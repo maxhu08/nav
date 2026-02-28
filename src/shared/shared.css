@@ -16,6 +16,16 @@
   background: #eab308;
 }
 
+*:focus:not(input):not(textarea) {
+  outline: none !important;
+}
+
+*:focus-visible:not(input):not(textarea) {
+  outline: none !important;
+  border-radius: 0.375rem;
+  box-shadow: 0 0 0 2px #0ea5e9;
+}
+
 .animate-up-bouncy {
   animation: animateUpBouncy 2500ms ease-in-out;
 }

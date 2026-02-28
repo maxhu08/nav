@@ -19,10 +19,10 @@ export const listenToInputs = (): void => {
   });
 
   hotkeysMappingsTextareaEl.addEventListener("focus", () => {
-    hotkeysMappingsContainerEl.classList.replace("border-transparent", "border-yellow-500");
+    hotkeysMappingsContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
   hotkeysMappingsTextareaEl.addEventListener("blur", () => {
-    hotkeysMappingsContainerEl.classList.replace("border-yellow-500", "border-transparent");
+    hotkeysMappingsContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 };
