@@ -5,12 +5,15 @@ const HINT_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
 const OVERLAY_ID = `${HINT_NAMESPACE_PREFIX}link-hints-overlay`;
 const MARKER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker`;
 const IS_MAC = navigator.userAgent.includes("Mac");
+
 type LinkMode = "current-tab" | "new-tab";
+
 type HintMarker = {
   element: HTMLElement;
   marker: HTMLSpanElement;
   label: string;
 };
+
 type HintState = {
   active: boolean;
   mode: LinkMode;
@@ -19,6 +22,7 @@ type HintState = {
   overlay: HTMLDivElement | null;
   frameHandle: number | null;
 };
+
 const hintState: HintState = {
   active: false,
   mode: "current-tab",
@@ -27,6 +31,44 @@ const hintState: HintState = {
   overlay: null,
   frameHandle: null
 };
+
+const getMarkerRect = (element: HTMLElement): DOMRect | null => {
+  const rects = Array.from(element.getClientRects()).filter(
+    (rect) => rect.width > 0 && rect.height > 0
+  );
+
+  if (rects.length === 0) return null;
+
+  rects.sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
+  return rects[0] ?? null;
+};
+
+const isHintable = (element: HTMLElement): boolean => {
+  if (element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true") {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    style.visibility === "collapse" ||
+    Number.parseFloat(style.opacity) === 0
+  ) {
+    return false;
+  }
+
+  const rect = getMarkerRect(element);
+  if (!rect) return false;
+
+  return (
+    rect.bottom >= 0 &&
+    rect.right >= 0 &&
+    rect.top <= window.innerHeight &&
+    rect.left <= window.innerWidth
+  );
+};
+
 const getHintableElements = (): HTMLElement[] => {
   const selectors = [
     "a[href]",
@@ -43,91 +85,73 @@ const getHintableElements = (): HTMLElement[] => {
     "[contenteditable]",
     "[contenteditable='true']"
   ];
+
   const seen = new Set<HTMLElement>();
   const elements: HTMLElement[] = [];
+
   for (const element of Array.from(document.querySelectorAll<HTMLElement>(selectors.join(",")))) {
-    if (seen.has(element) || !isHintable(element)) {
-      continue;
-    }
+    if (seen.has(element) || !isHintable(element)) continue;
     seen.add(element);
     elements.push(element);
   }
+
   return elements;
 };
-const isHintable = (element: HTMLElement): boolean => {
-  if (element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true") {
-    return false;
-  }
-  const style = window.getComputedStyle(element);
-  if (
-    style.display === "none" ||
-    style.visibility === "hidden" ||
-    style.visibility === "collapse" ||
-    Number.parseFloat(style.opacity) === 0
-  ) {
-    return false;
-  }
-  const rect = getMarkerRect(element);
-  if (!rect) {
-    return false;
-  }
-  return (
-    rect.bottom >= 0 &&
-    rect.right >= 0 &&
-    rect.top <= window.innerHeight &&
-    rect.left <= window.innerWidth
-  );
-};
-const getMarkerRect = (element: HTMLElement): DOMRect | null => {
-  const rects = Array.from(element.getClientRects()).filter(
-    (rect) => rect.width > 0 && rect.height > 0
-  );
-  if (rects.length === 0) {
-    return null;
-  }
-  rects.sort((left, right) => {
-    if (left.top !== right.top) {
-      return left.top - right.top;
-    }
-    return left.left - right.left;
-  });
-  return rects[0] ?? null;
-};
+
 const buildHintLabels = (count: number): string[] => {
-  if (count <= 0) {
-    return [];
-  }
+  if (count <= 0) return [];
+
   const alphabet = HINT_ALPHABET.split("");
   const labels = [""];
+
   while (labels.length < count + 1) {
-    const nextLabels: string[] = [];
+    const next: string[] = [];
+
     for (const prefix of labels) {
-      for (const char of alphabet) {
-        nextLabels.push(`${prefix}${char}`);
-      }
+      for (const char of alphabet) next.push(`${prefix}${char}`);
     }
-    labels.splice(0, labels.length, ...nextLabels);
+
+    labels.splice(0, labels.length, ...next);
   }
+
   return labels.slice(0, count);
 };
+
 const createOverlay = (): HTMLDivElement => {
   const existing = document.getElementById(OVERLAY_ID);
-  if (existing instanceof HTMLDivElement) {
-    existing.remove();
-  }
+  if (existing instanceof HTMLDivElement) existing.remove();
+
   const overlay = document.createElement("div");
   overlay.id = OVERLAY_ID;
   overlay.setAttribute(MARKER_ATTRIBUTE, "true");
+
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
   overlay.style.zIndex = "2147483647";
   overlay.style.pointerEvents = "none";
   overlay.style.fontFamily = '"JetBrains Mono", monospace"';
+
   return overlay;
 };
+
+const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string): void => {
+  marker.replaceChildren();
+
+  for (const [index, char] of Array.from(label.toUpperCase()).entries()) {
+    const letter = document.createElement("span");
+    const isTyped = typed.length > 0 && index < typed.length && label[index] === typed[index];
+
+    letter.textContent = char;
+    letter.style.color = isTyped ? "#ffffff" : "#000000";
+
+    marker.appendChild(letter);
+  }
+};
+
 const createMarker = (label: string, rect: DOMRect): HTMLSpanElement => {
   const marker = document.createElement("span");
   marker.setAttribute(MARKER_ATTRIBUTE, "true");
+
   marker.style.position = "fixed";
   marker.style.left = `${Math.max(0, Math.round(rect.left))}px`;
   marker.style.top = `${Math.max(0, Math.round(rect.top))}px`;
@@ -142,72 +166,47 @@ const createMarker = (label: string, rect: DOMRect): HTMLSpanElement => {
   marker.style.lineHeight = "1.2";
   marker.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.28)";
   marker.style.whiteSpace = "nowrap";
+
   renderMarkerText(marker, label, "");
+
   return marker;
 };
-const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string): void => {
-  marker.replaceChildren();
-  for (const [index, char] of Array.from(label.toUpperCase()).entries()) {
-    const letter = document.createElement("span");
-    const isTyped = typed.length > 0 && index < typed.length && label[index] === typed[index];
-    letter.textContent = char;
-    letter.style.color = isTyped ? "#ffffff" : "#000000";
-    marker.appendChild(letter);
-  }
-};
+
 const updateMarkerPositions = (): void => {
   for (const hint of hintState.markers) {
     const rect = getMarkerRect(hint.element);
+
     if (!rect) {
       hint.marker.style.display = "none";
       continue;
     }
+
     hint.marker.style.display = "";
     hint.marker.style.left = `${Math.max(0, Math.round(rect.left))}px`;
     hint.marker.style.top = `${Math.max(0, Math.round(rect.top))}px`;
   }
 };
+
 const schedulePositionUpdate = (): void => {
-  if (!hintState.active || hintState.frameHandle !== null) {
-    return;
-  }
+  if (!hintState.active || hintState.frameHandle !== null) return;
+
   hintState.frameHandle = window.requestAnimationFrame(() => {
     hintState.frameHandle = null;
     updateMarkerPositions();
   });
 };
-const applyFilter = (): void => {
-  const typed = hintState.typed;
-  const matches = hintState.markers.filter((hint) => hint.label.startsWith(typed));
-  for (const hint of hintState.markers) {
-    const isMatch = typed.length === 0 || hint.label.startsWith(typed);
-    renderMarkerText(hint.marker, hint.label, isMatch ? typed : "");
-    hint.marker.style.display = isMatch ? "" : "none";
-  }
-  if (matches.length === 1 && matches[0]?.label === typed) {
-    activateHint(matches[0]);
-  }
+
+const onViewportChange = (): void => {
+  if (!hintState.active) return;
+  schedulePositionUpdate();
 };
-const clickElement = (element: HTMLElement): void => {
-  element.click();
-  if (document.activeElement === element && shouldBlurAfterActivation(element)) {
-    element.blur();
-  }
+
+const clearFrameHandle = (): void => {
+  if (hintState.frameHandle === null) return;
+  window.cancelAnimationFrame(hintState.frameHandle);
+  hintState.frameHandle = null;
 };
-const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit): void => {
-  element.dispatchEvent(
-    new MouseEvent("click", {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      ...modifiers
-    })
-  );
-  if (document.activeElement === element && shouldBlurAfterActivation(element)) {
-    element.blur();
-  }
-};
+
 const shouldBlurAfterActivation = (element: HTMLElement): boolean =>
   element instanceof HTMLButtonElement ||
   (element instanceof HTMLInputElement &&
@@ -223,6 +222,31 @@ const shouldBlurAfterActivation = (element: HTMLElement): boolean =>
       "submit"
     ]).has(element.type)) ||
   element.getAttribute("role") === "button";
+
+const clickElement = (element: HTMLElement): void => {
+  element.click();
+
+  if (document.activeElement === element && shouldBlurAfterActivation(element)) {
+    element.blur();
+  }
+};
+
+const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit): void => {
+  element.dispatchEvent(
+    new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      ...modifiers
+    })
+  );
+
+  if (document.activeElement === element && shouldBlurAfterActivation(element)) {
+    element.blur();
+  }
+};
+
 const openHintInCurrentTab = (element: HTMLElement): void => {
   if (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) {
     const previousTarget = element.target;
@@ -235,120 +259,137 @@ const openHintInCurrentTab = (element: HTMLElement): void => {
       return;
     }
   }
+
   clickElement(element);
 };
+
 const openHintInNewTab = (element: HTMLElement): void => {
   if (
     (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) &&
     element.href
   ) {
     const openedWindow = window.open(element.href, "_blank", "noopener,noreferrer");
-    if (openedWindow) {
-      return;
-    }
+    if (openedWindow) return;
   }
+
   dispatchModifiedClick(element, {
     ctrlKey: !IS_MAC,
     metaKey: IS_MAC
   });
 };
-const activateHint = (hint: HintMarker): void => {
-  const mode = hintState.mode;
-  exitHints();
-  if (mode === "new-tab") {
-    openHintInNewTab(hint.element);
-    return;
-  }
-  openHintInCurrentTab(hint.element);
-};
-const onViewportChange = (): void => {
-  if (!hintState.active) {
-    return;
-  }
-  schedulePositionUpdate();
-};
-const clearFrameHandle = (): void => {
-  if (hintState.frameHandle !== null) {
-    window.cancelAnimationFrame(hintState.frameHandle);
-    hintState.frameHandle = null;
-  }
-};
+
 export const exitHints = (): void => {
-  if (!hintState.active) {
-    return;
-  }
+  if (!hintState.active) return;
+
   clearFrameHandle();
+
   window.removeEventListener("scroll", onViewportChange, true);
   window.removeEventListener("resize", onViewportChange, true);
   window.removeEventListener("blur", exitHints, true);
+
   hintState.overlay?.remove();
+
   hintState.active = false;
   hintState.mode = "current-tab";
   hintState.typed = "";
   hintState.markers = [];
   hintState.overlay = null;
 };
+
+const activateHint = (hint: HintMarker): void => {
+  const mode = hintState.mode;
+  exitHints();
+
+  if (mode === "new-tab") {
+    openHintInNewTab(hint.element);
+    return;
+  }
+
+  openHintInCurrentTab(hint.element);
+};
+
+const applyFilter = (): void => {
+  const typed = hintState.typed;
+  const matches = hintState.markers.filter((hint) => hint.label.startsWith(typed));
+
+  for (const hint of hintState.markers) {
+    const isMatch = typed.length === 0 || hint.label.startsWith(typed);
+    renderMarkerText(hint.marker, hint.label, isMatch ? typed : "");
+    hint.marker.style.display = isMatch ? "" : "none";
+  }
+
+  if (matches.length === 1 && matches[0]?.label === typed) {
+    activateHint(matches[0]);
+  }
+};
+
 export const activateHints = (mode: LinkMode): boolean => {
   exitHints();
+
   const elements = getHintableElements();
-  if (elements.length === 0) {
-    return false;
-  }
+  if (elements.length === 0) return false;
+
   const labels = buildHintLabels(elements.length);
   const overlay = createOverlay();
   const markers: HintMarker[] = [];
+
   elements.forEach((element, index) => {
     const rect = getMarkerRect(element);
-    if (!rect) {
-      return;
-    }
+    if (!rect) return;
+
     const label = labels[index];
     const marker = createMarker(label, rect);
+
     overlay.appendChild(marker);
     markers.push({ element, marker, label });
   });
-  if (markers.length === 0) {
-    return false;
-  }
+
+  if (markers.length === 0) return false;
+
   document.documentElement.appendChild(overlay);
+
   hintState.active = true;
   hintState.mode = mode;
   hintState.typed = "";
   hintState.markers = markers;
   hintState.overlay = overlay;
+
   window.addEventListener("scroll", onViewportChange, true);
   window.addEventListener("resize", onViewportChange, true);
   window.addEventListener("blur", exitHints, true);
+
   return true;
 };
+
 export const areHintsActive = (): boolean => hintState.active;
+
 export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
-  if (!hintState.active) {
-    return false;
-  }
+  if (!hintState.active) return false;
+
   if (event.key === "Escape") {
     exitHints();
     return true;
   }
+
   if (event.key === "Backspace" || event.key === "Delete") {
     hintState.typed = hintState.typed.slice(0, -1);
     applyFilter();
     return true;
   }
+
   if (event.key === "Enter") {
     const matches = hintState.markers.filter((hint) => hint.label.startsWith(hintState.typed));
-    if (matches.length === 1) {
-      activateHint(matches[0]);
-    }
+    if (matches.length === 1) activateHint(matches[0]);
     return true;
   }
+
   if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) {
     return true;
   }
+
   const key = event.key.toLowerCase();
-  if (!HINT_ALPHABET.includes(key)) {
-    return true;
-  }
+  if (!HINT_ALPHABET.includes(key)) return true;
+
   hintState.typed += key;
   applyFilter();
   return true;
