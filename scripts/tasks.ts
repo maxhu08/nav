@@ -1,0 +1,327 @@
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync
+} from "node:fs";
+import { resolve } from "node:path";
+import { spawn, spawnSync } from "node:child_process";
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
+
+type BrowserTarget = "chrome" | "firefox";
+type TaskName = "clean" | "dev" | "build" | "package" | "rc" | "source";
+
+const ROOT = process.cwd();
+const DIST_DIR = resolve(ROOT, "dist");
+const OUTPUT_DIR = resolve(ROOT, "output");
+const SRC_DIR = resolve(ROOT, "src");
+const ASSETS_DIR = resolve(SRC_DIR, "assets");
+const ENTRY_FILE = resolve(ROOT, "src", "index.ts");
+const VERSION_FILE = resolve(ROOT, "EXTENSION_VERSION.txt");
+
+const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
+  chrome: {
+    manifest_version: 3,
+    name: "nav",
+    author: "Max Hu",
+    description: "TODO: add description",
+    permissions: ["storage"],
+    background: {},
+    host_permissions: ["<all_urls>"],
+    content_scripts: [
+      {
+        matches: ["<all_urls>"],
+        js: ["index.js"],
+        run_at: "document_idle"
+      }
+    ],
+    icons: {
+      16: "16.png",
+      32: "32.png",
+      48: "48.png",
+      64: "64.png",
+      128: "128.png"
+    }
+  },
+  firefox: {
+    manifest_version: 3,
+    name: "nav",
+    author: "Max Hu",
+    description: "TODO: add description",
+    permissions: ["storage"],
+    background: {},
+    host_permissions: ["<all_urls>"],
+    content_scripts: [
+      {
+        matches: ["<all_urls>"],
+        js: ["index.js"],
+        run_at: "document_idle"
+      }
+    ],
+    icons: {
+      16: "16.png",
+      32: "32.png",
+      48: "48.png",
+      64: "64.png",
+      128: "128.png"
+    },
+    browser_specific_settings: {
+      gecko: {
+        id: "contact@maxhu.dev"
+      }
+    }
+  }
+};
+
+async function main() {
+  const [taskArg, targetArg, versionArg] = process.argv.slice(2);
+  const task = parseTask(taskArg);
+
+  if (task === "clean") {
+    clean();
+    return;
+  }
+
+  if (task === "source") {
+    packageSource();
+    return;
+  }
+
+  const target = parseTarget(targetArg);
+
+  switch (task) {
+    case "dev":
+      clean();
+      ensureDist();
+      syncStaticFiles();
+      writeManifest(target);
+      runParcel("watch");
+      return;
+    case "build":
+      clean();
+      buildBundle(target);
+      return;
+    case "package":
+      clean();
+      buildBundle(target);
+      packageBundle(target);
+      return;
+    case "rc": {
+      const rcVersion = versionArg ?? (await promptForRcVersion());
+      const release = parseRcVersion(rcVersion);
+
+      clean();
+      buildBundle(target, release.baseVersion);
+      annotateRcBuild(target, release.rcVersion);
+      packageBundle(target, {
+        packageVersion: release.rcVersion,
+        zipVersion: release.rcVersion
+      });
+      return;
+    }
+  }
+}
+
+function parseTask(value: string | undefined): TaskName {
+  if (
+    value === "clean" ||
+    value === "dev" ||
+    value === "build" ||
+    value === "package" ||
+    value === "rc" ||
+    value === "source"
+  ) {
+    return value;
+  }
+
+  throw new Error(
+    "Usage: bun run ./scripts/tasks.ts <clean|dev|build|package|rc|source> [chrome|firefox] [rc-version]"
+  );
+}
+
+function parseTarget(value: string | undefined): BrowserTarget {
+  if (value === "chrome" || value === "firefox") {
+    return value;
+  }
+
+  throw new Error("Expected browser target: chrome or firefox");
+}
+
+function clean() {
+  rmSync(resolve(ROOT, ".parcel-cache"), { force: true, recursive: true });
+  rmSync(DIST_DIR, { force: true, recursive: true });
+}
+
+function buildBundle(target: BrowserTarget, version = readVersion()) {
+  ensureDist();
+  runParcel("build");
+  syncStaticFiles();
+  writeManifest(target, version);
+}
+
+function ensureDist() {
+  mkdirSync(DIST_DIR, { recursive: true });
+}
+
+function syncStaticFiles() {
+  copyDirectoryContents(ASSETS_DIR, DIST_DIR);
+}
+
+function writeManifest(target: BrowserTarget, version = readVersion(), versionName?: string) {
+  const manifest = {
+    ...MANIFESTS[target],
+    version,
+    ...(versionName ? { version_name: versionName } : {})
+  };
+
+  writeFileSync(resolve(DIST_DIR, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+function readVersion() {
+  return readFileSync(VERSION_FILE, "utf8").trim();
+}
+
+function runParcel(mode: "build" | "watch") {
+  const args = ["x", "parcel"];
+
+  if (mode === "build") {
+    args.push(
+      "build",
+      ENTRY_FILE,
+      "--dist-dir",
+      DIST_DIR,
+      "--no-source-maps",
+      "--no-scope-hoist",
+      "--no-content-hash"
+    );
+    runCommand(process.execPath, args);
+    return;
+  }
+
+  args.push("watch", ENTRY_FILE, "--dist-dir", DIST_DIR, "--no-content-hash");
+  const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit" });
+
+  child.on("exit", (code) => {
+    process.exit(code ?? 0);
+  });
+}
+
+function packageBundle(
+  target: BrowserTarget,
+  options: {
+    packageVersion?: string;
+    zipVersion?: string;
+    dirSuffix?: string;
+    zipSuffix?: string;
+  } = {}
+) {
+  const packageVersion = options.packageVersion ?? readVersion();
+  const zipVersion = options.zipVersion ?? packageVersion;
+  const dirSuffix = options.dirSuffix ?? "";
+  const zipSuffix = options.zipSuffix ?? dirSuffix;
+  const packageDirName = `nav-v${packageVersion}-${target}${dirSuffix}`;
+  const packageZipName = `nav-v${zipVersion}-${target}${zipSuffix}.zip`;
+  const packageDir = resolve(OUTPUT_DIR, packageDirName);
+  const zipPath = resolve(OUTPUT_DIR, packageZipName);
+
+  mkdirSync(OUTPUT_DIR, { recursive: true });
+  rmSync(packageDir, { force: true, recursive: true });
+  rmSync(zipPath, { force: true });
+  cpSync(DIST_DIR, packageDir, { recursive: true });
+
+  if (!existsSync(resolve(packageDir, "index.js"))) {
+    throw new Error("Missing expected build output: dist/index.js");
+  }
+
+  runCommand("zip", ["-r", "-FS", zipPath, "."], packageDir);
+
+  console.log(`Build complete\nExtension: ${packageDir}\nZip: ${zipPath}`);
+}
+
+function packageSource() {
+  const version = readVersion();
+  const zipPath = resolve(OUTPUT_DIR, `nav-v${version}-source.zip`);
+
+  mkdirSync(OUTPUT_DIR, { recursive: true });
+  rmSync(zipPath, { force: true });
+
+  runCommand("zip", [
+    "-r",
+    "-FS",
+    zipPath,
+    ".",
+    "-x",
+    "*.git*",
+    "-x",
+    "node_modules/*",
+    "-x",
+    ".parcel-cache/*",
+    "-x",
+    "dist/*",
+    "-x",
+    "output/*"
+  ]);
+
+  console.log(`Source package complete\nZip: ${zipPath}`);
+}
+
+function runCommand(command: string, args: string[], cwd = ROOT) {
+  const result = spawnSync(command, args, {
+    cwd,
+    stdio: "inherit"
+  });
+
+  if (result.status !== 0) {
+    throw new Error(`Command failed: ${command} ${args.join(" ")}`);
+  }
+}
+
+function copyDirectoryContents(sourceDir: string, destinationDir: string) {
+  if (!existsSync(sourceDir)) {
+    return;
+  }
+
+  for (const entry of readdirSync(sourceDir)) {
+    cpSync(resolve(sourceDir, entry), resolve(destinationDir, entry), {
+      force: true,
+      recursive: true
+    });
+  }
+}
+
+function annotateRcBuild(target: BrowserTarget, rcVersion: string) {
+  writeManifest(target, parseRcVersion(rcVersion).baseVersion, rcVersion);
+}
+
+async function promptForRcVersion() {
+  const rl = createInterface({ input, output });
+
+  try {
+    return await rl.question("Enter release candidate version (example: 0.1.0-rc1): ");
+  } finally {
+    rl.close();
+  }
+}
+
+function parseRcVersion(value: string) {
+  const rcVersion = value.trim();
+  const match = /^([0-9]+\.[0-9]+\.[0-9]+)-rc([0-9A-Za-z.-]*)$/.exec(rcVersion);
+
+  if (!match) {
+    throw new Error("Invalid RC version. Expected format like 0.1.0-rc1.");
+  }
+
+  return {
+    baseVersion: match[1],
+    rcVersion
+  };
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

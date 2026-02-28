@@ -1,0 +1,49 @@
+{
+  "name": "nav",
+  "author": "Max Hu",
+  "description": "TODO: add description",
+  "keywords": [],
+  "scripts": {
+    "d": "bun run dev",
+    "dev": "bun run dev:chrome",
+    "dev:chrome": "bun run ./scripts/tasks.ts dev chrome",
+    "dev:firefox": "bun run ./scripts/tasks.ts dev firefox",
+    "build": "bun run build:chrome",
+    "build:chrome": "bun run ./scripts/tasks.ts build chrome",
+    "build:firefox": "bun run ./scripts/tasks.ts build firefox",
+    "build:firefox:windows": "bun run ./scripts/tasks.ts build firefox",
+    "package": "bun run package:chrome",
+    "package:chrome": "bun run ./scripts/tasks.ts package chrome",
+    "package:firefox": "bun run ./scripts/tasks.ts package firefox",
+    "rc:chrome": "bun run ./scripts/tasks.ts rc chrome",
+    "rc:firefox": "bun run ./scripts/tasks.ts rc firefox",
+    "package:source": "bun run ./scripts/tasks.ts source",
+    "clean": "bun run ./scripts/tasks.ts clean",
+    "format": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,html}\"",
+    "format:check": "prettier --check \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,html}\"",
+    "prettier": "bun run format",
+    "lint": "eslint src scripts --ext .js,.jsx,.mjs,.cjs,.ts,.tsx --ignore-pattern dist --ignore-pattern output",
+    "lint:fix": "bun run lint --fix",
+    "check": "bun run format:check && bun run lint && bun run typecheck",
+    "prepare": "husky",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "parcel": "2.16.3"
+  },
+  "devDependencies": {
+    "@parcel/config-default": "2.16.3",
+    "@parcel/core": "2.16.3",
+    "@parcel/resolver-default": "2.16.3",
+    "@types/chrome": "^0.1.37",
+    "@types/node": "^25.3.2",
+    "@types/sortablejs": "^1.15.9",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "husky": "^9.1.7",
+    "postcss": "^8.5.6",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "tailwindcss": "^3.4.19"
+  }
+}
