@@ -2,7 +2,7 @@ import { listenToInputs } from "~/src/options/scripts/inputs";
 import { listenToKeys } from "~/src/options/scripts/keybinds";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
 import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
-import { getConfig } from "~/src/utils/config";
+import { getConfig } from "~/src/utils/config-storage";
 
 const logo = document.getElementById("nav-logo") as HTMLImageElement;
 

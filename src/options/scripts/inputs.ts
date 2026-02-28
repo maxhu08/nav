@@ -1,4 +1,4 @@
-import { DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/config";
+import { DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
 import {
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,

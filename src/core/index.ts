@@ -12,7 +12,8 @@ import {
 } from "~/src/core/actions/scroll";
 import { isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { getToastApi } from "~/src/core/utils/sonner";
-import { type ActionName, DEFAULT_HOTKEY_MAPPINGS, getConfig } from "~/src/utils/config";
+import { getConfig } from "~/src/utils/config-storage";
+import { type ActionName, DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
 type ActionHandler = (count?: number) => boolean;
 
 const decodeSequenceToken = (value: string): string => {
