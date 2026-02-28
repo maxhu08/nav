@@ -12,6 +12,9 @@ export type ActionName =
   | "scroll-to-top";
 
 export type Config = {
+  rules: {
+    urls: string;
+  };
   hotkeys: {
     mappings: string;
   };
@@ -32,6 +35,9 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
 ].join("\n");
 
 export const defaultConfig: Config = {
+  rules: {
+    urls: ""
+  },
   hotkeys: {
     mappings: DEFAULT_HOTKEY_MAPPINGS
   }
@@ -50,9 +56,16 @@ const mergeConfig = (value: unknown): Config => {
 
   const candidateHotkeys = (
     value as {
+      rules?: unknown;
       hotkeys?: unknown;
     }
   ).hotkeys;
+  const candidateRules = (
+    value as {
+      rules?: unknown;
+      hotkeys?: unknown;
+    }
+  ).rules;
 
   if (candidateHotkeys && typeof candidateHotkeys === "object") {
     const mappings = (
@@ -63,6 +76,18 @@ const mergeConfig = (value: unknown): Config => {
 
     if (typeof mappings === "string") {
       mergedConfig.hotkeys.mappings = mappings;
+    }
+  }
+
+  if (candidateRules && typeof candidateRules === "object") {
+    const urls = (
+      candidateRules as {
+        urls?: unknown;
+      }
+    ).urls;
+
+    if (typeof urls === "string") {
+      mergedConfig.rules.urls = urls;
     }
   }
 
