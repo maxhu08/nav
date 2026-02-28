@@ -10,6 +10,10 @@ import {
 } from "~/src/options/scripts/ui";
 import { saveAndExportConfig } from "~/src/options/scripts/utils/export-config";
 import { importConfigAndSave } from "~/src/options/scripts/utils/import-config";
+import {
+  syncHotkeysMappingsHighlight,
+  syncHotkeysMappingsHighlightScroll
+} from "~/src/options/scripts/utils/hotkeys-highlight";
 import { saveConfig } from "~/src/options/scripts/utils/save-config";
 import { setDefaultConfig } from "~/src/options/scripts/utils/set-default-config";
 import { tippy } from "~/src/options/scripts/utils/tooltip";
@@ -41,6 +45,15 @@ export const listenToInputs = (): void => {
 
   hotkeysMappingsTextareaEl.addEventListener("focus", () => {
     hotkeysMappingsContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  hotkeysMappingsTextareaEl.addEventListener("input", () => {
+    syncHotkeysMappingsHighlight();
+    syncHotkeysMappingsHighlightScroll();
+  });
+
+  hotkeysMappingsTextareaEl.addEventListener("scroll", () => {
+    syncHotkeysMappingsHighlightScroll();
   });
 
   hotkeysMappingsTextareaEl.addEventListener("blur", () => {

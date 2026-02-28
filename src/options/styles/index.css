@@ -39,3 +39,56 @@
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+
+#hotkeys-mappings-container {
+  display: grid;
+}
+
+.hotkeys-mappings-editor-layer {
+  grid-area: 1 / 1;
+  margin: 0;
+  overflow: auto;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  line-height: 1.5rem;
+}
+
+#hotkeys-mappings-highlight {
+  pointer-events: none;
+  color: #fafafa;
+}
+
+.hotkeys-mappings-textarea {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: #fafafa;
+}
+
+.hotkeys-mappings-textarea::selection {
+  background: rgba(56, 189, 248, 0.35);
+}
+
+.hotkeys-mappings-token-comment {
+  color: #737373;
+}
+
+.hotkeys-mappings-token-sequence {
+  color: #569cd6;
+}
+
+.hotkeys-mappings-token-action {
+  color: #dcdcaa;
+}
+
+.hotkeys-mappings-token-invalid {
+  color: #f43f5e;
+}

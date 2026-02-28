@@ -88,12 +88,13 @@
             <p class="text-base text-neutral-500">One mapping per line: &lt;key-sequence&gt; &lt;action-name&gt;</p>
             <p class="text-base text-neutral-500">Lines starting with # are ignored</p>
             <div id="hotkeys-mappings-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <pre id="hotkeys-mappings-highlight" aria-hidden="true" class="hotkeys-mappings-editor-layer"></pre>
               <textarea
                 id="hotkeys-mappings-textarea"
                 autocomplete="off"
                 spellcheck="false"
                 rows="16"
-                class="w-full resize-none bg-transparent text-base text-white placeholder-neutral-500 outline-none"
+                class="hotkeys-mappings-editor-layer hotkeys-mappings-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
               ></textarea>
             </div>
           </div>

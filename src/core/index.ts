@@ -13,7 +13,7 @@ import {
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { getToastApi } from "~/src/core/utils/sonner";
 import { getConfig } from "~/src/utils/config-storage";
-import { type ActionName, DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
+import { type ActionName, DEFAULT_HOTKEY_MAPPINGS, isActionName } from "~/src/utils/hotkeys";
 
 type ActionHandler = (count?: number) => boolean;
 
@@ -44,7 +44,7 @@ const parseMappings = (value: string): Partial<Record<string, ActionName>> => {
     const sequence = decodeSequenceToken(trimmedLine.slice(0, separatorIndex));
     const actionName = trimmedLine.slice(separatorIndex).trim();
 
-    if (!sequence || !VALID_ACTION_NAMES.has(actionName as ActionName)) {
+    if (!sequence || !isActionName(actionName)) {
       continue;
     }
 
@@ -55,20 +55,6 @@ const parseMappings = (value: string): Partial<Record<string, ActionName>> => {
     ? parsedMappings
     : parseMappings(DEFAULT_HOTKEY_MAPPINGS);
 };
-
-const VALID_ACTION_NAMES = new Set<ActionName>([
-  "show-hints-current-tab",
-  "show-hints-new-tab",
-  "yank-current-tab-url",
-  "scroll-down",
-  "scroll-half-page-down",
-  "scroll-half-page-up",
-  "scroll-left",
-  "scroll-right",
-  "scroll-up",
-  "scroll-to-bottom",
-  "scroll-to-top"
-]);
 
 let keyActions = parseMappings(DEFAULT_HOTKEY_MAPPINGS);
 
