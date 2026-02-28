@@ -4,12 +4,12 @@ import { type ActionName, DEFAULT_HOTKEY_MAPPINGS, isActionName } from "~/src/ut
 export type FastRule = {
   pattern: string;
   mode: "allow" | "deny";
-  actions: ActionName[];
+  actions: Partial<Record<ActionName, true>>;
 };
 
 export type FastConfig = {
   rules: {
-    urlRules: FastRule[];
+    urls: FastRule[];
   };
   hotkeys: {
     mappings: Partial<Record<string, ActionName>>;
@@ -70,12 +70,12 @@ const createHotkeyPrefixes = (
   return prefixes;
 };
 
-const parseActions = (value: string): ActionName[] => {
-  const actions: ActionName[] = [];
+const parseActions = (value: string): Partial<Record<ActionName, true>> => {
+  const actions: Partial<Record<ActionName, true>> = {};
 
   for (const segment of value.trim().split(/\s+/)) {
     if (isActionName(segment)) {
-      actions.push(segment);
+      actions[segment] = true;
     }
   }
 
@@ -92,7 +92,7 @@ const isValidRegexPattern = (value: string): boolean => {
 };
 
 const parseRulesUrlsValue = (value: string): FastRule[] => {
-  const urlRules: FastRule[] = [];
+  const urls: FastRule[] = [];
   let previousRule: FastRule | null = null;
 
   for (const line of value.split("\n")) {
@@ -115,9 +115,9 @@ const parseRulesUrlsValue = (value: string): FastRule[] => {
       previousRule = {
         pattern: rest,
         mode: "allow",
-        actions: []
+        actions: {}
       };
-      urlRules.push(previousRule);
+      urls.push(previousRule);
       continue;
     }
 
@@ -131,7 +131,7 @@ const parseRulesUrlsValue = (value: string): FastRule[] => {
     previousRule = null;
   }
 
-  return urlRules;
+  return urls;
 };
 
 export const buildFastConfig = (config: Config): FastConfig => {
@@ -139,7 +139,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
 
   return {
     rules: {
-      urlRules: parseRulesUrlsValue(config.rules.urls)
+      urls: parseRulesUrlsValue(config.rules.urls)
     },
     hotkeys: {
       mappings,
