@@ -95,7 +95,12 @@ function findScrollableElement(
   return null;
 }
 
-function smoothScroll(element: HTMLElement, amount: number, keyCode: string): void {
+function smoothScroll(
+  element: HTMLElement,
+  amount: number,
+  keyCode: string,
+  continuous = true
+): void {
   if (amount === 0) {
     return;
   }
@@ -115,7 +120,7 @@ function smoothScroll(element: HTMLElement, amount: number, keyCode: string): vo
   let previousTimestamp: number | null = null;
 
   const keyIsStillDown = () =>
-    scrollState.time === activationTime && scrollState.keyDownCode === keyCode;
+    continuous && scrollState.time === activationTime && scrollState.keyDownCode === keyCode;
 
   const animate = (timestamp: number) => {
     if (previousTimestamp == null) {
@@ -159,6 +164,22 @@ function smoothScroll(element: HTMLElement, amount: number, keyCode: string): vo
   };
 
   requestAnimationFrame(animate);
+}
+
+function scrollToPosition(position: "top" | "bottom"): boolean {
+  const start = activatedElement ?? document.activeElement ?? getScrollingElement();
+  const direction = position === "top" ? "up" : "down";
+  const scrollableElement = findScrollableElement(start, direction);
+
+  if (!scrollableElement || !scrollState.keyDownCode) {
+    return false;
+  }
+
+  activatedElement = scrollableElement;
+  const targetTop = position === "top" ? 0 : scrollableElement.scrollHeight;
+  const amount = targetTop - scrollableElement.scrollTop;
+  smoothScroll(scrollableElement, amount, scrollState.keyDownCode, false);
+  return true;
 }
 
 function scroll(direction: ScrollDirection): boolean {
@@ -226,4 +247,12 @@ export function scrollDown(): boolean {
 
 export function scrollUp(): boolean {
   return scroll("up");
+}
+
+export function scrollToTop(): boolean {
+  return scrollToPosition("top");
+}
+
+export function scrollToBottom(): boolean {
+  return scrollToPosition("bottom");
 }
