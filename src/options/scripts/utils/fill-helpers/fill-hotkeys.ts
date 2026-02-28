@@ -1,5 +1,5 @@
 import { type Config } from "~/src/utils/config";
-import { hotkeysMappingsTextareaEl } from "~/src/options/scripts/ui";
+import { hotkeysHintsCharsetInputEl, hotkeysMappingsTextareaEl } from "~/src/options/scripts/ui";
 import {
   syncHotkeysMappingsHighlight,
   syncHotkeysMappingsHighlightScroll
@@ -7,6 +7,7 @@ import {
 
 export const fillHotkeysInputs = (config: Config): void => {
   hotkeysMappingsTextareaEl.value = config.hotkeys.mappings;
+  hotkeysHintsCharsetInputEl.value = config.hotkeys.hints.charset;
   syncHotkeysMappingsHighlight();
   syncHotkeysMappingsHighlightScroll();
 };

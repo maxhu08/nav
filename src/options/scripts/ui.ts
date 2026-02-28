@@ -1,16 +1,13 @@
-import {
-  getButton,
-  getContainerAndTextarea,
-  getElement
-} from "~/src/options/scripts/utils/ui-helpers";
+import { getButton, getContainerAndTextarea, getElement } from "~/src/options/scripts/utils/ui-helpers";
 
-export const [rulesUrlsContainerEl, rulesUrlsTextareaEl] =
-  getContainerAndTextarea("rules-urls");
+// prettier-ignore
+export const [rulesUrlsContainerEl, rulesUrlsTextareaEl] = getContainerAndTextarea("rules-urls");
 export const rulesUrlsHighlightEl = getElement<HTMLPreElement>("rules-urls-highlight");
-export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] =
-  getContainerAndTextarea("hotkeys-mappings");
-export const hotkeysMappingsHighlightEl =
-  getElement<HTMLPreElement>("hotkeys-mappings-highlight");
+// prettier-ignore
+export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] = getContainerAndTextarea("hotkeys-mappings");
+export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-mappings-highlight");
+export const hotkeysHintsCharsetContainerEl = getElement<HTMLDivElement>("hotkeys-hints-charset-container");
+export const hotkeysHintsCharsetInputEl = getElement<HTMLInputElement>("hotkeys-hints-charset-input");
 
 export const saveButtonEl = getButton("save");
 export const exportButtonEl = getButton("export");

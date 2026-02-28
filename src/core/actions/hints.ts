@@ -1,15 +1,16 @@
 import { getExtensionNamespace } from "~/src/utils/extension-id";
+import { DEFAULT_HINT_CHARSET } from "~/src/utils/hotkeys";
 import {
   getDeepActiveElement,
   isEditableElement,
   isSelectableElement
 } from "~/src/core/utils/isEditableTarget";
 
-const HINT_ALPHABET = "sadfjklewcmpgh";
 const HINT_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
 const OVERLAY_ID = `${HINT_NAMESPACE_PREFIX}link-hints-overlay`;
 const MARKER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker`;
 const IS_MAC = navigator.userAgent.includes("Mac");
+let hintAlphabet = DEFAULT_HINT_CHARSET;
 
 type LinkMode = "current-tab" | "new-tab";
 
@@ -106,7 +107,7 @@ const getHintableElements = (): HTMLElement[] => {
 const buildHintLabels = (count: number): string[] => {
   if (count <= 0) return [];
 
-  const alphabet = HINT_ALPHABET.split("");
+  const alphabet = hintAlphabet.split("");
   const labels = [""];
 
   while (labels.length < count + 1) {
@@ -408,6 +409,14 @@ export const activateHints = (mode: LinkMode): boolean => {
 
 export const areHintsActive = (): boolean => hintState.active;
 
+export const setHintCharset = (charset: string): void => {
+  hintAlphabet = charset;
+
+  if (hintState.active) {
+    exitHints();
+  }
+};
+
 export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
   if (!hintState.active) return false;
 
@@ -433,7 +442,7 @@ export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
   }
 
   const key = event.key.toLowerCase();
-  if (!HINT_ALPHABET.includes(key)) return true;
+  if (!hintAlphabet.includes(key)) return true;
 
   hintState.typed += key;
   applyFilter();

@@ -56,6 +56,17 @@
 
         <section id="hotkeys-mappings" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
+            <p class="text-base text-white">hotkeys.hints.charset</p>
+            <p class="text-base text-neutral-500">Controls which letters are used to generate hint labels.</p>
+            <p class="text-base text-neutral-500">Letters earlier in the charset are prioritized first when labels are assigned.</p>
+            <p class="text-base text-neutral-500">Use unique letters. Invalid characters and duplicates are ignored.</p>
+            <br />
+            <p class="text-base text-neutral-500">Example:</p>
+            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
+              <p><span class="text-[#569cd6]">sadfjklewcmpgh</span></p>
+            </div>
+            <p class="text-base text-neutral-500">This favors `s`, then `a`, then `d`, and so on when generating hint labels.</p>
+            <br />
             <p class="text-base text-white">hotkeys.mappings</p>
             <p class="text-base text-neutral-500">Each line maps one key sequence to one action name.</p>
             <p class="text-base text-neutral-500"><span class="text-[#569cd6]">&lt;key-sequence&gt;</span> <span class="text-[#dcdcaa]">&lt;action-name&gt;</span></p>

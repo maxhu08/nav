@@ -1,4 +1,9 @@
-import { activateHints, areHintsActive, handleHintsKeydown } from "~/src/core/actions/hints";
+import {
+  activateHints,
+  areHintsActive,
+  handleHintsKeydown,
+  setHintCharset
+} from "~/src/core/actions/hints";
 import {
   installScrollTracking,
   scrollHalfPageDown,
@@ -283,6 +288,7 @@ installScrollTracking();
 
 void getFastConfig().then((fastConfig) => {
   applyUrlRules(fastConfig.rules.urls);
+  setHintCharset(fastConfig.hotkeys.hints.charset);
   applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
 });
 
@@ -291,22 +297,29 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     return;
   }
 
-  const nextHotkeys = changes.fastConfig.newValue as {
+  const nextFastConfig = changes.fastConfig.newValue as {
     rules?: {
       urls?: FastRule[];
     };
     hotkeys?: {
+      hints?: {
+        charset?: string;
+      };
       mappings?: Partial<Record<string, ActionName>>;
       prefixes?: Partial<Record<string, true>>;
     };
   };
 
-  if (nextHotkeys.rules?.urls) {
-    applyUrlRules(nextHotkeys.rules.urls);
+  if (nextFastConfig.rules?.urls) {
+    applyUrlRules(nextFastConfig.rules.urls);
   }
 
-  if (nextHotkeys.hotkeys?.mappings && nextHotkeys.hotkeys.prefixes) {
-    applyHotkeyMappings(nextHotkeys.hotkeys.mappings, nextHotkeys.hotkeys.prefixes);
+  if (nextFastConfig.hotkeys?.hints?.charset) {
+    setHintCharset(nextFastConfig.hotkeys.hints.charset);
+  }
+
+  if (nextFastConfig.hotkeys?.mappings && nextFastConfig.hotkeys.prefixes) {
+    applyHotkeyMappings(nextFastConfig.hotkeys.mappings, nextFastConfig.hotkeys.prefixes);
   }
 });
 

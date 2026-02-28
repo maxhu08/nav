@@ -1,5 +1,7 @@
 import {
   exportButtonEl,
+  hotkeysHintsCharsetContainerEl,
+  hotkeysHintsCharsetInputEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
   importButtonEl,
@@ -71,6 +73,14 @@ export const listenToInputs = (): void => {
 
   hotkeysMappingsTextareaEl.addEventListener("blur", () => {
     hotkeysMappingsContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  hotkeysHintsCharsetInputEl.addEventListener("focus", () => {
+    hotkeysHintsCharsetContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  hotkeysHintsCharsetInputEl.addEventListener("blur", () => {
+    hotkeysHintsCharsetContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   tippy("#save-button", {

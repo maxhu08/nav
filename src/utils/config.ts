@@ -1,5 +1,5 @@
 import { deepMerge } from "~/src/utils/deep-merge";
-import { DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
+import { DEFAULT_HINT_CHARSET, DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
 
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
@@ -20,7 +20,10 @@ export const defaultConfig: Config = {
     urls: ""
   },
   hotkeys: {
-    mappings: DEFAULT_HOTKEY_MAPPINGS
+    mappings: DEFAULT_HOTKEY_MAPPINGS,
+    hints: {
+      charset: DEFAULT_HINT_CHARSET
+    }
   }
 };
 
@@ -30,5 +33,8 @@ export type Config = {
   };
   hotkeys: {
     mappings: string;
+    hints: {
+      charset: string;
+    };
   };
 };

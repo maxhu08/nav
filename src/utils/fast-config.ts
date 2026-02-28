@@ -1,5 +1,10 @@
 import { type Config, getConfig } from "~/src/utils/config";
-import { type ActionName, DEFAULT_HOTKEY_MAPPINGS, isActionName } from "~/src/utils/hotkeys";
+import {
+  type ActionName,
+  DEFAULT_HINT_CHARSET,
+  DEFAULT_HOTKEY_MAPPINGS,
+  isActionName
+} from "~/src/utils/hotkeys";
 
 export type FastRule = {
   pattern: string;
@@ -14,7 +19,14 @@ export type FastConfig = {
   hotkeys: {
     mappings: Partial<Record<string, ActionName>>;
     prefixes: Partial<Record<string, true>>;
+    hints: {
+      charset: string;
+    };
   };
+};
+
+const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
+  return typeof value?.hotkeys?.hints?.charset === "string";
 };
 
 const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionName>> => {
@@ -60,6 +72,22 @@ const createHotkeyPrefixes = (
   }
 
   return prefixes;
+};
+
+const parseHintCharsetValue = (value: string): string => {
+  const uniqueCharacters = new Set<string>();
+  let normalized = "";
+
+  for (const char of value.toLowerCase()) {
+    if (!/[a-z]/.test(char) || uniqueCharacters.has(char)) {
+      continue;
+    }
+
+    uniqueCharacters.add(char);
+    normalized += char;
+  }
+
+  return normalized.length >= 2 ? normalized : DEFAULT_HINT_CHARSET;
 };
 
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
@@ -135,7 +163,10 @@ export const buildFastConfig = (config: Config): FastConfig => {
     },
     hotkeys: {
       mappings,
-      prefixes: createHotkeyPrefixes(mappings)
+      prefixes: createHotkeyPrefixes(mappings),
+      hints: {
+        charset: parseHintCharsetValue(config.hotkeys.hints.charset)
+      }
     }
   };
 };
@@ -145,7 +176,7 @@ export const getFastConfig = (): Promise<FastConfig> => {
     chrome.storage.local.get(["fastConfig"], async (data) => {
       const fastConfig = data.fastConfig as FastConfig | undefined;
 
-      if (fastConfig !== undefined) {
+      if (isFastConfigShapeValid(fastConfig)) {
         resolve(fastConfig);
         return;
       }

@@ -47,3 +47,5 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
   // clipboard
   "yy yank-current-tab-url"
 ].join("\n");
+
+export const DEFAULT_HINT_CHARSET = "sadfjklewcmpgh";
