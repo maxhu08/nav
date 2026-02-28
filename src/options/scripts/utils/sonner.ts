@@ -1,7 +1,6 @@
 // @ts-nocheck
 // based off https://github.com/JeanxPereira/sonner-js/blob/main/sonner-js/sonner.js
-
-function getAsset(type) {
+const getAsset = (type) => {
   const ICONS = {
     success: `
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" height="20" width="20">
@@ -55,67 +54,56 @@ function getAsset(type) {
   </svg>`
   };
   return ICONS[type] || null;
-}
-
+};
 const VIEWPORT_OFFSET = "32px";
 const VISIBLE_TOASTS_AMOUNT = 3;
 const GAP = 14;
 const TOAST_LIFETIME = 4000;
 const TIME_BEFORE_UNMOUNT = 200;
 const TOAST_WIDTH = 300;
-const DEFAULT_POSITION = "bottom-right";
-const NAV_NAMESPACE_PREFIX = `nav-${typeof crypto.randomUUID === "function" ? crypto.randomUUID() : genid()}-`;
-const TOASTER_WRAPPER_ID = `${NAV_NAMESPACE_PREFIX}toaster-wrapper`;
-const TOASTER_LIST_ID = `${NAV_NAMESPACE_PREFIX}toaster-list`;
-const TOAST_CLASS = `${NAV_NAMESPACE_PREFIX}toast`;
-const STYLE_ID = `${NAV_NAMESPACE_PREFIX}toaster-style`;
-
+const DEFAULT_POSITION = "top-center";
 const __actionHandlers = new Map();
-
-export const WINDOW_TOAST_KEY = `${NAV_NAMESPACE_PREFIX}toast`;
-
-export function getToastApi() {
-  return window[WINDOW_TOAST_KEY];
-}
-
-function getWrapper() {
-  return document.getElementById(TOASTER_WRAPPER_ID);
-}
-
-function getToasterList() {
-  return document.getElementById(TOASTER_LIST_ID);
-}
-
-function isAllowedType(type) {
+const TOAST_BASE_CLASSES = ["!bg-neutral-900", "!border-2"];
+const isAllowedType = (type) => {
   return type === "success" || type === "info" || type === "warning" || type === "error";
-}
-
-function basicToast(content, { description = "", type, action } = {}) {
-  const wrapper = getWrapper();
-
-  if (!wrapper) throw new Error("No wrapper element found, please follow documentation");
-  if (!getToasterList()) renderToaster();
-
+};
+const typeToBorderClass = (type) => {
+  if (type === "success") return "!border-yellow-500";
+  if (type === "info") return "!border-sky-500";
+  if (type === "warning") return "!border-orange-500";
+  return "!border-rose-600";
+};
+const typeToTextClass = (type) => {
+  if (type === "success") return "!text-yellow-500";
+  if (type === "info") return "!text-sky-500";
+  if (type === "warning") return "!text-orange-500";
+  return "!text-rose-600";
+};
+export const getToastApi = () => {
+  return window.toast;
+};
+const basicToast = (content, { description = "", type, action } = {}) => {
+  const wrapper = document.querySelector("#toaster-wrapper");
+  if (!wrapper) {
+    throw new Error("No wrapper element found, please follow documentation");
+  }
+  if (!document.getElementById("toaster-list")) {
+    renderToaster();
+  }
   updatePosition();
   updateRichColors();
-
   const t = isAllowedType(type) ? type : "info";
   const { toast: toastEl } = createToast(content, { description, type: t, action });
-
   return toastEl;
-}
-
-function renderToaster() {
-  const el = getWrapper();
+};
+const renderToaster = () => {
+  const el = document.querySelector("#toaster-wrapper");
   const ol = document.createElement("ol");
-
   el.append(ol);
-
   const [y, x] = getPositionAttributes(el, DEFAULT_POSITION);
   const richColors = el.getAttribute("data-rich-colors") === "true";
   const expand = el.getAttribute("data-expand") === "true";
   const position = el.getAttribute("data-position") || DEFAULT_POSITION;
-
   ol.outerHTML = `
     <ol
       data-sonner-toaster="true"
@@ -125,59 +113,45 @@ function renderToaster() {
       ${richColors ? 'data-rich-colors="true"' : ""}
       ${expand ? 'data-expand="true"' : ""}
       data-position="${position}"
-      id="${TOASTER_LIST_ID}"
-      style="--front-toast-height: 0px; --offset: ${VIEWPORT_OFFSET}; --width: ${TOAST_WIDTH}px; --gap: ${GAP}px; ${getPositionStyles(
-        y,
-        x
-      )}">
+      id="toaster-list"
+      style="--front-toast-height: 0px; --offset: ${VIEWPORT_OFFSET}; --width: ${TOAST_WIDTH}px; --gap: ${GAP}px; ${getPositionStyles(y, x)}">
     </ol>`;
-
   registerMouseOver();
   registerDelegatedClicks();
-}
-
-function getPositionStyles(y, x) {
+};
+const getPositionStyles = (y, x) => {
   let styles = "";
-
   if (y === "top") styles += `top: ${VIEWPORT_OFFSET};`;
   else if (y === "bottom") styles += `bottom: ${VIEWPORT_OFFSET};`;
-
   if (x === "left") styles += `left: ${VIEWPORT_OFFSET};`;
   else if (x === "center") styles += `left: 50%; transform: translateX(-50%);`;
   else if (x === "right") styles += `right: ${VIEWPORT_OFFSET};`;
-
   return styles;
-}
-
-function updatePosition() {
-  const list = getToasterList();
+};
+const updatePosition = () => {
+  const list = document.getElementById("toaster-list");
   const [y, x] = getPositionAttributes(list.parentElement, DEFAULT_POSITION);
-
   if (x !== list.getAttribute("data-x-position") || y !== list.getAttribute("data-y-position")) {
     updateElementAttributes(list, { "data-x-position": x, "data-y-position": y });
     Array.from(list.children).forEach((el) =>
       updateElementAttributes(el, { "data-x-position": x, "data-y-position": y })
     );
   }
-}
-
-function updateRichColors() {
-  const list = getToasterList();
+};
+const updateRichColors = () => {
+  const list = document.getElementById("toaster-list");
   const richColors = list.parentElement.getAttribute("data-rich-colors") || "";
-
-  if (list.getAttribute("data-rich-colors") !== richColors)
+  if (list.getAttribute("data-rich-colors") !== richColors) {
     list.setAttribute("data-rich-colors", richColors);
-}
-
-function registerMouseOver() {
-  const ol = getToasterList();
+  }
+};
+const registerMouseOver = () => {
+  const ol = document.getElementById("toaster-list");
   const expandAlways = ol.parentElement.getAttribute("data-expand") === "true";
-
   if (expandAlways) {
     Array.from(ol.children).forEach((el) => el.setAttribute("data-expanded", "true"));
     return;
   }
-
   ol.addEventListener("mouseenter", () => {
     Array.from(ol.children).forEach((el) => {
       if (el.getAttribute("data-expanded") === "true") return;
@@ -185,7 +159,6 @@ function registerMouseOver() {
       clearRemoveTimeout(el);
     });
   });
-
   ol.addEventListener("mouseleave", () => {
     Array.from(ol.children).forEach((el) => {
       if (el.getAttribute("data-expanded") === "false") return;
@@ -193,132 +166,85 @@ function registerMouseOver() {
       registerRemoveTimeout(el);
     });
   });
-}
-
-function registerDelegatedClicks() {
-  const ol = getToasterList();
-
+};
+const registerDelegatedClicks = () => {
+  const ol = document.getElementById("toaster-list");
   if (!ol) return;
   if (ol.getAttribute("data-delegated-clicks") === "true") return;
-
   ol.setAttribute("data-delegated-clicks", "true");
-
   ol.addEventListener("click", (e) => {
     const actionBtn =
       e.target && e.target.closest && e.target.closest('button[data-toast-action="true"]');
-
     if (actionBtn) {
       const actionId = actionBtn.getAttribute("data-action-id");
       const fn = actionId ? __actionHandlers.get(actionId) : null;
-
       if (typeof fn === "function") fn();
-
-      const toastEl = actionBtn.closest(`.${TOAST_CLASS}`);
+      const toastEl = actionBtn.closest(".toast");
       if (toastEl) removeElement(toastEl);
       return;
     }
-
-    const toastEl = e.target && e.target.closest && e.target.closest(`.${TOAST_CLASS}`);
+    const toastEl = e.target && e.target.closest && e.target.closest(".toast");
     if (toastEl) removeElement(toastEl);
   });
-}
-
-function createToast(message, { description, type, action } = {}) {
-  const list = getToasterList();
+};
+const createToast = (message, { description, type, action } = {}) => {
+  const list = document.getElementById("toaster-list");
   const expandAlways = list.parentElement.getAttribute("data-expand") === "true";
   const toastPosition = list.parentElement.getAttribute("data-position") || DEFAULT_POSITION;
-
   const { toast: toastEl, id } = renderToast(list, message, {
     description,
     type,
     action,
     position: toastPosition
   });
-
   setTimeout(() => {
     if (list.children.length > 0) {
       const el = list.children[0];
       const height = el.getBoundingClientRect().height;
-
       el.setAttribute("data-mounted", "true");
       el.setAttribute("data-initial-height", `${height}`);
       el.style.setProperty("--initial-height", `${height}px`);
       list.style.setProperty("--front-toast-height", `${height}px`);
-
       if (expandAlways) el.setAttribute("data-expanded", "true");
-
       refreshProperties();
       registerRemoveTimeout(el);
     }
   }, 16);
-
   return { toast: toastEl, id };
-}
-
-function resetUtilityClasses(toastEl) {
-  const iconContainer = toastEl.querySelector("[data-icon]");
-  const titleEl = toastEl.querySelector("[data-title]");
-  const descEl = toastEl.querySelector("[data-description]");
-  const actionBtn = toastEl.querySelector('button[data-toast-action="true"]');
-
+};
+const resetUtilityClasses = (toastEl) => {
+  toastEl.classList.remove(
+    "!border-yellow-500",
+    "!border-sky-500",
+    "!border-orange-500",
+    "!border-rose-600",
+    "!text-yellow-500",
+    "!text-sky-500",
+    "!text-orange-500",
+    "!text-rose-600"
+  );
+};
+const applyToastClasses = (toastEl, type) => {
   toastEl.style.background = "";
-  toastEl.style.color = "";
+  toastEl.style.backgroundColor = "";
   toastEl.style.border = "";
-  toastEl.style.boxShadow = "";
-
-  if (iconContainer) iconContainer.style.color = "";
-  if (titleEl) titleEl.style.color = "";
-  if (descEl) descEl.style.color = "";
-
-  if (actionBtn) {
-    actionBtn.style.color = "";
-    actionBtn.style.borderColor = "";
-    actionBtn.style.background = "";
-  }
-}
-
-function applyToastClasses(toastEl) {
+  toastEl.style.borderColor = "";
+  toastEl.style.boxShadow = "none";
+  TOAST_BASE_CLASSES.forEach((c) => toastEl.classList.add(c));
   resetUtilityClasses(toastEl);
-
-  const accent = "#eab308";
-
-  toastEl.style.background =
-    "linear-gradient(135deg, rgba(10, 10, 10, 0.96), rgba(28, 28, 28, 0.94))";
-  toastEl.style.color = "#f5f5f5";
-  toastEl.style.border = `2px solid ${accent}`;
-  toastEl.style.boxShadow = `0 18px 45px rgba(0, 0, 0, 0.38), 0 0 0 1px ${accent}22 inset`;
-  toastEl.style.fontSize = "16px";
-  toastEl.style.lineHeight = "24px";
-
+  const borderClass = typeToBorderClass(type);
+  const textClass = typeToTextClass(type);
+  toastEl.classList.add(borderClass);
   const iconContainer = toastEl.querySelector("[data-icon]");
-  if (iconContainer) iconContainer.style.color = accent;
-
+  if (iconContainer) iconContainer.classList.add(textClass);
   const titleEl = toastEl.querySelector("[data-title]");
-  if (titleEl) {
-    titleEl.style.color = "#ffffff";
-    titleEl.style.fontWeight = "700";
-    titleEl.style.letterSpacing = "0.01em";
-    titleEl.style.fontSize = "16px";
-    titleEl.style.lineHeight = "24px";
-  }
-
+  if (titleEl) titleEl.classList.add(textClass);
   const descEl = toastEl.querySelector("[data-description]");
-  if (descEl) {
-    descEl.style.color = "#737373";
-    descEl.style.fontSize = "16px";
-    descEl.style.lineHeight = "24px";
-    descEl.style.wordBreak = "break-word";
-  }
-
+  if (descEl) descEl.classList.add(textClass);
   const actionBtn = toastEl.querySelector('button[data-toast-action="true"]');
-  if (actionBtn) {
-    actionBtn.style.color = accent;
-    actionBtn.style.borderColor = `${accent}55`;
-    actionBtn.style.background = `${accent}12`;
-  }
-}
-
-function renderToast(list, content, { description, type, action, position } = {}) {
+  if (actionBtn) actionBtn.classList.add(textClass);
+};
+const renderToast = (list, content, { description, type, action, position } = {}) => {
   const toastEl = document.createElement("li");
   const id = genid();
   const count = list.children.length;
@@ -326,7 +252,6 @@ function renderToast(list, content, { description, type, action, position } = {}
   const asset = getAsset(t) || "";
   const actionData = action ? registerAction(action, id) : null;
   const actionHtml = actionData ? createActionButton(actionData) : "";
-
   toastEl.innerHTML = `
     ${asset ? `<div data-icon="">${asset}</div>` : ""}
     <div data-content="">
@@ -334,210 +259,30 @@ function renderToast(list, content, { description, type, action, position } = {}
       ${description ? `<div data-description="">${description}</div>` : ""}
     </div>
     ${actionHtml}`;
-
-  toastEl.classList.add(TOAST_CLASS);
-
+  toastEl.classList.add("toast", "text-base");
   updateElementAttributes(toastEl, {
     "data-id": id,
     "data-type": t,
-    "data-position": position || "bottom-right",
+    "data-position": position || DEFAULT_POSITION,
     "data-removed": "false",
     "data-mounted": "false",
     "data-front": "true",
     "data-expanded": "false",
     "data-index": "0",
     "data-y-position":
-      list.getAttribute("data-y-position") || (position || "bottom-right").split("-")[0],
+      list.getAttribute("data-y-position") || (position || DEFAULT_POSITION).split("-")[0],
     "data-x-position":
-      list.getAttribute("data-x-position") || (position || "bottom-right").split("-")[1],
+      list.getAttribute("data-x-position") || (position || DEFAULT_POSITION).split("-")[1],
     style: `--index: 0; --toasts-before: 0; --z-index: ${count}; --offset: 0px; --initial-height: 0px; cursor: pointer;`
   });
-
   list.prepend(toastEl);
   applyToastClasses(toastEl, t);
-
   return { toast: toastEl, id };
-}
-
-const style = document.createElement("style");
-
-style.innerHTML = `
-/* credit to https://github.com/JeanxPereira/sonner-js/blob/main/sonner-js/sonner.css */
-
-#${TOASTER_WRAPPER_ID} {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 999999999;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] {
-  width: var(--width);
-  position: fixed;
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  outline: none;
-  z-index: 999999999;
-  --border-radius: 8px;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster][data-x-position="right"] {
-  right: max(var(--offset), env(safe-area-inset-right));
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster][data-x-position="left"] {
-  left: max(var(--offset), env(safe-area-inset-left));
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster][data-x-position="center"] {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster][data-y-position="top"] {
-  top: max(var(--offset), env(safe-area-inset-top));
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster][data-y-position="bottom"] {
-  bottom: max(var(--offset), env(safe-area-inset-bottom));
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} {
-  --lift: -1;
-  --y: translateY(100%);
-  --lift-amount: calc(var(--lift) * var(--gap));
-  box-sizing: border-box;
-  opacity: 0;
-  transform: var(--y);
-  z-index: var(--z-index);
-  position: absolute;
-  width: 100%;
-  padding: 16px;
-  border-radius: var(--border-radius);
-  transition:
-    transform 400ms,
-    opacity 400ms,
-    height 400ms;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-family: "JetBrains Mono", monospace;
-  pointer-events: auto;
-  backdrop-filter: blur(18px);
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS}[data-y-position="top"] {
-  top: 0;
-  --y: translateY(-100%);
-  --lift: 1;
-  --lift-amount: calc(1 * var(--gap));
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS}[data-y-position="bottom"] {
-  bottom: 0;
-  --y: translateY(100%);
-  --lift: -1;
-  --lift-amount: calc(var(--lift) * var(--gap));
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS}[data-mounted="true"] {
-  --y: translateY(0);
-  opacity: 1;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS}[data-mounted="true"][data-expanded="true"] {
-  --y: translateY(calc(var(--lift) * var(--offset)));
-  height: var(--initial-height);
-}
-
-#${TOASTER_WRAPPER_ID}
-  [data-sonner-toaster]
-  .${TOAST_CLASS}[data-mounted="true"][data-expanded="false"][data-front="false"] {
-  --scale: var(--toasts-before) * 0.05 + 1;
-  --y: translateY(calc(var(--lift-amount) * var(--toasts-before))) scale(calc(-1 * var(--scale)));
-  height: var(--front-toast-height);
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS}[data-visible="false"] {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS}[data-removed="true"][data-front="true"] {
-  --y: translateY(calc(var(--lift) * -100%));
-  opacity: 0;
-}
-
-#${TOASTER_WRAPPER_ID}
-  [data-sonner-toaster]
-  .${TOAST_CLASS}[data-removed="true"][data-front="false"][data-expanded="true"] {
-  --y: translateY(calc(var(--lift) * var(--offset) + var(--lift) * -100%));
-  opacity: 0;
-}
-
-#${TOASTER_WRAPPER_ID}
-  [data-sonner-toaster]
-  .${TOAST_CLASS}[data-removed="true"][data-front="false"][data-expanded="false"] {
-  --y: translateY(40%);
-  opacity: 0;
-  transition:
-    transform 500ms,
-    opacity 200ms;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} [data-icon] {
-  display: flex;
-  height: 16px;
-  width: 16px;
-  flex-shrink: 0;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} [data-content] {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} [data-title] {
-  font-size: 16px;
-  line-height: 24px;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} [data-description] {
-  opacity: 0.9;
-}
-
-#${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} button[data-toast-action="true"] {
-  appearance: none;
-  border: 1px solid;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font: inherit;
-  cursor: pointer;
-}
-
-@media (min-width: 640px) {
-  #${TOASTER_LIST_ID} {
-    --width: 350px !important;
-  }
-}
-
-@media (min-width: 768px) {
-  #${TOASTER_LIST_ID} {
-    --width: 500px !important;
-  }
-}
-`;
-
-function refreshProperties() {
-  const list = getToasterList();
+};
+const refreshProperties = () => {
+  const list = document.getElementById("toaster-list");
   let heightsBefore = 0;
   let removed = 0;
-
   Array.from(list.children).forEach((el, i) => {
     if (el.getAttribute("data-removed") === "true") {
       removed++;
@@ -555,63 +300,60 @@ function refreshProperties() {
     el.style.setProperty("--z-index", `${list.children.length - i}`);
     heightsBefore += Number(el.getAttribute("data-initial-height"));
   });
-}
-
-function registerRemoveTimeout(el) {
+};
+const registerRemoveTimeout = (el) => {
   const tid = setTimeout(() => removeElement(el), TOAST_LIFETIME);
   el.setAttribute("data-remove-tid", `${tid}`);
-}
-
-function clearRemoveTimeout(el) {
+};
+const clearRemoveTimeout = (el) => {
   const tid = el.getAttribute("data-remove-tid");
   if (tid != null) clearTimeout(+tid);
-}
-
-function removeElement(el) {
+};
+const removeElement = (el) => {
   el.setAttribute("data-removed", "true");
-
   const actionBtn = el.querySelector && el.querySelector('button[data-toast-action="true"]');
   const actionId = actionBtn ? actionBtn.getAttribute("data-action-id") : null;
-
   if (actionId) __actionHandlers.delete(actionId);
-
   refreshProperties();
-
   const tid = setTimeout(() => {
     if (el.parentElement) el.parentElement.removeChild(el);
   }, TIME_BEFORE_UNMOUNT);
-
   el.setAttribute("data-unmount-tid", `${tid}`);
-}
-
-function getPositionAttributes(element, defaultPosition) {
+};
+const getPositionAttributes = (element, defaultPosition) => {
   return (element.getAttribute("data-position") || defaultPosition).split("-");
-}
-
-function updateElementAttributes(element, attributes) {
+};
+const updateElementAttributes = (element, attributes) => {
   Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
-}
-
-function genid() {
+};
+const genid = () => {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
     (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
   );
-}
-
+};
+const registerAction = (action, toastId) => {
+  const actionId = genid();
+  __actionHandlers.set(actionId, action.onClick);
+  return { ...action, id: actionId, toastId };
+};
+const createActionButton = (actionData) => {
+  const label = actionData.label || "action";
+  return `
+    <button data-toast-action="true" data-action-id="${actionData.id}" type="button">
+      ${label}
+    </button>`;
+};
 const toast = {
   success: (message, options = {}) => basicToast(message, { ...options, type: "success" }),
   info: (message, options = {}) => basicToast(message, { ...options, type: "info" }),
   warning: (message, options = {}) => basicToast(message, { ...options, type: "warning" }),
   error: (message, options = {}) => basicToast(message, { ...options, type: "error" })
 };
-window[WINDOW_TOAST_KEY] = toast;
-if (document && document.head && !document.getElementById(STYLE_ID)) {
-  style.id = STYLE_ID;
+const style = document.createElement("style");
+style.innerHTML =
+  "@media(min-width:640px){#toaster-list{--width:350px!important}}@media(min-width:768px){#toaster-list{--width:500px!important}}";
+window.toast = toast;
+if (document && document.head && !document.getElementById("__toaster_action_style__")) {
+  style.id = "__toaster_action_style__";
   document.head.appendChild(style);
-}
-if (document && !getWrapper()) {
-  const wrapper = document.createElement("div");
-  wrapper.id = TOASTER_WRAPPER_ID;
-  wrapper.setAttribute("data-position", DEFAULT_POSITION);
-  document.documentElement.appendChild(wrapper);
 }

@@ -12,37 +12,53 @@ import {
 } from "~/src/core/actions/scroll";
 import { isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { getToastApi } from "~/src/core/utils/sonner";
-
-type ActionName =
-  | "show-hints-current-tab"
-  | "show-hints-new-tab"
-  | "yank-current-tab-url"
-  | "scroll-down"
-  | "scroll-half-page-down"
-  | "scroll-half-page-up"
-  | "scroll-left"
-  | "scroll-right"
-  | "scroll-up"
-  | "scroll-to-bottom"
-  | "scroll-to-top";
-
+import { type ActionName, DEFAULT_HOTKEY_MAPPINGS, getConfig } from "~/src/utils/config";
 type ActionHandler = (count?: number) => boolean;
 
-const KEY_ACTIONS: Partial<Record<string, ActionName>> = {
-  d: "scroll-half-page-down",
-  f: "show-hints-current-tab",
-  h: "scroll-left",
-  j: "scroll-down",
-  k: "scroll-up",
-  l: "scroll-right",
-  u: "scroll-half-page-up",
-  F: "show-hints-new-tab",
-  yy: "yank-current-tab-url",
-  gg: "scroll-to-top",
-  G: "scroll-to-bottom"
+const decodeSequenceToken = (value: string): string => {
+  if (value === "<space>") {
+    return " ";
+  }
+  return value;
+};
+const parseMappings = (value: string): Partial<Record<string, ActionName>> => {
+  const parsedMappings: Partial<Record<string, ActionName>> = {};
+  for (const line of value.split("\n")) {
+    const trimmedLine = line.trim();
+    if (!trimmedLine || trimmedLine.startsWith("#")) {
+      continue;
+    }
+    const separatorIndex = trimmedLine.search(/\s/);
+    if (separatorIndex === -1) {
+      continue;
+    }
+    const sequence = decodeSequenceToken(trimmedLine.slice(0, separatorIndex));
+    const actionName = trimmedLine.slice(separatorIndex).trim();
+    if (!sequence || !VALID_ACTION_NAMES.has(actionName as ActionName)) {
+      continue;
+    }
+    parsedMappings[sequence] = actionName as ActionName;
+  }
+  return Object.keys(parsedMappings).length > 0
+    ? parsedMappings
+    : parseMappings(DEFAULT_HOTKEY_MAPPINGS);
 };
 
-async function writeClipboard(text: string): Promise<boolean> {
+const VALID_ACTION_NAMES = new Set<ActionName>([
+  "show-hints-current-tab",
+  "show-hints-new-tab",
+  "yank-current-tab-url",
+  "scroll-down",
+  "scroll-half-page-down",
+  "scroll-half-page-up",
+  "scroll-left",
+  "scroll-right",
+  "scroll-up",
+  "scroll-to-bottom",
+  "scroll-to-top"
+]);
+let keyActions = parseMappings(DEFAULT_HOTKEY_MAPPINGS);
+const writeClipboard = async (text: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(text);
     return true;
@@ -56,52 +72,41 @@ async function writeClipboard(text: string): Promise<boolean> {
     document.body.appendChild(textarea);
     textarea.focus();
     textarea.select();
-
     try {
       return document.execCommand("copy");
     } finally {
       textarea.remove();
     }
   }
-}
-
-function getNormalizedCurrentUrl(): string {
+};
+const getNormalizedCurrentUrl = (): string => {
   const url = new URL(window.location.href);
   const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
-
   return `${url.origin}${pathname}${url.search}${url.hash}`;
-}
-
-function truncateMiddle(value: string, maxLength: number): string {
+};
+const truncateMiddle = (value: string, maxLength: number): string => {
   if (value.length <= maxLength) {
     return value;
   }
-
   const sideLength = Math.max(1, Math.floor((maxLength - 1) / 2));
   return `${value.slice(0, sideLength)}…${value.slice(-sideLength)}`;
-}
-
-function yankCurrentTabUrl(): boolean {
+};
+const yankCurrentTabUrl = (): boolean => {
   const currentUrl = getNormalizedCurrentUrl();
-
   void writeClipboard(currentUrl).then((didCopy) => {
     const toast = getToastApi();
-
     if (didCopy) {
       toast?.success("Current tab URL yanked", {
         description: truncateMiddle(currentUrl, 72)
       });
       return;
     }
-
     toast?.error("Could not yank current tab URL", {
       description: "Clipboard access was denied."
     });
   });
-
   return true;
-}
-
+};
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "show-hints-current-tab": () => activateHints("current-tab"),
   "show-hints-new-tab": () => activateHints("new-tab"),
@@ -115,110 +120,107 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "scroll-to-bottom": scrollToBottom,
   "scroll-to-top": scrollToTop
 };
-
 const KEY_SEQUENCE_TIMEOUT_MS = 1000;
-
 let pendingSequence = "";
 let pendingSequenceTimer: number | null = null;
 let pendingCount = "";
-
 type KeyParseResult = {
   actionName: ActionName | null;
   consumed: boolean;
 };
-
-function blurActiveEditableTarget(): boolean {
+const applyHotkeyMappings = (mappings: string): void => {
+  keyActions = parseMappings(mappings);
+  clearPendingState();
+};
+const blurActiveEditableTarget = (): boolean => {
   const activeElement = document.activeElement;
-
   if (!(activeElement instanceof HTMLElement) || !isEditableTarget(activeElement)) {
     return false;
   }
-
   activeElement.blur();
   return true;
-}
-
-function clearPendingSequence(): void {
+};
+const clearPendingSequence = (): void => {
   pendingSequence = "";
-
   if (pendingSequenceTimer !== null) {
     window.clearTimeout(pendingSequenceTimer);
     pendingSequenceTimer = null;
   }
-}
-
-function clearPendingCount(): void {
+};
+const clearPendingCount = (): void => {
   pendingCount = "";
-}
-
-function clearPendingState(): void {
+};
+const clearPendingState = (): void => {
   clearPendingSequence();
   clearPendingCount();
-}
-
-function startPendingSequence(sequence: string): void {
+};
+const startPendingSequence = (sequence: string): void => {
   clearPendingSequence();
   pendingSequence = sequence;
   pendingSequenceTimer = window.setTimeout(() => {
     clearPendingSequence();
   }, KEY_SEQUENCE_TIMEOUT_MS);
-}
-
-function isCountKey(key: string): boolean {
+};
+const isCountKey = (key: string): boolean => {
   if (pendingCount) {
     return key >= "0" && key <= "9";
   }
-
   return key >= "1" && key <= "9";
-}
-
-function consumeCountKey(key: string): void {
+};
+const consumeCountKey = (key: string): void => {
   pendingCount = pendingSequence ? key : `${pendingCount}${key}`;
   clearPendingSequence();
-}
-
-function resolveCount(): number {
+};
+const resolveCount = (): number => {
   const count = pendingCount ? Number.parseInt(pendingCount, 10) : 1;
   clearPendingCount();
   return count;
-}
-
-function getActionName(key: string): KeyParseResult {
+};
+const getActionName = (key: string): KeyParseResult => {
   if (isCountKey(key)) {
     consumeCountKey(key);
     return { actionName: null, consumed: true };
   }
-
   const nextSequence = `${pendingSequence}${key}`;
-  const directMatch = KEY_ACTIONS[nextSequence];
-
+  const directMatch = keyActions[nextSequence];
   if (directMatch) {
     clearPendingSequence();
     return { actionName: directMatch, consumed: true };
   }
-
-  const hasLongerMatch = Object.keys(KEY_ACTIONS).some((sequence) =>
+  const hasLongerMatch = Object.keys(keyActions).some((sequence) =>
     sequence.startsWith(nextSequence)
   );
-
   if (hasLongerMatch) {
     startPendingSequence(nextSequence);
     return { actionName: null, consumed: true };
   }
-
   clearPendingSequence();
-  const actionName = KEY_ACTIONS[key] ?? null;
-
+  const actionName = keyActions[key] ?? null;
   if (!actionName) {
     clearPendingCount();
     return { actionName: null, consumed: false };
   }
-
   return { actionName, consumed: true };
-}
-
+};
 installScrollTracking();
-
+void getConfig().then((config) => {
+  applyHotkeyMappings(config.hotkeys.mappings);
+});
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "local" || !changes.config?.newValue) {
+    return;
+  }
+  const nextMappings = (
+    changes.config.newValue as {
+      hotkeys?: {
+        mappings?: unknown;
+      };
+    }
+  ).hotkeys?.mappings;
+  if (typeof nextMappings === "string") {
+    applyHotkeyMappings(nextMappings);
+  }
+});
 document.addEventListener(
   "keydown",
   (event) => {
@@ -229,14 +231,12 @@ document.addEventListener(
       }
       return;
     }
-
     if (event.key === "Escape" && blurActiveEditableTarget()) {
       clearPendingState();
       event.preventDefault();
       event.stopPropagation();
       return;
     }
-
     if (
       event.defaultPrevented ||
       event.ctrlKey ||
@@ -247,9 +247,7 @@ document.addEventListener(
       clearPendingState();
       return;
     }
-
     const { actionName, consumed } = getActionName(event.key);
-
     if (!actionName) {
       if (consumed) {
         event.preventDefault();
@@ -257,13 +255,10 @@ document.addEventListener(
       }
       return;
     }
-
     const didHandle = ACTIONS[actionName](resolveCount());
-
     if (!didHandle) {
       return;
     }
-
     event.preventDefault();
     event.stopPropagation();
   },
