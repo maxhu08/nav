@@ -14,6 +14,10 @@ import {
   syncHotkeysMappingsHighlight,
   syncHotkeysMappingsHighlightScroll
 } from "~/src/options/scripts/utils/hotkeys-highlight";
+import {
+  syncRulesUrlsHighlight,
+  syncRulesUrlsHighlightScroll
+} from "~/src/options/scripts/utils/rules-highlight";
 import { saveConfig } from "~/src/options/scripts/utils/save-config";
 import { setDefaultConfig } from "~/src/options/scripts/utils/set-default-config";
 import { tippy } from "~/src/options/scripts/utils/tooltip";
@@ -37,6 +41,15 @@ export const listenToInputs = (): void => {
 
   rulesUrlsTextareaEl.addEventListener("focus", () => {
     rulesUrlsContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  rulesUrlsTextareaEl.addEventListener("input", () => {
+    syncRulesUrlsHighlight();
+    syncRulesUrlsHighlightScroll();
+  });
+
+  rulesUrlsTextareaEl.addEventListener("scroll", () => {
+    syncRulesUrlsHighlightScroll();
   });
 
   rulesUrlsTextareaEl.addEventListener("blur", () => {

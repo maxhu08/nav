@@ -6,6 +6,7 @@ import {
 
 export const [rulesUrlsContainerEl, rulesUrlsTextareaEl] =
   getContainerAndTextarea("rules-urls");
+export const rulesUrlsHighlightEl = getElement<HTMLPreElement>("rules-urls-highlight");
 export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] =
   getContainerAndTextarea("hotkeys-mappings");
 export const hotkeysMappingsHighlightEl =

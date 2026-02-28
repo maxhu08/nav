@@ -45,29 +45,30 @@
         <section id="rules-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
             <p class="text-base text-white">rules.urls</p>
-            <p class="text-base text-neutral-500">* &lt;pattern&gt;</p>
-            <p class="text-base text-neutral-500">Starts a new rule block. The `* ` prefix is required before every pattern.</p>
+            <p class="text-base text-neutral-500">* &lt;regex-pattern&gt;</p>
+            <p class="text-base text-neutral-500">Starts a new rule block. The `* ` prefix is required before every website regex pattern.</p>
             <br />
             <p class="text-base text-neutral-500">+ &lt;action1&gt; &lt;action2&gt;</p>
             <p class="text-base text-neutral-500">Blocks all actions except the listed actions for URLs that match the pattern above.</p>
             <p class="text-base text-neutral-500">- &lt;action1&gt; &lt;action2&gt;</p>
             <p class="text-base text-neutral-500">Allows all actions except the listed actions for URLs that match the pattern above.</p>
-            <p class="text-base text-neutral-500">* &lt;pattern&gt;</p>
-            <p class="text-base text-neutral-500">If nothing comes after the pattern, all actions are blocked for matching URLs.</p>
+            <p class="text-base text-neutral-500">* &lt;regex-pattern&gt;</p>
+            <p class="text-base text-neutral-500">If nothing comes after the regex pattern, all actions are blocked for matching URLs.</p>
             <p class="text-base text-neutral-500">Separate actions with spaces.</p>
             <p class="text-base text-neutral-500">Lines starting with # are ignored.</p>
             <br />
             <p class="text-base text-neutral-500">Example:</p>
-            <p class="text-base text-neutral-500">* https://github.com/*</p>
+            <p class="text-base text-neutral-500">* ^https?:\/\/(www\.)?github\.com\/.*$</p>
             <p class="text-base text-neutral-500">+ show-hints-current-tab yank-current-tab-url</p>
             <p class="text-base text-neutral-500">Blocks every action on GitHub pages except show-hints-current-tab and yank-current-tab-url.</p>
             <div id="rules-urls-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <pre id="rules-urls-highlight" aria-hidden="true" class="rules-urls-editor-layer"></pre>
               <textarea
                 id="rules-urls-textarea"
                 autocomplete="off"
                 spellcheck="false"
                 rows="12"
-                class="w-full resize-none bg-transparent text-base text-white placeholder-neutral-500 outline-none"
+                class="rules-urls-editor-layer rules-urls-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
               ></textarea>
             </div>
           </div>
