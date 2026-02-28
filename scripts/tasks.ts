@@ -341,7 +341,7 @@ async function promptForRcVersion() {
   const rl = createInterface({ input, output });
 
   try {
-    return await rl.question("Enter release candidate version (example: 0.1.0-rc1): ");
+    return await rl.question("Enter release candidate version (example: 0.0.1-rc1): ");
   } finally {
     rl.close();
   }
