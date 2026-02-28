@@ -3,52 +3,66 @@ const HALF_PAGE_RATIO = 0.5;
 const MIN_CALIBRATION = 0.5;
 const MAX_CALIBRATION = 1.6;
 const CALIBRATION_BOUNDARY = 150;
+
 let activatedElement: Element | null = null;
+
 type ScrollDirection = "up" | "down";
 type ScrollAxis = "x" | "y";
 type ScrollMovementDirection = "up" | "down" | "left" | "right";
+
 const scrollState = {
   time: 0,
   keyDownCode: null as string | null,
   lastKeydownWasRepeat: false
 };
+
 const getScrollingElement = (): HTMLElement | null => {
   const element = document.scrollingElement ?? document.documentElement ?? document.body;
   return element instanceof HTMLElement ? element : null;
 };
+
 const getEventTarget = (event: Event): Element | null => {
   const [target] = event.composedPath();
   return target instanceof Element ? target : null;
 };
+
 const getParentElement = (element: Element): Element | null => {
   if (element.parentElement) {
     return element.parentElement;
   }
+
   const root = element.getRootNode();
   return root instanceof ShadowRoot ? root.host : null;
 };
+
 const getScrollAxis = (direction: ScrollMovementDirection): ScrollAxis => {
   return direction === "left" || direction === "right" ? "x" : "y";
 };
+
 const performScroll = (element: Element, amount: number, axis: ScrollAxis = "y"): boolean => {
   if (!(element instanceof HTMLElement)) {
     return false;
   }
+
   if (axis === "x") {
     const before = element.scrollLeft;
     element.scrollLeft += amount;
     return element.scrollLeft !== before;
   }
+
   const before = element.scrollTop;
   element.scrollTop += amount;
   return element.scrollTop !== before;
 };
+
 const canScroll = (element: Element, direction: ScrollMovementDirection): boolean => {
   if (!(element instanceof HTMLElement)) {
     return false;
   }
+
   const style = window.getComputedStyle(element);
   const axis = getScrollAxis(direction);
+
   if (
     style.display === "none" ||
     style.visibility === "hidden" ||
@@ -57,43 +71,56 @@ const canScroll = (element: Element, direction: ScrollMovementDirection): boolea
   ) {
     return false;
   }
+
   if (axis === "x") {
     if (element.scrollWidth <= element.clientWidth) {
       return false;
     }
+
     if (direction === "right") {
       return element.scrollLeft + element.clientWidth < element.scrollWidth;
     }
+
     return element.scrollLeft > 0;
   }
+
   if (element.scrollHeight <= element.clientHeight) {
     return false;
   }
+
   if (direction === "down") {
     return element.scrollTop + element.clientHeight < element.scrollHeight;
   }
+
   return element.scrollTop > 0;
 };
+
 const findScrollableElement = (
   start: Element | null,
   direction: ScrollMovementDirection
 ): HTMLElement | null => {
   let current = start;
   const scrollingElement = getScrollingElement();
+
   while (current) {
     if (canScroll(current, direction) && current instanceof HTMLElement) {
       return current;
     }
+
     if (current === scrollingElement) {
       break;
     }
+
     current = getParentElement(current);
   }
+
   if (scrollingElement && canScroll(scrollingElement, direction)) {
     return scrollingElement;
   }
+
   return null;
 };
+
 const smoothScroll = (
   element: HTMLElement,
   amount: number,
@@ -104,30 +131,38 @@ const smoothScroll = (
   if (amount === 0) {
     return;
   }
+
   if (scrollState.lastKeydownWasRepeat) {
     return;
   }
+
   const activationTime = ++scrollState.time;
   const sign = Math.sign(amount);
   const absoluteAmount = Math.abs(amount);
   const duration = Math.max(100, 20 * Math.log(absoluteAmount));
+
   let totalDelta = 0;
   let totalElapsed = 0;
   let calibration = 1;
   let previousTimestamp: number | null = null;
+
   const keyIsStillDown = () =>
     continuous && scrollState.time === activationTime && scrollState.keyDownCode === keyCode;
+
   const animate = (timestamp: number) => {
     if (previousTimestamp == null) {
       previousTimestamp = timestamp;
     }
+
     if (timestamp === previousTimestamp) {
       requestAnimationFrame(animate);
       return;
     }
+
     const elapsed = timestamp - previousTimestamp;
     totalElapsed += elapsed;
     previousTimestamp = timestamp;
+
     if (
       keyIsStillDown() &&
       totalElapsed >= 75 &&
@@ -137,71 +172,98 @@ const smoothScroll = (
       if (1.05 * calibration * absoluteAmount < CALIBRATION_BOUNDARY) {
         calibration *= 1.05;
       }
+
       if (CALIBRATION_BOUNDARY < 0.95 * calibration * absoluteAmount) {
         calibration *= 0.95;
       }
     }
+
     let delta = Math.ceil(absoluteAmount * (elapsed / duration) * calibration);
+
     if (!keyIsStillDown()) {
       delta = Math.max(0, Math.min(delta, absoluteAmount - totalDelta));
     }
+
     if (delta > 0 && performScroll(element, sign * delta, axis)) {
       totalDelta += delta;
       requestAnimationFrame(animate);
     }
   };
+
   requestAnimationFrame(animate);
 };
+
 const scrollToPosition = (position: "top" | "bottom", count = 1): boolean => {
   const start = activatedElement ?? document.activeElement ?? getScrollingElement();
   const direction = position === "top" ? "up" : "down";
   const scrollableElement = findScrollableElement(start, direction);
+
   if (!scrollableElement || !scrollState.keyDownCode) {
     return false;
   }
+
   activatedElement = scrollableElement;
+
   const targetTop =
     position === "top"
       ? Math.max(0, (count - 1) * SCROLL_STEP_SIZE)
       : scrollableElement.scrollHeight;
+
   const amount = targetTop - scrollableElement.scrollTop;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode, false);
+
   return true;
 };
+
 const scroll = (direction: ScrollDirection, count = 1): boolean => {
   const start = activatedElement ?? document.activeElement ?? getScrollingElement();
   const scrollableElement = findScrollableElement(start, direction);
+
   if (!scrollableElement || !scrollState.keyDownCode) {
     return false;
   }
+
   const amount = (direction === "down" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE) * count;
+
   activatedElement = scrollableElement;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode);
+
   return true;
 };
+
 const scrollHalfPage = (direction: ScrollDirection, count = 1): boolean => {
   const start = activatedElement ?? document.activeElement ?? getScrollingElement();
   const scrollableElement = findScrollableElement(start, direction);
+
   if (!scrollableElement || !scrollState.keyDownCode) {
     return false;
   }
+
   const halfPageSize = Math.max(1, Math.round(scrollableElement.clientHeight * HALF_PAGE_RATIO));
   const amount = (direction === "down" ? halfPageSize : -halfPageSize) * count;
+
   activatedElement = scrollableElement;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode);
+
   return true;
 };
+
 const scrollHorizontal = (direction: "left" | "right", count = 1): boolean => {
   const start = activatedElement ?? document.activeElement ?? getScrollingElement();
   const scrollableElement = findScrollableElement(start, direction);
+
   if (!scrollableElement || !scrollState.keyDownCode) {
     return false;
   }
+
   const amount = (direction === "right" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE) * count;
+
   activatedElement = scrollableElement;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode, true, "x");
+
   return true;
 };
+
 export const installScrollTracking = (): void => {
   document.addEventListener(
     "click",
@@ -210,18 +272,21 @@ export const installScrollTracking = (): void => {
     },
     true
   );
-  document.addEventListener(
+
+  window.addEventListener(
     "keydown",
     (event) => {
       scrollState.keyDownCode = event.code;
       scrollState.lastKeydownWasRepeat = event.repeat;
+
       if (!event.repeat) {
         scrollState.time += 1;
       }
     },
     true
   );
-  document.addEventListener(
+
+  window.addEventListener(
     "keyup",
     (event) => {
       if (event.code === scrollState.keyDownCode) {
@@ -232,6 +297,7 @@ export const installScrollTracking = (): void => {
     },
     true
   );
+
   window.addEventListener(
     "blur",
     () => {
@@ -242,27 +308,35 @@ export const installScrollTracking = (): void => {
     true
   );
 };
+
 export const scrollDown = (count = 1): boolean => {
   return scroll("down", count);
 };
+
 export const scrollUp = (count = 1): boolean => {
   return scroll("up", count);
 };
+
 export const scrollHalfPageDown = (count = 1): boolean => {
   return scrollHalfPage("down", count);
 };
+
 export const scrollHalfPageUp = (count = 1): boolean => {
   return scrollHalfPage("up", count);
 };
+
 export const scrollLeft = (count = 1): boolean => {
   return scrollHorizontal("left", count);
 };
+
 export const scrollRight = (count = 1): boolean => {
   return scrollHorizontal("right", count);
 };
+
 export const scrollToTop = (count = 1): boolean => {
   return scrollToPosition("top", count);
 };
+
 export const scrollToBottom = (count = 1): boolean => {
   return scrollToPosition("bottom", count);
 };

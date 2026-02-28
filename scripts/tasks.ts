@@ -49,7 +49,9 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
       {
         matches: ["<all_urls>"],
         js: ["index.js"],
-        run_at: "document_idle"
+        run_at: "document_start",
+        all_frames: true,
+        match_about_blank: true
       }
     ],
     icons: {
@@ -79,7 +81,9 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
       {
         matches: ["<all_urls>"],
         js: ["index.js"],
-        run_at: "document_idle"
+        run_at: "document_start",
+        all_frames: true,
+        match_about_blank: true
       }
     ],
     icons: {

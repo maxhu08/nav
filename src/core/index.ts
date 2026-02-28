@@ -10,36 +10,47 @@ import {
   scrollToTop,
   scrollUp
 } from "~/src/core/actions/scroll";
-import { isEditableTarget } from "~/src/core/utils/isEditableTarget";
+import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { getToastApi } from "~/src/core/utils/sonner";
 import { getConfig } from "~/src/utils/config-storage";
 import { type ActionName, DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
+
 type ActionHandler = (count?: number) => boolean;
 
 const decodeSequenceToken = (value: string): string => {
   if (value === "<space>") {
     return " ";
   }
+
   return value;
 };
+
 const parseMappings = (value: string): Partial<Record<string, ActionName>> => {
   const parsedMappings: Partial<Record<string, ActionName>> = {};
+
   for (const line of value.split("\n")) {
     const trimmedLine = line.trim();
+
     if (!trimmedLine || trimmedLine.startsWith("#")) {
       continue;
     }
+
     const separatorIndex = trimmedLine.search(/\s/);
+
     if (separatorIndex === -1) {
       continue;
     }
+
     const sequence = decodeSequenceToken(trimmedLine.slice(0, separatorIndex));
     const actionName = trimmedLine.slice(separatorIndex).trim();
+
     if (!sequence || !VALID_ACTION_NAMES.has(actionName as ActionName)) {
       continue;
     }
+
     parsedMappings[sequence] = actionName as ActionName;
   }
+
   return Object.keys(parsedMappings).length > 0
     ? parsedMappings
     : parseMappings(DEFAULT_HOTKEY_MAPPINGS);
@@ -58,7 +69,9 @@ const VALID_ACTION_NAMES = new Set<ActionName>([
   "scroll-to-bottom",
   "scroll-to-top"
 ]);
+
 let keyActions = parseMappings(DEFAULT_HOTKEY_MAPPINGS);
+
 const writeClipboard = async (text: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(text);
@@ -71,8 +84,10 @@ const writeClipboard = async (text: string): Promise<boolean> => {
     textarea.style.top = "-9999px";
     textarea.style.left = "-9999px";
     document.body.appendChild(textarea);
+
     textarea.focus();
     textarea.select();
+
     try {
       return document.execCommand("copy");
     } finally {
@@ -80,34 +95,44 @@ const writeClipboard = async (text: string): Promise<boolean> => {
     }
   }
 };
+
 const getNormalizedCurrentUrl = (): string => {
   const url = new URL(window.location.href);
   const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
+
   return `${url.origin}${pathname}${url.search}${url.hash}`;
 };
+
 const truncateMiddle = (value: string, maxLength: number): string => {
   if (value.length <= maxLength) {
     return value;
   }
+
   const sideLength = Math.max(1, Math.floor((maxLength - 1) / 2));
   return `${value.slice(0, sideLength)}…${value.slice(-sideLength)}`;
 };
+
 const yankCurrentTabUrl = (): boolean => {
   const currentUrl = getNormalizedCurrentUrl();
+
   void writeClipboard(currentUrl).then((didCopy) => {
     const toast = getToastApi();
+
     if (didCopy) {
       toast?.success("Current tab URL yanked", {
         description: truncateMiddle(currentUrl, 72)
       });
       return;
     }
+
     toast?.error("Could not yank current tab URL", {
       description: "Clipboard access was denied."
     });
   });
+
   return true;
 };
+
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "show-hints-current-tab": () => activateHints("current-tab"),
   "show-hints-new-tab": () => activateHints("new-tab"),
@@ -121,96 +146,126 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "scroll-to-bottom": scrollToBottom,
   "scroll-to-top": scrollToTop
 };
+
 const KEY_SEQUENCE_TIMEOUT_MS = 1000;
+
 let pendingSequence = "";
 let pendingSequenceTimer: number | null = null;
 let pendingCount = "";
+
 type KeyParseResult = {
   actionName: ActionName | null;
   consumed: boolean;
 };
+
 const applyHotkeyMappings = (mappings: string): void => {
   keyActions = parseMappings(mappings);
   clearPendingState();
 };
+
 const blurActiveEditableTarget = (): boolean => {
-  const activeElement = document.activeElement;
+  const activeElement = getDeepActiveElement();
+
   if (!(activeElement instanceof HTMLElement) || !isEditableTarget(activeElement)) {
     return false;
   }
+
   activeElement.blur();
   return true;
 };
+
 const clearPendingSequence = (): void => {
   pendingSequence = "";
+
   if (pendingSequenceTimer !== null) {
     window.clearTimeout(pendingSequenceTimer);
     pendingSequenceTimer = null;
   }
 };
+
 const clearPendingCount = (): void => {
   pendingCount = "";
 };
+
 const clearPendingState = (): void => {
   clearPendingSequence();
   clearPendingCount();
 };
+
 const startPendingSequence = (sequence: string): void => {
   clearPendingSequence();
   pendingSequence = sequence;
+
   pendingSequenceTimer = window.setTimeout(() => {
     clearPendingSequence();
   }, KEY_SEQUENCE_TIMEOUT_MS);
 };
+
 const isCountKey = (key: string): boolean => {
   if (pendingCount) {
     return key >= "0" && key <= "9";
   }
+
   return key >= "1" && key <= "9";
 };
+
 const consumeCountKey = (key: string): void => {
   pendingCount = pendingSequence ? key : `${pendingCount}${key}`;
   clearPendingSequence();
 };
+
 const resolveCount = (): number => {
   const count = pendingCount ? Number.parseInt(pendingCount, 10) : 1;
   clearPendingCount();
   return count;
 };
+
 const getActionName = (key: string): KeyParseResult => {
   if (isCountKey(key)) {
     consumeCountKey(key);
     return { actionName: null, consumed: true };
   }
+
   const nextSequence = `${pendingSequence}${key}`;
   const directMatch = keyActions[nextSequence];
+
   if (directMatch) {
     clearPendingSequence();
     return { actionName: directMatch, consumed: true };
   }
+
   const hasLongerMatch = Object.keys(keyActions).some((sequence) =>
     sequence.startsWith(nextSequence)
   );
+
   if (hasLongerMatch) {
     startPendingSequence(nextSequence);
     return { actionName: null, consumed: true };
   }
+
   clearPendingSequence();
+
   const actionName = keyActions[key] ?? null;
+
   if (!actionName) {
     clearPendingCount();
     return { actionName: null, consumed: false };
   }
+
   return { actionName, consumed: true };
 };
+
 installScrollTracking();
+
 void getConfig().then((config) => {
   applyHotkeyMappings(config.hotkeys.mappings);
 });
+
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local" || !changes.config?.newValue) {
     return;
   }
+
   const nextMappings = (
     changes.config.newValue as {
       hotkeys?: {
@@ -218,50 +273,60 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       };
     }
   ).hotkeys?.mappings;
+
   if (typeof nextMappings === "string") {
     applyHotkeyMappings(nextMappings);
   }
 });
-document.addEventListener(
+
+window.addEventListener(
   "keydown",
   (event) => {
     if (areHintsActive()) {
       if (handleHintsKeydown(event)) {
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
       }
+
       return;
     }
+
     if (event.key === "Escape" && blurActiveEditableTarget()) {
       clearPendingState();
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       return;
     }
+
     if (
-      event.defaultPrevented ||
       event.ctrlKey ||
       event.metaKey ||
       event.altKey ||
-      isEditableTarget(event.target)
+      isEditableTarget(getDeepActiveElement())
     ) {
       clearPendingState();
       return;
     }
+
     const { actionName, consumed } = getActionName(event.key);
+
     if (!actionName) {
       if (consumed) {
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
       }
+
       return;
     }
+
     const didHandle = ACTIONS[actionName](resolveCount());
+
     if (!didHandle) {
       return;
     }
+
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
   },
   true
 );

@@ -1,4 +1,9 @@
 import { getExtensionNamespace } from "~/src/utils/extension-id";
+import {
+  getDeepActiveElement,
+  isEditableElement,
+  isSelectableElement
+} from "~/src/core/utils/isEditableTarget";
 
 const HINT_ALPHABET = "sadfjklewcmpgh";
 const HINT_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
@@ -223,6 +228,31 @@ const shouldBlurAfterActivation = (element: HTMLElement): boolean =>
     ]).has(element.type)) ||
   element.getAttribute("role") === "button";
 
+const simulateSelect = (element: HTMLElement): void => {
+  const activeElement = getDeepActiveElement();
+  if (activeElement === element && isEditableElement(activeElement)) {
+    return;
+  }
+
+  element.focus();
+
+  if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
+    return;
+  }
+
+  if (element instanceof HTMLTextAreaElement && element.value.includes("\n")) {
+    return;
+  }
+
+  try {
+    if (element.selectionStart === 0 && element.selectionEnd === 0) {
+      element.setSelectionRange(element.value.length, element.value.length);
+    }
+  } catch {
+    // Ignore elements without stable selection APIs.
+  }
+};
+
 const clickElement = (element: HTMLElement): void => {
   element.click();
 
@@ -248,6 +278,12 @@ const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit):
 };
 
 const openHintInCurrentTab = (element: HTMLElement): void => {
+  if (isSelectableElement(element)) {
+    window.focus();
+    simulateSelect(element);
+    return;
+  }
+
   if (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) {
     const previousTarget = element.target;
     if (previousTarget === "_blank") {
@@ -258,6 +294,15 @@ const openHintInCurrentTab = (element: HTMLElement): void => {
       }, 0);
       return;
     }
+  }
+
+  if (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLSelectElement ||
+    element instanceof HTMLEmbedElement ||
+    element instanceof HTMLObjectElement
+  ) {
+    element.focus();
   }
 
   clickElement(element);
