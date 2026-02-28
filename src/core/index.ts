@@ -1,5 +1,7 @@
 import {
   installScrollTracking,
+  scrollLeft,
+  scrollRight,
   scrollDown,
   scrollToBottom,
   scrollToTop,
@@ -7,19 +9,29 @@ import {
 } from "~/src/core/actions/scroll";
 import { isEditableTarget } from "~/src/core/utils/isEditableTarget";
 
-type ActionName = "scroll-down" | "scroll-up" | "scroll-to-bottom" | "scroll-to-top";
+type ActionName =
+  | "scroll-down"
+  | "scroll-left"
+  | "scroll-right"
+  | "scroll-up"
+  | "scroll-to-bottom"
+  | "scroll-to-top";
 
 type ActionHandler = (count?: number) => boolean;
 
 const KEY_ACTIONS: Partial<Record<string, ActionName>> = {
+  h: "scroll-left",
   j: "scroll-down",
   k: "scroll-up",
+  l: "scroll-right",
   gg: "scroll-to-top",
   G: "scroll-to-bottom"
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "scroll-down": scrollDown,
+  "scroll-left": scrollLeft,
+  "scroll-right": scrollRight,
   "scroll-up": scrollUp,
   "scroll-to-bottom": scrollToBottom,
   "scroll-to-top": scrollToTop

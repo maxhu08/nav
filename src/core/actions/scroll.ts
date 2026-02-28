@@ -6,6 +6,8 @@ const CALIBRATION_BOUNDARY = 150;
 let activatedElement: Element | null = null;
 
 type ScrollDirection = "up" | "down";
+type ScrollAxis = "x" | "y";
+type ScrollMovementDirection = "up" | "down" | "left" | "right";
 
 const scrollState = {
   time: 0,
@@ -32,9 +34,19 @@ function getParentElement(element: Element): Element | null {
   return root instanceof ShadowRoot ? root.host : null;
 }
 
-function performScroll(element: Element, amount: number): boolean {
+function getScrollAxis(direction: ScrollMovementDirection): ScrollAxis {
+  return direction === "left" || direction === "right" ? "x" : "y";
+}
+
+function performScroll(element: Element, amount: number, axis: ScrollAxis = "y"): boolean {
   if (!(element instanceof HTMLElement)) {
     return false;
+  }
+
+  if (axis === "x") {
+    const before = element.scrollLeft;
+    element.scrollLeft += amount;
+    return element.scrollLeft !== before;
   }
 
   const before = element.scrollTop;
@@ -42,20 +54,33 @@ function performScroll(element: Element, amount: number): boolean {
   return element.scrollTop !== before;
 }
 
-function canScroll(element: Element, direction: ScrollDirection): boolean {
+function canScroll(element: Element, direction: ScrollMovementDirection): boolean {
   if (!(element instanceof HTMLElement)) {
     return false;
   }
 
   const style = window.getComputedStyle(element);
+  const axis = getScrollAxis(direction);
 
   if (
     style.display === "none" ||
     style.visibility === "hidden" ||
     style.visibility === "collapse" ||
-    style.overflowY === "hidden"
+    (axis === "x" ? style.overflowX === "hidden" : style.overflowY === "hidden")
   ) {
     return false;
+  }
+
+  if (axis === "x") {
+    if (element.scrollWidth <= element.clientWidth) {
+      return false;
+    }
+
+    if (direction === "right") {
+      return element.scrollLeft + element.clientWidth < element.scrollWidth;
+    }
+
+    return element.scrollLeft > 0;
   }
 
   if (element.scrollHeight <= element.clientHeight) {
@@ -71,7 +96,7 @@ function canScroll(element: Element, direction: ScrollDirection): boolean {
 
 function findScrollableElement(
   start: Element | null,
-  direction: ScrollDirection
+  direction: ScrollMovementDirection
 ): HTMLElement | null {
   let current = start;
   const scrollingElement = getScrollingElement();
@@ -99,7 +124,8 @@ function smoothScroll(
   element: HTMLElement,
   amount: number,
   keyCode: string,
-  continuous = true
+  continuous = true,
+  axis: ScrollAxis = "y"
 ): void {
   if (amount === 0) {
     return;
@@ -157,7 +183,7 @@ function smoothScroll(
       delta = Math.max(0, Math.min(delta, absoluteAmount - totalDelta));
     }
 
-    if (delta > 0 && performScroll(element, sign * delta)) {
+    if (delta > 0 && performScroll(element, sign * delta, axis)) {
       totalDelta += delta;
       requestAnimationFrame(animate);
     }
@@ -196,6 +222,20 @@ function scroll(direction: ScrollDirection, count = 1): boolean {
   const amount = (direction === "down" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE) * count;
   activatedElement = scrollableElement;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode);
+  return true;
+}
+
+function scrollHorizontal(direction: "left" | "right", count = 1): boolean {
+  const start = activatedElement ?? document.activeElement ?? getScrollingElement();
+  const scrollableElement = findScrollableElement(start, direction);
+
+  if (!scrollableElement || !scrollState.keyDownCode) {
+    return false;
+  }
+
+  const amount = (direction === "right" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE) * count;
+  activatedElement = scrollableElement;
+  smoothScroll(scrollableElement, amount, scrollState.keyDownCode, true, "x");
   return true;
 }
 
@@ -250,6 +290,14 @@ export function scrollDown(count = 1): boolean {
 
 export function scrollUp(count = 1): boolean {
   return scroll("up", count);
+}
+
+export function scrollLeft(count = 1): boolean {
+  return scrollHorizontal("left", count);
+}
+
+export function scrollRight(count = 1): boolean {
+  return scrollHorizontal("right", count);
 }
 
 export function scrollToTop(count = 1): boolean {
