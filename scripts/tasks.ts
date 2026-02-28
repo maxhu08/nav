@@ -25,7 +25,8 @@ const DIST_CORE_DIR = resolve(DIST_DIR, "core");
 const ENTRY_FILES = [
   resolve(ROOT, "src", "core", "index.ts"),
   resolve(ROOT, "src", "popup.html"),
-  resolve(ROOT, "src", "options.html")
+  resolve(ROOT, "src", "options.html"),
+  resolve(ROOT, "src", "docs.html")
 ];
 const VERSION_FILE = resolve(ROOT, "EXTENSION_VERSION.txt");
 

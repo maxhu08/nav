@@ -114,7 +114,7 @@ const renderActions = (value: string): string => {
   return tokens.join("");
 };
 
-const renderLine = (line: string): string => {
+const renderLine = (line: string, canAttachActions: boolean): string => {
   const trimmedLine = line.trim();
 
   if (!trimmedLine) {
@@ -144,6 +144,10 @@ const renderLine = (line: string): string => {
     ].join("");
   }
 
+  if (!canAttachActions) {
+    return wrapToken("rules-urls-token-invalid", line);
+  }
+
   return [
     wrapToken("rules-urls-token-operator", prefix),
     escapeHtml(spacing),
@@ -152,7 +156,19 @@ const renderLine = (line: string): string => {
 };
 
 export const syncRulesUrlsHighlight = (): void => {
-  rulesUrlsHighlightEl.innerHTML = rulesUrlsTextareaEl.value.split("\n").map(renderLine).join("\n");
+  let previousLineWasRuleStart = false;
+
+  rulesUrlsHighlightEl.innerHTML = rulesUrlsTextareaEl.value
+    .split("\n")
+    .map((line) => {
+      const renderedLine = renderLine(line, previousLineWasRuleStart);
+      const trimmedLine = line.trim();
+
+      previousLineWasRuleStart = trimmedLine.startsWith("*");
+
+      return renderedLine;
+    })
+    .join("\n");
 };
 
 export const syncRulesUrlsHighlightScroll = (): void => {

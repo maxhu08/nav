@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="shared/tailwind.css" />
+    <link rel="stylesheet" href="shared/shared.css" />
+    <link rel="stylesheet" href="options/styles/index.css" />
+    <link rel="icon" href="assets/icon.png" type="image/png" />
+    <title>docs ヽ(・ω・*)</title>
+  </head>
+
+  <body dir="ltr" class="min-h-screen bg-neutral-900 text-white">
+    <div class="mx-auto grid w-[95%] grid-flow-row sm:w-[80%] md:w-[60%] lg:w-[50%] xl:w-[40%]">
+      <div class="grid place-items-center gap-4 p-4">
+        <img src="./assets/icon.png" class="aspect-square w-40" alt="nav logo" />
+        <h1 class="w-max text-2xl font-semibold text-white md:text-4xl"><span class="text-yellow-500">nav</span><span class="text-neutral-500">/</span><span>docs</span></h1>
+      </div>
+      <div>
+        <p class="text-center text-base text-neutral-500">
+          <a href="options.html" class="text-blue-500 transition hover:text-blue-600">back to options</a>
+        </p>
+      </div>
+      <main class="grid grid-flow-row pt-16">
+        <section id="rules-urls" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p class="text-base text-white">rules.urls</p>
+            <p class="text-base text-neutral-500">Use this field to define URL-based rules. Each rule starts with a website regex pattern.</p>
+            <p class="text-base text-neutral-500"><span class="text-[#569cd6]">*</span> <span class="text-white">&lt;regex-pattern&gt;</span></p>
+            <p class="text-base text-neutral-500">Starts a new rule block. The `* ` prefix is required before every website regex pattern.</p>
+            <br />
+            <p class="text-base text-neutral-500"><span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span></p>
+            <p class="text-base text-neutral-500">Blocks all actions except the listed action names for URLs matching the regex pattern above.</p>
+            <p class="text-base text-neutral-500"><span class="text-[#c586c0]">-</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span></p>
+            <p class="text-base text-neutral-500">Allows all actions except the listed action names for URLs matching the regex pattern above.</p>
+            <p class="text-base text-neutral-500">You can list any number of action names on a `+` or `-` line.</p>
+            <p class="text-base text-neutral-500">A `+` or `-` line must go on the next consecutive line immediately after its `* &lt;regex-pattern&gt;` line.</p>
+            <p class="text-base text-neutral-500">If a rule block contains only `* &lt;regex-pattern&gt;`, all actions are blocked for matching URLs.</p>
+            <p class="text-base text-neutral-500">Separate action names with spaces.</p>
+            <p class="text-base text-neutral-500">Lines starting with # are ignored.</p>
+            <br />
+            <p class="text-base text-neutral-500">Example:</p>
+            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
+              <p>
+                <span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span><span class="text-[#d06969]">https</span><span class="text-[#d6b97c]">?</span
+                ><span class="text-[#d06969]">://</span><span class="text-[#cd9077]">(</span><span class="text-[#d06969]">www</span><span class="text-[#d6b97c]">\.</span
+                ><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">?</span><span class="text-[#d06969]">github</span><span class="text-[#d6b97c]">\.</span
+                ><span class="text-[#d06969]">com/</span><span class="text-[#d6b97c]">.*$</span>
+              </p>
+              <p><span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">show-hints-current-tab</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
+            </div>
+            <p class="text-base text-neutral-500">This blocks every action on GitHub pages except `show-hints-current-tab` and `yank-current-tab-url`.</p>
+          </div>
+        </section>
+
+        <section id="hotkeys-mappings" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p class="text-base text-white">hotkeys.mappings</p>
+            <p class="text-base text-neutral-500">Each line maps one key sequence to one action name.</p>
+            <p class="text-base text-neutral-500"><span class="text-[#569cd6]">&lt;key-sequence&gt;</span> <span class="text-[#dcdcaa]">&lt;action-name&gt;</span></p>
+            <p class="text-base text-neutral-500">Put one mapping on each line.</p>
+            <p class="text-base text-neutral-500">Lines starting with # are ignored.</p>
+            <p class="text-base text-neutral-500">If an action name is invalid, it is highlighted in red in the editor.</p>
+            <br />
+            <p class="text-base text-neutral-500">Example:</p>
+            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
+              <p><span class="text-[#569cd6]">j</span> <span class="text-[#dcdcaa]">scroll-down</span></p>
+              <p><span class="text-[#569cd6]">gg</span> <span class="text-[#dcdcaa]">scroll-to-top</span></p>
+              <p><span class="text-[#569cd6]">yy</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
+            </div>
+            <p class="text-base text-neutral-500">This maps `j` to scroll down, `gg` to jump to the top of the page, and `yy` to copy the current tab URL.</p>
+          </div>
+        </section>
+
+        <section id="action-names" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p class="text-base text-white">action.names</p>
+            <p class="text-base text-neutral-500">These are the currently valid action names.</p>
+            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-[#dcdcaa]">
+              <p>show-hints-current-tab</p>
+              <p>show-hints-new-tab</p>
+              <p>yank-current-tab-url</p>
+              <p>scroll-down</p>
+              <p>scroll-half-page-down</p>
+              <p>scroll-half-page-up</p>
+              <p>scroll-left</p>
+              <p>scroll-right</p>
+              <p>scroll-up</p>
+              <p>scroll-to-bottom</p>
+              <p>scroll-to-top</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
