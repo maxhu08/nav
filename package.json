@@ -1,7 +1,7 @@
 {
   "name": "nav",
   "author": "Max Hu",
-  "description": "TODO: add description",
+  "description": "vim style keyboard navigation for the web",
   "keywords": [],
   "scripts": {
     "d": "bun run dev",
