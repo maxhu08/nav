@@ -12,13 +12,14 @@ import {
 } from "~/src/core/actions/scroll";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { getToastApi } from "~/src/core/utils/sonner";
-import { getFastConfig } from "~/src/utils/fast-config";
+import { type FastRule, getFastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 
 type ActionHandler = (count?: number) => boolean;
 
 let keyActions: Partial<Record<string, ActionName>> = {};
 let keyActionPrefixes: Partial<Record<string, true>> = {};
+let urlRules: FastRule[] = [];
 
 const writeClipboard = async (text: string): Promise<boolean> => {
   try {
@@ -155,6 +156,39 @@ const applyHotkeyMappings = (
   clearPendingState();
 };
 
+const applyUrlRules = (rules: FastRule[]): void => {
+  urlRules = rules;
+  clearPendingState();
+};
+
+const getCurrentUrlRule = (): FastRule | null => {
+  const currentUrl = window.location.href;
+
+  for (const rule of urlRules) {
+    if (new RegExp(rule.pattern).test(currentUrl)) {
+      return rule;
+    }
+  }
+
+  return null;
+};
+
+const isActionAllowed = (actionName: ActionName): boolean => {
+  const rule = getCurrentUrlRule();
+
+  if (!rule) {
+    return true;
+  }
+
+  const isListedAction = rule.actions[actionName] === true;
+
+  if (rule.mode === "allow") {
+    return isListedAction;
+  }
+
+  return !isListedAction;
+};
+
 const blurActiveEditableTarget = (): boolean => {
   const activeElement = getDeepActiveElement();
 
@@ -248,6 +282,7 @@ const getActionName = (keyToken: string): KeyParseResult => {
 installScrollTracking();
 
 void getFastConfig().then((fastConfig) => {
+  applyUrlRules(fastConfig.rules.urls);
   applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
 });
 
@@ -256,17 +291,22 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     return;
   }
 
-  const nextHotkeys = (
-    changes.fastConfig.newValue as {
-      hotkeys?: {
-        mappings?: Partial<Record<string, ActionName>>;
-        prefixes?: Partial<Record<string, true>>;
-      };
-    }
-  ).hotkeys;
+  const nextHotkeys = changes.fastConfig.newValue as {
+    rules?: {
+      urls?: FastRule[];
+    };
+    hotkeys?: {
+      mappings?: Partial<Record<string, ActionName>>;
+      prefixes?: Partial<Record<string, true>>;
+    };
+  };
 
-  if (nextHotkeys?.mappings && nextHotkeys.prefixes) {
-    applyHotkeyMappings(nextHotkeys.mappings, nextHotkeys.prefixes);
+  if (nextHotkeys.rules?.urls) {
+    applyUrlRules(nextHotkeys.rules.urls);
+  }
+
+  if (nextHotkeys.hotkeys?.mappings && nextHotkeys.hotkeys.prefixes) {
+    applyHotkeyMappings(nextHotkeys.hotkeys.mappings, nextHotkeys.hotkeys.prefixes);
   }
 });
 
@@ -309,6 +349,13 @@ window.addEventListener(
         event.stopImmediatePropagation();
       }
 
+      return;
+    }
+
+    if (!isActionAllowed(actionName)) {
+      clearPendingCount();
+      event.preventDefault();
+      event.stopImmediatePropagation();
       return;
     }
 
