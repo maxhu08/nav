@@ -12,15 +12,20 @@ export type ActionName =
   | "scroll-to-top";
 
 export const DEFAULT_HOTKEY_MAPPINGS = [
-  "d scroll-half-page-down",
-  "f show-hints-current-tab",
-  "h scroll-left",
+  // scroll
   "j scroll-down",
   "k scroll-up",
+  "h scroll-left",
   "l scroll-right",
+  "d scroll-half-page-down",
   "u scroll-half-page-up",
-  "F show-hints-new-tab",
-  "yy yank-current-tab-url",
   "gg scroll-to-top",
-  "G scroll-to-bottom"
+  "G scroll-to-bottom",
+
+  // hints
+  "f show-hints-current-tab",
+  "F show-hints-new-tab",
+
+  // clipboard
+  "yy yank-current-tab-url"
 ].join("\n");
