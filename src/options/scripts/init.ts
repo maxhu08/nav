@@ -4,7 +4,7 @@ import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-optio
 import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
 import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
-import { getConfig } from "~/src/utils/config-storage";
+import { getConfig } from "~/src/utils/config";
 
 const logo = document.getElementById("nav-logo") as HTMLImageElement;
 

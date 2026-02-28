@@ -12,51 +12,13 @@ import {
 } from "~/src/core/actions/scroll";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { getToastApi } from "~/src/core/utils/sonner";
-import { getConfig } from "~/src/utils/config-storage";
-import { type ActionName, DEFAULT_HOTKEY_MAPPINGS, isActionName } from "~/src/utils/hotkeys";
+import { getFastConfig } from "~/src/utils/fast-config";
+import { type ActionName } from "~/src/utils/hotkeys";
 
 type ActionHandler = (count?: number) => boolean;
 
-const decodeSequenceToken = (value: string): string => {
-  if (value === "<space>") {
-    return " ";
-  }
-
-  return value;
-};
-
-const parseMappings = (value: string): Partial<Record<string, ActionName>> => {
-  const parsedMappings: Partial<Record<string, ActionName>> = {};
-
-  for (const line of value.split("\n")) {
-    const trimmedLine = line.trim();
-
-    if (!trimmedLine || trimmedLine.startsWith("#")) {
-      continue;
-    }
-
-    const separatorIndex = trimmedLine.search(/\s/);
-
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const sequence = decodeSequenceToken(trimmedLine.slice(0, separatorIndex));
-    const actionName = trimmedLine.slice(separatorIndex).trim();
-
-    if (!sequence || !isActionName(actionName)) {
-      continue;
-    }
-
-    parsedMappings[sequence] = actionName as ActionName;
-  }
-
-  return Object.keys(parsedMappings).length > 0
-    ? parsedMappings
-    : parseMappings(DEFAULT_HOTKEY_MAPPINGS);
-};
-
-let keyActions = parseMappings(DEFAULT_HOTKEY_MAPPINGS);
+let keyActions: Partial<Record<string, ActionName>> = {};
+let keyActionPrefixes: Partial<Record<string, true>> = {};
 
 const writeClipboard = async (text: string): Promise<boolean> => {
   try {
@@ -144,8 +106,12 @@ type KeyParseResult = {
   consumed: boolean;
 };
 
-const applyHotkeyMappings = (mappings: string): void => {
-  keyActions = parseMappings(mappings);
+const applyHotkeyMappings = (
+  mappings: Partial<Record<string, ActionName>>,
+  prefixes: Partial<Record<string, true>>
+): void => {
+  keyActions = mappings;
+  keyActionPrefixes = prefixes;
   clearPendingState();
 };
 
@@ -220,9 +186,7 @@ const getActionName = (key: string): KeyParseResult => {
     return { actionName: directMatch, consumed: true };
   }
 
-  const hasLongerMatch = Object.keys(keyActions).some((sequence) =>
-    sequence.startsWith(nextSequence)
-  );
+  const hasLongerMatch = keyActionPrefixes[nextSequence] === true;
 
   if (hasLongerMatch) {
     startPendingSequence(nextSequence);
@@ -243,25 +207,26 @@ const getActionName = (key: string): KeyParseResult => {
 
 installScrollTracking();
 
-void getConfig().then((config) => {
-  applyHotkeyMappings(config.hotkeys.mappings);
+void getFastConfig().then((fastConfig) => {
+  applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName !== "local" || !changes.config?.newValue) {
+  if (areaName !== "local" || !changes.fastConfig?.newValue) {
     return;
   }
 
-  const nextMappings = (
-    changes.config.newValue as {
+  const nextHotkeys = (
+    changes.fastConfig.newValue as {
       hotkeys?: {
-        mappings?: unknown;
+        mappings?: Partial<Record<string, ActionName>>;
+        prefixes?: Partial<Record<string, true>>;
       };
     }
-  ).hotkeys?.mappings;
+  ).hotkeys;
 
-  if (typeof nextMappings === "string") {
-    applyHotkeyMappings(nextMappings);
+  if (nextHotkeys?.mappings && nextHotkeys.prefixes) {
+    applyHotkeyMappings(nextHotkeys.mappings, nextHotkeys.prefixes);
   }
 });
 

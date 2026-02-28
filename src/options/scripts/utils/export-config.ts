@@ -1,8 +1,8 @@
-import { saveConfig } from "~/src/options/scripts/utils/save-config";
+import { saveConfigAndFastConfig } from "~/src/options/scripts/utils/save-config";
 import { getToastApi } from "~/src/options/scripts/utils/sonner";
 
 export const saveAndExportConfig = async (): Promise<void> => {
-  const config = await saveConfig(false);
+  const config = await saveConfigAndFastConfig(false);
   const extensionVersion = chrome.runtime.getManifest().version;
   const formattedSave = `NAV_SAVE_FORMAT_v${extensionVersion}_${JSON.stringify(config)}`;
 

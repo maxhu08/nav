@@ -18,13 +18,13 @@ import {
   syncRulesUrlsHighlight,
   syncRulesUrlsHighlightScroll
 } from "~/src/options/scripts/utils/rules-highlight";
-import { saveConfig } from "~/src/options/scripts/utils/save-config";
+import { saveConfigAndFastConfig } from "~/src/options/scripts/utils/save-config";
 import { setDefaultConfig } from "~/src/options/scripts/utils/set-default-config";
 import { tippy } from "~/src/options/scripts/utils/tooltip";
 
 export const listenToInputs = (): void => {
   saveButtonEl.addEventListener("click", () => {
-    void saveConfig();
+    void saveConfigAndFastConfig();
   });
 
   exportButtonEl.addEventListener("click", () => {

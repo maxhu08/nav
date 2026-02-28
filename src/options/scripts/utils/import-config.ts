@@ -1,6 +1,6 @@
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
 import { showInputDialog } from "~/src/options/scripts/utils/input-dialog";
-import { saveConfig } from "~/src/options/scripts/utils/save-config";
+import { saveConfigAndFastConfig } from "~/src/options/scripts/utils/save-config";
 import { getToastApi } from "~/src/options/scripts/utils/sonner";
 import { deepMerge } from "~/src/utils/deep-merge";
 import { defaultConfig } from "~/src/utils/config";
@@ -44,5 +44,5 @@ export const importConfigAndSave = async (): Promise<void> => {
 
   const mergedConfig = deepMerge(structuredClone(defaultConfig), importedConfig);
   fillInputs(mergedConfig);
-  await saveConfig();
+  await saveConfigAndFastConfig();
 };
