@@ -19,6 +19,8 @@ Formatting is handled by Prettier on commit. Follow these project-specific rules
 
 Useful reference: `src/utils/config.ts`.
 
+If a config value needs parsing or precomputation for runtime use, put the persisted shape in `config` and the derived shape in `fastConfig` (`src/utils/fast-config.ts`).
+
 ## TypeScript Patterns
 
 - Keep type fields one per line and end each with `;`.

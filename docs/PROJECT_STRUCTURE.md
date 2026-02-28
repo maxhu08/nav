@@ -17,7 +17,18 @@ Use this map to decide where new code should go.
 - Entry point: `src/core/index.ts`
 - Action handlers: `src/core/actions/`
 - Core utilities: `src/core/utils/`
-- This is where hotkeys are parsed and page actions are executed.
+- This is where parsed hotkeys and parsed `rules.urls` are enforced at runtime.
+
+## Config Layers
+
+- `src/utils/config.ts`: defines the persisted `config` object stored in `chrome.storage.local`.
+- `config` keeps option values in the same shape the options UI edits them.
+- Example: `config.rules.urls` is stored as the raw textarea string.
+- `src/utils/fast-config.ts`: defines `fastConfig`, a derived runtime cache built from `config`.
+- `fastConfig.rules.urls` is a parsed array of URL rules.
+- `fastConfig.hotkeys.mappings` is a parsed key-to-action map.
+- `fastConfig.hotkeys.prefixes` is a derived lookup used for multi-key sequence matching.
+- `src/options/scripts/utils/save-config.ts` writes both `config` and a rebuilt `fastConfig` together.
 
 ## Options Page
 
@@ -26,6 +37,7 @@ Use this map to decide where new code should go.
 - Fill helpers: `src/options/scripts/utils/fill-helpers/`
 - Save helpers: `src/options/scripts/utils/save-helpers/`
 - Save pipeline entry: `src/options/scripts/utils/save-config.ts`
+- The options page reads and writes `config`, then rebuilds `fastConfig` for the content script.
 
 ## Build Scripts
 

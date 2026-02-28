@@ -5,6 +5,7 @@ This page covers the minimum conventions required to add new options safely.
 ## Naming Rules
 
 - Config section names come from config keys.
+- The options UI edits the persisted `config` shape, not `fastConfig`.
 - Textarea helpers use the suffix pattern:
   - Container: `feature-name-container`
   - Textarea: `feature-name-textarea`
@@ -25,6 +26,16 @@ Example:
 3. Add fill logic in `src/options/scripts/utils/fill-helpers/`.
 4. Add save logic in `src/options/scripts/utils/save-helpers/`.
 5. Wire the new fill/save helpers through `fill-inputs.ts` and `save-config.ts`.
+6. If the option needs a parsed or optimized runtime representation, update `src/utils/fast-config.ts` so `save-config.ts` can rebuild `fastConfig`.
+
+## Config vs Fast Config
+
+- `config` is the user-facing stored shape from `src/utils/config.ts`.
+- Keep `config` values easy to edit and export.
+- Example: `config.hotkeys.mappings` and `config.rules.urls` are stored as raw strings.
+- `fastConfig` is the derived runtime shape from `src/utils/fast-config.ts`.
+- Keep `fastConfig` values ready for the content script to consume without reparsing on every keydown.
+- Example: parsed URL rules, parsed hotkey mappings, and hotkey prefixes belong in `fastConfig`.
 
 ## Required Wiring When Adding a New Interaction
 
@@ -37,4 +48,5 @@ Example:
 
 - If a control renders but does not persist, check `save-helpers`.
 - If a control persists but does not show initial state, check `fill-helpers`.
+- If an option saves correctly but the content script does not react to it, check `buildFastConfig` and the `chrome.storage.onChanged` handling in `src/core/index.ts`.
 - If an element lookup fails, check that its ID matches the suffix helpers in `ui-helpers.ts`.
