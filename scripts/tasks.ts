@@ -20,7 +20,11 @@ const DIST_DIR = resolve(ROOT, "dist");
 const OUTPUT_DIR = resolve(ROOT, "output");
 const SRC_DIR = resolve(ROOT, "src");
 const ASSETS_DIR = resolve(SRC_DIR, "assets");
-const ENTRY_FILE = resolve(ROOT, "src", "index.ts");
+const ENTRY_FILES = [
+  resolve(ROOT, "src", "core", "index.ts"),
+  resolve(ROOT, "src", "popup.html"),
+  resolve(ROOT, "src", "options.html")
+];
 const VERSION_FILE = resolve(ROOT, "EXTENSION_VERSION.txt");
 
 const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
@@ -32,10 +36,17 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     permissions: ["storage"],
     background: {},
     host_permissions: ["<all_urls>"],
+    action: {
+      default_popup: "popup.html"
+    },
+    options_ui: {
+      page: "options.html",
+      open_in_tab: true
+    },
     content_scripts: [
       {
         matches: ["<all_urls>"],
-        js: ["index.js"],
+        js: ["core/index.js"],
         run_at: "document_idle"
       }
     ],
@@ -55,10 +66,17 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     permissions: ["storage"],
     background: {},
     host_permissions: ["<all_urls>"],
+    action: {
+      default_popup: "popup.html"
+    },
+    options_ui: {
+      page: "options.html",
+      open_in_tab: true
+    },
     content_scripts: [
       {
         matches: ["<all_urls>"],
-        js: ["index.js"],
+        js: ["core/index.js"],
         run_at: "document_idle"
       }
     ],
@@ -191,7 +209,7 @@ function runParcel(mode: "build" | "watch") {
   if (mode === "build") {
     args.push(
       "build",
-      ENTRY_FILE,
+      ...ENTRY_FILES,
       "--dist-dir",
       DIST_DIR,
       "--no-source-maps",
@@ -202,7 +220,7 @@ function runParcel(mode: "build" | "watch") {
     return;
   }
 
-  args.push("watch", ENTRY_FILE, "--dist-dir", DIST_DIR, "--no-content-hash");
+  args.push("watch", ...ENTRY_FILES, "--dist-dir", DIST_DIR, "--no-content-hash");
   const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit" });
 
   child.on("exit", (code) => {

@@ -177,7 +177,9 @@ function scrollToPosition(position: "top" | "bottom", count = 1): boolean {
 
   activatedElement = scrollableElement;
   const targetTop =
-    position === "top" ? Math.max(0, (count - 1) * SCROLL_STEP_SIZE) : scrollableElement.scrollHeight;
+    position === "top"
+      ? Math.max(0, (count - 1) * SCROLL_STEP_SIZE)
+      : scrollableElement.scrollHeight;
   const amount = targetTop - scrollableElement.scrollTop;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode, false);
   return true;

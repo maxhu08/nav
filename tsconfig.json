@@ -10,7 +10,7 @@
     "noEmit": true,
     "noEmitOnError": true,
     "lib": ["ES2022", "DOM"],
-    "types": ["bun", "node"],
+    "types": ["bun", "node", "chrome"],
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true

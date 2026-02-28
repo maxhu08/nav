@@ -4,8 +4,8 @@ import {
   scrollToBottom,
   scrollToTop,
   scrollUp
-} from "~/src/actions/scroll";
-import { isEditableTarget } from "~/src/utils/isEditableTarget";
+} from "~/src/core/actions/scroll";
+import { isEditableTarget } from "~/src/core/utils/isEditableTarget";
 
 type ActionName = "scroll-down" | "scroll-up" | "scroll-to-bottom" | "scroll-to-top";
 
@@ -95,7 +95,9 @@ function getActionName(key: string): KeyParseResult {
     return { actionName: directMatch, consumed: true };
   }
 
-  const hasLongerMatch = Object.keys(KEY_ACTIONS).some((sequence) => sequence.startsWith(nextSequence));
+  const hasLongerMatch = Object.keys(KEY_ACTIONS).some((sequence) =>
+    sequence.startsWith(nextSequence)
+  );
 
   if (hasLongerMatch) {
     startPendingSequence(nextSequence);
