@@ -2,6 +2,10 @@ import { type Config, defaultConfig } from "~/src/utils/config";
 import { deepMerge } from "~/src/utils/deep-merge";
 
 const mergeConfig = (value: unknown): Config => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return structuredClone(defaultConfig);
+  }
+
   return deepMerge(structuredClone(defaultConfig), value);
 };
 

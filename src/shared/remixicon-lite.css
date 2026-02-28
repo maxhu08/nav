@@ -1,0 +1,24 @@
+[class^="ri-"],
+[class*=" ri-"] {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 1em 1em;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: 1em 1em;
+}
+
+.ri-collapse-horizontal-line {
+  mask-image: url("../assets/remixicon/collapse-horizontal-line.svg");
+  -webkit-mask-image: url("../assets/remixicon/collapse-horizontal-line.svg");
+}
+
+.ri-expand-horizontal-s-line {
+  mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");
+  -webkit-mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");
+}
