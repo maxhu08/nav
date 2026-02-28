@@ -1,3 +1,4 @@
+import { activateHints, areHintsActive, handleHintsKeydown } from "~/src/core/actions/hints";
 import {
   installScrollTracking,
   scrollHalfPageDown,
@@ -12,6 +13,8 @@ import {
 import { isEditableTarget } from "~/src/core/utils/isEditableTarget";
 
 type ActionName =
+  | "show-hints-current-tab"
+  | "show-hints-new-tab"
   | "scroll-down"
   | "scroll-half-page-down"
   | "scroll-half-page-up"
@@ -25,16 +28,20 @@ type ActionHandler = (count?: number) => boolean;
 
 const KEY_ACTIONS: Partial<Record<string, ActionName>> = {
   d: "scroll-half-page-down",
+  f: "show-hints-current-tab",
   h: "scroll-left",
   j: "scroll-down",
   k: "scroll-up",
   l: "scroll-right",
   u: "scroll-half-page-up",
+  F: "show-hints-new-tab",
   gg: "scroll-to-top",
   G: "scroll-to-bottom"
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
+  "show-hints-current-tab": () => activateHints("current-tab"),
+  "show-hints-new-tab": () => activateHints("new-tab"),
   "scroll-down": scrollDown,
   "scroll-half-page-down": scrollHalfPageDown,
   "scroll-half-page-up": scrollHalfPageUp,
@@ -55,6 +62,17 @@ type KeyParseResult = {
   actionName: ActionName | null;
   consumed: boolean;
 };
+
+function blurActiveEditableTarget(): boolean {
+  const activeElement = document.activeElement;
+
+  if (!(activeElement instanceof HTMLElement) || !isEditableTarget(activeElement)) {
+    return false;
+  }
+
+  activeElement.blur();
+  return true;
+}
 
 function clearPendingSequence(): void {
   pendingSequence = "";
@@ -140,6 +158,21 @@ installScrollTracking();
 document.addEventListener(
   "keydown",
   (event) => {
+    if (areHintsActive()) {
+      if (handleHintsKeydown(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      return;
+    }
+
+    if (event.key === "Escape" && blurActiveEditableTarget()) {
+      clearPendingState();
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (
       event.defaultPrevented ||
       event.ctrlKey ||
