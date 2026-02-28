@@ -9,7 +9,7 @@ import { isEditableTarget } from "~/src/utils/isEditableTarget";
 
 type ActionName = "scroll-down" | "scroll-up" | "scroll-to-bottom" | "scroll-to-top";
 
-type ActionHandler = () => boolean;
+type ActionHandler = (count?: number) => boolean;
 
 const KEY_ACTIONS: Partial<Record<string, ActionName>> = {
   j: "scroll-down",
@@ -29,6 +29,12 @@ const KEY_SEQUENCE_TIMEOUT_MS = 1000;
 
 let pendingSequence = "";
 let pendingSequenceTimer: number | null = null;
+let pendingCount = "";
+
+type KeyParseResult = {
+  actionName: ActionName | null;
+  consumed: boolean;
+};
 
 function clearPendingSequence(): void {
   pendingSequence = "";
@@ -39,6 +45,15 @@ function clearPendingSequence(): void {
   }
 }
 
+function clearPendingCount(): void {
+  pendingCount = "";
+}
+
+function clearPendingState(): void {
+  clearPendingSequence();
+  clearPendingCount();
+}
+
 function startPendingSequence(sequence: string): void {
   clearPendingSequence();
   pendingSequence = sequence;
@@ -47,24 +62,55 @@ function startPendingSequence(sequence: string): void {
   }, KEY_SEQUENCE_TIMEOUT_MS);
 }
 
-function getActionName(key: string): ActionName | null {
+function isCountKey(key: string): boolean {
+  if (pendingCount) {
+    return key >= "0" && key <= "9";
+  }
+
+  return key >= "1" && key <= "9";
+}
+
+function consumeCountKey(key: string): void {
+  pendingCount = pendingSequence ? key : `${pendingCount}${key}`;
+  clearPendingSequence();
+}
+
+function resolveCount(): number {
+  const count = pendingCount ? Number.parseInt(pendingCount, 10) : 1;
+  clearPendingCount();
+  return count;
+}
+
+function getActionName(key: string): KeyParseResult {
+  if (isCountKey(key)) {
+    consumeCountKey(key);
+    return { actionName: null, consumed: true };
+  }
+
   const nextSequence = `${pendingSequence}${key}`;
   const directMatch = KEY_ACTIONS[nextSequence];
 
   if (directMatch) {
     clearPendingSequence();
-    return directMatch;
+    return { actionName: directMatch, consumed: true };
   }
 
   const hasLongerMatch = Object.keys(KEY_ACTIONS).some((sequence) => sequence.startsWith(nextSequence));
 
   if (hasLongerMatch) {
     startPendingSequence(nextSequence);
-    return null;
+    return { actionName: null, consumed: true };
   }
 
   clearPendingSequence();
-  return KEY_ACTIONS[key] ?? null;
+  const actionName = KEY_ACTIONS[key] ?? null;
+
+  if (!actionName) {
+    clearPendingCount();
+    return { actionName: null, consumed: false };
+  }
+
+  return { actionName, consumed: true };
 }
 
 installScrollTracking();
@@ -79,17 +125,21 @@ document.addEventListener(
       event.altKey ||
       isEditableTarget(event.target)
     ) {
-      clearPendingSequence();
+      clearPendingState();
       return;
     }
 
-    const actionName = getActionName(event.key);
+    const { actionName, consumed } = getActionName(event.key);
 
     if (!actionName) {
+      if (consumed) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
       return;
     }
 
-    const didHandle = ACTIONS[actionName]();
+    const didHandle = ACTIONS[actionName](resolveCount());
 
     if (!didHandle) {
       return;

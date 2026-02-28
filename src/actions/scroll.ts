@@ -166,7 +166,7 @@ function smoothScroll(
   requestAnimationFrame(animate);
 }
 
-function scrollToPosition(position: "top" | "bottom"): boolean {
+function scrollToPosition(position: "top" | "bottom", count = 1): boolean {
   const start = activatedElement ?? document.activeElement ?? getScrollingElement();
   const direction = position === "top" ? "up" : "down";
   const scrollableElement = findScrollableElement(start, direction);
@@ -176,13 +176,14 @@ function scrollToPosition(position: "top" | "bottom"): boolean {
   }
 
   activatedElement = scrollableElement;
-  const targetTop = position === "top" ? 0 : scrollableElement.scrollHeight;
+  const targetTop =
+    position === "top" ? Math.max(0, (count - 1) * SCROLL_STEP_SIZE) : scrollableElement.scrollHeight;
   const amount = targetTop - scrollableElement.scrollTop;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode, false);
   return true;
 }
 
-function scroll(direction: ScrollDirection): boolean {
+function scroll(direction: ScrollDirection, count = 1): boolean {
   const start = activatedElement ?? document.activeElement ?? getScrollingElement();
   const scrollableElement = findScrollableElement(start, direction);
 
@@ -190,7 +191,7 @@ function scroll(direction: ScrollDirection): boolean {
     return false;
   }
 
-  const amount = direction === "down" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE;
+  const amount = (direction === "down" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE) * count;
   activatedElement = scrollableElement;
   smoothScroll(scrollableElement, amount, scrollState.keyDownCode);
   return true;
@@ -241,18 +242,18 @@ export function installScrollTracking(): void {
   );
 }
 
-export function scrollDown(): boolean {
-  return scroll("down");
+export function scrollDown(count = 1): boolean {
+  return scroll("down", count);
 }
 
-export function scrollUp(): boolean {
-  return scroll("up");
+export function scrollUp(count = 1): boolean {
+  return scroll("up", count);
 }
 
-export function scrollToTop(): boolean {
-  return scrollToPosition("top");
+export function scrollToTop(count = 1): boolean {
+  return scrollToPosition("top", count);
 }
 
-export function scrollToBottom(): boolean {
-  return scrollToPosition("bottom");
+export function scrollToBottom(count = 1): boolean {
+  return scrollToPosition("bottom", count);
 }
