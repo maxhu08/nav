@@ -4,6 +4,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync
 } from "node:fs";
@@ -20,6 +21,7 @@ const DIST_DIR = resolve(ROOT, "dist");
 const OUTPUT_DIR = resolve(ROOT, "output");
 const SRC_DIR = resolve(ROOT, "src");
 const ASSETS_DIR = resolve(SRC_DIR, "assets");
+const DIST_CORE_DIR = resolve(DIST_DIR, "core");
 const ENTRY_FILES = [
   resolve(ROOT, "src", "core", "index.ts"),
   resolve(ROOT, "src", "popup.html"),
@@ -46,7 +48,7 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     content_scripts: [
       {
         matches: ["<all_urls>"],
-        js: ["core/index.js"],
+        js: ["index.js"],
         run_at: "document_idle"
       }
     ],
@@ -76,7 +78,7 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     content_scripts: [
       {
         matches: ["<all_urls>"],
-        js: ["core/index.js"],
+        js: ["index.js"],
         run_at: "document_idle"
       }
     ],
@@ -177,6 +179,7 @@ function clean() {
 function buildBundle(target: BrowserTarget, version = readVersion()) {
   ensureDist();
   runParcel("build");
+  flattenDistCoreDirectory();
   syncStaticFiles();
   writeManifest(target, version);
 }
@@ -187,6 +190,20 @@ function ensureDist() {
 
 function syncStaticFiles() {
   copyDirectoryContents(ASSETS_DIR, DIST_DIR);
+}
+
+function flattenDistCoreDirectory() {
+  if (!existsSync(DIST_CORE_DIR)) {
+    return;
+  }
+
+  for (const entry of readdirSync(DIST_CORE_DIR)) {
+    const destination = resolve(DIST_DIR, entry);
+    rmSync(destination, { force: true, recursive: true });
+    renameSync(resolve(DIST_CORE_DIR, entry), destination);
+  }
+
+  rmSync(DIST_CORE_DIR, { force: true, recursive: true });
 }
 
 function writeManifest(target: BrowserTarget, version = readVersion(), versionName?: string) {
@@ -221,9 +238,14 @@ function runParcel(mode: "build" | "watch") {
   }
 
   args.push("watch", ...ENTRY_FILES, "--dist-dir", DIST_DIR, "--no-content-hash");
+  const flattenInterval = setInterval(() => {
+    flattenDistCoreDirectory();
+  }, 100);
   const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit" });
 
   child.on("exit", (code) => {
+    clearInterval(flattenInterval);
+    flattenDistCoreDirectory();
     process.exit(code ?? 0);
   });
 }
