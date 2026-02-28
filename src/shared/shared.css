@@ -16,6 +16,10 @@
   background: #eab308;
 }
 
+::selection {
+  background-color: #ffffff20;
+}
+
 *:focus:not(input):not(textarea) {
   outline: none !important;
 }
