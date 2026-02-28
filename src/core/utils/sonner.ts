@@ -1,6 +1,8 @@
 // @ts-nocheck
 // based off https://github.com/JeanxPereira/sonner-js/blob/main/sonner-js/sonner.js
 
+import { getExtensionNamespace } from "~/src/utils/extension-id";
+
 function getAsset(type) {
   const ICONS = {
     success: `
@@ -64,7 +66,7 @@ const TOAST_LIFETIME = 4000;
 const TIME_BEFORE_UNMOUNT = 200;
 const TOAST_WIDTH = 300;
 const DEFAULT_POSITION = "bottom-right";
-const NAV_NAMESPACE_PREFIX = `nav-${typeof crypto.randomUUID === "function" ? crypto.randomUUID() : genid()}-`;
+const NAV_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
 const TOASTER_WRAPPER_ID = `${NAV_NAMESPACE_PREFIX}toaster-wrapper`;
 const TOASTER_LIST_ID = `${NAV_NAMESPACE_PREFIX}toaster-list`;
 const TOAST_CLASS = `${NAV_NAMESPACE_PREFIX}toast`;
