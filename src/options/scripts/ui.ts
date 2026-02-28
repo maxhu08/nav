@@ -8,5 +8,7 @@ export const [rulesUrlsContainerEl, rulesUrlsTextareaEl] =
 export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] =
   getContainerAndTextarea("hotkeys-mappings");
 
-export const saveConfigButtonEl = getButton("save-config");
+export const saveButtonEl = getButton("save");
+export const exportButtonEl = getButton("export");
+export const importButtonEl = getButton("import");
 export const resetConfigButtonEl = getButton("reset-config");

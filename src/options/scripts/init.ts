@@ -1,6 +1,7 @@
 import { listenToInputs } from "~/src/options/scripts/inputs";
 import { listenToKeys } from "~/src/options/scripts/keybinds";
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
+import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
 import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
 import { getConfig } from "~/src/utils/config-storage";
@@ -35,3 +36,4 @@ void getConfig().then((config) => {
 
 listenToInputs();
 listenToKeys();
+handleControls();

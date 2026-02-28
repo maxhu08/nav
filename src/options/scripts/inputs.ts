@@ -1,24 +1,34 @@
-import { DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
 import {
+  exportButtonEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
+  importButtonEl,
   resetConfigButtonEl,
   rulesUrlsContainerEl,
   rulesUrlsTextareaEl,
-  saveConfigButtonEl
+  saveButtonEl
 } from "~/src/options/scripts/ui";
-import { getToastApi } from "~/src/options/scripts/utils/sonner";
+import { saveAndExportConfig } from "~/src/options/scripts/utils/export-config";
+import { importConfigAndSave } from "~/src/options/scripts/utils/import-config";
 import { saveConfig } from "~/src/options/scripts/utils/save-config";
+import { setDefaultConfig } from "~/src/options/scripts/utils/set-default-config";
+import { tippy } from "~/src/options/scripts/utils/tooltip";
 
 export const listenToInputs = (): void => {
-  saveConfigButtonEl.addEventListener("click", () => {
-    saveConfig();
+  saveButtonEl.addEventListener("click", () => {
+    void saveConfig();
+  });
+
+  exportButtonEl.addEventListener("click", () => {
+    void saveAndExportConfig();
+  });
+
+  importButtonEl.addEventListener("click", () => {
+    void importConfigAndSave();
   });
 
   resetConfigButtonEl.addEventListener("click", () => {
-    rulesUrlsTextareaEl.value = "";
-    hotkeysMappingsTextareaEl.value = DEFAULT_HOTKEY_MAPPINGS;
-    getToastApi()?.info("restored defaults");
+    setDefaultConfig();
   });
 
   rulesUrlsTextareaEl.addEventListener("focus", () => {
@@ -35,5 +45,17 @@ export const listenToInputs = (): void => {
 
   hotkeysMappingsTextareaEl.addEventListener("blur", () => {
     hotkeysMappingsContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  tippy("#save-button", {
+    content: "save (ctrl+s)"
+  });
+
+  tippy("#export-button", {
+    content: "save & export (ctrl+e)"
+  });
+
+  tippy("#import-button", {
+    content: "import & save (ctrl+i)"
   });
 };

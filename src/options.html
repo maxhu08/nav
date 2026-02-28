@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="shared/sonner.css" />
     <link rel="stylesheet" href="shared/tailwind.css" />
     <link rel="stylesheet" href="shared/shared.css" />
+    <link rel="stylesheet" href="options/styles/index.css" />
     <script src="options/scripts/utils/sonner.ts" type="module" defer></script>
     <script src="options/scripts/init.ts" type="module" defer></script>
     <link rel="icon" href="assets/icon.png" type="image/png" />
@@ -84,8 +85,8 @@
         <section id="hotkeys-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
             <p class="text-base text-white">hotkeys.mappings</p>
-            <p class="text-base text-neutral-500">one mapping per line: &lt;key-sequence&gt; &lt;action-name&gt;</p>
-            <p class="text-base text-neutral-500">lines starting with # are ignored</p>
+            <p class="text-base text-neutral-500">One mapping per line: &lt;key-sequence&gt; &lt;action-name&gt;</p>
+            <p class="text-base text-neutral-500">Lines starting with # are ignored</p>
             <div id="hotkeys-mappings-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
               <textarea
                 id="hotkeys-mappings-textarea"
@@ -97,13 +98,37 @@
             </div>
           </div>
         </section>
-        <div class="mb-20 flex flex-wrap items-center justify-center gap-3">
-          <button id="save-config-button" class="cursor-pointer rounded-md bg-yellow-500 px-4 py-2 transition hover:bg-yellow-600">
-            <span class="text-base text-white">save</span>
-          </button>
-          <button id="reset-config-button" class="cursor-pointer rounded-md bg-rose-500 px-4 py-2 transition hover:bg-rose-600">
-            <span class="text-base text-white">reset to default</span>
-          </button>
+        <div class="my-12 grid grid-flow-row place-items-center gap-4 py-4">
+          <div class="grid w-full grid-flow-row place-items-center gap-4">
+            <div class="grid w-full grid-flow-row place-items-center">
+              <div id="controls-container-placeholder" class="w-full">
+                <div id="controls-container" class="controls-hidden fixed bottom-4 rounded-md border-2 border-yellow-500 bg-neutral-900 p-4 drop-shadow">
+                  <div class="grid w-full grid-flow-row gap-2 lg:grid-cols-3">
+                    <button id="save-button" class="cursor-pointer rounded-md bg-yellow-500 p-2 transition hover:bg-yellow-600">
+                      <span class="text-base text-white">save</span>
+                    </button>
+                    <button id="export-button" class="cursor-pointer rounded-md bg-indigo-500 p-2 transition hover:bg-indigo-600">
+                      <span class="text-base text-white">save & export</span>
+                    </button>
+                    <button id="import-button" class="cursor-pointer rounded-md bg-indigo-500 p-2 transition hover:bg-indigo-600">
+                      <span class="text-base text-white">import & save</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div id="bottom-of-page-sensor" class="h-px w-full"></div>
+            </div>
+            <div class="grid w-full grid-flow-row place-items-center gap-4">
+              <div class="grid w-full grid-cols-[1fr_max-content_1fr] gap-2">
+                <div class="my-auto h-[1px] rounded-md bg-neutral-500"></div>
+                <span class="text-base text-neutral-500">danger</span>
+                <div class="my-auto h-[1px] rounded-md bg-neutral-500"></div>
+              </div>
+              <button id="reset-config-button" class="w-full cursor-pointer rounded-md bg-rose-500 p-2 transition hover:bg-rose-600 lg:w-max">
+                <span class="text-base text-white">reset to default</span>
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </div>
