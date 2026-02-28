@@ -11,10 +11,12 @@ import {
   scrollUp
 } from "~/src/core/actions/scroll";
 import { isEditableTarget } from "~/src/core/utils/isEditableTarget";
+import { getToastApi } from "~/src/core/utils/sonner";
 
 type ActionName =
   | "show-hints-current-tab"
   | "show-hints-new-tab"
+  | "yank-current-tab-url"
   | "scroll-down"
   | "scroll-half-page-down"
   | "scroll-half-page-up"
@@ -35,13 +37,75 @@ const KEY_ACTIONS: Partial<Record<string, ActionName>> = {
   l: "scroll-right",
   u: "scroll-half-page-up",
   F: "show-hints-new-tab",
+  yy: "yank-current-tab-url",
   gg: "scroll-to-top",
   G: "scroll-to-bottom"
 };
 
+async function writeClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "true");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      return document.execCommand("copy");
+    } finally {
+      textarea.remove();
+    }
+  }
+}
+
+function getNormalizedCurrentUrl(): string {
+  const url = new URL(window.location.href);
+  const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
+
+  return `${url.origin}${pathname}${url.search}${url.hash}`;
+}
+
+function truncateMiddle(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  const sideLength = Math.max(1, Math.floor((maxLength - 1) / 2));
+  return `${value.slice(0, sideLength)}…${value.slice(-sideLength)}`;
+}
+
+function yankCurrentTabUrl(): boolean {
+  const currentUrl = getNormalizedCurrentUrl();
+
+  void writeClipboard(currentUrl).then((didCopy) => {
+    const toast = getToastApi();
+
+    if (didCopy) {
+      toast?.success("Current tab URL yanked", {
+        description: truncateMiddle(currentUrl, 72)
+      });
+      return;
+    }
+
+    toast?.error("Could not yank current tab URL", {
+      description: "Clipboard access was denied."
+    });
+  });
+
+  return true;
+}
+
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "show-hints-current-tab": () => activateHints("current-tab"),
   "show-hints-new-tab": () => activateHints("new-tab"),
+  "yank-current-tab-url": yankCurrentTabUrl,
   "scroll-down": scrollDown,
   "scroll-half-page-down": scrollHalfPageDown,
   "scroll-half-page-up": scrollHalfPageUp,
