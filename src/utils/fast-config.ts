@@ -17,14 +17,6 @@ export type FastConfig = {
   };
 };
 
-const decodeSequenceToken = (value: string): string => {
-  if (value === "<space>") {
-    return " ";
-  }
-
-  return value;
-};
-
 const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionName>> => {
   const parsedMappings: Partial<Record<string, ActionName>> = {};
 
@@ -41,7 +33,7 @@ const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionN
       continue;
     }
 
-    const sequence = decodeSequenceToken(trimmedLine.slice(0, separatorIndex));
+    const sequence = trimmedLine.slice(0, separatorIndex);
     const actionName = trimmedLine.slice(separatorIndex).trim();
 
     if (!sequence || !isActionName(actionName)) {

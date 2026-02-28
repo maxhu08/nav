@@ -106,6 +106,46 @@ type KeyParseResult = {
   consumed: boolean;
 };
 
+const normalizeBaseKey = (key: string): string | null => {
+  if (key === " ") {
+    return "<space>";
+  }
+
+  if (key.length === 1) {
+    return key;
+  }
+
+  return null;
+};
+
+const getKeyToken = (event: KeyboardEvent): string | null => {
+  const normalizedKey = normalizeBaseKey(event.key);
+
+  if (!normalizedKey) {
+    return null;
+  }
+
+  const modifiers: string[] = [];
+
+  if (event.ctrlKey) {
+    modifiers.push("c");
+  }
+
+  if (event.metaKey) {
+    modifiers.push("m");
+  }
+
+  if (event.altKey) {
+    modifiers.push("a");
+  }
+
+  if (modifiers.length > 0) {
+    return `<${modifiers.join("-")}-${normalizedKey}>`;
+  }
+
+  return normalizedKey;
+};
+
 const applyHotkeyMappings = (
   mappings: Partial<Record<string, ActionName>>,
   prefixes: Partial<Record<string, true>>
@@ -172,13 +212,13 @@ const resolveCount = (): number => {
   return count;
 };
 
-const getActionName = (key: string): KeyParseResult => {
-  if (isCountKey(key)) {
-    consumeCountKey(key);
+const getActionName = (keyToken: string): KeyParseResult => {
+  if (isCountKey(keyToken)) {
+    consumeCountKey(keyToken);
     return { actionName: null, consumed: true };
   }
 
-  const nextSequence = `${pendingSequence}${key}`;
+  const nextSequence = `${pendingSequence}${keyToken}`;
   const directMatch = keyActions[nextSequence];
 
   if (directMatch) {
@@ -195,7 +235,7 @@ const getActionName = (key: string): KeyParseResult => {
 
   clearPendingSequence();
 
-  const actionName = keyActions[key] ?? null;
+  const actionName = keyActions[keyToken] ?? null;
 
   if (!actionName) {
     clearPendingCount();
@@ -249,17 +289,19 @@ window.addEventListener(
       return;
     }
 
-    if (
-      event.ctrlKey ||
-      event.metaKey ||
-      event.altKey ||
-      isEditableTarget(getDeepActiveElement())
-    ) {
+    if (isEditableTarget(getDeepActiveElement())) {
       clearPendingState();
       return;
     }
 
-    const { actionName, consumed } = getActionName(event.key);
+    const keyToken = getKeyToken(event);
+
+    if (!keyToken) {
+      clearPendingState();
+      return;
+    }
+
+    const { actionName, consumed } = getActionName(keyToken);
 
     if (!actionName) {
       if (consumed) {

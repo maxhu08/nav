@@ -60,6 +60,10 @@
             <p class="text-base text-neutral-500">Each line maps one key sequence to one action name.</p>
             <p class="text-base text-neutral-500"><span class="text-[#569cd6]">&lt;key-sequence&gt;</span> <span class="text-[#dcdcaa]">&lt;action-name&gt;</span></p>
             <p class="text-base text-neutral-500">Put one mapping on each line.</p>
+            <p class="text-base text-neutral-500">
+              Modifier keys are specified as `&lt;c-x&gt;`, `&lt;m-x&gt;`, and `&lt;a-x&gt;` for ctrl+x, meta+x, and alt+x. Combined modifiers are written like `&lt;c-a-x&gt;` or `&lt;c-m-x&gt;`. Use
+              `&lt;space&gt;` for the space key.
+            </p>
             <p class="text-base text-neutral-500">Lines starting with # are ignored.</p>
             <p class="text-base text-neutral-500">If an action name is invalid, it is highlighted in red in the editor.</p>
             <br />
@@ -67,9 +71,13 @@
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
               <p><span class="text-[#569cd6]">j</span> <span class="text-[#dcdcaa]">scroll-down</span></p>
               <p><span class="text-[#569cd6]">gg</span> <span class="text-[#dcdcaa]">scroll-to-top</span></p>
+              <p><span class="text-[#569cd6]">&lt;space&gt;</span> <span class="text-[#dcdcaa]">show-hints-current-tab</span></p>
+              <p><span class="text-[#569cd6]">&lt;c-y&gt;</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
               <p><span class="text-[#569cd6]">yy</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
             </div>
-            <p class="text-base text-neutral-500">This maps `j` to scroll down, `gg` to jump to the top of the page, and `yy` to copy the current tab URL.</p>
+            <p class="text-base text-neutral-500">
+              This maps `j` to scroll down, `gg` to jump to the top of the page, `&lt;space&gt;` to show hints in the current tab, `&lt;c-y&gt;` to ctrl+y, and `yy` to copy the current tab URL.
+            </p>
           </div>
         </section>
 
