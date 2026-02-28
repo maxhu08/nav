@@ -1,4 +1,5 @@
 const SCROLL_STEP_SIZE = 60;
+const HALF_PAGE_RATIO = 0.5;
 const MIN_CALIBRATION = 0.5;
 const MAX_CALIBRATION = 1.6;
 const CALIBRATION_BOUNDARY = 150;
@@ -225,6 +226,21 @@ function scroll(direction: ScrollDirection, count = 1): boolean {
   return true;
 }
 
+function scrollHalfPage(direction: ScrollDirection, count = 1): boolean {
+  const start = activatedElement ?? document.activeElement ?? getScrollingElement();
+  const scrollableElement = findScrollableElement(start, direction);
+
+  if (!scrollableElement || !scrollState.keyDownCode) {
+    return false;
+  }
+
+  const halfPageSize = Math.max(1, Math.round(scrollableElement.clientHeight * HALF_PAGE_RATIO));
+  const amount = (direction === "down" ? halfPageSize : -halfPageSize) * count;
+  activatedElement = scrollableElement;
+  smoothScroll(scrollableElement, amount, scrollState.keyDownCode);
+  return true;
+}
+
 function scrollHorizontal(direction: "left" | "right", count = 1): boolean {
   const start = activatedElement ?? document.activeElement ?? getScrollingElement();
   const scrollableElement = findScrollableElement(start, direction);
@@ -290,6 +306,14 @@ export function scrollDown(count = 1): boolean {
 
 export function scrollUp(count = 1): boolean {
   return scroll("up", count);
+}
+
+export function scrollHalfPageDown(count = 1): boolean {
+  return scrollHalfPage("down", count);
+}
+
+export function scrollHalfPageUp(count = 1): boolean {
+  return scrollHalfPage("up", count);
 }
 
 export function scrollLeft(count = 1): boolean {
