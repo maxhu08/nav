@@ -4,20 +4,23 @@ Use this map to decide where new code should go.
 
 ## Main Directories
 
-- `src/core/`: content script runtime and page interaction logic.
+- `src/core/`: shared navigation runtime, content script entry, and page interaction logic.
 - `src/options/`: options page scripts and helpers.
+- `src/docs/`: docs page scripts.
 - `src/popup/`: extension popup implementation.
 - `src/utils/`: shared config and reusable utilities.
 - `src/shared/`: CSS shared across extension pages.
 - `src/assets/`: extension icons and bundled assets.
 - `scripts/`: build and packaging tasks.
 
-## Core Content Script
+## Core Navigation Runtime
 
-- Entry point: `src/core/index.ts`
+- Shared runtime: `src/core/navigation.ts`
+- Content script entry: `src/core/index.ts`
 - Action handlers: `src/core/actions/`
 - Core utilities: `src/core/utils/`
-- This is where parsed hotkeys and parsed `rules.urls` are enforced at runtime.
+- `src/core/navigation.ts` is the single place where parsed hotkeys and parsed `rules.urls` are enforced at runtime.
+- `src/core/index.ts` only boots the shared runtime for normal webpages.
 
 ## Config Layers
 
@@ -33,11 +36,18 @@ Use this map to decide where new code should go.
 ## Options Page
 
 - Page entry: `src/options.html`
+- Init script: `src/options/scripts/init.ts`
 - Main scripts: `src/options/scripts/`
 - Fill helpers: `src/options/scripts/utils/fill-helpers/`
 - Save helpers: `src/options/scripts/utils/save-helpers/`
 - Save pipeline entry: `src/options/scripts/utils/save-config.ts`
-- The options page reads and writes `config`, then rebuilds `fastConfig` for the content script.
+- The options page reads and writes `config`, rebuilds `fastConfig`, and boots the shared core navigation runtime.
+
+## Docs Page
+
+- Page entry: `src/docs.html`
+- Init script: `src/docs/scripts/init.ts`
+- The docs page is mostly static markup, but it also boots the shared core navigation runtime so hotkeys and hints behave the same there.
 
 ## Build Scripts
 
@@ -47,5 +57,6 @@ Use this map to decide where new code should go.
 
 ## Useful Rule of Thumb
 
-- If logic is shared between the content script and options page, put it in `src/utils/`.
+- If logic is shared between the content script and extension pages and it is part of navigation behavior, keep it in `src/core/`.
+- If logic is shared between multiple features but is not tied to navigation runtime, put it in `src/utils/`.
 - If logic is feature-specific, keep it in the closest folder (`core`, `options`, or `popup`).
