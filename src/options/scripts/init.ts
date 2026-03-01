@@ -1,3 +1,4 @@
+import { initCoreNavigation } from "~/src/core/navigation";
 import { listenToInputs } from "~/src/options/scripts/inputs";
 import { listenToKeys } from "~/src/options/scripts/keybinds";
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
@@ -23,6 +24,8 @@ logo.addEventListener(
 const manifest = chrome.runtime.getManifest();
 const displayVersion =
   document.documentElement.getAttribute("rc-version-info")?.trim() || manifest.version;
+
+initCoreNavigation();
 
 (document.getElementById("version-number-text") as HTMLSpanElement).textContent += displayVersion;
 

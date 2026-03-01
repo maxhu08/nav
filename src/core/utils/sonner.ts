@@ -84,6 +84,19 @@ function getWrapper() {
   return document.getElementById(TOASTER_WRAPPER_ID);
 }
 
+export function ensureToastWrapper() {
+  if (getWrapper()) {
+    return;
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.id = TOASTER_WRAPPER_ID;
+  wrapper.setAttribute("data-rich-colors", "true");
+  wrapper.setAttribute("data-expand", "false");
+  wrapper.setAttribute("data-position", "bottom-right");
+  document.body.appendChild(wrapper);
+}
+
 function getToasterList() {
   return document.getElementById(TOASTER_LIST_ID);
 }
