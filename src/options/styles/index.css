@@ -75,7 +75,7 @@
 }
 
 .rules-urls-textarea::selection {
-  background: rgba(56, 189, 248, 0.35);
+  background-color: #ffffff20;
 }
 
 .rules-urls-token-comment {
@@ -152,7 +152,7 @@
 }
 
 .hotkeys-mappings-textarea::selection {
-  background: rgba(56, 189, 248, 0.35);
+  background-color: #ffffff20;
 }
 
 .hotkeys-mappings-token-comment {
