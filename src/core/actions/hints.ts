@@ -482,6 +482,14 @@ const getSearchCandidateScore = (element: HTMLElement): number => {
 };
 
 const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null => {
+  const selectableElementIndexes = elements.flatMap((element, index) =>
+    isSelectableElement(element) ? [index] : []
+  );
+
+  if (selectableElementIndexes.length === 1) {
+    return selectableElementIndexes[0] ?? null;
+  }
+
   let bestIndex: number | null = null;
   let bestScore = 180;
 
@@ -532,11 +540,9 @@ const doesLabelConflictWithReservedLabel = (
 
 const getPreferredSearchLabel = (labelLength: number): string | null => {
   const label = preferredSearchLabels.find(
-    (preferredSearchLabel) => preferredSearchLabel.length === labelLength
+    (preferredSearchLabel) => preferredSearchLabel.length >= labelLength
   );
-  return label && label.length === labelLength && isPreferredSearchLabelValid(label, labelLength)
-    ? label
-    : null;
+  return label && isPreferredSearchLabelValid(label, labelLength) ? label : null;
 };
 
 const createOverlay = (): HTMLDivElement => {
