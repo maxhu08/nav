@@ -88,6 +88,11 @@ const yankCurrentTabUrl = (): boolean => {
   return true;
 };
 
+const isOptionsPage = (): boolean => {
+  const optionsUrl = chrome.runtime.getURL("options.html");
+  return window.location.href === optionsUrl;
+};
+
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "show-hints-current-tab": () => activateHints("current-tab"),
   "show-hints-new-tab": () => activateHints("new-tab"),
@@ -452,7 +457,11 @@ const ensureFocusStyles = (): void => {
       box-sizing: border-box;
       opacity: 0;
       visibility: hidden;
-    }
+      transform: none !important;
+      transition: none !important;
+      transition-duration: 0ms !important;
+      transition-property: none !important;
+      }
 
     #${FOCUS_OVERLAY_ID}[data-visible="true"] {
       visibility: visible;
@@ -590,14 +599,16 @@ export const initCoreNavigation = (): void => {
   isInitialized = true;
 
   installScrollTracking();
-  ensureFocusStyles();
-  getFocusOverlay();
+  if (!isOptionsPage()) {
+    ensureFocusStyles();
+    getFocusOverlay();
+    window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
+    window.addEventListener("resize", scheduleFocusOverlayPosition, true);
+    window.addEventListener("scroll", scheduleFocusOverlayPosition, true);
+  }
   ensureToastWrapper();
   syncFastConfig();
 
   chrome.storage.onChanged.addListener(handleStorageChange);
   window.addEventListener("keydown", handleKeydown, true);
-  window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
-  window.addEventListener("resize", scheduleFocusOverlayPosition, true);
-  window.addEventListener("scroll", scheduleFocusOverlayPosition, true);
 };
