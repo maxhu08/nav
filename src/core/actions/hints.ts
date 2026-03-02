@@ -566,7 +566,7 @@ const getDefaultHintMarkerCSS = (): string => {
   const pendingSelector = `[${LETTER_STYLE_ATTRIBUTE}="pending"]`;
   const typedSelector = `[${LETTER_STYLE_ATTRIBUTE}="typed"]`;
 
-  return `${markerSelector}{transform:translate(-20%,-20%);padding:1px 4px;border-radius:3px;background:#eab308;color:#2b1d00;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.28);white-space:nowrap;}${pendingSelector}{color:#000000;}${typedSelector}{color:#ffffff;}`;
+  return `${markerSelector}{transform:translate(-20%,-20%);transition:none !important;transition-duration:0ms !important;transition-property:none !important;padding:1px 4px;border-radius:3px;background:#eab308;color:#2b1d00;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.28);white-space:nowrap;}${pendingSelector}{color:#000000;}${typedSelector}{color:#ffffff;}`;
 };
 
 const applyHintStyles = (): void => {

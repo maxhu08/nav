@@ -19,6 +19,14 @@
   transition-duration: 250ms;
 }
 
+[data-nav-hint-marker],
+[data-nav-hint-marker] *,
+[data-nav-hint-marker-letter] {
+  transition: none !important;
+  transition-duration: 0ms !important;
+  transition-property: none !important;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }

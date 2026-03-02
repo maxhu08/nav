@@ -9,6 +9,9 @@ import {
 export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 [data-nav-hint-marker] {
   transform: translate(-20%, -20%);
+  transition: none !important;
+  transition-duration: 0ms !important;
+  transition-property: none !important;
   padding: 1px 4px;
   border-radius: 3px;
   background: #eab308;
