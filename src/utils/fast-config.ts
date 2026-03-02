@@ -21,12 +21,16 @@ export type FastConfig = {
     prefixes: Partial<Record<string, true>>;
     hints: {
       charset: string;
+      showActivationIndicator: boolean;
     };
   };
 };
 
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
-  return typeof value?.hotkeys?.hints?.charset === "string";
+  return (
+    typeof value?.hotkeys?.hints?.charset === "string" &&
+    typeof value?.hotkeys?.hints?.showActivationIndicator === "boolean"
+  );
 };
 
 const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionName>> => {
@@ -165,7 +169,8 @@ export const buildFastConfig = (config: Config): FastConfig => {
       mappings,
       prefixes: createHotkeyPrefixes(mappings),
       hints: {
-        charset: parseHintCharsetValue(config.hotkeys.hints.charset)
+        charset: parseHintCharsetValue(config.hotkeys.hints.charset),
+        showActivationIndicator: config.hotkeys.hints.showActivationIndicator
       }
     }
   };

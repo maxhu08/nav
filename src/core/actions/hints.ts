@@ -9,6 +9,7 @@ import {
 const HINT_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
 const OVERLAY_ID = `${HINT_NAMESPACE_PREFIX}link-hints-overlay`;
 const MARKER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker`;
+const FOCUS_INDICATOR_EVENT = `${HINT_NAMESPACE_PREFIX}focus-indicator`;
 const IS_MAC = navigator.userAgent.includes("Mac");
 let hintAlphabet = DEFAULT_HINT_CHARSET;
 
@@ -229,13 +230,25 @@ const shouldBlurAfterActivation = (element: HTMLElement): boolean =>
     ]).has(element.type)) ||
   element.getAttribute("role") === "button";
 
+const dispatchFocusIndicator = (element: HTMLElement): void => {
+  window.dispatchEvent(
+    new CustomEvent(FOCUS_INDICATOR_EVENT, {
+      detail: {
+        element
+      }
+    })
+  );
+};
+
 const simulateSelect = (element: HTMLElement): void => {
   const activeElement = getDeepActiveElement();
   if (activeElement === element && isEditableElement(activeElement)) {
+    dispatchFocusIndicator(element);
     return;
   }
 
   element.focus();
+  dispatchFocusIndicator(element);
 
   if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
     return;
@@ -255,6 +268,7 @@ const simulateSelect = (element: HTMLElement): void => {
 };
 
 const clickElement = (element: HTMLElement): void => {
+  dispatchFocusIndicator(element);
   element.click();
 
   if (document.activeElement === element && shouldBlurAfterActivation(element)) {
@@ -263,6 +277,7 @@ const clickElement = (element: HTMLElement): void => {
 };
 
 const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit): void => {
+  dispatchFocusIndicator(element);
   element.dispatchEvent(
     new MouseEvent("click", {
       bubbles: true,

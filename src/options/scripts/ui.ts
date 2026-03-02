@@ -8,6 +8,9 @@ export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] = getContai
 export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-mappings-highlight");
 export const hotkeysHintsCharsetContainerEl = getElement<HTMLDivElement>("hotkeys-hints-charset-container");
 export const hotkeysHintsCharsetInputEl = getElement<HTMLInputElement>("hotkeys-hints-charset-input");
+export const hotkeysHintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>(
+  "hotkeys-hints-show-activation-indicator-checkbox"
+);
 
 export const saveButtonEl = getButton("save");
 export const exportButtonEl = getButton("export");

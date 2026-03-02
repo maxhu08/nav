@@ -17,6 +17,7 @@ import {
 } from "~/src/core/actions/scroll";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
+import { getExtensionNamespace } from "~/src/utils/extension-id";
 import { type FastRule, getFastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 
@@ -107,6 +108,17 @@ let pendingSequence = "";
 let pendingSequenceTimer: number | null = null;
 let pendingCount = "";
 let isInitialized = false;
+
+const FOCUS_STYLE_ID = `nav-${getExtensionNamespace()}-focus-style`;
+const FOCUS_OVERLAY_ID = `nav-${getExtensionNamespace()}-focus-overlay`;
+const FOCUS_INDICATOR_EVENT = `nav-${getExtensionNamespace()}-focus-indicator`;
+const FOCUS_OVERLAY_DURATION_MS = 1000;
+const FOCUS_OVERLAY_HIDE_MS = 920;
+
+let focusedOverlayTarget: HTMLElement | null = null;
+let focusOverlayFrame: number | null = null;
+let focusOverlayTimeout: number | null = null;
+let showActivationIndicator = true;
 
 type KeyParseResult = {
   actionName: ActionName | null;
@@ -289,6 +301,7 @@ const syncFastConfig = (): void => {
   void getFastConfig().then((fastConfig) => {
     applyUrlRules(fastConfig.rules.urls);
     setHintCharset(fastConfig.hotkeys.hints.charset);
+    showActivationIndicator = fastConfig.hotkeys.hints.showActivationIndicator;
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
 };
@@ -308,6 +321,7 @@ const handleStorageChange = (
     hotkeys?: {
       hints?: {
         charset?: string;
+        showActivationIndicator?: boolean;
       };
       mappings?: Partial<Record<string, ActionName>>;
       prefixes?: Partial<Record<string, true>>;
@@ -320,6 +334,10 @@ const handleStorageChange = (
 
   if (nextFastConfig.hotkeys?.hints?.charset) {
     setHintCharset(nextFastConfig.hotkeys.hints.charset);
+  }
+
+  if (typeof nextFastConfig.hotkeys?.hints?.showActivationIndicator === "boolean") {
+    showActivationIndicator = nextFastConfig.hotkeys.hints.showActivationIndicator;
   }
 
   if (nextFastConfig.hotkeys?.mappings && nextFastConfig.hotkeys.prefixes) {
@@ -384,6 +402,186 @@ const handleKeydown = (event: KeyboardEvent): void => {
   event.stopImmediatePropagation();
 };
 
+const ensureFocusStyles = (): void => {
+  if (document.getElementById(FOCUS_STYLE_ID)) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = FOCUS_STYLE_ID;
+  style.textContent = `
+    @keyframes nav-focus-pulse {
+      0% {
+        opacity: 1;
+        box-shadow:
+          0 0 0 10px rgba(234, 179, 8, 0.38),
+          0 0 0 6px rgba(234, 179, 8, 0.95);
+      }
+
+      18% {
+        opacity: 1;
+        box-shadow:
+          0 0 0 5px rgba(234, 179, 8, 0.18),
+          0 0 0 3px rgba(234, 179, 8, 0.95);
+      }
+
+      70% {
+        opacity: 1;
+        box-shadow:
+          0 0 0 2px rgba(234, 179, 8, 0.06),
+          0 0 0 2px rgba(234, 179, 8, 0.92);
+      }
+
+      100% {
+        opacity: 0;
+        box-shadow:
+          0 0 0 2px rgba(234, 179, 8, 0.02),
+          0 0 0 2px rgba(234, 179, 8, 0);
+      }
+    }
+
+    #${FOCUS_OVERLAY_ID} {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+      z-index: 2147483647;
+      border-radius: 0.375rem;
+      box-sizing: border-box;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #${FOCUS_OVERLAY_ID}[data-visible="true"] {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    #${FOCUS_OVERLAY_ID}[data-animate="true"] {
+      animation: nav-focus-pulse ${FOCUS_OVERLAY_DURATION_MS}ms cubic-bezier(0.2, 0.9, 0.2, 1)
+        !important;
+    }
+  `;
+
+  const styleRoot = document.head ?? document.documentElement;
+  styleRoot.append(style);
+};
+
+const getFocusOverlay = (): HTMLDivElement => {
+  const existing = document.getElementById(FOCUS_OVERLAY_ID);
+
+  if (existing instanceof HTMLDivElement) {
+    return existing;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.id = FOCUS_OVERLAY_ID;
+  overlay.setAttribute("data-visible", "false");
+  overlay.setAttribute("data-animate", "false");
+  document.documentElement.append(overlay);
+  return overlay;
+};
+
+const clearFocusOverlayFrame = (): void => {
+  if (focusOverlayFrame === null) {
+    return;
+  }
+
+  window.cancelAnimationFrame(focusOverlayFrame);
+  focusOverlayFrame = null;
+};
+
+const clearFocusOverlayTimeout = (): void => {
+  if (focusOverlayTimeout === null) {
+    return;
+  }
+
+  window.clearTimeout(focusOverlayTimeout);
+  focusOverlayTimeout = null;
+};
+
+const hideFocusOverlay = (): void => {
+  focusedOverlayTarget = null;
+  clearFocusOverlayFrame();
+  clearFocusOverlayTimeout();
+
+  const overlay = getFocusOverlay();
+  overlay.setAttribute("data-visible", "false");
+  overlay.setAttribute("data-animate", "false");
+};
+
+const updateFocusOverlayPosition = (): void => {
+  if (!focusedOverlayTarget || !focusedOverlayTarget.isConnected) {
+    hideFocusOverlay();
+    return;
+  }
+
+  const rect = focusedOverlayTarget.getBoundingClientRect();
+
+  if (rect.width <= 0 || rect.height <= 0) {
+    hideFocusOverlay();
+    return;
+  }
+
+  const overlay = getFocusOverlay();
+  const horizontalInset = 3;
+  const verticalInset = 2;
+  const targetHeight = rect.height + verticalInset * 2;
+  const centeredTop = rect.top + rect.height / 2 - targetHeight / 2;
+
+  overlay.style.top = `${Math.round(centeredTop)}px`;
+  overlay.style.left = `${Math.round(rect.left - horizontalInset)}px`;
+  overlay.style.width = `${Math.round(rect.width + horizontalInset * 2)}px`;
+  overlay.style.height = `${Math.round(targetHeight)}px`;
+  overlay.style.borderRadius = "0.375rem";
+  overlay.style.boxShadow = "0 0 0 2px rgba(234, 179, 8, 0.95)";
+  overlay.setAttribute("data-visible", "true");
+};
+
+const scheduleFocusOverlayPosition = (): void => {
+  if (focusOverlayFrame !== null) {
+    return;
+  }
+
+  focusOverlayFrame = window.requestAnimationFrame(() => {
+    focusOverlayFrame = null;
+    updateFocusOverlayPosition();
+  });
+};
+
+const animateFocusOverlay = (): void => {
+  const overlay = getFocusOverlay();
+  overlay.setAttribute("data-animate", "false");
+  overlay.setAttribute("data-visible", "true");
+
+  void overlay.offsetWidth;
+
+  overlay.setAttribute("data-animate", "true");
+};
+
+const handleFocusIndicator = (event: Event): void => {
+  if (!showActivationIndicator) {
+    return;
+  }
+
+  const target = (event as CustomEvent<{ element?: HTMLElement }>).detail?.element;
+
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  focusedOverlayTarget = target;
+  clearFocusOverlayTimeout();
+  updateFocusOverlayPosition();
+  animateFocusOverlay();
+
+  focusOverlayTimeout = window.setTimeout(() => {
+    hideFocusOverlay();
+  }, FOCUS_OVERLAY_HIDE_MS);
+};
+
 export const initCoreNavigation = (): void => {
   if (isInitialized) {
     return;
@@ -392,9 +590,14 @@ export const initCoreNavigation = (): void => {
   isInitialized = true;
 
   installScrollTracking();
+  ensureFocusStyles();
+  getFocusOverlay();
   ensureToastWrapper();
   syncFastConfig();
 
   chrome.storage.onChanged.addListener(handleStorageChange);
   window.addEventListener("keydown", handleKeydown, true);
+  window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
+  window.addEventListener("resize", scheduleFocusOverlayPosition, true);
+  window.addEventListener("scroll", scheduleFocusOverlayPosition, true);
 };

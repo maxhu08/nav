@@ -22,7 +22,8 @@ export const defaultConfig: Config = {
   hotkeys: {
     mappings: DEFAULT_HOTKEY_MAPPINGS,
     hints: {
-      charset: DEFAULT_HINT_CHARSET
+      charset: DEFAULT_HINT_CHARSET,
+      showActivationIndicator: true
     }
   }
 };
@@ -35,6 +36,7 @@ export type Config = {
     mappings: string;
     hints: {
       charset: string;
+      showActivationIndicator: boolean;
     };
   };
 };
