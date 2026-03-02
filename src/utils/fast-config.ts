@@ -21,6 +21,7 @@ export type FastConfig = {
     prefixes: Partial<Record<string, true>>;
     hints: {
       charset: string;
+      avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
       showActivationIndicator: boolean;
     };
   };
@@ -29,6 +30,8 @@ export type FastConfig = {
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
   return (
     typeof value?.hotkeys?.hints?.charset === "string" &&
+    typeof value?.hotkeys?.hints?.avoidAdjacentPairs === "object" &&
+    value?.hotkeys?.hints?.avoidAdjacentPairs !== null &&
     typeof value?.hotkeys?.hints?.showActivationIndicator === "boolean"
   );
 };
@@ -92,6 +95,38 @@ const parseHintCharsetValue = (value: string): string => {
   }
 
   return normalized.length >= 2 ? normalized : DEFAULT_HINT_CHARSET;
+};
+
+const parseAvoidAdjacentPairsValue = (
+  value: string
+): Partial<Record<string, Partial<Record<string, true>>>> => {
+  const normalizedPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
+
+  for (const line of value.toLowerCase().split("\n")) {
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine || trimmedLine.startsWith("#")) {
+      continue;
+    }
+
+    for (const segment of trimmedLine.split(/\s+/).map((part) => part.trim())) {
+      if (!/^[a-z]{2}$/.test(segment)) {
+        continue;
+      }
+
+      const previousChar = segment[0];
+      const nextChar = segment[1];
+
+      if (!previousChar || !nextChar) {
+        continue;
+      }
+
+      normalizedPairs[previousChar] ??= {};
+      normalizedPairs[previousChar]![nextChar] = true;
+    }
+  }
+
+  return normalizedPairs;
 };
 
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
@@ -170,6 +205,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
       prefixes: createHotkeyPrefixes(mappings),
       hints: {
         charset: parseHintCharsetValue(config.hotkeys.hints.charset),
+        avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hotkeys.hints.avoidAdjacentPairs),
         showActivationIndicator: config.hotkeys.hints.showActivationIndicator
       }
     }

@@ -1,4 +1,6 @@
 import {
+  hotkeysHintsAvoidAdjacentPairsContainerEl,
+  hotkeysHintsAvoidAdjacentPairsTextareaEl,
   exportButtonEl,
   hotkeysHintsCharsetContainerEl,
   hotkeysHintsCharsetInputEl,
@@ -16,6 +18,11 @@ import {
   syncHotkeysMappingsHighlight,
   syncHotkeysMappingsHighlightScroll
 } from "~/src/options/scripts/utils/hotkeys-highlight";
+import {
+  normalizeAvoidAdjacentPairsValue,
+  syncHotkeysHintsAvoidAdjacentPairsHighlight,
+  syncHotkeysHintsAvoidAdjacentPairsHighlightScroll
+} from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
 import {
   syncRulesUrlsHighlight,
   syncRulesUrlsHighlightScroll
@@ -81,6 +88,42 @@ export const listenToInputs = (): void => {
 
   hotkeysHintsCharsetInputEl.addEventListener("blur", () => {
     hotkeysHintsCharsetContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("focus", () => {
+    hotkeysHintsAvoidAdjacentPairsContainerEl.classList.replace(
+      "border-transparent",
+      "border-sky-500"
+    );
+  });
+
+  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("input", () => {
+    const normalizedValue = normalizeAvoidAdjacentPairsValue(
+      hotkeysHintsAvoidAdjacentPairsTextareaEl.value
+    );
+
+    if (hotkeysHintsAvoidAdjacentPairsTextareaEl.value !== normalizedValue) {
+      const selectionStart = hotkeysHintsAvoidAdjacentPairsTextareaEl.selectionStart;
+      hotkeysHintsAvoidAdjacentPairsTextareaEl.value = normalizedValue;
+
+      if (selectionStart !== null) {
+        hotkeysHintsAvoidAdjacentPairsTextareaEl.setSelectionRange(selectionStart, selectionStart);
+      }
+    }
+
+    syncHotkeysHintsAvoidAdjacentPairsHighlight();
+    syncHotkeysHintsAvoidAdjacentPairsHighlightScroll();
+  });
+
+  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("scroll", () => {
+    syncHotkeysHintsAvoidAdjacentPairsHighlightScroll();
+  });
+
+  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("blur", () => {
+    hotkeysHintsAvoidAdjacentPairsContainerEl.classList.replace(
+      "border-sky-500",
+      "border-transparent"
+    );
   });
 
   tippy("#save-button", {

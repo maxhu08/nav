@@ -1,5 +1,9 @@
 import { deepMerge } from "~/src/utils/deep-merge";
-import { DEFAULT_HINT_CHARSET, DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/hotkeys";
+import {
+  DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
+  DEFAULT_HINT_CHARSET,
+  DEFAULT_HOTKEY_MAPPINGS
+} from "~/src/utils/hotkeys";
 
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
@@ -23,6 +27,7 @@ export const defaultConfig: Config = {
     mappings: DEFAULT_HOTKEY_MAPPINGS,
     hints: {
       charset: DEFAULT_HINT_CHARSET,
+      avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
       showActivationIndicator: true
     }
   }
@@ -36,6 +41,7 @@ export type Config = {
     mappings: string;
     hints: {
       charset: string;
+      avoidAdjacentPairs: string;
       showActivationIndicator: boolean;
     };
   };

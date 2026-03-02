@@ -49,3 +49,14 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
 ].join("\n");
 
 export const DEFAULT_HINT_CHARSET = "sadfjklewcmpgh";
+
+export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = [
+  "# double letters",
+  "aa cc dd ee ff gg hh jj kk ll mm pp ss ww",
+  "",
+  "# same finger bigrams",
+  "cd ce dc de ec ed fg gf hj hm jh jm mh mj sw ws",
+  "",
+  "# other",
+  "sa"
+].join("\n");

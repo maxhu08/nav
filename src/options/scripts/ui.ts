@@ -8,6 +8,11 @@ export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] = getContai
 export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-mappings-highlight");
 export const hotkeysHintsCharsetContainerEl = getElement<HTMLDivElement>("hotkeys-hints-charset-container");
 export const hotkeysHintsCharsetInputEl = getElement<HTMLInputElement>("hotkeys-hints-charset-input");
+export const [hotkeysHintsAvoidAdjacentPairsContainerEl, hotkeysHintsAvoidAdjacentPairsTextareaEl] =
+  getContainerAndTextarea("hotkeys-hints-avoid-adjacent-pairs");
+export const hotkeysHintsAvoidAdjacentPairsHighlightEl = getElement<HTMLPreElement>(
+  "hotkeys-hints-avoid-adjacent-pairs-highlight"
+);
 export const hotkeysHintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>(
   "hotkeys-hints-show-activation-indicator-checkbox"
 );

@@ -13,6 +13,7 @@ const FOCUS_INDICATOR_EVENT = `${HINT_NAMESPACE_PREFIX}focus-indicator`;
 const IS_MAC = navigator.userAgent.includes("Mac");
 let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
+let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 
 type LinkMode = "current-tab" | "new-tab";
 
@@ -231,73 +232,113 @@ const getHintableElements = (): HTMLElement[] => {
 const buildHintLabels = (count: number): string[] => {
   if (count <= 0) return [];
 
-  const alphabet = hintAlphabet.split("");
-  const firstCharacters = alphabet.filter((char) => !reservedHintPrefixes.has(char));
-  const leadingAlphabet = firstCharacters.length > 0 ? firstCharacters : alphabet;
-  const labels: string[] = [];
+  const buildLabels = (
+    blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
+  ): string[] => {
+    const alphabet = hintAlphabet.split("");
+    const firstCharacters = alphabet.filter((char) => !reservedHintPrefixes.has(char));
+    const leadingAlphabet = firstCharacters.length > 0 ? firstCharacters : alphabet;
+    const labels: string[] = [];
+    const subtreeCapacityCache = new Map<string, number>();
 
-  let labelLength = 1;
-  let capacity = leadingAlphabet.length;
-
-  while (capacity < count) {
-    labelLength += 1;
-    capacity *= alphabet.length;
-  }
-
-  const getSubtreeCapacity = (remainingLength: number, isLeadingCharacter: boolean): number => {
-    if (remainingLength <= 0) return 1;
-
-    let subtreeCapacity = isLeadingCharacter ? leadingAlphabet.length : alphabet.length;
-
-    for (let index = 1; index < remainingLength; index += 1) {
-      subtreeCapacity *= alphabet.length;
-    }
-
-    return subtreeCapacity;
-  };
-
-  const appendLabels = (
-    prefix: string,
-    remainingCount: number,
-    remainingLength: number,
-    isLeadingCharacter: boolean
-  ): void => {
-    if (remainingCount <= 0) return;
-
-    const sourceAlphabet = isLeadingCharacter ? leadingAlphabet : alphabet;
-    const subtreeCapacity = getSubtreeCapacity(remainingLength - 1, false);
-    let assignedCount = 0;
-
-    for (let index = 0; index < sourceAlphabet.length; index += 1) {
-      const char = sourceAlphabet[index];
-      const nextLabel = `${prefix}${char}`;
-      const remainingBuckets = sourceAlphabet.length - index;
-      const nextRemainingCount = remainingCount - assignedCount;
-      const bucketCount = Math.min(
-        subtreeCapacity,
-        Math.ceil(nextRemainingCount / remainingBuckets)
-      );
-
-      if (bucketCount <= 0) continue;
-
-      if (remainingLength === 1) {
-        labels.push(nextLabel);
-      } else {
-        appendLabels(nextLabel, bucketCount, remainingLength - 1, false);
+    const getAllowedCharacters = (
+      previousChar: string | null,
+      isLeadingCharacter: boolean
+    ): string[] => {
+      if (isLeadingCharacter) {
+        return leadingAlphabet;
       }
 
-      assignedCount += bucketCount;
-      if (assignedCount >= remainingCount || labels.length >= count) return;
+      return alphabet.filter(
+        (char) => previousChar === null || blockedPairs[previousChar]?.[char] !== true
+      );
+    };
+
+    const getSubtreeCapacity = (
+      previousChar: string | null,
+      remainingLength: number,
+      isLeadingCharacter: boolean
+    ): number => {
+      if (remainingLength <= 0) return 1;
+
+      const cacheKey = `${previousChar ?? "_"}:${remainingLength}:${isLeadingCharacter ? "1" : "0"}`;
+      const cachedCapacity = subtreeCapacityCache.get(cacheKey);
+      if (cachedCapacity !== undefined) {
+        return cachedCapacity;
+      }
+
+      let subtreeCapacity = 0;
+
+      for (const char of getAllowedCharacters(previousChar, isLeadingCharacter)) {
+        subtreeCapacity += getSubtreeCapacity(char, remainingLength - 1, false);
+      }
+
+      subtreeCapacityCache.set(cacheKey, subtreeCapacity);
+      return subtreeCapacity;
+    };
+
+    let labelLength = 1;
+    let capacity = getSubtreeCapacity(null, labelLength, true);
+
+    while (capacity < count) {
+      const nextLength = labelLength + 1;
+      const nextCapacity = getSubtreeCapacity(null, nextLength, true);
+
+      if (nextCapacity <= capacity) {
+        return [];
+      }
+
+      labelLength = nextLength;
+      capacity = nextCapacity;
     }
+
+    const appendLabels = (
+      prefix: string,
+      previousChar: string | null,
+      remainingCount: number,
+      remainingLength: number,
+      isLeadingCharacter: boolean
+    ): void => {
+      if (remainingCount <= 0) return;
+
+      const sourceAlphabet = getAllowedCharacters(previousChar, isLeadingCharacter);
+      let assignedCount = 0;
+
+      for (let index = 0; index < sourceAlphabet.length; index += 1) {
+        const char = sourceAlphabet[index];
+        const nextLabel = `${prefix}${char}`;
+        const remainingBuckets = sourceAlphabet.length - index;
+        const nextRemainingCount = remainingCount - assignedCount;
+        const subtreeCapacity = getSubtreeCapacity(char, remainingLength - 1, false);
+        const bucketCount = Math.min(
+          subtreeCapacity,
+          Math.ceil(nextRemainingCount / remainingBuckets)
+        );
+
+        if (bucketCount <= 0) continue;
+
+        if (remainingLength === 1) {
+          labels.push(nextLabel);
+        } else {
+          appendLabels(nextLabel, char, bucketCount, remainingLength - 1, false);
+        }
+
+        assignedCount += bucketCount;
+        if (assignedCount >= remainingCount || labels.length >= count) return;
+      }
+    };
+
+    appendLabels("", null, count, labelLength, true);
+
+    if (labels.length > count) {
+      labels.length = count;
+    }
+
+    return labels.slice(0, count);
   };
 
-  appendLabels("", count, labelLength, true);
-
-  if (labels.length > count) {
-    labels.length = count;
-  }
-
-  return labels.slice(0, count);
+  const labels = buildLabels(avoidedAdjacentHintPairs);
+  return labels.length === count ? labels : buildLabels({});
 };
 
 const createOverlay = (): HTMLDivElement => {
@@ -647,6 +688,16 @@ export const setHintCharset = (charset: string): void => {
 
 export const setReservedHintPrefixes = (prefixes: Iterable<string>): void => {
   reservedHintPrefixes = new Set(prefixes);
+
+  if (hintState.active) {
+    exitHints();
+  }
+};
+
+export const setAvoidedAdjacentHintPairs = (
+  pairs: Partial<Record<string, Partial<Record<string, true>>>>
+): void => {
+  avoidedAdjacentHintPairs = pairs;
 
   if (hintState.active) {
     exitHints();
