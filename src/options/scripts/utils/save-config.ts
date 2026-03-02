@@ -20,19 +20,25 @@ const setConfigAndFastConfig = (config: Config): Promise<void> => {
   });
 };
 
-const hasUnresolvedEditorErrors = (): boolean =>
-  hasEditorError(rulesUrlsStatusEl) ||
-  hasEditorError(hotkeysMappingsStatusEl) ||
-  hasEditorError(hotkeysHintsCharsetStatusEl) ||
-  hasEditorError(hotkeysHintsPreferredSearchLabelsStatusEl) ||
-  hasEditorError(hotkeysHintsAvoidAdjacentPairsStatusEl);
+const SAVE_ERROR_FIELDS = [
+  { path: "rules.urls", statusEl: rulesUrlsStatusEl },
+  { path: "hotkeys.mappings", statusEl: hotkeysMappingsStatusEl },
+  { path: "hints.charset", statusEl: hotkeysHintsCharsetStatusEl },
+  { path: "hints.preferredSearchLabels", statusEl: hotkeysHintsPreferredSearchLabelsStatusEl },
+  { path: "hints.avoidAdjacentPairs", statusEl: hotkeysHintsAvoidAdjacentPairsStatusEl }
+] as const;
+
+const getFirstUnresolvedEditorErrorPath = (): string | null => {
+  const errorField = SAVE_ERROR_FIELDS.find(({ statusEl }) => hasEditorError(statusEl));
+  return errorField?.path ?? null;
+};
 
 export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<Config> => {
-  if (hasUnresolvedEditorErrors()) {
+  const unresolvedErrorPath = getFirstUnresolvedEditorErrorPath();
+
+  if (unresolvedErrorPath) {
     if (notify) {
-      getToastApi()?.error("config not saved", {
-        description: "unresolved errors"
-      });
+      getToastApi()?.error(`${unresolvedErrorPath} has unresolved errors, aborting save`);
     }
 
     return getConfig();
