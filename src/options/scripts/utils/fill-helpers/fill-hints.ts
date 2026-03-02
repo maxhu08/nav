@@ -1,37 +1,37 @@
 import { type Config } from "~/src/utils/config";
 import {
-  hotkeysHintsAvoidAdjacentPairsTextareaEl,
-  hotkeysHintsCharsetInputEl,
-  hotkeysHintsCustomCSSSectionEl,
-  hotkeysHintsCustomCSSTextareaEl,
-  hotkeysHintsPreferredSearchLabelsInputEl,
-  hotkeysHintsShowActivationIndicatorCheckboxEl,
-  hotkeysHintsShowCapitalizedLettersCheckboxEl,
-  hotkeysHintsStylingCustomButtonEl,
-  hotkeysHintsStylingDefaultButtonEl
+  hintsAvoidAdjacentPairsTextareaEl,
+  hintsCharsetInputEl,
+  hintsCustomCSSSectionEl,
+  hintsCustomCSSTextareaEl,
+  hintsPreferredSearchLabelsInputEl,
+  hintsShowActivationIndicatorCheckboxEl,
+  hintsShowCapitalizedLettersCheckboxEl,
+  hintsStylingCustomButtonEl,
+  hintsStylingDefaultButtonEl
 } from "~/src/options/scripts/ui";
-import { syncHotkeysHintsAvoidAdjacentPairsHighlight } from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
-import { refreshHotkeysHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
+import { syncHintsAvoidAdjacentPairsHighlight } from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
+import { refreshHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
 import {
-  syncHotkeysHintsCharsetHighlight,
-  syncHotkeysHintsPreferredSearchLabelsHighlight
+  syncHintsCharsetHighlight,
+  syncHintsPreferredSearchLabelsHighlight
 } from "~/src/options/scripts/utils/hints-inline-highlight";
 
 const setHintsStylingButtonState = (styling: Config["hints"]["styling"]): void => {
   const isCustom = styling === "custom";
 
-  hotkeysHintsStylingDefaultButtonEl.setAttribute("aria-pressed", String(!isCustom));
-  hotkeysHintsStylingCustomButtonEl.setAttribute("aria-pressed", String(isCustom));
-  hotkeysHintsStylingDefaultButtonEl.classList.toggle("bg-yellow-500", !isCustom);
-  hotkeysHintsStylingDefaultButtonEl.classList.toggle("hover:bg-yellow-600", !isCustom);
-  hotkeysHintsStylingDefaultButtonEl.classList.toggle("bg-neutral-800", isCustom);
-  hotkeysHintsStylingDefaultButtonEl.classList.toggle("hover:bg-neutral-700", isCustom);
-  hotkeysHintsStylingCustomButtonEl.classList.toggle("bg-yellow-500", isCustom);
-  hotkeysHintsStylingCustomButtonEl.classList.toggle("hover:bg-yellow-600", isCustom);
-  hotkeysHintsStylingCustomButtonEl.classList.toggle("bg-neutral-800", !isCustom);
-  hotkeysHintsStylingCustomButtonEl.classList.toggle("hover:bg-neutral-700", !isCustom);
-  hotkeysHintsCustomCSSSectionEl.classList.toggle("hidden", !isCustom);
-  hotkeysHintsCustomCSSSectionEl.classList.toggle("grid", isCustom);
+  hintsStylingDefaultButtonEl.setAttribute("aria-pressed", String(!isCustom));
+  hintsStylingCustomButtonEl.setAttribute("aria-pressed", String(isCustom));
+  hintsStylingDefaultButtonEl.classList.toggle("bg-yellow-500", !isCustom);
+  hintsStylingDefaultButtonEl.classList.toggle("hover:bg-yellow-600", !isCustom);
+  hintsStylingDefaultButtonEl.classList.toggle("bg-neutral-800", isCustom);
+  hintsStylingDefaultButtonEl.classList.toggle("hover:bg-neutral-700", isCustom);
+  hintsStylingCustomButtonEl.classList.toggle("bg-yellow-500", isCustom);
+  hintsStylingCustomButtonEl.classList.toggle("hover:bg-yellow-600", isCustom);
+  hintsStylingCustomButtonEl.classList.toggle("bg-neutral-800", !isCustom);
+  hintsStylingCustomButtonEl.classList.toggle("hover:bg-neutral-700", !isCustom);
+  hintsCustomCSSSectionEl.classList.toggle("hidden", !isCustom);
+  hintsCustomCSSSectionEl.classList.toggle("grid", isCustom);
 };
 
 export const syncHintsStylingControls = (styling: Config["hints"]["styling"]): void => {
@@ -39,15 +39,15 @@ export const syncHintsStylingControls = (styling: Config["hints"]["styling"]): v
 };
 
 export const fillHintsInputs = (config: Config): void => {
-  hotkeysHintsShowCapitalizedLettersCheckboxEl.checked = config.hints.showCapitalizedLetters;
-  hotkeysHintsShowActivationIndicatorCheckboxEl.checked = config.hints.showActivationIndicator;
-  hotkeysHintsCustomCSSTextareaEl.value = config.hints.customCSS;
-  hotkeysHintsCharsetInputEl.value = config.hints.charset;
-  hotkeysHintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
-  hotkeysHintsPreferredSearchLabelsInputEl.value = config.hints.preferredSearchLabels;
+  hintsShowCapitalizedLettersCheckboxEl.checked = config.hints.showCapitalizedLetters;
+  hintsShowActivationIndicatorCheckboxEl.checked = config.hints.showActivationIndicator;
+  hintsCustomCSSTextareaEl.value = config.hints.customCSS;
+  hintsCharsetInputEl.value = config.hints.charset;
+  hintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
+  hintsPreferredSearchLabelsInputEl.value = config.hints.preferredSearchLabels;
   setHintsStylingButtonState(config.hints.styling);
-  refreshHotkeysHintsCustomCSSHighlight();
-  syncHotkeysHintsCharsetHighlight();
-  syncHotkeysHintsAvoidAdjacentPairsHighlight();
-  syncHotkeysHintsPreferredSearchLabelsHighlight();
+  refreshHintsCustomCSSHighlight();
+  syncHintsCharsetHighlight();
+  syncHintsAvoidAdjacentPairsHighlight();
+  syncHintsPreferredSearchLabelsHighlight();
 };

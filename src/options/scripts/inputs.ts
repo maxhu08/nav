@@ -1,15 +1,15 @@
 import {
-  hotkeysHintsAvoidAdjacentPairsContainerEl,
-  hotkeysHintsAvoidAdjacentPairsTextareaEl,
-  hotkeysHintsCustomCSSContainerEl,
-  hotkeysHintsCustomCSSTextareaEl,
+  hintsAvoidAdjacentPairsContainerEl,
+  hintsAvoidAdjacentPairsTextareaEl,
+  hintsCustomCSSContainerEl,
+  hintsCustomCSSTextareaEl,
   exportButtonEl,
-  hotkeysHintsCharsetContainerEl,
-  hotkeysHintsCharsetInputEl,
-  hotkeysHintsPreferredSearchLabelsContainerEl,
-  hotkeysHintsPreferredSearchLabelsInputEl,
-  hotkeysHintsStylingCustomButtonEl,
-  hotkeysHintsStylingDefaultButtonEl,
+  hintsCharsetContainerEl,
+  hintsCharsetInputEl,
+  hintsPreferredSearchLabelsContainerEl,
+  hintsPreferredSearchLabelsInputEl,
+  hintsStylingCustomButtonEl,
+  hintsStylingDefaultButtonEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
   importButtonEl,
@@ -26,18 +26,18 @@ import {
 } from "~/src/options/scripts/utils/hotkeys-highlight";
 import {
   normalizeAvoidAdjacentPairsValue,
-  syncHotkeysHintsAvoidAdjacentPairsHighlight,
-  syncHotkeysHintsAvoidAdjacentPairsHighlightScroll
+  syncHintsAvoidAdjacentPairsHighlight,
+  syncHintsAvoidAdjacentPairsHighlightScroll
 } from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
 import {
-  refreshHotkeysHintsCustomCSSHighlight,
-  syncHotkeysHintsCustomCSSHighlightScroll
+  refreshHintsCustomCSSHighlight,
+  syncHintsCustomCSSHighlightScroll
 } from "~/src/options/scripts/utils/hints-custom-css-highlight";
 import {
-  syncHotkeysHintsCharsetHighlight,
-  syncHotkeysHintsCharsetHighlightScroll,
-  syncHotkeysHintsPreferredSearchLabelsHighlight,
-  syncHotkeysHintsPreferredSearchLabelsHighlightScroll
+  syncHintsCharsetHighlight,
+  syncHintsCharsetHighlightScroll,
+  syncHintsPreferredSearchLabelsHighlight,
+  syncHintsPreferredSearchLabelsHighlightScroll
 } from "~/src/options/scripts/utils/hints-inline-highlight";
 import { syncHintsStylingControls } from "~/src/options/scripts/utils/fill-helpers/fill-hints";
 import {
@@ -99,104 +99,92 @@ export const listenToInputs = (): void => {
     hotkeysMappingsContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
-  hotkeysHintsCharsetInputEl.addEventListener("focus", () => {
-    hotkeysHintsCharsetContainerEl.classList.replace("border-transparent", "border-sky-500");
+  hintsCharsetInputEl.addEventListener("focus", () => {
+    hintsCharsetContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
-  hotkeysHintsCharsetInputEl.addEventListener("input", () => {
-    syncHotkeysHintsCharsetHighlight();
-    syncHotkeysHintsCharsetHighlightScroll();
+  hintsCharsetInputEl.addEventListener("input", () => {
+    syncHintsCharsetHighlight();
+    syncHintsCharsetHighlightScroll();
   });
 
-  hotkeysHintsCharsetInputEl.addEventListener("scroll", () => {
-    syncHotkeysHintsCharsetHighlightScroll();
+  hintsCharsetInputEl.addEventListener("scroll", () => {
+    syncHintsCharsetHighlightScroll();
   });
 
-  hotkeysHintsCharsetInputEl.addEventListener("blur", () => {
-    hotkeysHintsCharsetContainerEl.classList.replace("border-sky-500", "border-transparent");
+  hintsCharsetInputEl.addEventListener("blur", () => {
+    hintsCharsetContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
-  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("focus", () => {
-    hotkeysHintsPreferredSearchLabelsContainerEl.classList.replace(
-      "border-transparent",
-      "border-sky-500"
-    );
+  hintsPreferredSearchLabelsInputEl.addEventListener("focus", () => {
+    hintsPreferredSearchLabelsContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
-  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("input", () => {
-    syncHotkeysHintsPreferredSearchLabelsHighlight();
-    syncHotkeysHintsPreferredSearchLabelsHighlightScroll();
+  hintsPreferredSearchLabelsInputEl.addEventListener("input", () => {
+    syncHintsPreferredSearchLabelsHighlight();
+    syncHintsPreferredSearchLabelsHighlightScroll();
   });
 
-  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("scroll", () => {
-    syncHotkeysHintsPreferredSearchLabelsHighlightScroll();
+  hintsPreferredSearchLabelsInputEl.addEventListener("scroll", () => {
+    syncHintsPreferredSearchLabelsHighlightScroll();
   });
 
-  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("blur", () => {
-    hotkeysHintsPreferredSearchLabelsContainerEl.classList.replace(
-      "border-sky-500",
-      "border-transparent"
-    );
+  hintsPreferredSearchLabelsInputEl.addEventListener("blur", () => {
+    hintsPreferredSearchLabelsContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
-  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("focus", () => {
-    hotkeysHintsAvoidAdjacentPairsContainerEl.classList.replace(
-      "border-transparent",
-      "border-sky-500"
-    );
+  hintsAvoidAdjacentPairsTextareaEl.addEventListener("focus", () => {
+    hintsAvoidAdjacentPairsContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
-  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("input", () => {
+  hintsAvoidAdjacentPairsTextareaEl.addEventListener("input", () => {
     const normalizedValue = normalizeAvoidAdjacentPairsValue(
-      hotkeysHintsAvoidAdjacentPairsTextareaEl.value
+      hintsAvoidAdjacentPairsTextareaEl.value
     );
 
-    if (hotkeysHintsAvoidAdjacentPairsTextareaEl.value !== normalizedValue) {
-      const selectionStart = hotkeysHintsAvoidAdjacentPairsTextareaEl.selectionStart;
-      hotkeysHintsAvoidAdjacentPairsTextareaEl.value = normalizedValue;
+    if (hintsAvoidAdjacentPairsTextareaEl.value !== normalizedValue) {
+      const selectionStart = hintsAvoidAdjacentPairsTextareaEl.selectionStart;
+      hintsAvoidAdjacentPairsTextareaEl.value = normalizedValue;
 
       if (selectionStart !== null) {
-        hotkeysHintsAvoidAdjacentPairsTextareaEl.setSelectionRange(selectionStart, selectionStart);
+        hintsAvoidAdjacentPairsTextareaEl.setSelectionRange(selectionStart, selectionStart);
       }
     }
 
-    syncHotkeysHintsAvoidAdjacentPairsHighlight();
-    syncHotkeysHintsAvoidAdjacentPairsHighlightScroll();
+    syncHintsAvoidAdjacentPairsHighlight();
+    syncHintsAvoidAdjacentPairsHighlightScroll();
   });
 
-  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("scroll", () => {
-    syncHotkeysHintsAvoidAdjacentPairsHighlightScroll();
+  hintsAvoidAdjacentPairsTextareaEl.addEventListener("scroll", () => {
+    syncHintsAvoidAdjacentPairsHighlightScroll();
   });
 
-  hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("blur", () => {
-    hotkeysHintsAvoidAdjacentPairsContainerEl.classList.replace(
-      "border-sky-500",
-      "border-transparent"
-    );
+  hintsAvoidAdjacentPairsTextareaEl.addEventListener("blur", () => {
+    hintsAvoidAdjacentPairsContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
-  hotkeysHintsStylingDefaultButtonEl.addEventListener("click", () => {
+  hintsStylingDefaultButtonEl.addEventListener("click", () => {
     syncHintsStylingControls("default");
   });
 
-  hotkeysHintsStylingCustomButtonEl.addEventListener("click", () => {
+  hintsStylingCustomButtonEl.addEventListener("click", () => {
     syncHintsStylingControls("custom");
   });
 
-  hotkeysHintsCustomCSSTextareaEl.addEventListener("focus", () => {
-    hotkeysHintsCustomCSSContainerEl.classList.replace("border-transparent", "border-sky-500");
+  hintsCustomCSSTextareaEl.addEventListener("focus", () => {
+    hintsCustomCSSContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
-  hotkeysHintsCustomCSSTextareaEl.addEventListener("input", () => {
-    refreshHotkeysHintsCustomCSSHighlight();
+  hintsCustomCSSTextareaEl.addEventListener("input", () => {
+    refreshHintsCustomCSSHighlight();
   });
 
-  hotkeysHintsCustomCSSTextareaEl.addEventListener("scroll", () => {
-    syncHotkeysHintsCustomCSSHighlightScroll();
+  hintsCustomCSSTextareaEl.addEventListener("scroll", () => {
+    syncHintsCustomCSSHighlightScroll();
   });
 
-  hotkeysHintsCustomCSSTextareaEl.addEventListener("blur", () => {
-    hotkeysHintsCustomCSSContainerEl.classList.replace("border-sky-500", "border-transparent");
+  hintsCustomCSSTextareaEl.addEventListener("blur", () => {
+    hintsCustomCSSContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   tippy("#save-button", {

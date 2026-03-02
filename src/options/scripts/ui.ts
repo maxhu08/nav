@@ -1,31 +1,57 @@
 import { getButton, getContainerAndTextarea, getElement } from "~/src/options/scripts/utils/ui-helpers";
 
-export const [rulesUrlsContainerEl, rulesUrlsTextareaEl] = getContainerAndTextarea("rules-urls");
-export const rulesUrlsHighlightEl = getElement<HTMLPreElement>("rules-urls-highlight");
-export const rulesUrlsStatusEl = getElement<HTMLParagraphElement>("rules-urls-status");
-export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] = getContainerAndTextarea("hotkeys-mappings");
-export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-mappings-highlight");
-export const hotkeysMappingsStatusEl = getElement<HTMLParagraphElement>("hotkeys-mappings-status");
-export const hotkeysHintsCharsetContainerEl = getElement<HTMLDivElement>("hotkeys-hints-charset-container");
-export const hotkeysHintsCharsetInputEl = getElement<HTMLInputElement>("hotkeys-hints-charset-input");
-export const hotkeysHintsCharsetHighlightEl = getElement<HTMLPreElement>("hotkeys-hints-charset-highlight");
-export const hotkeysHintsCharsetStatusEl = getElement<HTMLParagraphElement>("hotkeys-hints-charset-status");
-export const [hotkeysHintsAvoidAdjacentPairsContainerEl, hotkeysHintsAvoidAdjacentPairsTextareaEl] = getContainerAndTextarea("hotkeys-hints-avoid-adjacent-pairs");
-export const hotkeysHintsAvoidAdjacentPairsHighlightEl = getElement<HTMLPreElement>("hotkeys-hints-avoid-adjacent-pairs-highlight");
-export const hotkeysHintsAvoidAdjacentPairsStatusEl = getElement<HTMLParagraphElement>("hotkeys-hints-avoid-adjacent-pairs-status");
-export const hotkeysHintsPreferredSearchLabelsContainerEl = getElement<HTMLDivElement>("hotkeys-hints-preferred-search-labels-container");
-export const hotkeysHintsPreferredSearchLabelsInputEl = getElement<HTMLInputElement>("hotkeys-hints-preferred-search-labels-input");
-export const hotkeysHintsPreferredSearchLabelsHighlightEl = getElement<HTMLPreElement>("hotkeys-hints-preferred-search-labels-highlight");
-export const hotkeysHintsPreferredSearchLabelsStatusEl = getElement<HTMLParagraphElement>("hotkeys-hints-preferred-search-labels-status");
-export const hotkeysHintsShowCapitalizedLettersCheckboxEl = getElement<HTMLInputElement>("hotkeys-hints-show-capitalized-letters-checkbox");
-export const hotkeysHintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>("hotkeys-hints-show-activation-indicator-checkbox");
-export const hotkeysHintsStylingDefaultButtonEl = getElement<HTMLButtonElement>("hotkeys-hints-styling-default-button");
-export const hotkeysHintsStylingCustomButtonEl = getElement<HTMLButtonElement>("hotkeys-hints-styling-custom-button");
-export const hotkeysHintsCustomCSSSectionEl = getElement<HTMLDivElement>("hotkeys-hints-custom-css-section");
-export const [hotkeysHintsCustomCSSContainerEl, hotkeysHintsCustomCSSTextareaEl] = getContainerAndTextarea("hotkeys-hints-custom-css");
-export const hotkeysHintsCustomCSSHighlightEl = getElement<HTMLPreElement>("hotkeys-hints-custom-css-highlight");
-
 export const saveButtonEl = getButton("save");
 export const exportButtonEl = getButton("export");
 export const importButtonEl = getButton("import");
 export const resetConfigButtonEl = getButton("reset-config");
+
+export const [rulesUrlsContainerEl, rulesUrlsTextareaEl] = getContainerAndTextarea("rules-urls");
+export const rulesUrlsHighlightEl = getElement<HTMLPreElement>("rules-urls-highlight");
+export const rulesUrlsStatusEl = getElement<HTMLParagraphElement>("rules-urls-status");
+
+export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] = getContainerAndTextarea("hotkeys-mappings");
+export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-mappings-highlight");
+export const hotkeysMappingsStatusEl = getElement<HTMLParagraphElement>("hotkeys-mappings-status");
+
+export const hintsShowCapitalizedLettersCheckboxEl = getElement<HTMLInputElement>(
+  "hints-show-capitalized-letters-checkbox"
+);
+export const hintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>(
+  "hints-show-activation-indicator-checkbox"
+);
+export const hintsCharsetContainerEl = getElement<HTMLDivElement>("hints-charset-container");
+export const hintsCharsetInputEl = getElement<HTMLInputElement>("hints-charset-input");
+export const hintsCharsetHighlightEl = getElement<HTMLPreElement>("hints-charset-highlight");
+export const hintsCharsetStatusEl = getElement<HTMLParagraphElement>("hints-charset-status");
+export const [hintsAvoidAdjacentPairsContainerEl, hintsAvoidAdjacentPairsTextareaEl] =
+  getContainerAndTextarea("hints-avoid-adjacent-pairs");
+export const hintsAvoidAdjacentPairsHighlightEl = getElement<HTMLPreElement>(
+  "hints-avoid-adjacent-pairs-highlight"
+);
+export const hintsAvoidAdjacentPairsStatusEl = getElement<HTMLParagraphElement>(
+  "hints-avoid-adjacent-pairs-status"
+);
+export const hintsPreferredSearchLabelsContainerEl = getElement<HTMLDivElement>(
+  "hints-preferred-search-labels-container"
+);
+export const hintsPreferredSearchLabelsInputEl = getElement<HTMLInputElement>(
+  "hints-preferred-search-labels-input"
+);
+export const hintsPreferredSearchLabelsHighlightEl = getElement<HTMLPreElement>(
+  "hints-preferred-search-labels-highlight"
+);
+export const hintsPreferredSearchLabelsStatusEl = getElement<HTMLParagraphElement>(
+  "hints-preferred-search-labels-status"
+);
+export const hintsStylingDefaultButtonEl = getElement<HTMLButtonElement>(
+  "hints-styling-default-button"
+);
+export const hintsStylingCustomButtonEl = getElement<HTMLButtonElement>(
+  "hints-styling-custom-button"
+);
+export const hintsCustomCSSSectionEl = getElement<HTMLDivElement>("hints-custom-css-section");
+export const [hintsCustomCSSContainerEl, hintsCustomCSSTextareaEl] =
+  getContainerAndTextarea("hints-custom-css");
+export const hintsCustomCSSHighlightEl = getElement<HTMLPreElement>(
+  "hints-custom-css-highlight"
+);

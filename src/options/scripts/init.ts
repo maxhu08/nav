@@ -3,8 +3,8 @@ import { initCoreNavigation } from "~/src/core/navigation";
 import { listenToInputs } from "~/src/options/scripts/inputs";
 import { listenToKeys } from "~/src/options/scripts/keybinds";
 import {
-  hotkeysHintsAvoidAdjacentPairsContainerEl,
-  hotkeysHintsAvoidAdjacentPairsTextareaEl,
+  hintsAvoidAdjacentPairsContainerEl,
+  hintsAvoidAdjacentPairsTextareaEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
   rulesUrlsContainerEl,
@@ -13,7 +13,7 @@ import {
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
 import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
-import { initHotkeysHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
+import { initHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
 import { showTextareaDialog } from "~/src/options/scripts/utils/input-dialog";
 import {
   syncRulesUrlsHighlight,
@@ -50,7 +50,7 @@ initCoreNavigation();
 (document.getElementById("user-agent-text") as HTMLSpanElement).textContent += getUserAgent();
 
 void createCollapseGroups();
-initHotkeysHintsCustomCSSHighlight();
+initHintsCustomCSSHighlight();
 
 void getConfig().then((config) => {
   fillInputs(config);
@@ -58,8 +58,8 @@ void getConfig().then((config) => {
   lockTextareaContainerHeight(rulesUrlsContainerEl, rulesUrlsTextareaEl);
   lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
   lockTextareaContainerHeight(
-    hotkeysHintsAvoidAdjacentPairsContainerEl,
-    hotkeysHintsAvoidAdjacentPairsTextareaEl
+    hintsAvoidAdjacentPairsContainerEl,
+    hintsAvoidAdjacentPairsTextareaEl
   );
 });
 

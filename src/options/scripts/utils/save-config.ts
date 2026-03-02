@@ -1,7 +1,7 @@
 import {
-  hotkeysHintsCharsetStatusEl,
-  hotkeysHintsAvoidAdjacentPairsStatusEl,
-  hotkeysHintsPreferredSearchLabelsStatusEl,
+  hintsCharsetStatusEl,
+  hintsAvoidAdjacentPairsStatusEl,
+  hintsPreferredSearchLabelsStatusEl,
   hotkeysMappingsStatusEl,
   rulesUrlsStatusEl
 } from "~/src/options/scripts/ui";
@@ -23,9 +23,9 @@ const setConfigAndFastConfig = (config: Config): Promise<void> => {
 const SAVE_ERROR_FIELDS = [
   { path: "rules.urls", statusEl: rulesUrlsStatusEl },
   { path: "hotkeys.mappings", statusEl: hotkeysMappingsStatusEl },
-  { path: "hints.charset", statusEl: hotkeysHintsCharsetStatusEl },
-  { path: "hints.preferredSearchLabels", statusEl: hotkeysHintsPreferredSearchLabelsStatusEl },
-  { path: "hints.avoidAdjacentPairs", statusEl: hotkeysHintsAvoidAdjacentPairsStatusEl }
+  { path: "hints.charset", statusEl: hintsCharsetStatusEl },
+  { path: "hints.preferredSearchLabels", statusEl: hintsPreferredSearchLabelsStatusEl },
+  { path: "hints.avoidAdjacentPairs", statusEl: hintsAvoidAdjacentPairsStatusEl }
 ] as const;
 
 const getFirstUnresolvedEditorErrorPath = (): string | null => {

@@ -1,10 +1,10 @@
 import {
-  hotkeysHintsCharsetHighlightEl,
-  hotkeysHintsCharsetInputEl,
-  hotkeysHintsCharsetStatusEl,
-  hotkeysHintsPreferredSearchLabelsHighlightEl,
-  hotkeysHintsPreferredSearchLabelsInputEl,
-  hotkeysHintsPreferredSearchLabelsStatusEl
+  hintsCharsetHighlightEl,
+  hintsCharsetInputEl,
+  hintsCharsetStatusEl,
+  hintsPreferredSearchLabelsHighlightEl,
+  hintsPreferredSearchLabelsInputEl,
+  hintsPreferredSearchLabelsStatusEl
 } from "~/src/options/scripts/ui";
 import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 
@@ -31,10 +31,7 @@ const renderCharsetHighlight = (value: string): { hasError: boolean; html: strin
     }
 
     hasError ||= !isValid;
-    html += wrapToken(
-      isValid ? "hotkeys-hints-inline-token-valid" : "hotkeys-hints-inline-token-invalid",
-      char
-    );
+    html += wrapToken(isValid ? "hints-inline-token-valid" : "hints-inline-token-invalid", char);
   }
 
   return { hasError, html };
@@ -73,7 +70,7 @@ const renderPreferredSearchLabelsHighlight = (
 
       hasError ||= !isValid;
       html += wrapToken(
-        isValid ? "hotkeys-hints-inline-token-separator" : "hotkeys-hints-inline-token-invalid",
+        isValid ? "hints-inline-token-separator" : "hints-inline-token-invalid",
         token.value
       );
       return;
@@ -90,7 +87,7 @@ const renderPreferredSearchLabelsHighlight = (
 
     hasError ||= !isValid;
     html += wrapToken(
-      isValid ? "hotkeys-hints-inline-token-valid" : "hotkeys-hints-inline-token-invalid",
+      isValid ? "hints-inline-token-valid" : "hints-inline-token-invalid",
       token.value
     );
   });
@@ -98,26 +95,25 @@ const renderPreferredSearchLabelsHighlight = (
   return { hasError, html };
 };
 
-export const syncHotkeysHintsCharsetHighlight = (): void => {
-  const { hasError, html } = renderCharsetHighlight(hotkeysHintsCharsetInputEl.value);
-  hotkeysHintsCharsetHighlightEl.innerHTML = html;
-  setEditorStatus(hotkeysHintsCharsetStatusEl, hasError);
+export const syncHintsCharsetHighlight = (): void => {
+  const { hasError, html } = renderCharsetHighlight(hintsCharsetInputEl.value);
+  hintsCharsetHighlightEl.innerHTML = html;
+  setEditorStatus(hintsCharsetStatusEl, hasError);
 };
 
-export const syncHotkeysHintsCharsetHighlightScroll = (): void => {
-  hotkeysHintsCharsetHighlightEl.scrollLeft = hotkeysHintsCharsetInputEl.scrollLeft;
+export const syncHintsCharsetHighlightScroll = (): void => {
+  hintsCharsetHighlightEl.scrollLeft = hintsCharsetInputEl.scrollLeft;
 };
 
-export const syncHotkeysHintsPreferredSearchLabelsHighlight = (): void => {
+export const syncHintsPreferredSearchLabelsHighlight = (): void => {
   const { hasError, html } = renderPreferredSearchLabelsHighlight(
-    hotkeysHintsPreferredSearchLabelsInputEl.value
+    hintsPreferredSearchLabelsInputEl.value
   );
 
-  hotkeysHintsPreferredSearchLabelsHighlightEl.innerHTML = html;
-  setEditorStatus(hotkeysHintsPreferredSearchLabelsStatusEl, hasError);
+  hintsPreferredSearchLabelsHighlightEl.innerHTML = html;
+  setEditorStatus(hintsPreferredSearchLabelsStatusEl, hasError);
 };
 
-export const syncHotkeysHintsPreferredSearchLabelsHighlightScroll = (): void => {
-  hotkeysHintsPreferredSearchLabelsHighlightEl.scrollLeft =
-    hotkeysHintsPreferredSearchLabelsInputEl.scrollLeft;
+export const syncHintsPreferredSearchLabelsHighlightScroll = (): void => {
+  hintsPreferredSearchLabelsHighlightEl.scrollLeft = hintsPreferredSearchLabelsInputEl.scrollLeft;
 };

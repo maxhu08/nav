@@ -1,23 +1,21 @@
 import { type Config } from "~/src/utils/config";
 import {
-  hotkeysHintsAvoidAdjacentPairsTextareaEl,
-  hotkeysHintsCharsetInputEl,
-  hotkeysHintsCustomCSSTextareaEl,
-  hotkeysHintsPreferredSearchLabelsInputEl,
-  hotkeysHintsShowActivationIndicatorCheckboxEl,
-  hotkeysHintsShowCapitalizedLettersCheckboxEl,
-  hotkeysHintsStylingCustomButtonEl
+  hintsAvoidAdjacentPairsTextareaEl,
+  hintsCharsetInputEl,
+  hintsCustomCSSTextareaEl,
+  hintsPreferredSearchLabelsInputEl,
+  hintsShowActivationIndicatorCheckboxEl,
+  hintsShowCapitalizedLettersCheckboxEl,
+  hintsStylingCustomButtonEl
 } from "~/src/options/scripts/ui";
 
 export const saveHintsSettingsToDraft = (draft: Config): void => {
-  draft.hints.showCapitalizedLetters = hotkeysHintsShowCapitalizedLettersCheckboxEl.checked;
-  draft.hints.showActivationIndicator = hotkeysHintsShowActivationIndicatorCheckboxEl.checked;
+  draft.hints.showCapitalizedLetters = hintsShowCapitalizedLettersCheckboxEl.checked;
+  draft.hints.showActivationIndicator = hintsShowActivationIndicatorCheckboxEl.checked;
   draft.hints.styling =
-    hotkeysHintsStylingCustomButtonEl.getAttribute("aria-pressed") === "true"
-      ? "custom"
-      : "default";
-  draft.hints.customCSS = hotkeysHintsCustomCSSTextareaEl.value;
-  draft.hints.charset = hotkeysHintsCharsetInputEl.value;
-  draft.hints.avoidAdjacentPairs = hotkeysHintsAvoidAdjacentPairsTextareaEl.value;
-  draft.hints.preferredSearchLabels = hotkeysHintsPreferredSearchLabelsInputEl.value;
+    hintsStylingCustomButtonEl.getAttribute("aria-pressed") === "true" ? "custom" : "default";
+  draft.hints.customCSS = hintsCustomCSSTextareaEl.value;
+  draft.hints.charset = hintsCharsetInputEl.value;
+  draft.hints.avoidAdjacentPairs = hintsAvoidAdjacentPairsTextareaEl.value;
+  draft.hints.preferredSearchLabels = hintsPreferredSearchLabelsInputEl.value;
 };

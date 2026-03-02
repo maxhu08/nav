@@ -196,11 +196,11 @@
   color: #f43f5e;
 }
 
-#hotkeys-hints-avoid-adjacent-pairs-container {
+#hints-avoid-adjacent-pairs-container {
   display: grid;
 }
 
-.hotkeys-hints-inline-editor-layer {
+.hints-inline-editor-layer {
   grid-area: 1 / 1;
   margin: 0;
   overflow-x: auto;
@@ -211,42 +211,42 @@
   line-height: 1.5rem;
 }
 
-#hotkeys-hints-charset-container,
-#hotkeys-hints-preferred-search-labels-container {
+#hints-charset-container,
+#hints-preferred-search-labels-container {
   display: grid;
 }
 
-#hotkeys-hints-charset-highlight,
-#hotkeys-hints-preferred-search-labels-highlight {
+#hints-charset-highlight,
+#hints-preferred-search-labels-highlight {
   pointer-events: none;
   color: #fafafa;
   padding: 0.25rem 0.5rem;
 }
 
-.hotkeys-hints-inline-input {
+.hints-inline-input {
   position: relative;
   z-index: 1;
   color: transparent;
   caret-color: #fafafa;
 }
 
-.hotkeys-hints-inline-input::selection {
+.hints-inline-input::selection {
   background-color: #ffffff20;
 }
 
-.hotkeys-hints-inline-token-valid {
+.hints-inline-token-valid {
   color: #569cd6;
 }
 
-.hotkeys-hints-inline-token-separator {
+.hints-inline-token-separator {
   color: #737373;
 }
 
-.hotkeys-hints-inline-token-invalid {
+.hints-inline-token-invalid {
   color: #f43f5e;
 }
 
-.hotkeys-hints-avoid-adjacent-pairs-editor-layer {
+.hints-avoid-adjacent-pairs-editor-layer {
   grid-area: 1 / 1;
   height: 20rem;
   margin: 0;
@@ -259,31 +259,31 @@
   line-height: 1.5rem;
 }
 
-#hotkeys-hints-avoid-adjacent-pairs-highlight {
+#hints-avoid-adjacent-pairs-highlight {
   pointer-events: none;
   color: #fafafa;
 }
 
-.hotkeys-hints-avoid-adjacent-pairs-textarea {
+.hints-avoid-adjacent-pairs-textarea {
   position: relative;
   z-index: 1;
   color: transparent;
   caret-color: #fafafa;
 }
 
-.hotkeys-hints-avoid-adjacent-pairs-textarea::selection {
+.hints-avoid-adjacent-pairs-textarea::selection {
   background-color: #ffffff20;
 }
 
-.hotkeys-hints-avoid-adjacent-pairs-token-valid {
+.hints-avoid-adjacent-pairs-token-valid {
   color: #569cd6;
 }
 
-.hotkeys-hints-avoid-adjacent-pairs-token-comment {
+.hints-avoid-adjacent-pairs-token-comment {
   color: #737373;
 }
 
-.hotkeys-hints-avoid-adjacent-pairs-token-invalid {
+.hints-avoid-adjacent-pairs-token-invalid {
   color: #f43f5e;
 }
 

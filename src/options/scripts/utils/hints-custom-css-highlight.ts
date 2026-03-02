@@ -1,7 +1,4 @@
-import {
-  hotkeysHintsCustomCSSHighlightEl,
-  hotkeysHintsCustomCSSTextareaEl
-} from "~/src/options/scripts/ui";
+import { hintsCustomCSSHighlightEl, hintsCustomCSSTextareaEl } from "~/src/options/scripts/ui";
 
 const escapeHtml = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -448,44 +445,41 @@ const renderCustomCSSValue = (value: string): string => {
 };
 
 const syncCustomCSSMetrics = (): void => {
-  const computedStyle = window.getComputedStyle(hotkeysHintsCustomCSSTextareaEl);
+  const computedStyle = window.getComputedStyle(hintsCustomCSSTextareaEl);
 
-  hotkeysHintsCustomCSSHighlightEl.style.padding = computedStyle.padding;
-  hotkeysHintsCustomCSSHighlightEl.style.font = computedStyle.font;
-  hotkeysHintsCustomCSSHighlightEl.style.letterSpacing = computedStyle.letterSpacing;
-  hotkeysHintsCustomCSSHighlightEl.style.lineHeight = computedStyle.lineHeight;
-  hotkeysHintsCustomCSSHighlightEl.style.tabSize = computedStyle.tabSize;
-  hotkeysHintsCustomCSSHighlightEl.style.whiteSpace = computedStyle.whiteSpace;
+  hintsCustomCSSHighlightEl.style.padding = computedStyle.padding;
+  hintsCustomCSSHighlightEl.style.font = computedStyle.font;
+  hintsCustomCSSHighlightEl.style.letterSpacing = computedStyle.letterSpacing;
+  hintsCustomCSSHighlightEl.style.lineHeight = computedStyle.lineHeight;
+  hintsCustomCSSHighlightEl.style.tabSize = computedStyle.tabSize;
+  hintsCustomCSSHighlightEl.style.whiteSpace = computedStyle.whiteSpace;
 };
 
 const syncCustomCSSHighlight = (): void => {
-  const value = hotkeysHintsCustomCSSTextareaEl.value;
-  hotkeysHintsCustomCSSHighlightEl.innerHTML = renderCustomCSSValue(value.length > 0 ? value : " ");
+  const value = hintsCustomCSSTextareaEl.value;
+  hintsCustomCSSHighlightEl.innerHTML = renderCustomCSSValue(value.length > 0 ? value : " ");
 };
 
-export const syncHotkeysHintsCustomCSSHighlightScroll = (): void => {
-  hotkeysHintsCustomCSSHighlightEl.scrollTop = hotkeysHintsCustomCSSTextareaEl.scrollTop;
-  hotkeysHintsCustomCSSHighlightEl.scrollLeft = hotkeysHintsCustomCSSTextareaEl.scrollLeft;
+export const syncHintsCustomCSSHighlightScroll = (): void => {
+  hintsCustomCSSHighlightEl.scrollTop = hintsCustomCSSTextareaEl.scrollTop;
+  hintsCustomCSSHighlightEl.scrollLeft = hintsCustomCSSTextareaEl.scrollLeft;
 };
 
-export const initHotkeysHintsCustomCSSHighlight = (): void => {
+export const initHintsCustomCSSHighlight = (): void => {
   syncCustomCSSMetrics();
   syncCustomCSSHighlight();
-  syncHotkeysHintsCustomCSSHighlightScroll();
+  syncHintsCustomCSSHighlightScroll();
 
-  hotkeysHintsCustomCSSTextareaEl.addEventListener("input", () => {
+  hintsCustomCSSTextareaEl.addEventListener("input", () => {
     syncCustomCSSHighlight();
-    syncHotkeysHintsCustomCSSHighlightScroll();
+    syncHintsCustomCSSHighlightScroll();
   });
-  hotkeysHintsCustomCSSTextareaEl.addEventListener(
-    "scroll",
-    syncHotkeysHintsCustomCSSHighlightScroll
-  );
+  hintsCustomCSSTextareaEl.addEventListener("scroll", syncHintsCustomCSSHighlightScroll);
   window.addEventListener("resize", syncCustomCSSMetrics);
 };
 
-export const refreshHotkeysHintsCustomCSSHighlight = (): void => {
+export const refreshHintsCustomCSSHighlight = (): void => {
   syncCustomCSSMetrics();
   syncCustomCSSHighlight();
-  syncHotkeysHintsCustomCSSHighlightScroll();
+  syncHintsCustomCSSHighlightScroll();
 };

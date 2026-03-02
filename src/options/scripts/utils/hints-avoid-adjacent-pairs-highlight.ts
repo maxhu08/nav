@@ -1,7 +1,7 @@
 import {
-  hotkeysHintsAvoidAdjacentPairsHighlightEl,
-  hotkeysHintsAvoidAdjacentPairsStatusEl,
-  hotkeysHintsAvoidAdjacentPairsTextareaEl
+  hintsAvoidAdjacentPairsHighlightEl,
+  hintsAvoidAdjacentPairsStatusEl,
+  hintsAvoidAdjacentPairsTextareaEl
 } from "~/src/options/scripts/ui";
 import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 
@@ -21,7 +21,7 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
   if (trimmedLine.startsWith("#")) {
     return {
       hasError: false,
-      html: wrapToken("hotkeys-hints-avoid-adjacent-pairs-token-comment", line)
+      html: wrapToken("hints-avoid-adjacent-pairs-token-comment", line)
     };
   }
 
@@ -41,8 +41,8 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
     tokens.push(
       wrapToken(
         isValid
-          ? "hotkeys-hints-avoid-adjacent-pairs-token-valid"
-          : "hotkeys-hints-avoid-adjacent-pairs-token-invalid",
+          ? "hints-avoid-adjacent-pairs-token-valid"
+          : "hints-avoid-adjacent-pairs-token-invalid",
         segment
       )
     );
@@ -60,25 +60,22 @@ export const normalizeAvoidAdjacentPairsValue = (value: string): string => {
     .replaceAll(/\n +/g, "\n");
 };
 
-export const syncHotkeysHintsAvoidAdjacentPairsHighlight = (): void => {
+export const syncHintsAvoidAdjacentPairsHighlight = (): void => {
   let hasError = false;
 
-  hotkeysHintsAvoidAdjacentPairsHighlightEl.innerHTML =
-    hotkeysHintsAvoidAdjacentPairsTextareaEl.value
-      .split("\n")
-      .map((line) => {
-        const result = renderLine(line);
-        hasError ||= result.hasError;
-        return result.html;
-      })
-      .join("\n");
+  hintsAvoidAdjacentPairsHighlightEl.innerHTML = hintsAvoidAdjacentPairsTextareaEl.value
+    .split("\n")
+    .map((line) => {
+      const result = renderLine(line);
+      hasError ||= result.hasError;
+      return result.html;
+    })
+    .join("\n");
 
-  setEditorStatus(hotkeysHintsAvoidAdjacentPairsStatusEl, hasError);
+  setEditorStatus(hintsAvoidAdjacentPairsStatusEl, hasError);
 };
 
-export const syncHotkeysHintsAvoidAdjacentPairsHighlightScroll = (): void => {
-  hotkeysHintsAvoidAdjacentPairsHighlightEl.scrollTop =
-    hotkeysHintsAvoidAdjacentPairsTextareaEl.scrollTop;
-  hotkeysHintsAvoidAdjacentPairsHighlightEl.scrollLeft =
-    hotkeysHintsAvoidAdjacentPairsTextareaEl.scrollLeft;
+export const syncHintsAvoidAdjacentPairsHighlightScroll = (): void => {
+  hintsAvoidAdjacentPairsHighlightEl.scrollTop = hintsAvoidAdjacentPairsTextareaEl.scrollTop;
+  hintsAvoidAdjacentPairsHighlightEl.scrollLeft = hintsAvoidAdjacentPairsTextareaEl.scrollLeft;
 };
