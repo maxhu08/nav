@@ -324,7 +324,7 @@ const buildHintLabels = (
 
         if (bucketCount <= 0) continue;
 
-        if (remainingLength === 1 && nextLabel === reservedLabel) {
+        if (remainingLength === 1 && doesLabelConflictWithReservedLabel(nextLabel, reservedLabel)) {
           continue;
         }
 
@@ -440,7 +440,7 @@ const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null 
 };
 
 const isPreferredSearchLabelValid = (label: string, labelLength: number): boolean => {
-  if (label.length !== labelLength) return false;
+  if (label.length < labelLength) return false;
 
   const alphabet = new Set(hintAlphabet.split(""));
   if (label.length === 0 || reservedHintPrefixes.has(label[0] ?? "")) {
@@ -461,6 +461,15 @@ const isPreferredSearchLabelValid = (label: string, labelLength: number): boolea
   }
 
   return true;
+};
+
+const doesLabelConflictWithReservedLabel = (
+  label: string,
+  reservedLabel: string | null
+): boolean => {
+  if (!reservedLabel) return false;
+
+  return label.startsWith(reservedLabel) || reservedLabel.startsWith(label);
 };
 
 const getPreferredSearchLabel = (labelLength: number): string | null => {
