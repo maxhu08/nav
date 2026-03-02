@@ -46,5 +46,6 @@ export const createCollapseGroups = (): Promise<void> => {
       "hotkeys-section",
       optionsData.sectionsExpanded.hotkeys
     );
+    newCollapseGroup("hints-collapse-button", "hints-section", optionsData.sectionsExpanded.hints);
   });
 };

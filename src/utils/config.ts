@@ -25,14 +25,14 @@ export const defaultConfig: Config = {
     urls: ""
   },
   hotkeys: {
-    mappings: DEFAULT_HOTKEY_MAPPINGS,
-    hints: {
-      charset: DEFAULT_HINT_CHARSET,
-      avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
-      preferredSearchLabels: DEFAULT_HINT_PREFERRED_SEARCH_LABELS,
-      showCapitalizedLetters: true,
-      showActivationIndicator: true
-    }
+    mappings: DEFAULT_HOTKEY_MAPPINGS
+  },
+  hints: {
+    showCapitalizedLetters: true,
+    showActivationIndicator: true,
+    charset: DEFAULT_HINT_CHARSET,
+    avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
+    preferredSearchLabels: DEFAULT_HINT_PREFERRED_SEARCH_LABELS
   }
 };
 
@@ -42,12 +42,12 @@ export type Config = {
   };
   hotkeys: {
     mappings: string;
-    hints: {
-      charset: string;
-      avoidAdjacentPairs: string;
-      preferredSearchLabels: string;
-      showCapitalizedLetters: boolean;
-      showActivationIndicator: boolean;
-    };
+  };
+  hints: {
+    showCapitalizedLetters: boolean;
+    showActivationIndicator: boolean;
+    charset: string;
+    avoidAdjacentPairs: string;
+    preferredSearchLabels: string;
   };
 };

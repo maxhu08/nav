@@ -4,13 +4,15 @@ export type OptionsData = {
   sectionsExpanded: {
     rules: boolean;
     hotkeys: boolean;
+    hints: boolean;
   };
 };
 
 export const defaultOptionsData: OptionsData = {
   sectionsExpanded: {
     rules: true,
-    hotkeys: true
+    hotkeys: true,
+    hints: true
   }
 };
 

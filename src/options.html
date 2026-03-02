@@ -97,8 +97,48 @@
             </div>
             <p id="hotkeys-mappings-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
+        </section>
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="hints-collapse-button" class="text-xl text-neutral-500">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">hints</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="hints-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p class="text-base text-white">hotkeys.hints.charset</p>
+            <div class="grid w-full grid-cols-[max-content_auto] place-items-center">
+              <p class="text-base text-white">hints.showCapitalizedLetters</p>
+              <div class="ml-auto">
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input id="hotkeys-hints-show-capitalized-letters-checkbox" type="checkbox" value="" class="peer sr-only" />
+                  <div
+                    class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
+                  ></div>
+                </label>
+              </div>
+            </div>
+            <p class="text-base text-neutral-500">Changes how hint labels are displayed. The required key presses stay lowercase.</p>
+          </div>
+          <div class="grid gap-2">
+            <div class="grid w-full grid-cols-[max-content_auto] place-items-center">
+              <p class="text-base text-white">hints.showActivationIndicator</p>
+              <div class="ml-auto">
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input id="hotkeys-hints-show-activation-indicator-checkbox" type="checkbox" value="" class="peer sr-only" />
+                  <div
+                    class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
+                  ></div>
+                </label>
+              </div>
+            </div>
+            <p class="text-base text-neutral-500">Shows a temporary activation ring after you open or focus something through hints.</p>
+          </div>
+          <div class="grid gap-2">
+            <p class="text-base text-white">hints.charset</p>
             <p class="text-base text-neutral-500">
               Controls which letters are used to generate hint labels. Letters earlier in the charset are prioritized first.
               <br /><br />
@@ -119,7 +159,7 @@
             <p id="hotkeys-hints-charset-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
-            <p class="text-base text-white">hotkeys.hints.avoidAdjacentPairs</p>
+            <p class="text-base text-white">hints.avoidAdjacentPairs</p>
             <p class="text-base text-neutral-500">
               Lists consecutive character pairs to avoid inside generated hint labels. It is recommended to put hard-to-press character pairs here.
               <br /><br />
@@ -139,7 +179,7 @@
             <p id="hotkeys-hints-avoid-adjacent-pairs-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
-            <p class="text-base text-white">hotkeys.hints.preferredSearchLabels</p>
+            <p class="text-base text-white">hints.preferredSearchLabels</p>
             <p class="text-base text-neutral-500">
               Controls which hint labels are preferred for the page's primary search bar or composer. Later labels are used when the page needs longer hint labels.
               <br /><br />
@@ -158,36 +198,6 @@
               />
             </div>
             <p id="hotkeys-hints-preferred-search-labels-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
-          </div>
-          <div class="grid gap-2">
-            <div class="grid w-full grid-cols-[max-content_auto] place-items-center">
-              <p class="text-base text-white">hotkeys.hints.showCapitalizedLetters</p>
-              <div class="ml-auto">
-                <label class="relative inline-flex cursor-pointer items-center">
-                  <input id="hotkeys-hints-show-capitalized-letters-checkbox" type="checkbox" value="" class="peer sr-only" />
-                  <div
-                    class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
-                  ></div>
-                </label>
-              </div>
-            </div>
-            <p class="text-base text-neutral-500">
-              Changes how hint labels are displayed. The required key presses stay lowercase; this only shows the letters in uppercase when enabled, or lowercase when disabled.
-            </p>
-          </div>
-          <div class="grid gap-2">
-            <div class="grid w-full grid-cols-[max-content_auto] place-items-center">
-              <p class="text-base text-white">hotkeys.hints.showActivationIndicator</p>
-              <div class="ml-auto">
-                <label class="relative inline-flex cursor-pointer items-center">
-                  <input id="hotkeys-hints-show-activation-indicator-checkbox" type="checkbox" value="" class="peer sr-only" />
-                  <div
-                    class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
-                  ></div>
-                </label>
-              </div>
-            </div>
-            <p class="text-base text-neutral-500">Shows a temporary activation ring after you open or focus something through hints.</p>
           </div>
         </section>
         <div class="my-12 grid grid-flow-row place-items-center gap-4 py-4">

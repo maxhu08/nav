@@ -20,24 +20,24 @@ export type FastConfig = {
   hotkeys: {
     mappings: Partial<Record<string, ActionName>>;
     prefixes: Partial<Record<string, true>>;
-    hints: {
-      charset: string;
-      avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
-      preferredSearchLabels: string[];
-      showCapitalizedLetters: boolean;
-      showActivationIndicator: boolean;
-    };
+  };
+  hints: {
+    showCapitalizedLetters: boolean;
+    showActivationIndicator: boolean;
+    charset: string;
+    avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
+    preferredSearchLabels: string[];
   };
 };
 
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
   return (
-    typeof value?.hotkeys?.hints?.charset === "string" &&
-    typeof value?.hotkeys?.hints?.avoidAdjacentPairs === "object" &&
-    value?.hotkeys?.hints?.avoidAdjacentPairs !== null &&
-    Array.isArray(value?.hotkeys?.hints?.preferredSearchLabels) &&
-    typeof value?.hotkeys?.hints?.showCapitalizedLetters === "boolean" &&
-    typeof value?.hotkeys?.hints?.showActivationIndicator === "boolean"
+    typeof value?.hints?.showCapitalizedLetters === "boolean" &&
+    typeof value?.hints?.showActivationIndicator === "boolean" &&
+    typeof value?.hints?.charset === "string" &&
+    typeof value?.hints?.avoidAdjacentPairs === "object" &&
+    value?.hints?.avoidAdjacentPairs !== null &&
+    Array.isArray(value?.hints?.preferredSearchLabels)
   );
 };
 
@@ -228,16 +228,14 @@ export const buildFastConfig = (config: Config): FastConfig => {
     },
     hotkeys: {
       mappings,
-      prefixes: createHotkeyPrefixes(mappings),
-      hints: {
-        charset: parseHintCharsetValue(config.hotkeys.hints.charset),
-        avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hotkeys.hints.avoidAdjacentPairs),
-        preferredSearchLabels: parsePreferredSearchLabelsValue(
-          config.hotkeys.hints.preferredSearchLabels
-        ),
-        showCapitalizedLetters: config.hotkeys.hints.showCapitalizedLetters,
-        showActivationIndicator: config.hotkeys.hints.showActivationIndicator
-      }
+      prefixes: createHotkeyPrefixes(mappings)
+    },
+    hints: {
+      showCapitalizedLetters: config.hints.showCapitalizedLetters,
+      showActivationIndicator: config.hints.showActivationIndicator,
+      charset: parseHintCharsetValue(config.hints.charset),
+      avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),
+      preferredSearchLabels: parsePreferredSearchLabelsValue(config.hints.preferredSearchLabels)
     }
   };
 };

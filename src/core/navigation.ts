@@ -372,11 +372,11 @@ const getToggleHintsActionName = (keyToken: string): KeyParseResult => {
 const syncFastConfig = (): void => {
   void getFastConfig().then((fastConfig) => {
     applyUrlRules(fastConfig.rules.urls);
-    setHintCharset(fastConfig.hotkeys.hints.charset);
-    setAvoidedAdjacentHintPairs(fastConfig.hotkeys.hints.avoidAdjacentPairs);
-    setPreferredSearchLabels(fastConfig.hotkeys.hints.preferredSearchLabels);
-    setShowCapitalizedLetters(fastConfig.hotkeys.hints.showCapitalizedLetters);
-    showActivationIndicator = fastConfig.hotkeys.hints.showActivationIndicator;
+    setHintCharset(fastConfig.hints.charset);
+    setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
+    setPreferredSearchLabels(fastConfig.hints.preferredSearchLabels);
+    setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
+    showActivationIndicator = fastConfig.hints.showActivationIndicator;
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
 };
@@ -394,15 +394,15 @@ const handleStorageChange = (
       urls?: FastRule[];
     };
     hotkeys?: {
-      hints?: {
-        charset?: string;
-        avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
-        preferredSearchLabels?: string[];
-        showCapitalizedLetters?: boolean;
-        showActivationIndicator?: boolean;
-      };
       mappings?: Partial<Record<string, ActionName>>;
       prefixes?: Partial<Record<string, true>>;
+    };
+    hints?: {
+      charset?: string;
+      avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
+      preferredSearchLabels?: string[];
+      showCapitalizedLetters?: boolean;
+      showActivationIndicator?: boolean;
     };
   };
 
@@ -410,24 +410,24 @@ const handleStorageChange = (
     applyUrlRules(nextFastConfig.rules.urls);
   }
 
-  if (nextFastConfig.hotkeys?.hints?.charset) {
-    setHintCharset(nextFastConfig.hotkeys.hints.charset);
+  if (nextFastConfig.hints?.charset) {
+    setHintCharset(nextFastConfig.hints.charset);
   }
 
-  if (nextFastConfig.hotkeys?.hints?.avoidAdjacentPairs) {
-    setAvoidedAdjacentHintPairs(nextFastConfig.hotkeys.hints.avoidAdjacentPairs);
+  if (nextFastConfig.hints?.avoidAdjacentPairs) {
+    setAvoidedAdjacentHintPairs(nextFastConfig.hints.avoidAdjacentPairs);
   }
 
-  if (nextFastConfig.hotkeys?.hints?.preferredSearchLabels) {
-    setPreferredSearchLabels(nextFastConfig.hotkeys.hints.preferredSearchLabels);
+  if (nextFastConfig.hints?.preferredSearchLabels) {
+    setPreferredSearchLabels(nextFastConfig.hints.preferredSearchLabels);
   }
 
-  if (typeof nextFastConfig.hotkeys?.hints?.showCapitalizedLetters === "boolean") {
-    setShowCapitalizedLetters(nextFastConfig.hotkeys.hints.showCapitalizedLetters);
+  if (typeof nextFastConfig.hints?.showCapitalizedLetters === "boolean") {
+    setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
   }
 
-  if (typeof nextFastConfig.hotkeys?.hints?.showActivationIndicator === "boolean") {
-    showActivationIndicator = nextFastConfig.hotkeys.hints.showActivationIndicator;
+  if (typeof nextFastConfig.hints?.showActivationIndicator === "boolean") {
+    showActivationIndicator = nextFastConfig.hints.showActivationIndicator;
   }
 
   if (nextFastConfig.hotkeys?.mappings && nextFastConfig.hotkeys.prefixes) {

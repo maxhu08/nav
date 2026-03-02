@@ -7,6 +7,7 @@ import {
 } from "~/src/options/scripts/ui";
 import { hasEditorError } from "~/src/options/scripts/utils/editor-status";
 import { getToastApi } from "~/src/options/scripts/utils/sonner";
+import { saveHintsSettingsToDraft } from "~/src/options/scripts/utils/save-helpers/save-hints";
 import { saveHotkeysSettingsToDraft } from "~/src/options/scripts/utils/save-helpers/save-hotkeys";
 import { saveRulesSettingsToDraft } from "~/src/options/scripts/utils/save-helpers/save-rules";
 import { type Config, defaultConfig, getConfig } from "~/src/utils/config";
@@ -40,6 +41,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   const draft = await getConfig();
   saveRulesSettingsToDraft(draft);
   saveHotkeysSettingsToDraft(draft);
+  saveHintsSettingsToDraft(draft);
 
   const config = deepMerge(structuredClone(defaultConfig), draft);
   await setConfigAndFastConfig(config);
