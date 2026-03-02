@@ -89,6 +89,8 @@ export function ensureToastWrapper() {
     return;
   }
 
+  ensureToastStyle();
+
   const wrapper = document.createElement("div");
   wrapper.id = TOASTER_WRAPPER_ID;
   wrapper.setAttribute("data-rich-colors", "true");
@@ -99,6 +101,22 @@ export function ensureToastWrapper() {
 
 function getToasterList() {
   return document.getElementById(TOASTER_LIST_ID);
+}
+
+function ensureToastStyle() {
+  if (document.getElementById(STYLE_ID)) {
+    return;
+  }
+
+  style.id = STYLE_ID;
+
+  const parent = document.head ?? document.documentElement;
+
+  if (!parent) {
+    return;
+  }
+
+  parent.appendChild(style);
 }
 
 function isAllowedType(type) {
@@ -322,7 +340,10 @@ function applyToastClasses(toastEl) {
     descEl.style.color = "#737373";
     descEl.style.fontSize = "16px";
     descEl.style.lineHeight = "24px";
-    descEl.style.wordBreak = "break-word";
+    descEl.style.minWidth = "0";
+    descEl.style.overflow = "hidden";
+    descEl.style.textOverflow = "ellipsis";
+    descEl.style.whiteSpace = "nowrap";
   }
 
   const actionBtn = toastEl.querySelector('button[data-toast-action="true"]');
@@ -524,6 +545,10 @@ style.innerHTML = `
 
 #${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} [data-description] {
   opacity: 0.9;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS} button[data-toast-action="true"] {
@@ -620,9 +645,8 @@ const toast = {
   error: (message, options = {}) => basicToast(message, { ...options, type: "error" })
 };
 window[WINDOW_TOAST_KEY] = toast;
-if (document && document.head && !document.getElementById(STYLE_ID)) {
-  style.id = STYLE_ID;
-  document.head.appendChild(style);
+if (document) {
+  ensureToastStyle();
 }
 if (document && !getWrapper()) {
   const wrapper = document.createElement("div");

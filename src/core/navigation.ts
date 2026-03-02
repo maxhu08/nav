@@ -66,31 +66,28 @@ const getNormalizedCurrentUrl = (): string => {
   return `${url.origin}${pathname}${url.search}${url.hash}`;
 };
 
-const truncateMiddle = (value: string, maxLength: number): string => {
-  if (value.length <= maxLength) {
-    return value;
+const showYankToast = (type: "success" | "error", message: string, description: string): void => {
+  ensureToastWrapper();
+  const toast = getToastApi();
+
+  if (type === "success") {
+    toast?.success(message, { description });
+    return;
   }
 
-  const sideLength = Math.max(1, Math.floor((maxLength - 1) / 2));
-  return `${value.slice(0, sideLength)}…${value.slice(-sideLength)}`;
+  toast?.error(message, { description });
 };
 
 const yankCurrentTabUrl = (): boolean => {
   const currentUrl = getNormalizedCurrentUrl();
 
   void writeClipboard(currentUrl).then((didCopy) => {
-    const toast = getToastApi();
-
     if (didCopy) {
-      toast?.success("Current tab URL yanked", {
-        description: truncateMiddle(currentUrl, 72)
-      });
+      showYankToast("success", "Current tab URL yanked", currentUrl);
       return;
     }
 
-    toast?.error("Could not yank current tab URL", {
-      description: "Clipboard access was denied."
-    });
+    showYankToast("error", "Could not yank current tab URL", "Clipboard access was denied.");
   });
 
   return true;
