@@ -65,61 +65,85 @@ listenToInputs();
 listenToKeys();
 handleControls();
 
-void (async () => {
-  const { pendingExcludeSiteUrl } = await getOptionsData();
+let pendingExcludeSiteDialogPromise: Promise<void> | null = null;
 
-  if (!pendingExcludeSiteUrl) {
-    return;
+const maybeShowPendingExcludeSiteDialog = async (): Promise<void> => {
+  if (pendingExcludeSiteDialogPromise) {
+    return pendingExcludeSiteDialogPromise;
   }
 
-  await updateOptionsData((draft) => ({
-    ...draft,
-    pendingExcludeSiteUrl: null
-  }));
+  pendingExcludeSiteDialogPromise = (async () => {
+    const { pendingExcludeSiteUrl } = await getOptionsData();
 
-  let url: URL;
+    if (!pendingExcludeSiteUrl) {
+      return;
+    }
+
+    await updateOptionsData((draft) => ({
+      ...draft,
+      pendingExcludeSiteUrl: null
+    }));
+
+    let url: URL;
+
+    try {
+      url = new URL(pendingExcludeSiteUrl);
+    } catch {
+      return;
+    }
+
+    if (!/^https?:$/.test(url.protocol)) {
+      return;
+    }
+
+    const config = await getConfig();
+    const snippet = await showTextareaDialog("Exclude site", {
+      defaultValue: getManagedWebsiteRuleSnippet(config.rules.urls, url),
+      note: "This will be added to rules.urls",
+      confirmText: "add",
+      cancelText: "cancel"
+    });
+
+    if (snippet === null) {
+      return;
+    }
+
+    const normalizedSnippet = snippet.trim();
+
+    if (!normalizedSnippet) {
+      return;
+    }
+
+    rulesUrlsTextareaEl.value = [rulesUrlsTextareaEl.value.trimEnd(), normalizedSnippet]
+      .filter(Boolean)
+      .join("\n");
+    syncRulesUrlsHighlight();
+    syncRulesUrlsHighlightScroll();
+    rulesUrlsContainerEl.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+    rulesUrlsTextareaEl.focus();
+    rulesUrlsTextareaEl.setSelectionRange(
+      rulesUrlsTextareaEl.value.length,
+      rulesUrlsTextareaEl.value.length
+    );
+    await saveConfigAndFastConfig();
+  })();
 
   try {
-    url = new URL(pendingExcludeSiteUrl);
-  } catch {
+    await pendingExcludeSiteDialogPromise;
+  } finally {
+    pendingExcludeSiteDialogPromise = null;
+  }
+};
+
+void maybeShowPendingExcludeSiteDialog();
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "local" || !changes.optionsData) {
     return;
   }
 
-  if (!/^https?:$/.test(url.protocol)) {
-    return;
-  }
-
-  const config = await getConfig();
-  const snippet = await showTextareaDialog("Exclude site", {
-    defaultValue: getManagedWebsiteRuleSnippet(config.rules.urls, url),
-    note: "This will be added to rules.urls",
-    confirmText: "add",
-    cancelText: "cancel"
-  });
-
-  if (snippet === null) {
-    return;
-  }
-
-  const normalizedSnippet = snippet.trim();
-
-  if (!normalizedSnippet) {
-    return;
-  }
-
-  rulesUrlsTextareaEl.value = [rulesUrlsTextareaEl.value.trimEnd(), normalizedSnippet]
-    .filter(Boolean)
-    .join("\n");
-  syncRulesUrlsHighlight();
-  syncRulesUrlsHighlightScroll();
-  rulesUrlsContainerEl.scrollIntoView({
-    behavior: "smooth",
-    block: "center"
-  });
-  rulesUrlsTextareaEl.focus();
-  rulesUrlsTextareaEl.setSelectionRange(
-    rulesUrlsTextareaEl.value.length,
-    rulesUrlsTextareaEl.value.length
-  );
-  await saveConfigAndFastConfig();
-})();
+  void maybeShowPendingExcludeSiteDialog();
+});
