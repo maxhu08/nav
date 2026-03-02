@@ -28,7 +28,7 @@ export const defaultConfig: Config = {
     mappings: DEFAULT_HOTKEY_MAPPINGS
   },
   hints: {
-    showCapitalizedLetters: true,
+    showCapitalizedLetters: false,
     showActivationIndicator: true,
     charset: DEFAULT_HINT_CHARSET,
     avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
