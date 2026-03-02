@@ -122,6 +122,7 @@ const FOCUS_OVERLAY_ID = `nav-${getExtensionNamespace()}-focus-overlay`;
 const FOCUS_INDICATOR_EVENT = `nav-${getExtensionNamespace()}-focus-indicator`;
 const FOCUS_OVERLAY_DURATION_MS = 1000;
 const FOCUS_OVERLAY_HIDE_MS = 920;
+const FOCUS_OVERLAY_FADE_OUT_MS = 220;
 
 let focusedOverlayTarget: HTMLElement | null = null;
 let focusOverlayFrame: number | null = null;
@@ -494,11 +495,17 @@ const ensureFocusStyles = (): void => {
       transition: none !important;
       transition-duration: 0ms !important;
       transition-property: none !important;
-      }
+    }
 
     #${FOCUS_OVERLAY_ID}[data-visible="true"] {
       visibility: visible;
       opacity: 1;
+    }
+
+    #${FOCUS_OVERLAY_ID}[data-hiding="true"] {
+      visibility: visible;
+      opacity: 0;
+      transition: opacity ${FOCUS_OVERLAY_FADE_OUT_MS}ms ease-out !important;
     }
 
     #${FOCUS_OVERLAY_ID}[data-animate="true"] {
@@ -522,6 +529,7 @@ const getFocusOverlay = (): HTMLDivElement => {
   overlay.id = FOCUS_OVERLAY_ID;
   overlay.setAttribute("data-visible", "false");
   overlay.setAttribute("data-animate", "false");
+  overlay.setAttribute("data-hiding", "false");
   document.documentElement.append(overlay);
   return overlay;
 };
@@ -544,14 +552,31 @@ const clearFocusOverlayTimeout = (): void => {
   focusOverlayTimeout = null;
 };
 
+const finishHidingFocusOverlay = (): void => {
+  const overlay = getFocusOverlay();
+  overlay.setAttribute("data-visible", "false");
+  overlay.setAttribute("data-animate", "false");
+  overlay.setAttribute("data-hiding", "false");
+};
+
 const hideFocusOverlay = (): void => {
   focusedOverlayTarget = null;
   clearFocusOverlayFrame();
   clearFocusOverlayTimeout();
 
   const overlay = getFocusOverlay();
-  overlay.setAttribute("data-visible", "false");
+  if (overlay.getAttribute("data-visible") !== "true") {
+    finishHidingFocusOverlay();
+    return;
+  }
+
   overlay.setAttribute("data-animate", "false");
+  overlay.setAttribute("data-hiding", "true");
+
+  focusOverlayTimeout = window.setTimeout(() => {
+    finishHidingFocusOverlay();
+    focusOverlayTimeout = null;
+  }, FOCUS_OVERLAY_FADE_OUT_MS);
 };
 
 const updateFocusOverlayPosition = (): void => {
@@ -579,6 +604,7 @@ const updateFocusOverlayPosition = (): void => {
   overlay.style.height = `${Math.round(targetHeight)}px`;
   overlay.style.borderRadius = "0.375rem";
   overlay.style.boxShadow = "0 0 0 2px rgba(234, 179, 8, 0.95)";
+  overlay.setAttribute("data-hiding", "false");
   overlay.setAttribute("data-visible", "true");
 };
 
@@ -624,6 +650,14 @@ const handleFocusIndicator = (event: Event): void => {
   }, FOCUS_OVERLAY_HIDE_MS);
 };
 
+const handleEditableBeforeInput = (event: Event): void => {
+  if (!isEditableTarget(event.target) && !isEditableTarget(getDeepActiveElement())) {
+    return;
+  }
+
+  hideFocusOverlay();
+};
+
 export const initCoreNavigation = (): void => {
   if (isInitialized) {
     return;
@@ -636,6 +670,8 @@ export const initCoreNavigation = (): void => {
     ensureFocusStyles();
     getFocusOverlay();
     window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
+    window.addEventListener("beforeinput", handleEditableBeforeInput, true);
+    window.addEventListener("compositionstart", handleEditableBeforeInput, true);
     window.addEventListener("resize", scheduleFocusOverlayPosition, true);
     window.addEventListener("scroll", scheduleFocusOverlayPosition, true);
   }
