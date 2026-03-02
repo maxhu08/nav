@@ -1,6 +1,6 @@
 export type ActionName =
-  | "show-hints-current-tab"
-  | "show-hints-new-tab"
+  | "toggle-hints-current-tab"
+  | "toggle-hints-new-tab"
   | "yank-current-tab-url"
   | "scroll-down"
   | "scroll-half-page-down"
@@ -12,8 +12,8 @@ export type ActionName =
   | "scroll-to-top";
 
 export const VALID_ACTION_NAMES = new Set<ActionName>([
-  "show-hints-current-tab",
-  "show-hints-new-tab",
+  "toggle-hints-current-tab",
+  "toggle-hints-new-tab",
   "yank-current-tab-url",
   "scroll-down",
   "scroll-half-page-down",
@@ -41,8 +41,8 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
   "G scroll-to-bottom",
 
   // hints
-  "f show-hints-current-tab",
-  "F show-hints-new-tab",
+  "f toggle-hints-current-tab",
+  "F toggle-hints-new-tab",
 
   // clipboard
   "yy yank-current-tab-url"

@@ -816,6 +816,9 @@ export const activateHints = (mode: LinkMode): boolean => {
 
 export const areHintsActive = (): boolean => hintState.active;
 
+export const areHintsPendingSelection = (): boolean =>
+  hintState.active && hintState.typed.length === 0;
+
 export const setHintCharset = (charset: string): void => {
   hintAlphabet = charset;
 

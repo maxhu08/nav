@@ -1,6 +1,8 @@
 import {
   activateHints,
   areHintsActive,
+  areHintsPendingSelection,
+  exitHints,
   handleHintsKeydown,
   setAvoidedAdjacentHintPairs,
   setHintCharset,
@@ -97,8 +99,22 @@ const isOptionsPage = (): boolean => {
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
-  "show-hints-current-tab": () => activateHints("current-tab"),
-  "show-hints-new-tab": () => activateHints("new-tab"),
+  "toggle-hints-current-tab": () => {
+    if (areHintsPendingSelection()) {
+      exitHints();
+      return true;
+    }
+
+    return activateHints("current-tab");
+  },
+  "toggle-hints-new-tab": () => {
+    if (areHintsPendingSelection()) {
+      exitHints();
+      return true;
+    }
+
+    return activateHints("new-tab");
+  },
   "yank-current-tab-url": yankCurrentTabUrl,
   "scroll-down": scrollDown,
   "scroll-half-page-down": scrollHalfPageDown,
@@ -267,7 +283,7 @@ const getReservedHintPrefixes = (mappings: Partial<Record<string, ActionName>>):
   const reservedPrefixes = new Set<string>();
 
   for (const [sequence, actionName] of Object.entries(mappings)) {
-    if (actionName !== "show-hints-current-tab" && actionName !== "show-hints-new-tab") {
+    if (actionName !== "toggle-hints-current-tab" && actionName !== "toggle-hints-new-tab") {
       continue;
     }
 
@@ -386,6 +402,24 @@ const handleStorageChange = (
 
 const handleKeydown = (event: KeyboardEvent): void => {
   if (areHintsActive()) {
+    const keyToken = getKeyToken(event);
+
+    if (keyToken && (pendingSequence || areHintsPendingSelection())) {
+      const { actionName, consumed } = getActionName(keyToken);
+
+      if (actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab") {
+        if (ACTIONS[actionName]()) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
+      } else if (consumed) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+    }
+
     if (handleHintsKeydown(event)) {
       event.preventDefault();
       event.stopImmediatePropagation();
