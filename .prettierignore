@@ -1,5 +1,2 @@
-node_modules
-dist
-.parcel-cache
-
-ui.ts
+src/options/scripts/ui.ts
+src/popup/ui.ts
