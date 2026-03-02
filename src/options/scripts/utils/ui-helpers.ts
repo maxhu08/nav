@@ -12,3 +12,22 @@ export const getContainerAndTextarea = (id: string): [HTMLDivElement, HTMLTextAr
 
   return [container, textarea];
 };
+
+export const lockTextareaContainerHeight = (
+  container: HTMLDivElement,
+  textarea: HTMLTextAreaElement
+): void => {
+  const syncHeight = () => {
+    const styles = window.getComputedStyle(container);
+    const verticalInsets =
+      Number.parseFloat(styles.paddingTop) +
+      Number.parseFloat(styles.paddingBottom) +
+      Number.parseFloat(styles.borderTopWidth) +
+      Number.parseFloat(styles.borderBottomWidth);
+
+    container.style.height = `${textarea.offsetHeight + verticalInsets}px`;
+  };
+
+  syncHeight();
+  window.addEventListener("resize", syncHeight);
+};

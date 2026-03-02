@@ -47,6 +47,7 @@
 
 .rules-urls-editor-layer {
   grid-area: 1 / 1;
+  height: 40rem;
   margin: 0;
   overflow: auto;
   padding: 0;
@@ -124,6 +125,7 @@
 
 .hotkeys-mappings-editor-layer {
   grid-area: 1 / 1;
+  height: 40rem;
   margin: 0;
   overflow: auto;
   padding: 0;
@@ -228,6 +230,7 @@
 
 .hotkeys-hints-avoid-adjacent-pairs-editor-layer {
   grid-area: 1 / 1;
+  height: 20rem;
   margin: 0;
   overflow: auto;
   padding: 0.25rem 0.5rem;

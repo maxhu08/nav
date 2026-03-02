@@ -1,9 +1,18 @@
 import { initCoreNavigation } from "~/src/core/navigation";
 import { listenToInputs } from "~/src/options/scripts/inputs";
 import { listenToKeys } from "~/src/options/scripts/keybinds";
+import {
+  hotkeysHintsAvoidAdjacentPairsContainerEl,
+  hotkeysHintsAvoidAdjacentPairsTextareaEl,
+  hotkeysMappingsContainerEl,
+  hotkeysMappingsTextareaEl,
+  rulesUrlsContainerEl,
+  rulesUrlsTextareaEl
+} from "~/src/options/scripts/ui";
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
 import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
+import { lockTextareaContainerHeight } from "~/src/options/scripts/utils/ui-helpers";
 import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
 import { getConfig } from "~/src/utils/config";
 
@@ -35,6 +44,13 @@ void createCollapseGroups();
 
 void getConfig().then((config) => {
   fillInputs(config);
+
+  lockTextareaContainerHeight(rulesUrlsContainerEl, rulesUrlsTextareaEl);
+  lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
+  lockTextareaContainerHeight(
+    hotkeysHintsAvoidAdjacentPairsContainerEl,
+    hotkeysHintsAvoidAdjacentPairsTextareaEl
+  );
 });
 
 listenToInputs();
