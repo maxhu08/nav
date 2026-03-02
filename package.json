@@ -31,7 +31,8 @@
   },
   "dependencies": {
     "parcel": "2.16.3",
-    "tippy.js": "^6.3.7"
+    "tippy.js": "^6.3.7",
+    "vanilla-colorful": "^0.7.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.2",
