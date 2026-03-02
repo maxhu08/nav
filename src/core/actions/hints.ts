@@ -480,7 +480,7 @@ const createOverlay = (): HTMLDivElement => {
   overlay.style.inset = "0";
   overlay.style.zIndex = "2147483647";
   overlay.style.pointerEvents = "none";
-  overlay.style.fontFamily = '"JetBrains Mono", monospace"';
+  overlay.style.fontFamily = '"JetBrains Mono", monospace';
 
   return overlay;
 };
@@ -513,6 +513,7 @@ const createMarker = (label: string, rect: DOMRect): HTMLSpanElement => {
   marker.style.borderRadius = "3px";
   marker.style.background = "#eab308";
   marker.style.color = "#2b1d00";
+  marker.style.fontFamily = '"JetBrains Mono", monospace';
   marker.style.fontSize = "12px";
   marker.style.fontWeight = "700";
   marker.style.letterSpacing = "0.08em";
