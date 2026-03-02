@@ -1,12 +1,23 @@
 import { type OptionsData, getOptionsData, updateOptionsData } from "~/src/utils/options-storage";
 
+const SECTION_EXPANDED_EVENT = "nav:options-section-expanded";
+
 export const collapseOptionSection = (optionSection: HTMLElement): void => {
   optionSection.classList.replace("grid", "hidden");
 };
 
 export const expandOptionSection = (optionSection: HTMLElement): void => {
   optionSection.classList.replace("hidden", "grid");
+  window.dispatchEvent(
+    new CustomEvent(SECTION_EXPANDED_EVENT, {
+      detail: {
+        sectionId: optionSection.id
+      }
+    })
+  );
 };
+
+export const OPTIONS_SECTION_EXPANDED_EVENT = SECTION_EXPANDED_EVENT;
 
 export const bindCollapseOptionButton = (
   collapseButton: HTMLButtonElement,

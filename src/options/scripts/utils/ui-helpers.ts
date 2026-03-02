@@ -1,3 +1,5 @@
+import { OPTIONS_SECTION_EXPANDED_EVENT } from "~/src/options/scripts/utils/collapse-option";
+
 export const getButton = (id: string): HTMLButtonElement => {
   return document.getElementById(`${id}-button`) as HTMLButtonElement;
 };
@@ -25,6 +27,15 @@ export const lockTextareaContainerHeight = (
   textarea: HTMLTextAreaElement
 ): void => {
   const syncHeight = () => {
+    if (!container.isConnected || !textarea.isConnected) {
+      return;
+    }
+
+    if (textarea.offsetHeight === 0) {
+      container.style.removeProperty("height");
+      return;
+    }
+
     const styles = window.getComputedStyle(container);
     const verticalInsets =
       Number.parseFloat(styles.paddingTop) +
@@ -37,4 +48,17 @@ export const lockTextareaContainerHeight = (
 
   syncHeight();
   window.addEventListener("resize", syncHeight);
+  window.addEventListener(OPTIONS_SECTION_EXPANDED_EVENT, (event) => {
+    const expandedSectionId = (event as CustomEvent<{ sectionId?: string }>).detail?.sectionId;
+    if (!expandedSectionId) {
+      return;
+    }
+
+    const expandedSection = document.getElementById(expandedSectionId);
+    if (!expandedSection?.contains(container)) {
+      return;
+    }
+
+    window.requestAnimationFrame(syncHeight);
+  });
 };
