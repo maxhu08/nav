@@ -1,4 +1,9 @@
-import { rulesUrlsHighlightEl, rulesUrlsTextareaEl } from "~/src/options/scripts/ui";
+import {
+  rulesUrlsHighlightEl,
+  rulesUrlsStatusEl,
+  rulesUrlsTextareaEl
+} from "~/src/options/scripts/ui";
+import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { isActionName } from "~/src/utils/hotkeys";
 
 const escapeHtml = (value: string): string =>
@@ -92,8 +97,9 @@ const tokenizeRegexPattern = (value: string): string => {
   return tokens.join("");
 };
 
-const renderActions = (value: string): string => {
+const renderActions = (value: string): { hasError: boolean; html: string } => {
   const tokens: string[] = [];
+  let hasError = false;
 
   for (const token of value.matchAll(/\s+|\S+/g)) {
     const segment = token[0];
@@ -103,32 +109,34 @@ const renderActions = (value: string): string => {
       continue;
     }
 
+    const isValid = isActionName(segment);
+    hasError ||= !isValid;
     tokens.push(
-      wrapToken(
-        isActionName(segment) ? "rules-urls-token-action" : "rules-urls-token-invalid",
-        segment
-      )
+      wrapToken(isValid ? "rules-urls-token-action" : "rules-urls-token-invalid", segment)
     );
   }
 
-  return tokens.join("");
+  return { hasError, html: tokens.join("") };
 };
 
-const renderLine = (line: string, canAttachActions: boolean): string => {
+const renderLine = (
+  line: string,
+  canAttachActions: boolean
+): { hasError: boolean; html: string } => {
   const trimmedLine = line.trim();
 
   if (!trimmedLine) {
-    return "";
+    return { hasError: false, html: "" };
   }
 
   if (trimmedLine.startsWith("#")) {
-    return wrapToken("rules-urls-token-comment", line);
+    return { hasError: false, html: wrapToken("rules-urls-token-comment", line) };
   }
 
   const prefix = line[0];
 
   if (prefix !== "*" && prefix !== "+" && prefix !== "-") {
-    return wrapToken("rules-urls-token-invalid", line);
+    return { hasError: true, html: wrapToken("rules-urls-token-invalid", line) };
   }
 
   const rest = line.slice(1);
@@ -137,26 +145,35 @@ const renderLine = (line: string, canAttachActions: boolean): string => {
   const value = rest.slice(leadingSpaceLength);
 
   if (prefix === "*") {
-    return [
-      wrapToken("rules-urls-token-prefix", prefix),
-      escapeHtml(spacing),
-      tokenizeRegexPattern(value)
-    ].join("");
+    return {
+      hasError: false,
+      html: [
+        wrapToken("rules-urls-token-prefix", prefix),
+        escapeHtml(spacing),
+        tokenizeRegexPattern(value)
+      ].join("")
+    };
   }
 
   if (!canAttachActions) {
-    return wrapToken("rules-urls-token-invalid", line);
+    return { hasError: true, html: wrapToken("rules-urls-token-invalid", line) };
   }
 
-  return [
-    wrapToken("rules-urls-token-operator", prefix),
-    escapeHtml(spacing),
-    renderActions(value)
-  ].join("");
+  const renderedActions = renderActions(value);
+
+  return {
+    hasError: renderedActions.hasError,
+    html: [
+      wrapToken("rules-urls-token-operator", prefix),
+      escapeHtml(spacing),
+      renderedActions.html
+    ].join("")
+  };
 };
 
 export const syncRulesUrlsHighlight = (): void => {
   let previousLineWasRuleStart = false;
+  let hasError = false;
 
   rulesUrlsHighlightEl.innerHTML = rulesUrlsTextareaEl.value
     .split("\n")
@@ -165,10 +182,13 @@ export const syncRulesUrlsHighlight = (): void => {
       const trimmedLine = line.trim();
 
       previousLineWasRuleStart = trimmedLine.startsWith("*");
+      hasError ||= renderedLine.hasError;
 
-      return renderedLine;
+      return renderedLine.html;
     })
     .join("\n");
+
+  setEditorStatus(rulesUrlsStatusEl, hasError);
 };
 
 export const syncRulesUrlsHighlightScroll = (): void => {

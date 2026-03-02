@@ -1,4 +1,9 @@
-import { hotkeysMappingsHighlightEl, hotkeysMappingsTextareaEl } from "~/src/options/scripts/ui";
+import {
+  hotkeysMappingsHighlightEl,
+  hotkeysMappingsStatusEl,
+  hotkeysMappingsTextareaEl
+} from "~/src/options/scripts/ui";
+import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { isActionName } from "~/src/utils/hotkeys";
 
 const escapeHtml = (value: string): string =>
@@ -7,21 +12,27 @@ const escapeHtml = (value: string): string =>
 const wrapToken = (className: string, value: string): string =>
   `<span class="${className}">${escapeHtml(value)}</span>`;
 
-const renderLine = (line: string): string => {
+const renderLine = (line: string): { hasError: boolean; html: string } => {
   const trimmedLine = line.trim();
 
   if (!trimmedLine) {
-    return "";
+    return { hasError: false, html: "" };
   }
 
   if (trimmedLine.startsWith("#")) {
-    return wrapToken("hotkeys-mappings-token-comment", line);
+    return {
+      hasError: false,
+      html: wrapToken("hotkeys-mappings-token-comment", line)
+    };
   }
 
   const separatorIndex = line.search(/\s/);
 
   if (separatorIndex === -1) {
-    return wrapToken("hotkeys-mappings-token-invalid", line);
+    return {
+      hasError: true,
+      html: wrapToken("hotkeys-mappings-token-invalid", line)
+    };
   }
 
   const sequence = line.slice(0, separatorIndex);
@@ -30,22 +41,32 @@ const renderLine = (line: string): string => {
   const spacingLength = spacingAndAction.length - spacingAndAction.trimStart().length;
   const spacing = spacingAndAction.slice(0, spacingLength);
   const action = spacingAndAction.slice(spacingLength);
-  const actionClass = isActionName(trimmedAction)
-    ? "hotkeys-mappings-token-action"
-    : "hotkeys-mappings-token-invalid";
+  const hasError = !isActionName(trimmedAction);
+  const actionClass = hasError ? "hotkeys-mappings-token-invalid" : "hotkeys-mappings-token-action";
 
-  return [
-    wrapToken("hotkeys-mappings-token-sequence", sequence),
-    escapeHtml(spacing),
-    wrapToken(actionClass, action)
-  ].join("");
+  return {
+    hasError,
+    html: [
+      wrapToken("hotkeys-mappings-token-sequence", sequence),
+      escapeHtml(spacing),
+      wrapToken(actionClass, action)
+    ].join("")
+  };
 };
 
 export const syncHotkeysMappingsHighlight = (): void => {
+  let hasError = false;
+
   hotkeysMappingsHighlightEl.innerHTML = hotkeysMappingsTextareaEl.value
     .split("\n")
-    .map(renderLine)
+    .map((line) => {
+      const result = renderLine(line);
+      hasError ||= result.hasError;
+      return result.html;
+    })
     .join("\n");
+
+  setEditorStatus(hotkeysMappingsStatusEl, hasError);
 };
 
 export const syncHotkeysMappingsHighlightScroll = (): void => {

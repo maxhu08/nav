@@ -18,6 +18,16 @@
   -webkit-mask-image: url("../assets/remixicon/collapse-horizontal-line.svg");
 }
 
+.ri-check-line {
+  mask-image: url("../assets/remixicon/check-line.svg");
+  -webkit-mask-image: url("../assets/remixicon/check-line.svg");
+}
+
+.ri-close-line {
+  mask-image: url("../assets/remixicon/close-line.svg");
+  -webkit-mask-image: url("../assets/remixicon/close-line.svg");
+}
+
 .ri-expand-horizontal-s-line {
   mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");
   -webkit-mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");

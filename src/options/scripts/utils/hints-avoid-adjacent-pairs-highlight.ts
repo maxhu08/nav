@@ -1,7 +1,9 @@
 import {
   hotkeysHintsAvoidAdjacentPairsHighlightEl,
+  hotkeysHintsAvoidAdjacentPairsStatusEl,
   hotkeysHintsAvoidAdjacentPairsTextareaEl
 } from "~/src/options/scripts/ui";
+import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -9,18 +11,22 @@ const escapeHtml = (value: string): string =>
 const wrapToken = (className: string, value: string): string =>
   `<span class="${className}">${escapeHtml(value)}</span>`;
 
-const renderLine = (line: string): string => {
+const renderLine = (line: string): { hasError: boolean; html: string } => {
   const trimmedLine = line.trim();
 
   if (!trimmedLine) {
-    return "";
+    return { hasError: false, html: "" };
   }
 
   if (trimmedLine.startsWith("#")) {
-    return wrapToken("hotkeys-hints-avoid-adjacent-pairs-token-comment", line);
+    return {
+      hasError: false,
+      html: wrapToken("hotkeys-hints-avoid-adjacent-pairs-token-comment", line)
+    };
   }
 
   const tokens: string[] = [];
+  let hasError = false;
 
   for (const match of line.matchAll(/\s+|\S+/g)) {
     const segment = match[0];
@@ -30,9 +36,11 @@ const renderLine = (line: string): string => {
       continue;
     }
 
+    const isValid = /^[a-z]{2}$/i.test(segment);
+    hasError ||= !isValid;
     tokens.push(
       wrapToken(
-        /^[a-z]{2}$/i.test(segment)
+        isValid
           ? "hotkeys-hints-avoid-adjacent-pairs-token-valid"
           : "hotkeys-hints-avoid-adjacent-pairs-token-invalid",
         segment
@@ -40,7 +48,7 @@ const renderLine = (line: string): string => {
     );
   }
 
-  return tokens.join("");
+  return { hasError, html: tokens.join("") };
 };
 
 export const normalizeAvoidAdjacentPairsValue = (value: string): string => {
@@ -53,8 +61,19 @@ export const normalizeAvoidAdjacentPairsValue = (value: string): string => {
 };
 
 export const syncHotkeysHintsAvoidAdjacentPairsHighlight = (): void => {
+  let hasError = false;
+
   hotkeysHintsAvoidAdjacentPairsHighlightEl.innerHTML =
-    hotkeysHintsAvoidAdjacentPairsTextareaEl.value.split("\n").map(renderLine).join("\n");
+    hotkeysHintsAvoidAdjacentPairsTextareaEl.value
+      .split("\n")
+      .map((line) => {
+        const result = renderLine(line);
+        hasError ||= result.hasError;
+        return result.html;
+      })
+      .join("\n");
+
+  setEditorStatus(hotkeysHintsAvoidAdjacentPairsStatusEl, hasError);
 };
 
 export const syncHotkeysHintsAvoidAdjacentPairsHighlightScroll = (): void => {
