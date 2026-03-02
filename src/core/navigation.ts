@@ -2,7 +2,8 @@ import {
   activateHints,
   areHintsActive,
   handleHintsKeydown,
-  setHintCharset
+  setHintCharset,
+  setReservedHintPrefixes
 } from "~/src/core/actions/hints";
 import {
   installScrollTracking,
@@ -176,6 +177,7 @@ const applyHotkeyMappings = (
 ): void => {
   keyActions = mappings;
   keyActionPrefixes = prefixes;
+  setReservedHintPrefixes(getReservedHintPrefixes(mappings));
   clearPendingState();
 };
 
@@ -256,6 +258,23 @@ const isCountKey = (key: string): boolean => {
   }
 
   return key >= "1" && key <= "9";
+};
+
+const getReservedHintPrefixes = (mappings: Partial<Record<string, ActionName>>): Set<string> => {
+  const reservedPrefixes = new Set<string>();
+
+  for (const [sequence, actionName] of Object.entries(mappings)) {
+    if (actionName !== "show-hints-current-tab" && actionName !== "show-hints-new-tab") {
+      continue;
+    }
+
+    const firstCharacter = sequence[0]?.toLowerCase();
+    if (firstCharacter && /[a-z]/.test(firstCharacter)) {
+      reservedPrefixes.add(firstCharacter);
+    }
+  }
+
+  return reservedPrefixes;
 };
 
 const consumeCountKey = (key: string): void => {

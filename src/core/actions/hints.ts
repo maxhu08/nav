@@ -12,6 +12,7 @@ const MARKER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker`;
 const FOCUS_INDICATOR_EVENT = `${HINT_NAMESPACE_PREFIX}focus-indicator`;
 const IS_MAC = navigator.userAgent.includes("Mac");
 let hintAlphabet = DEFAULT_HINT_CHARSET;
+let reservedHintPrefixes = new Set<string>();
 
 type LinkMode = "current-tab" | "new-tab";
 
@@ -50,8 +51,117 @@ const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   return rects[0] ?? null;
 };
 
+const getTopElementAtPoint = (
+  x: number,
+  y: number,
+  root: Document | ShadowRoot = document
+): Element | null => {
+  const topElement = root.elementsFromPoint(x, y)[0] ?? null;
+
+  if (topElement instanceof HTMLElement && topElement.shadowRoot) {
+    return getTopElementAtPoint(x, y, topElement.shadowRoot) ?? topElement;
+  }
+
+  return topElement;
+};
+
+const intersectsAtPoint = (element: HTMLElement, x: number, y: number): boolean => {
+  const topElement = getTopElementAtPoint(x, y);
+
+  return !!topElement && (element.contains(topElement) || topElement.contains(element));
+};
+
+const hasClickablePoint = (element: HTMLElement, rect: DOMRect): boolean => {
+  const points: Array<[number, number]> = [
+    [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5],
+    [rect.left + 0.1, rect.top + 0.1],
+    [rect.right - 0.1, rect.top + 0.1],
+    [rect.left + 0.1, rect.bottom - 0.1],
+    [rect.right - 0.1, rect.bottom - 0.1]
+  ];
+
+  return points.some(([x, y]) => intersectsAtPoint(element, x, y));
+};
+
+const CLICKABLE_ROLES = new Set([
+  "button",
+  "tab",
+  "link",
+  "checkbox",
+  "menuitem",
+  "menuitemcheckbox",
+  "menuitemradio",
+  "radio",
+  "textbox"
+]);
+
+const isClickableByTagName = (element: HTMLElement, tagName: string): boolean => {
+  switch (tagName) {
+    case "a":
+    case "area":
+    case "object":
+    case "embed":
+    case "details":
+      return true;
+    case "button":
+    case "select":
+      return !element.hasAttribute("disabled");
+    case "textarea":
+      return !element.hasAttribute("disabled") && !element.hasAttribute("readonly");
+    case "input": {
+      const input = element as HTMLInputElement;
+      return (
+        input.type !== "hidden" &&
+        !input.disabled &&
+        !(input.readOnly && isSelectableElement(input))
+      );
+    }
+    case "label": {
+      const label = element as HTMLLabelElement;
+      const control = label.control;
+      return !!control && !("disabled" in control && control.disabled);
+    }
+    default:
+      return false;
+  }
+};
+
+const isExplicitlyClickable = (element: HTMLElement): boolean => {
+  if (element.hasAttribute("onclick")) {
+    return true;
+  }
+
+  const role = element.getAttribute("role")?.toLowerCase();
+  if (role && CLICKABLE_ROLES.has(role)) {
+    return true;
+  }
+
+  const contentEditable = element.getAttribute("contenteditable")?.toLowerCase();
+  if (contentEditable && ["", "contenteditable", "true"].includes(contentEditable)) {
+    return true;
+  }
+
+  if (element.hasAttribute("jsaction")) {
+    return true;
+  }
+
+  const tabIndexValue = element.getAttribute("tabindex");
+  if (tabIndexValue !== null) {
+    const tabIndex = Number.parseInt(tabIndexValue, 10);
+    if (!Number.isNaN(tabIndex) && tabIndex >= 0) {
+      return true;
+    }
+  }
+
+  return isClickableByTagName(element, element.tagName.toLowerCase());
+};
+
 const isHintable = (element: HTMLElement): boolean => {
   if (element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true") {
+    return false;
+  }
+
+  if (!isExplicitlyClickable(element)) {
     return false;
   }
 
@@ -72,7 +182,8 @@ const isHintable = (element: HTMLElement): boolean => {
     rect.bottom >= 0 &&
     rect.right >= 0 &&
     rect.top <= window.innerHeight &&
-    rect.left <= window.innerWidth
+    rect.left <= window.innerWidth &&
+    hasClickablePoint(element, rect)
   );
 };
 
@@ -84,13 +195,16 @@ const getHintableElements = (): HTMLElement[] => {
     "input:not([type='hidden'])",
     "select",
     "textarea",
-    "summary",
+    "object",
+    "embed",
+    "label",
+    "details",
     "[onclick]",
-    "[role='button']",
-    "[role='link']",
+    "[role]",
     "[tabindex]:not([tabindex='-1'])",
     "[contenteditable]",
-    "[contenteditable='true']"
+    "[contenteditable='true']",
+    "[jsaction]"
   ];
 
   const seen = new Set<HTMLElement>();
@@ -102,6 +216,15 @@ const getHintableElements = (): HTMLElement[] => {
     elements.push(element);
   }
 
+  elements.sort((leftElement, rightElement) => {
+    const leftRect = getMarkerRect(leftElement);
+    const rightRect = getMarkerRect(rightElement);
+
+    if (!leftRect || !rightRect) return 0;
+    if (leftRect.top !== rightRect.top) return leftRect.top - rightRect.top;
+    return leftRect.left - rightRect.left;
+  });
+
   return elements;
 };
 
@@ -109,16 +232,69 @@ const buildHintLabels = (count: number): string[] => {
   if (count <= 0) return [];
 
   const alphabet = hintAlphabet.split("");
-  const labels = [""];
+  const firstCharacters = alphabet.filter((char) => !reservedHintPrefixes.has(char));
+  const leadingAlphabet = firstCharacters.length > 0 ? firstCharacters : alphabet;
+  const labels: string[] = [];
 
-  while (labels.length < count + 1) {
-    const next: string[] = [];
+  let labelLength = 1;
+  let capacity = leadingAlphabet.length;
 
-    for (const prefix of labels) {
-      for (const char of alphabet) next.push(`${prefix}${char}`);
+  while (capacity < count) {
+    labelLength += 1;
+    capacity *= alphabet.length;
+  }
+
+  const getSubtreeCapacity = (remainingLength: number, isLeadingCharacter: boolean): number => {
+    if (remainingLength <= 0) return 1;
+
+    let subtreeCapacity = isLeadingCharacter ? leadingAlphabet.length : alphabet.length;
+
+    for (let index = 1; index < remainingLength; index += 1) {
+      subtreeCapacity *= alphabet.length;
     }
 
-    labels.splice(0, labels.length, ...next);
+    return subtreeCapacity;
+  };
+
+  const appendLabels = (
+    prefix: string,
+    remainingCount: number,
+    remainingLength: number,
+    isLeadingCharacter: boolean
+  ): void => {
+    if (remainingCount <= 0) return;
+
+    const sourceAlphabet = isLeadingCharacter ? leadingAlphabet : alphabet;
+    const subtreeCapacity = getSubtreeCapacity(remainingLength - 1, false);
+    let assignedCount = 0;
+
+    for (let index = 0; index < sourceAlphabet.length; index += 1) {
+      const char = sourceAlphabet[index];
+      const nextLabel = `${prefix}${char}`;
+      const remainingBuckets = sourceAlphabet.length - index;
+      const nextRemainingCount = remainingCount - assignedCount;
+      const bucketCount = Math.min(
+        subtreeCapacity,
+        Math.ceil(nextRemainingCount / remainingBuckets)
+      );
+
+      if (bucketCount <= 0) continue;
+
+      if (remainingLength === 1) {
+        labels.push(nextLabel);
+      } else {
+        appendLabels(nextLabel, bucketCount, remainingLength - 1, false);
+      }
+
+      assignedCount += bucketCount;
+      if (assignedCount >= remainingCount || labels.length >= count) return;
+    }
+  };
+
+  appendLabels("", count, labelLength, true);
+
+  if (labels.length > count) {
+    labels.length = count;
   }
 
   return labels.slice(0, count);
@@ -269,24 +445,60 @@ const simulateSelect = (element: HTMLElement): void => {
 
 const clickElement = (element: HTMLElement): void => {
   dispatchFocusIndicator(element);
-  element.click();
+  simulateClick(element);
 
   if (document.activeElement === element && shouldBlurAfterActivation(element)) {
     element.blur();
   }
 };
 
-const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit): void => {
+const simulateMouseInteraction = (
+  element: HTMLElement,
+  eventName: string,
+  modifiers: MouseEventInit
+): void => {
+  const baseInit = {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    view: window,
+    detail: 1,
+    ...modifiers
+  };
+
+  if (eventName.startsWith("pointer") && typeof PointerEvent !== "undefined") {
+    element.dispatchEvent(
+      new PointerEvent(eventName, {
+        pointerId: 1,
+        pointerType: "mouse",
+        isPrimary: true,
+        ...baseInit
+      })
+    );
+    return;
+  }
+
+  element.dispatchEvent(new MouseEvent(eventName, baseInit));
+};
+
+const simulateClick = (element: HTMLElement, modifiers: MouseEventInit = {}): void => {
   dispatchFocusIndicator(element);
-  element.dispatchEvent(
-    new MouseEvent("click", {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      ...modifiers
-    })
-  );
+
+  for (const eventName of [
+    "pointerover",
+    "mouseover",
+    "pointerdown",
+    "mousedown",
+    "pointerup",
+    "mouseup",
+    "click"
+  ]) {
+    simulateMouseInteraction(element, eventName, modifiers);
+  }
+};
+
+const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit): void => {
+  simulateClick(element, modifiers);
 
   if (document.activeElement === element && shouldBlurAfterActivation(element)) {
     element.blur();
@@ -372,6 +584,7 @@ const activateHint = (hint: HintMarker): void => {
 const applyFilter = (): void => {
   const typed = hintState.typed;
   const matches = hintState.markers.filter((hint) => hint.label.startsWith(typed));
+  const exactMatch = matches.find((hint) => hint.label === typed);
 
   for (const hint of hintState.markers) {
     const isMatch = typed.length === 0 || hint.label.startsWith(typed);
@@ -379,8 +592,8 @@ const applyFilter = (): void => {
     hint.marker.style.display = isMatch ? "" : "none";
   }
 
-  if (matches.length === 1 && matches[0]?.label === typed) {
-    activateHint(matches[0]);
+  if (exactMatch) {
+    activateHint(exactMatch);
   }
 };
 
@@ -432,6 +645,14 @@ export const setHintCharset = (charset: string): void => {
   }
 };
 
+export const setReservedHintPrefixes = (prefixes: Iterable<string>): void => {
+  reservedHintPrefixes = new Set(prefixes);
+
+  if (hintState.active) {
+    exitHints();
+  }
+};
+
 export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
   if (!hintState.active) return false;
 
@@ -448,6 +669,13 @@ export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
 
   if (event.key === "Enter") {
     const matches = hintState.markers.filter((hint) => hint.label.startsWith(hintState.typed));
+    const exactMatch = matches.find((hint) => hint.label === hintState.typed);
+
+    if (exactMatch) {
+      activateHint(exactMatch);
+      return true;
+    }
+
     if (matches.length === 1) activateHint(matches[0]);
     return true;
   }
