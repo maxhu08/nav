@@ -58,5 +58,5 @@ export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = [
   "cd ce dc de ec ed fg gf hj hm jh jm mh mj sw ws",
   "",
   "# other",
-  "sa"
+  "sa wa"
 ].join("\n");
