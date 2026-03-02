@@ -473,8 +473,12 @@ const doesLabelConflictWithReservedLabel = (
 };
 
 const getPreferredSearchLabel = (labelLength: number): string | null => {
-  const label = preferredSearchLabels[labelLength - 1];
-  return label && isPreferredSearchLabelValid(label, labelLength) ? label : null;
+  const label = preferredSearchLabels.find(
+    (preferredSearchLabel) => preferredSearchLabel.length === labelLength
+  );
+  return label && label.length === labelLength && isPreferredSearchLabelValid(label, labelLength)
+    ? label
+    : null;
 };
 
 const createOverlay = (): HTMLDivElement => {

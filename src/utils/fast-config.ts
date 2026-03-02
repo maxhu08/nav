@@ -137,17 +137,22 @@ const parseAvoidAdjacentPairsValue = (
 const parsePreferredSearchLabelsValue = (value: string): string[] => {
   const normalizedLabels: string[] = [];
   const seenLabels = new Set<string>();
+  let previousLabelLength: number | null = null;
 
   for (const segment of value
     .toLowerCase()
     .split(/\s+/)
     .map((part) => part.trim())) {
-    if (!/^[a-z]+$/.test(segment) || seenLabels.has(segment)) {
+    const hasExpectedLength =
+      previousLabelLength === null || segment.length === previousLabelLength + 1;
+
+    if (!/^[a-z]+$/.test(segment) || seenLabels.has(segment) || !hasExpectedLength) {
       continue;
     }
 
     seenLabels.add(segment);
     normalizedLabels.push(segment);
+    previousLabelLength = segment.length;
   }
 
   return normalizedLabels.length > 0
