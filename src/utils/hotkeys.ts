@@ -1,4 +1,6 @@
 export type ActionName =
+  | "close-current-tab"
+  | "create-new-tab"
   | "toggle-hints-current-tab"
   | "toggle-hints-new-tab"
   | "yank-current-tab-url"
@@ -12,6 +14,8 @@ export type ActionName =
   | "scroll-to-top";
 
 export const VALID_ACTION_NAMES = new Set<ActionName>([
+  "close-current-tab",
+  "create-new-tab",
   "toggle-hints-current-tab",
   "toggle-hints-new-tab",
   "yank-current-tab-url",
@@ -43,6 +47,10 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
   // hints
   "f toggle-hints-current-tab",
   "F toggle-hints-new-tab",
+
+  // tabs
+  "# t create-new-tab",
+  "# x close-current-tab",
 
   // clipboard
   "yy yank-current-tab-url"

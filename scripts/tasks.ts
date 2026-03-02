@@ -23,6 +23,7 @@ const SRC_DIR = resolve(ROOT, "src");
 const ASSETS_DIR = resolve(SRC_DIR, "assets");
 const DIST_CORE_DIR = resolve(DIST_DIR, "core");
 const ENTRY_FILES = [
+  resolve(ROOT, "src", "background.ts"),
   resolve(ROOT, "src", "core", "index.ts"),
   resolve(ROOT, "src", "popup.html"),
   resolve(ROOT, "src", "options.html"),
@@ -36,8 +37,10 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     name: "nav",
     author: "Max Hu",
     description: "vim style keyboard navigation for the web",
-    permissions: ["storage"],
-    background: {},
+    permissions: ["storage", "tabs"],
+    background: {
+      service_worker: "background.js"
+    },
     host_permissions: ["<all_urls>"],
     action: {
       default_popup: "popup.html"
@@ -68,8 +71,10 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     name: "nav",
     author: "Max Hu",
     description: "vim style keyboard navigation for the web",
-    permissions: ["storage"],
-    background: {},
+    permissions: ["storage", "tabs"],
+    background: {
+      service_worker: "background.js"
+    },
     host_permissions: ["<all_urls>"],
     action: {
       default_popup: "popup.html"

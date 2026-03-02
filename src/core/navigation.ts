@@ -28,6 +28,8 @@ import { type FastRule, getFastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 
 type ActionHandler = (count?: number) => boolean;
+type TabCommand = "close-current-tab" | "create-new-tab";
+type TabCommandResponse = { ok: boolean };
 
 let keyActions: Partial<Record<string, ActionName>> = {};
 let keyActionPrefixes: Partial<Record<string, true>> = {};
@@ -94,12 +96,64 @@ const yankCurrentTabUrl = (): boolean => {
   return true;
 };
 
+const getCurrentExtensionPageTabContext = async (): Promise<{
+  tabId?: number;
+  tabIndex?: number;
+  windowId?: number;
+}> => {
+  if (typeof chrome.tabs?.getCurrent !== "function") {
+    return {};
+  }
+
+  return new Promise((resolve) => {
+    chrome.tabs.getCurrent((tab) => {
+      if (chrome.runtime.lastError || !tab) {
+        resolve({});
+        return;
+      }
+
+      resolve({
+        tabId: tab.id,
+        tabIndex: tab.index,
+        windowId: tab.windowId
+      });
+    });
+  });
+};
+
+const runTabCommand = (command: TabCommand): boolean => {
+  void getCurrentExtensionPageTabContext().then((tabContext) => {
+    chrome.runtime.sendMessage(
+      {
+        type: "tab-command",
+        command,
+        ...tabContext
+      },
+      (response?: TabCommandResponse) => {
+        if (response?.ok) {
+          return;
+        }
+
+        const toast = getToastApi();
+        const actionLabel =
+          command === "close-current-tab" ? "close current tab" : "create new tab";
+
+        toast?.error(`Could not ${actionLabel}`);
+      }
+    );
+  });
+
+  return true;
+};
+
 const isOptionsPage = (): boolean => {
   const optionsUrl = chrome.runtime.getURL("options.html");
   return window.location.href === optionsUrl;
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
+  "close-current-tab": () => runTabCommand("close-current-tab"),
+  "create-new-tab": () => runTabCommand("create-new-tab"),
   "toggle-hints-current-tab": () => {
     if (areHintsPendingSelection()) {
       exitHints();
