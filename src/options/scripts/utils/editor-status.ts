@@ -4,6 +4,7 @@ const ERROR_STATUS_CLASSES = ["text-rose-500"];
 export const setEditorStatus = (element: HTMLParagraphElement, hasError: boolean): void => {
   element.classList.remove(...NEUTRAL_STATUS_CLASSES, ...ERROR_STATUS_CLASSES);
   element.classList.add(...(hasError ? ERROR_STATUS_CLASSES : NEUTRAL_STATUS_CLASSES));
+  element.dataset.hasError = hasError ? "true" : "false";
 
   const icon = document.createElement("i");
   icon.className = hasError ? "ri-close-line" : "ri-check-line";
@@ -13,3 +14,6 @@ export const setEditorStatus = (element: HTMLParagraphElement, hasError: boolean
 
   element.replaceChildren(icon, text);
 };
+
+export const hasEditorError = (element: HTMLParagraphElement): boolean =>
+  element.dataset.hasError === "true";

@@ -1,3 +1,9 @@
+import {
+  hotkeysHintsAvoidAdjacentPairsStatusEl,
+  hotkeysMappingsStatusEl,
+  rulesUrlsStatusEl
+} from "~/src/options/scripts/ui";
+import { hasEditorError } from "~/src/options/scripts/utils/editor-status";
 import { getToastApi } from "~/src/options/scripts/utils/sonner";
 import { saveHotkeysSettingsToDraft } from "~/src/options/scripts/utils/save-helpers/save-hotkeys";
 import { saveRulesSettingsToDraft } from "~/src/options/scripts/utils/save-helpers/save-rules";
@@ -11,7 +17,22 @@ const setConfigAndFastConfig = (config: Config): Promise<void> => {
   });
 };
 
+const hasUnresolvedEditorErrors = (): boolean =>
+  hasEditorError(rulesUrlsStatusEl) ||
+  hasEditorError(hotkeysMappingsStatusEl) ||
+  hasEditorError(hotkeysHintsAvoidAdjacentPairsStatusEl);
+
 export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<Config> => {
+  if (hasUnresolvedEditorErrors()) {
+    if (notify) {
+      getToastApi()?.error("config not saved", {
+        description: "unresolved errors"
+      });
+    }
+
+    return getConfig();
+  }
+
   const draft = await getConfig();
   saveRulesSettingsToDraft(draft);
   saveHotkeysSettingsToDraft(draft);
