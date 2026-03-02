@@ -102,17 +102,51 @@ const hasClickablePoint = (element: HTMLElement, rect: DOMRect): boolean => {
   return points.some(([x, y]) => intersectsAtPoint(element, x, y));
 };
 
-const CLICKABLE_ROLES = new Set([
+const ACTIVATABLE_ROLES = new Set([
   "button",
-  "tab",
   "link",
   "checkbox",
+  "combobox",
   "menuitem",
   "menuitemcheckbox",
   "menuitemradio",
+  "option",
   "radio",
+  "searchbox",
+  "slider",
+  "spinbutton",
+  "switch",
+  "tab",
   "textbox"
 ]);
+
+const INTERACTIVE_ARIA_ATTRIBUTES = [
+  "aria-checked",
+  "aria-controls",
+  "aria-expanded",
+  "aria-haspopup",
+  "aria-pressed",
+  "aria-selected"
+] as const;
+
+const getElementTabIndex = (element: HTMLElement): number | null => {
+  const tabIndexValue = element.getAttribute("tabindex");
+  if (tabIndexValue === null) return null;
+
+  const tabIndex = Number.parseInt(tabIndexValue, 10);
+  return Number.isNaN(tabIndex) ? null : tabIndex;
+};
+
+const hasInteractiveRole = (element: HTMLElement): boolean => {
+  const role = element.getAttribute("role")?.toLowerCase();
+  return !!role && ACTIVATABLE_ROLES.has(role);
+};
+
+const hasInteractiveAriaState = (element: HTMLElement): boolean =>
+  INTERACTIVE_ARIA_ATTRIBUTES.some((attributeName) => element.hasAttribute(attributeName));
+
+const hasDirectActionAttribute = (element: HTMLElement): boolean =>
+  element.hasAttribute("onclick") || element.hasAttribute("jsaction");
 
 const isClickableByTagName = (element: HTMLElement, tagName: string): boolean => {
   switch (tagName) {
@@ -120,7 +154,7 @@ const isClickableByTagName = (element: HTMLElement, tagName: string): boolean =>
     case "area":
     case "object":
     case "embed":
-    case "details":
+    case "summary":
       return true;
     case "button":
     case "select":
@@ -145,42 +179,51 @@ const isClickableByTagName = (element: HTMLElement, tagName: string): boolean =>
   }
 };
 
-const isExplicitlyClickable = (element: HTMLElement): boolean => {
-  if (element.hasAttribute("onclick")) {
-    return true;
-  }
-
-  const role = element.getAttribute("role")?.toLowerCase();
-  if (role && CLICKABLE_ROLES.has(role)) {
-    return true;
-  }
-
+const isEditableHintTarget = (element: HTMLElement): boolean => {
   const contentEditable = element.getAttribute("contenteditable")?.toLowerCase();
-  if (contentEditable && ["", "contenteditable", "true"].includes(contentEditable)) {
-    return true;
-  }
-
-  if (element.hasAttribute("jsaction")) {
-    return true;
-  }
-
-  const tabIndexValue = element.getAttribute("tabindex");
-  if (tabIndexValue !== null) {
-    const tabIndex = Number.parseInt(tabIndexValue, 10);
-    if (!Number.isNaN(tabIndex) && tabIndex >= 0) {
-      return true;
-    }
-  }
-
-  return isClickableByTagName(element, element.tagName.toLowerCase());
+  return !!contentEditable && ["", "contenteditable", "true"].includes(contentEditable);
 };
 
-const isHintable = (element: HTMLElement): boolean => {
-  if (element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true") {
+const isCustomActivatableElement = (element: HTMLElement): boolean => {
+  const tabIndex = getElementTabIndex(element);
+  const isFocusable = tabIndex !== null && tabIndex >= 0;
+  const style = window.getComputedStyle(element);
+  const looksInteractive = style.cursor === "pointer" || hasInteractiveAriaState(element);
+
+  if (hasInteractiveRole(element)) {
+    return isFocusable || isEditableHintTarget(element) || looksInteractive;
+  }
+
+  if (!hasDirectActionAttribute(element)) {
     return false;
   }
 
-  if (!isExplicitlyClickable(element)) {
+  return isFocusable || looksInteractive;
+};
+
+const isActivatableElement = (element: HTMLElement): boolean => {
+  if (isClickableByTagName(element, element.tagName.toLowerCase())) {
+    return true;
+  }
+
+  if (isEditableHintTarget(element)) {
+    return true;
+  }
+
+  return isCustomActivatableElement(element);
+};
+
+const isHintable = (element: HTMLElement): boolean => {
+  if (
+    element.hasAttribute("disabled") ||
+    element.hasAttribute("inert") ||
+    element.getAttribute("aria-disabled") === "true" ||
+    element.closest("[inert],[aria-disabled='true'],fieldset[disabled]")
+  ) {
+    return false;
+  }
+
+  if (!isActivatableElement(element)) {
     return false;
   }
 
@@ -217,12 +260,11 @@ const getHintableElements = (): HTMLElement[] => {
     "object",
     "embed",
     "label",
-    "details",
+    "summary",
     "[onclick]",
     "[role]",
-    "[tabindex]:not([tabindex='-1'])",
-    "[contenteditable]",
     "[contenteditable='true']",
+    "[contenteditable='']",
     "[jsaction]"
   ];
 
