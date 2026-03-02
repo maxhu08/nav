@@ -6,6 +6,13 @@ export const getElement = <T extends HTMLElement>(id: string): T => {
   return document.getElementById(id) as T;
 };
 
+export const getContainerAndInput = (id: string): [HTMLDivElement, HTMLInputElement] => {
+  const container = document.getElementById(`${id}-container`) as HTMLDivElement;
+  const input = document.getElementById(`${id}-input`) as HTMLInputElement;
+
+  return [container, input];
+};
+
 export const getContainerAndTextarea = (id: string): [HTMLDivElement, HTMLTextAreaElement] => {
   const container = document.getElementById(`${id}-container`) as HTMLDivElement;
   const textarea = document.getElementById(`${id}-textarea`) as HTMLTextAreaElement;

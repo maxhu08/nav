@@ -1,4 +1,9 @@
-import { DEFAULT_HINT_CUSTOM_CSS, type Config, getConfig } from "~/src/utils/config";
+import {
+  DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
+  DEFAULT_HINT_CUSTOM_CSS,
+  type Config,
+  getConfig
+} from "~/src/utils/config";
 import {
   type ActionName,
   DEFAULT_HINT_CHARSET,
@@ -24,6 +29,7 @@ export type FastConfig = {
   hints: {
     showCapitalizedLetters: boolean;
     showActivationIndicator: boolean;
+    showActivationIndicatorColor: string;
     css: string;
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
@@ -35,6 +41,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
   return (
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.showActivationIndicator === "boolean" &&
+    typeof value?.hints?.showActivationIndicatorColor === "string" &&
     typeof value?.hints?.css === "string" &&
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
@@ -45,6 +52,20 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
 
 const resolveHintCSS = (config: Config): string => {
   return config.hints.styling === "default" ? DEFAULT_HINT_CUSTOM_CSS : config.hints.customCSS;
+};
+
+const parseActivationIndicatorColorValue = (value: string): string => {
+  const trimmedValue = value.trim();
+  const normalizedHex = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmedValue)
+    ? trimmedValue.toLowerCase()
+    : "";
+
+  if (normalizedHex.length === 4) {
+    const [hash, r, g, b] = normalizedHex;
+    return `${hash}${r}${r}${g}${g}${b}${b}`;
+  }
+
+  return normalizedHex || DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
 };
 
 const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionName>> => {
@@ -244,6 +265,9 @@ export const buildFastConfig = (config: Config): FastConfig => {
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,
       showActivationIndicator: config.hints.showActivationIndicator,
+      showActivationIndicatorColor: parseActivationIndicatorColorValue(
+        config.hints.showActivationIndicatorColor
+      ),
       css: resolveHintCSS(config),
       charset: parseHintCharsetValue(config.hints.charset),
       avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),

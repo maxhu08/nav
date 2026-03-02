@@ -11,6 +11,7 @@ import {
   rulesUrlsTextareaEl
 } from "~/src/options/scripts/ui";
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
+import { initColorInputControls } from "~/src/options/scripts/utils/color-inputs";
 import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
 import { initHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
@@ -51,6 +52,7 @@ initCoreNavigation();
 
 void createCollapseGroups();
 initHintsCustomCSSHighlight();
+initColorInputControls();
 
 void getConfig().then((config) => {
   fillInputs(config);

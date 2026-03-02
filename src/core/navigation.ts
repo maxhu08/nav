@@ -27,6 +27,7 @@ import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 import { getExtensionNamespace } from "~/src/utils/extension-id";
 import { type FastRule, getFastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
+import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 
 type ActionHandler = (count?: number) => boolean;
 type TabCommand = "close-current-tab" | "create-new-tab" | "reload-current-tab";
@@ -202,10 +203,53 @@ let focusedOverlayTarget: HTMLElement | null = null;
 let focusOverlayFrame: number | null = null;
 let focusOverlayTimeout: number | null = null;
 let showActivationIndicator = true;
+let activationIndicatorColor = DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
 
 type KeyParseResult = {
   actionName: ActionName | null;
   consumed: boolean;
+};
+
+const hexToRgba = (hex: string, alpha: number): string => {
+  const normalizedHex = hex.replace("#", "");
+  const red = Number.parseInt(normalizedHex.slice(0, 2), 16);
+  const green = Number.parseInt(normalizedHex.slice(2, 4), 16);
+  const blue = Number.parseInt(normalizedHex.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
+
+const applyActivationIndicatorColor = (overlay: HTMLDivElement = getFocusOverlay()): void => {
+  overlay.style.setProperty(
+    "--nav-focus-ring-outer-strong",
+    hexToRgba(activationIndicatorColor, 0.38)
+  );
+  overlay.style.setProperty(
+    "--nav-focus-ring-inner-strong",
+    hexToRgba(activationIndicatorColor, 0.95)
+  );
+  overlay.style.setProperty(
+    "--nav-focus-ring-outer-medium",
+    hexToRgba(activationIndicatorColor, 0.18)
+  );
+  overlay.style.setProperty(
+    "--nav-focus-ring-inner-medium",
+    hexToRgba(activationIndicatorColor, 0.95)
+  );
+  overlay.style.setProperty(
+    "--nav-focus-ring-outer-soft",
+    hexToRgba(activationIndicatorColor, 0.06)
+  );
+  overlay.style.setProperty(
+    "--nav-focus-ring-inner-soft",
+    hexToRgba(activationIndicatorColor, 0.92)
+  );
+  overlay.style.setProperty(
+    "--nav-focus-ring-outer-fade",
+    hexToRgba(activationIndicatorColor, 0.02)
+  );
+  overlay.style.setProperty("--nav-focus-ring-inner-fade", hexToRgba(activationIndicatorColor, 0));
+  overlay.style.setProperty("--nav-focus-ring-static", hexToRgba(activationIndicatorColor, 0.95));
 };
 
 const normalizeBaseKey = (key: string): string | null => {
@@ -435,6 +479,8 @@ const syncFastConfig = (): void => {
     setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
     setHintCSS(fastConfig.hints.css);
     showActivationIndicator = fastConfig.hints.showActivationIndicator;
+    activationIndicatorColor = fastConfig.hints.showActivationIndicatorColor;
+    applyActivationIndicatorColor();
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
 };
@@ -462,6 +508,7 @@ const handleStorageChange = (
       preferredSearchLabels?: string[];
       showCapitalizedLetters?: boolean;
       showActivationIndicator?: boolean;
+      showActivationIndicatorColor?: string;
     };
   };
 
@@ -491,6 +538,11 @@ const handleStorageChange = (
 
   if (typeof nextFastConfig.hints?.showActivationIndicator === "boolean") {
     showActivationIndicator = nextFastConfig.hints.showActivationIndicator;
+  }
+
+  if (typeof nextFastConfig.hints?.showActivationIndicatorColor === "string") {
+    activationIndicatorColor = nextFastConfig.hints.showActivationIndicatorColor;
+    applyActivationIndicatorColor();
   }
 
   if (nextFastConfig.hotkeys?.mappings && nextFastConfig.hotkeys.prefixes) {
@@ -585,29 +637,29 @@ const ensureFocusStyles = (): void => {
       0% {
         opacity: 1;
         box-shadow:
-          0 0 0 10px rgba(234, 179, 8, 0.38),
-          0 0 0 6px rgba(234, 179, 8, 0.95);
+          0 0 0 10px var(--nav-focus-ring-outer-strong, rgba(234, 179, 8, 0.38)),
+          0 0 0 6px var(--nav-focus-ring-inner-strong, rgba(234, 179, 8, 0.95));
       }
 
       18% {
         opacity: 1;
         box-shadow:
-          0 0 0 5px rgba(234, 179, 8, 0.18),
-          0 0 0 3px rgba(234, 179, 8, 0.95);
+          0 0 0 5px var(--nav-focus-ring-outer-medium, rgba(234, 179, 8, 0.18)),
+          0 0 0 3px var(--nav-focus-ring-inner-medium, rgba(234, 179, 8, 0.95));
       }
 
       70% {
         opacity: 1;
         box-shadow:
-          0 0 0 2px rgba(234, 179, 8, 0.06),
-          0 0 0 2px rgba(234, 179, 8, 0.92);
+          0 0 0 2px var(--nav-focus-ring-outer-soft, rgba(234, 179, 8, 0.06)),
+          0 0 0 2px var(--nav-focus-ring-inner-soft, rgba(234, 179, 8, 0.92));
       }
 
       100% {
         opacity: 0;
         box-shadow:
-          0 0 0 2px rgba(234, 179, 8, 0.02),
-          0 0 0 2px rgba(234, 179, 8, 0);
+          0 0 0 2px var(--nav-focus-ring-outer-fade, rgba(234, 179, 8, 0.02)),
+          0 0 0 2px var(--nav-focus-ring-inner-fade, rgba(234, 179, 8, 0));
       }
     }
 
@@ -662,6 +714,7 @@ const getFocusOverlay = (): HTMLDivElement => {
   overlay.setAttribute("data-visible", "false");
   overlay.setAttribute("data-animate", "false");
   overlay.setAttribute("data-hiding", "false");
+  applyActivationIndicatorColor(overlay);
   document.documentElement.append(overlay);
   return overlay;
 };
@@ -735,7 +788,7 @@ const updateFocusOverlayPosition = (): void => {
   overlay.style.width = `${Math.round(rect.width + horizontalInset * 2)}px`;
   overlay.style.height = `${Math.round(targetHeight)}px`;
   overlay.style.borderRadius = "0.375rem";
-  overlay.style.boxShadow = "0 0 0 2px rgba(234, 179, 8, 0.95)";
+  overlay.style.boxShadow = "0 0 0 2px var(--nav-focus-ring-static, rgba(234, 179, 8, 0.95))";
   overlay.setAttribute("data-hiding", "false");
   overlay.setAttribute("data-visible", "true");
 };

@@ -31,6 +31,8 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 }
 `;
 
+export const DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR = "#eab308";
+
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
     chrome.storage.local.get(["config"], (data) => {
@@ -55,6 +57,7 @@ export const defaultConfig: Config = {
   hints: {
     showCapitalizedLetters: false,
     showActivationIndicator: true,
+    showActivationIndicatorColor: DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
     styling: "default",
     customCSS: DEFAULT_HINT_CUSTOM_CSS,
     charset: DEFAULT_HINT_CHARSET,
@@ -73,6 +76,7 @@ export type Config = {
   hints: {
     showCapitalizedLetters: boolean;
     showActivationIndicator: boolean;
+    showActivationIndicatorColor: string;
     styling: "default" | "custom";
     customCSS: string;
     charset: string;

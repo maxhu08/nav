@@ -5,6 +5,8 @@ import {
   hintsCustomCSSSectionEl,
   hintsCustomCSSTextareaEl,
   hintsPreferredSearchLabelsInputEl,
+  hintsShowActivationIndicatorColorInputEl,
+  hintsShowActivationIndicatorColorSectionEl,
   hintsShowActivationIndicatorCheckboxEl,
   hintsShowCapitalizedLettersCheckboxEl,
   hintsStylingCustomButtonEl,
@@ -16,6 +18,7 @@ import {
   syncHintsCharsetHighlight,
   syncHintsPreferredSearchLabelsHighlight
 } from "~/src/options/scripts/utils/hints-inline-highlight";
+import { syncColorInputControl } from "~/src/options/scripts/utils/color-inputs";
 
 const setHintsStylingButtonState = (styling: Config["hints"]["styling"]): void => {
   const isCustom = styling === "custom";
@@ -38,14 +41,24 @@ export const syncHintsStylingControls = (styling: Config["hints"]["styling"]): v
   setHintsStylingButtonState(styling);
 };
 
+export const syncHintsActivationIndicatorColorControls = (
+  showActivationIndicator: boolean
+): void => {
+  hintsShowActivationIndicatorColorSectionEl.classList.toggle("hidden", !showActivationIndicator);
+  hintsShowActivationIndicatorColorSectionEl.classList.toggle("grid", showActivationIndicator);
+};
+
 export const fillHintsInputs = (config: Config): void => {
   hintsShowCapitalizedLettersCheckboxEl.checked = config.hints.showCapitalizedLetters;
   hintsShowActivationIndicatorCheckboxEl.checked = config.hints.showActivationIndicator;
+  hintsShowActivationIndicatorColorInputEl.value = config.hints.showActivationIndicatorColor;
   hintsCustomCSSTextareaEl.value = config.hints.customCSS;
   hintsCharsetInputEl.value = config.hints.charset;
   hintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
   hintsPreferredSearchLabelsInputEl.value = config.hints.preferredSearchLabels;
   setHintsStylingButtonState(config.hints.styling);
+  syncHintsActivationIndicatorColorControls(config.hints.showActivationIndicator);
+  syncColorInputControl(hintsShowActivationIndicatorColorInputEl);
   refreshHintsCustomCSSHighlight();
   syncHintsCharsetHighlight();
   syncHintsAvoidAdjacentPairsHighlight();

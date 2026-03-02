@@ -1,4 +1,9 @@
-import { getButton, getContainerAndTextarea, getElement } from "~/src/options/scripts/utils/ui-helpers";
+import {
+  getButton,
+  getContainerAndInput,
+  getContainerAndTextarea,
+  getElement
+} from "~/src/options/scripts/utils/ui-helpers";
 
 export const saveButtonEl = getButton("save");
 export const exportButtonEl = getButton("export");
@@ -19,6 +24,11 @@ export const hintsShowCapitalizedLettersCheckboxEl = getElement<HTMLInputElement
 export const hintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>(
   "hints-show-activation-indicator-checkbox"
 );
+export const hintsShowActivationIndicatorColorSectionEl = getElement<HTMLDivElement>(
+  "hints-show-activation-indicator-color-section"
+);
+export const [hintsShowActivationIndicatorColorContainerEl, hintsShowActivationIndicatorColorInputEl] =
+  getContainerAndInput("hints-show-activation-indicator-color");
 export const hintsCharsetContainerEl = getElement<HTMLDivElement>("hints-charset-container");
 export const hintsCharsetInputEl = getElement<HTMLInputElement>("hints-charset-input");
 export const hintsCharsetHighlightEl = getElement<HTMLPreElement>("hints-charset-highlight");
@@ -55,3 +65,10 @@ export const [hintsCustomCSSContainerEl, hintsCustomCSSTextareaEl] =
 export const hintsCustomCSSHighlightEl = getElement<HTMLPreElement>(
   "hints-custom-css-highlight"
 );
+
+export const colorInputs = [
+  {
+    container: hintsShowActivationIndicatorColorContainerEl,
+    input: hintsShowActivationIndicatorColorInputEl
+  }
+] as const satisfies Array<{ container: HTMLDivElement; input: HTMLInputElement }>;

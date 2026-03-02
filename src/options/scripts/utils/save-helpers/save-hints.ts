@@ -4,6 +4,7 @@ import {
   hintsCharsetInputEl,
   hintsCustomCSSTextareaEl,
   hintsPreferredSearchLabelsInputEl,
+  hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorCheckboxEl,
   hintsShowCapitalizedLettersCheckboxEl,
   hintsStylingCustomButtonEl
@@ -12,6 +13,7 @@ import {
 export const saveHintsSettingsToDraft = (draft: Config): void => {
   draft.hints.showCapitalizedLetters = hintsShowCapitalizedLettersCheckboxEl.checked;
   draft.hints.showActivationIndicator = hintsShowActivationIndicatorCheckboxEl.checked;
+  draft.hints.showActivationIndicatorColor = hintsShowActivationIndicatorColorInputEl.value;
   draft.hints.styling =
     hintsStylingCustomButtonEl.getAttribute("aria-pressed") === "true" ? "custom" : "default";
   draft.hints.customCSS = hintsCustomCSSTextareaEl.value;

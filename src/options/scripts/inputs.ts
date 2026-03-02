@@ -8,6 +8,9 @@ import {
   hintsCharsetInputEl,
   hintsPreferredSearchLabelsContainerEl,
   hintsPreferredSearchLabelsInputEl,
+  hintsShowActivationIndicatorColorContainerEl,
+  hintsShowActivationIndicatorColorInputEl,
+  hintsShowActivationIndicatorCheckboxEl,
   hintsStylingCustomButtonEl,
   hintsStylingDefaultButtonEl,
   hotkeysMappingsContainerEl,
@@ -39,7 +42,10 @@ import {
   syncHintsPreferredSearchLabelsHighlight,
   syncHintsPreferredSearchLabelsHighlightScroll
 } from "~/src/options/scripts/utils/hints-inline-highlight";
-import { syncHintsStylingControls } from "~/src/options/scripts/utils/fill-helpers/fill-hints";
+import {
+  syncHintsActivationIndicatorColorControls,
+  syncHintsStylingControls
+} from "~/src/options/scripts/utils/fill-helpers/fill-hints";
 import {
   syncRulesUrlsHighlight,
   syncRulesUrlsHighlightScroll
@@ -101,6 +107,24 @@ export const listenToInputs = (): void => {
 
   hintsCharsetInputEl.addEventListener("focus", () => {
     hintsCharsetContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  hintsShowActivationIndicatorCheckboxEl.addEventListener("input", () => {
+    syncHintsActivationIndicatorColorControls(hintsShowActivationIndicatorCheckboxEl.checked);
+  });
+
+  hintsShowActivationIndicatorColorInputEl.addEventListener("focus", () => {
+    hintsShowActivationIndicatorColorContainerEl.classList.replace(
+      "border-transparent",
+      "border-sky-500"
+    );
+  });
+
+  hintsShowActivationIndicatorColorInputEl.addEventListener("blur", () => {
+    hintsShowActivationIndicatorColorContainerEl.classList.replace(
+      "border-sky-500",
+      "border-transparent"
+    );
   });
 
   hintsCharsetInputEl.addEventListener("input", () => {
