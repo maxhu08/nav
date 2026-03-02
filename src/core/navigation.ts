@@ -28,7 +28,7 @@ import { type FastRule, getFastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 
 type ActionHandler = (count?: number) => boolean;
-type TabCommand = "close-current-tab" | "create-new-tab";
+type TabCommand = "close-current-tab" | "create-new-tab" | "reload-current-tab";
 type TabCommandResponse = { ok: boolean };
 
 let keyActions: Partial<Record<string, ActionName>> = {};
@@ -133,7 +133,11 @@ const runTabCommand = (command: TabCommand): boolean => {
 
         const toast = getToastApi();
         const actionLabel =
-          command === "close-current-tab" ? "close current tab" : "create new tab";
+          command === "close-current-tab"
+            ? "close current tab"
+            : command === "create-new-tab"
+              ? "create new tab"
+              : "reload current tab";
 
         toast?.error(`Could not ${actionLabel}`);
       }
@@ -151,6 +155,7 @@ const isOptionsPage = (): boolean => {
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "close-current-tab": () => runTabCommand("close-current-tab"),
   "create-new-tab": () => runTabCommand("create-new-tab"),
+  "reload-current-tab": () => runTabCommand("reload-current-tab"),
   "toggle-hints-current-tab": () => {
     if (areHintsPendingSelection()) {
       exitHints();

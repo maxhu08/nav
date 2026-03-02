@@ -1,4 +1,4 @@
-type TabCommand = "close-current-tab" | "create-new-tab";
+type TabCommand = "close-current-tab" | "create-new-tab" | "reload-current-tab";
 
 type TabCommandMessage = {
   type: "tab-command";
@@ -61,6 +61,21 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
     }
 
     chrome.tabs.remove(tabId, () => {
+      sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
+    });
+
+    return true;
+  }
+
+  if (typedMessage.command === "reload-current-tab") {
+    const tabId = typedMessage.tabId ?? sender.tab?.id;
+
+    if (typeof tabId !== "number") {
+      sendTabCommandResponse(sendResponse, false);
+      return false;
+    }
+
+    chrome.tabs.reload(tabId, () => {
       sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
     });
 

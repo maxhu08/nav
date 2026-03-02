@@ -1,6 +1,7 @@
 export type ActionName =
   | "close-current-tab"
   | "create-new-tab"
+  | "reload-current-tab"
   | "toggle-hints-current-tab"
   | "toggle-hints-new-tab"
   | "yank-current-tab-url"
@@ -16,6 +17,7 @@ export type ActionName =
 export const VALID_ACTION_NAMES = new Set<ActionName>([
   "close-current-tab",
   "create-new-tab",
+  "reload-current-tab",
   "toggle-hints-current-tab",
   "toggle-hints-new-tab",
   "yank-current-tab-url",
@@ -51,6 +53,7 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
   // tabs
   "# t create-new-tab",
   "# x close-current-tab",
+  "# r reload-current-tab",
 
   // clipboard
   "yy yank-current-tab-url"
