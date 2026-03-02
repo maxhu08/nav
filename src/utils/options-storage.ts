@@ -6,6 +6,7 @@ export type OptionsData = {
     hotkeys: boolean;
     hints: boolean;
   };
+  pendingExcludeSiteUrl: string | null;
 };
 
 export const defaultOptionsData: OptionsData = {
@@ -13,7 +14,8 @@ export const defaultOptionsData: OptionsData = {
     rules: true,
     hotkeys: true,
     hints: true
-  }
+  },
+  pendingExcludeSiteUrl: null
 };
 
 const mergeOptionsData = (value: unknown): OptionsData => {

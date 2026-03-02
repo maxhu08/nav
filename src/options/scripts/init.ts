@@ -1,3 +1,4 @@
+import { getManagedWebsiteRuleSnippet } from "~/src/popup/site-navigation-rule";
 import { initCoreNavigation } from "~/src/core/navigation";
 import { listenToInputs } from "~/src/options/scripts/inputs";
 import { listenToKeys } from "~/src/options/scripts/keybinds";
@@ -12,9 +13,16 @@ import {
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
 import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
+import { showTextareaDialog } from "~/src/options/scripts/utils/input-dialog";
+import {
+  syncRulesUrlsHighlight,
+  syncRulesUrlsHighlightScroll
+} from "~/src/options/scripts/utils/rules-highlight";
+import { saveConfigAndFastConfig } from "~/src/options/scripts/utils/save-config";
 import { lockTextareaContainerHeight } from "~/src/options/scripts/utils/ui-helpers";
 import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
 import { getConfig } from "~/src/utils/config";
+import { getOptionsData, updateOptionsData } from "~/src/utils/options-storage";
 
 const logo = document.getElementById("nav-logo") as HTMLImageElement;
 
@@ -56,3 +64,62 @@ void getConfig().then((config) => {
 listenToInputs();
 listenToKeys();
 handleControls();
+
+void (async () => {
+  const { pendingExcludeSiteUrl } = await getOptionsData();
+
+  if (!pendingExcludeSiteUrl) {
+    return;
+  }
+
+  await updateOptionsData((draft) => ({
+    ...draft,
+    pendingExcludeSiteUrl: null
+  }));
+
+  let url: URL;
+
+  try {
+    url = new URL(pendingExcludeSiteUrl);
+  } catch {
+    return;
+  }
+
+  if (!/^https?:$/.test(url.protocol)) {
+    return;
+  }
+
+  const config = await getConfig();
+  const snippet = await showTextareaDialog("Exclude site", {
+    defaultValue: getManagedWebsiteRuleSnippet(config.rules.urls, url),
+    note: "This will be added to rules.urls",
+    confirmText: "add",
+    cancelText: "cancel"
+  });
+
+  if (snippet === null) {
+    return;
+  }
+
+  const normalizedSnippet = snippet.trim();
+
+  if (!normalizedSnippet) {
+    return;
+  }
+
+  rulesUrlsTextareaEl.value = [rulesUrlsTextareaEl.value.trimEnd(), normalizedSnippet]
+    .filter(Boolean)
+    .join("\n");
+  syncRulesUrlsHighlight();
+  syncRulesUrlsHighlightScroll();
+  rulesUrlsContainerEl.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+  rulesUrlsTextareaEl.focus();
+  rulesUrlsTextareaEl.setSelectionRange(
+    rulesUrlsTextareaEl.value.length,
+    rulesUrlsTextareaEl.value.length
+  );
+  await saveConfigAndFastConfig();
+})();

@@ -54,12 +54,7 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family:
-    "JetBrains Mono",
-    "Fira Code",
-    "SFMono-Regular",
-    Consolas,
-    "Liberation Mono",
-    monospace;
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   line-height: 1.5rem;
 }
 
@@ -68,11 +63,44 @@
   color: #fafafa;
 }
 
+.nav-dialog-rules-editor-container {
+  display: grid;
+}
+
 .rules-urls-textarea {
   position: relative;
   z-index: 1;
   color: transparent;
   caret-color: #fafafa;
+}
+
+.nav-dialog-rules-editor-layer {
+  grid-area: 1 / 1;
+  height: 8rem;
+  margin: 0;
+  overflow: auto;
+  padding: 0.25rem 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  line-height: 1.5rem;
+}
+
+.nav-dialog-rules-editor-layer[aria-hidden="true"] {
+  pointer-events: none;
+  color: #fafafa;
+}
+
+.nav-dialog-rules-textarea {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: #fafafa;
+}
+
+.nav-dialog-rules-textarea::selection {
+  background-color: #ffffff20;
 }
 
 .rules-urls-textarea::selection {
@@ -132,12 +160,7 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family:
-    "JetBrains Mono",
-    "Fira Code",
-    "SFMono-Regular",
-    Consolas,
-    "Liberation Mono",
-    monospace;
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   line-height: 1.5rem;
 }
 
@@ -184,12 +207,7 @@
   overflow-y: hidden;
   white-space: pre;
   font-family:
-    "JetBrains Mono",
-    "Fira Code",
-    "SFMono-Regular",
-    Consolas,
-    "Liberation Mono",
-    monospace;
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   line-height: 1.5rem;
 }
 
@@ -237,12 +255,7 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family:
-    "JetBrains Mono",
-    "Fira Code",
-    "SFMono-Regular",
-    Consolas,
-    "Liberation Mono",
-    monospace;
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   line-height: 1.5rem;
 }
 

@@ -171,11 +171,16 @@ const renderLine = (
   };
 };
 
-export const syncRulesUrlsHighlight = (): void => {
+export const renderRulesUrlsValue = (
+  value: string
+): {
+  hasError: boolean;
+  html: string;
+} => {
   let previousLineWasRuleStart = false;
   let hasError = false;
 
-  rulesUrlsHighlightEl.innerHTML = rulesUrlsTextareaEl.value
+  const html = value
     .split("\n")
     .map((line) => {
       const renderedLine = renderLine(line, previousLineWasRuleStart);
@@ -188,7 +193,18 @@ export const syncRulesUrlsHighlight = (): void => {
     })
     .join("\n");
 
-  setEditorStatus(rulesUrlsStatusEl, hasError);
+  return {
+    hasError,
+    html
+  };
+};
+
+export const syncRulesUrlsHighlight = (): void => {
+  const renderedValue = renderRulesUrlsValue(rulesUrlsTextareaEl.value);
+
+  rulesUrlsHighlightEl.innerHTML = renderedValue.html;
+
+  setEditorStatus(rulesUrlsStatusEl, renderedValue.hasError);
 };
 
 export const syncRulesUrlsHighlightScroll = (): void => {
