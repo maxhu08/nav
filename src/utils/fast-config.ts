@@ -54,18 +54,19 @@ const resolveHintCSS = (config: Config): string => {
   return config.hints.styling === "default" ? DEFAULT_HINT_CUSTOM_CSS : config.hints.customCSS;
 };
 
+const colorParsingContext = document.createElement("canvas").getContext("2d");
+
+const normalizeCssColor = (value: string): string | null => {
+  if (!colorParsingContext) return null;
+
+  colorParsingContext.fillStyle = "#000000";
+  colorParsingContext.fillStyle = value;
+
+  return colorParsingContext.fillStyle.toLowerCase() || null;
+};
+
 const parseActivationIndicatorColorValue = (value: string): string => {
-  const trimmedValue = value.trim();
-  const normalizedHex = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmedValue)
-    ? trimmedValue.toLowerCase()
-    : "";
-
-  if (normalizedHex.length === 4) {
-    const [hash, r, g, b] = normalizedHex;
-    return `${hash}${r}${r}${g}${g}${b}${b}`;
-  }
-
-  return normalizedHex || DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
+  return normalizeCssColor(value.trim()) || DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
 };
 
 const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionName>> => {

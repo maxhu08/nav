@@ -210,46 +210,132 @@ type KeyParseResult = {
   consumed: boolean;
 };
 
-const hexToRgba = (hex: string, alpha: number): string => {
-  const normalizedHex = hex.replace("#", "");
-  const red = Number.parseInt(normalizedHex.slice(0, 2), 16);
-  const green = Number.parseInt(normalizedHex.slice(2, 4), 16);
-  const blue = Number.parseInt(normalizedHex.slice(4, 6), 16);
+const colorParsingContext = document.createElement("canvas").getContext("2d");
+
+const rgbStringToRgba = (value: string, alpha: number): string | null => {
+  const matches = value.match(/\d*\.?\d+/g);
+
+  if (!matches || matches.length < 3) {
+    return null;
+  }
+
+  const [red, green, blue, sourceAlpha] = matches.map((match) => Number.parseFloat(match));
+  const resolvedAlpha = Math.max(0, Math.min(1, (sourceAlpha ?? 1) * alpha));
+
+  return `rgba(${red}, ${green}, ${blue}, ${resolvedAlpha})`;
+};
+
+const hexToRgba = (value: string, alpha: number): string | null => {
+  const normalizedHex = value.toLowerCase();
+  const expandedHex =
+    normalizedHex.length === 4
+      ? `#${normalizedHex[1]}${normalizedHex[1]}${normalizedHex[2]}${normalizedHex[2]}${normalizedHex[3]}${normalizedHex[3]}`
+      : normalizedHex;
+
+  if (!/^#[0-9a-f]{6}$/.test(expandedHex)) {
+    return null;
+  }
+
+  const red = Number.parseInt(expandedHex.slice(1, 3), 16);
+  const green = Number.parseInt(expandedHex.slice(3, 5), 16);
+  const blue = Number.parseInt(expandedHex.slice(5, 7), 16);
 
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
-const applyActivationIndicatorColor = (overlay: HTMLDivElement = getFocusOverlay()): void => {
-  overlay.style.setProperty(
-    "--nav-focus-ring-outer-strong",
-    hexToRgba(activationIndicatorColor, 0.38)
-  );
-  overlay.style.setProperty(
-    "--nav-focus-ring-inner-strong",
-    hexToRgba(activationIndicatorColor, 0.95)
-  );
-  overlay.style.setProperty(
-    "--nav-focus-ring-outer-medium",
-    hexToRgba(activationIndicatorColor, 0.18)
-  );
-  overlay.style.setProperty(
-    "--nav-focus-ring-inner-medium",
-    hexToRgba(activationIndicatorColor, 0.95)
-  );
-  overlay.style.setProperty(
-    "--nav-focus-ring-outer-soft",
-    hexToRgba(activationIndicatorColor, 0.06)
-  );
-  overlay.style.setProperty(
-    "--nav-focus-ring-inner-soft",
-    hexToRgba(activationIndicatorColor, 0.92)
-  );
-  overlay.style.setProperty(
-    "--nav-focus-ring-outer-fade",
-    hexToRgba(activationIndicatorColor, 0.02)
-  );
-  overlay.style.setProperty("--nav-focus-ring-inner-fade", hexToRgba(activationIndicatorColor, 0));
-  overlay.style.setProperty("--nav-focus-ring-static", hexToRgba(activationIndicatorColor, 0.95));
+const colorToRgba = (color: string, alpha: number): string => {
+  if (!colorParsingContext) {
+    return `rgba(234, 179, 8, ${alpha})`;
+  }
+
+  colorParsingContext.fillStyle = "#000000";
+  colorParsingContext.fillStyle = color;
+
+  const normalized = colorParsingContext.fillStyle.toLowerCase();
+
+  if (normalized.startsWith("#")) {
+    return hexToRgba(normalized, alpha) ?? `rgba(234, 179, 8, ${alpha})`;
+  }
+
+  if (normalized.startsWith("rgb")) {
+    return rgbStringToRgba(normalized, alpha) ?? `rgba(234, 179, 8, ${alpha})`;
+  }
+
+  return `rgba(234, 179, 8, ${alpha})`;
+};
+
+const renderFocusStyles = (): string => `
+  @keyframes nav-focus-pulse {
+    0% {
+      opacity: 1;
+      box-shadow:
+        0 0 0 10px ${colorToRgba(activationIndicatorColor, 0.38)},
+        0 0 0 6px ${colorToRgba(activationIndicatorColor, 0.95)};
+    }
+
+    18% {
+      opacity: 1;
+      box-shadow:
+        0 0 0 5px ${colorToRgba(activationIndicatorColor, 0.18)},
+        0 0 0 3px ${colorToRgba(activationIndicatorColor, 0.95)};
+    }
+
+    70% {
+      opacity: 1;
+      box-shadow:
+        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.06)},
+        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.92)};
+    }
+
+    100% {
+      opacity: 0;
+      box-shadow:
+        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.02)},
+        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0)};
+    }
+  }
+
+  #${FOCUS_OVERLAY_ID} {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 2147483647;
+    border-radius: 0.375rem;
+    box-sizing: border-box;
+    opacity: 0;
+    visibility: hidden;
+    transform: none !important;
+    transition: none !important;
+    transition-duration: 0ms !important;
+    transition-property: none !important;
+  }
+
+  #${FOCUS_OVERLAY_ID}[data-visible="true"] {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  #${FOCUS_OVERLAY_ID}[data-hiding="true"] {
+    visibility: visible;
+    opacity: 0;
+    transition: opacity ${FOCUS_OVERLAY_FADE_OUT_MS}ms ease-out !important;
+  }
+
+  #${FOCUS_OVERLAY_ID}[data-animate="true"] {
+    animation: nav-focus-pulse ${FOCUS_OVERLAY_DURATION_MS}ms cubic-bezier(0.2, 0.9, 0.2, 1)
+      !important;
+  }
+`;
+
+const syncFocusStyles = (): void => {
+  const style = document.getElementById(FOCUS_STYLE_ID);
+
+  if (style instanceof HTMLStyleElement) {
+    style.textContent = renderFocusStyles();
+  }
 };
 
 const normalizeBaseKey = (key: string): string | null => {
@@ -480,7 +566,7 @@ const syncFastConfig = (): void => {
     setHintCSS(fastConfig.hints.css);
     showActivationIndicator = fastConfig.hints.showActivationIndicator;
     activationIndicatorColor = fastConfig.hints.showActivationIndicatorColor;
-    applyActivationIndicatorColor();
+    syncFocusStyles();
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
 };
@@ -542,7 +628,7 @@ const handleStorageChange = (
 
   if (typeof nextFastConfig.hints?.showActivationIndicatorColor === "string") {
     activationIndicatorColor = nextFastConfig.hints.showActivationIndicatorColor;
-    applyActivationIndicatorColor();
+    syncFocusStyles();
   }
 
   if (nextFastConfig.hotkeys?.mappings && nextFastConfig.hotkeys.prefixes) {
@@ -626,77 +712,16 @@ const handleKeydown = (event: KeyboardEvent): void => {
 };
 
 const ensureFocusStyles = (): void => {
-  if (document.getElementById(FOCUS_STYLE_ID)) {
+  const existingStyle = document.getElementById(FOCUS_STYLE_ID);
+
+  if (existingStyle instanceof HTMLStyleElement) {
+    existingStyle.textContent = renderFocusStyles();
     return;
   }
 
   const style = document.createElement("style");
   style.id = FOCUS_STYLE_ID;
-  style.textContent = `
-    @keyframes nav-focus-pulse {
-      0% {
-        opacity: 1;
-        box-shadow:
-          0 0 0 10px var(--nav-focus-ring-outer-strong, rgba(234, 179, 8, 0.38)),
-          0 0 0 6px var(--nav-focus-ring-inner-strong, rgba(234, 179, 8, 0.95));
-      }
-
-      18% {
-        opacity: 1;
-        box-shadow:
-          0 0 0 5px var(--nav-focus-ring-outer-medium, rgba(234, 179, 8, 0.18)),
-          0 0 0 3px var(--nav-focus-ring-inner-medium, rgba(234, 179, 8, 0.95));
-      }
-
-      70% {
-        opacity: 1;
-        box-shadow:
-          0 0 0 2px var(--nav-focus-ring-outer-soft, rgba(234, 179, 8, 0.06)),
-          0 0 0 2px var(--nav-focus-ring-inner-soft, rgba(234, 179, 8, 0.92));
-      }
-
-      100% {
-        opacity: 0;
-        box-shadow:
-          0 0 0 2px var(--nav-focus-ring-outer-fade, rgba(234, 179, 8, 0.02)),
-          0 0 0 2px var(--nav-focus-ring-inner-fade, rgba(234, 179, 8, 0));
-      }
-    }
-
-    #${FOCUS_OVERLAY_ID} {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 0;
-      height: 0;
-      pointer-events: none;
-      z-index: 2147483647;
-      border-radius: 0.375rem;
-      box-sizing: border-box;
-      opacity: 0;
-      visibility: hidden;
-      transform: none !important;
-      transition: none !important;
-      transition-duration: 0ms !important;
-      transition-property: none !important;
-    }
-
-    #${FOCUS_OVERLAY_ID}[data-visible="true"] {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    #${FOCUS_OVERLAY_ID}[data-hiding="true"] {
-      visibility: visible;
-      opacity: 0;
-      transition: opacity ${FOCUS_OVERLAY_FADE_OUT_MS}ms ease-out !important;
-    }
-
-    #${FOCUS_OVERLAY_ID}[data-animate="true"] {
-      animation: nav-focus-pulse ${FOCUS_OVERLAY_DURATION_MS}ms cubic-bezier(0.2, 0.9, 0.2, 1)
-        !important;
-    }
-  `;
+  style.textContent = renderFocusStyles();
 
   const styleRoot = document.head ?? document.documentElement;
   styleRoot.append(style);
@@ -714,7 +739,6 @@ const getFocusOverlay = (): HTMLDivElement => {
   overlay.setAttribute("data-visible", "false");
   overlay.setAttribute("data-animate", "false");
   overlay.setAttribute("data-hiding", "false");
-  applyActivationIndicatorColor(overlay);
   document.documentElement.append(overlay);
   return overlay;
 };
@@ -788,7 +812,7 @@ const updateFocusOverlayPosition = (): void => {
   overlay.style.width = `${Math.round(rect.width + horizontalInset * 2)}px`;
   overlay.style.height = `${Math.round(targetHeight)}px`;
   overlay.style.borderRadius = "0.375rem";
-  overlay.style.boxShadow = "0 0 0 2px var(--nav-focus-ring-static, rgba(234, 179, 8, 0.95))";
+  overlay.style.boxShadow = `0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.95)}`;
   overlay.setAttribute("data-hiding", "false");
   overlay.setAttribute("data-visible", "true");
 };
