@@ -30,6 +30,13 @@ type HintMarker = {
   label: string;
 };
 
+type PlacedMarkerRect = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
 type HintState = {
   active: boolean;
   mode: LinkMode;
@@ -47,6 +54,10 @@ const hintState: HintState = {
   overlay: null,
   frameHandle: null
 };
+
+const MARKER_VIEWPORT_PADDING = 4;
+const MARKER_COLLISION_GAP = 2;
+const MARKER_POSITION_SEARCH_RADIUS = 6;
 
 const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   const rects = Array.from(element.getClientRects()).filter(
@@ -543,32 +554,137 @@ const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string)
   }
 };
 
-const createMarker = (label: string, rect: DOMRect): HTMLSpanElement => {
+const createMarker = (label: string): HTMLSpanElement => {
   const marker = document.createElement("span");
   marker.setAttribute(MARKER_ATTRIBUTE, "true");
   marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
 
   marker.style.position = "fixed";
-  marker.style.left = `${Math.max(0, Math.round(rect.left))}px`;
-  marker.style.top = `${Math.max(0, Math.round(rect.top))}px`;
+  marker.style.left = "0px";
+  marker.style.top = "0px";
 
   renderMarkerText(marker, label, "");
 
   return marker;
 };
 
-const updateMarkerPositions = (): void => {
-  for (const hint of hintState.markers) {
-    const rect = getMarkerRect(hint.element);
+const doPlacedMarkerRectsOverlap = (left: PlacedMarkerRect, right: PlacedMarkerRect): boolean =>
+  left.left < right.right + MARKER_COLLISION_GAP &&
+  left.right > right.left - MARKER_COLLISION_GAP &&
+  left.top < right.bottom + MARKER_COLLISION_GAP &&
+  left.bottom > right.top - MARKER_COLLISION_GAP;
 
-    if (!rect) {
+const clampMarkerPosition = (
+  left: number,
+  top: number,
+  width: number,
+  height: number
+): Pick<PlacedMarkerRect, "left" | "top"> => ({
+  left: Math.min(
+    Math.max(MARKER_VIEWPORT_PADDING, left),
+    Math.max(MARKER_VIEWPORT_PADDING, window.innerWidth - width - MARKER_VIEWPORT_PADDING)
+  ),
+  top: Math.min(
+    Math.max(MARKER_VIEWPORT_PADDING, top),
+    Math.max(MARKER_VIEWPORT_PADDING, window.innerHeight - height - MARKER_VIEWPORT_PADDING)
+  )
+});
+
+const createPlacedMarkerRect = (
+  left: number,
+  top: number,
+  width: number,
+  height: number
+): PlacedMarkerRect => ({
+  left,
+  top,
+  right: left + width,
+  bottom: top + height
+});
+
+const getMarkerPositionCandidates = (
+  targetRect: DOMRect,
+  markerWidth: number,
+  markerHeight: number
+): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
+  const horizontalStep = Math.max(12, Math.round(markerWidth * 0.7));
+  const verticalStep = Math.max(10, Math.round(markerHeight * 0.85));
+  const candidates: Array<Pick<PlacedMarkerRect, "left" | "top">> = [];
+  const seen = new Set<string>();
+  const pushCandidate = (left: number, top: number): void => {
+    const clamped = clampMarkerPosition(left, top, markerWidth, markerHeight);
+    const key = `${Math.round(clamped.left)}:${Math.round(clamped.top)}`;
+
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push(clamped);
+  };
+
+  for (let radius = 0; radius <= MARKER_POSITION_SEARCH_RADIUS; radius += 1) {
+    for (let y = -radius; y <= radius; y += 1) {
+      for (let x = -radius; x <= radius; x += 1) {
+        if (Math.max(Math.abs(x), Math.abs(y)) !== radius) continue;
+
+        pushCandidate(targetRect.left + x * horizontalStep, targetRect.top + y * verticalStep);
+      }
+    }
+  }
+
+  return candidates;
+};
+
+const updateMarkerPositions = (): void => {
+  const placedRects: PlacedMarkerRect[] = [];
+
+  for (const hint of hintState.markers) {
+    const targetRect = getMarkerRect(hint.element);
+
+    if (!targetRect) {
       hint.marker.style.display = "none";
       continue;
     }
 
     hint.marker.style.display = "";
-    hint.marker.style.left = `${Math.max(0, Math.round(rect.left))}px`;
-    hint.marker.style.top = `${Math.max(0, Math.round(rect.top))}px`;
+
+    const markerRect = hint.marker.getBoundingClientRect();
+    const markerWidth = Math.max(1, Math.round(markerRect.width));
+    const markerHeight = Math.max(1, Math.round(markerRect.height));
+    const candidates = getMarkerPositionCandidates(targetRect, markerWidth, markerHeight);
+
+    let chosenRect: PlacedMarkerRect | null = null;
+
+    for (const candidate of candidates) {
+      const nextRect = createPlacedMarkerRect(
+        candidate.left,
+        candidate.top,
+        markerWidth,
+        markerHeight
+      );
+
+      if (placedRects.every((placedRect) => !doPlacedMarkerRectsOverlap(placedRect, nextRect))) {
+        chosenRect = nextRect;
+        break;
+      }
+    }
+
+    const fallbackPosition = clampMarkerPosition(
+      targetRect.left,
+      targetRect.top,
+      markerWidth,
+      markerHeight
+    );
+    const nextRect =
+      chosenRect ??
+      createPlacedMarkerRect(
+        fallbackPosition.left,
+        fallbackPosition.top,
+        markerWidth,
+        markerHeight
+      );
+
+    hint.marker.style.left = `${Math.round(nextRect.left)}px`;
+    hint.marker.style.top = `${Math.round(nextRect.top)}px`;
+    placedRects.push(nextRect);
   }
 };
 
@@ -827,7 +943,7 @@ export const activateHints = (mode: LinkMode): boolean => {
         : labels[labelIndex++];
 
     if (!label) return;
-    const marker = createMarker(label, rect);
+    const marker = createMarker(label);
 
     overlay.appendChild(marker);
     markers.push({ element, marker, label });
@@ -842,6 +958,8 @@ export const activateHints = (mode: LinkMode): boolean => {
   hintState.typed = "";
   hintState.markers = markers;
   hintState.overlay = overlay;
+
+  updateMarkerPositions();
 
   window.addEventListener("scroll", onViewportChange, true);
   window.addEventListener("resize", onViewportChange, true);
