@@ -20,8 +20,7 @@ let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 let preferredSearchLabels: string[] = [];
 let showCapitalizedLetters = true;
-let hintStyling: "default" | "custom" = "default";
-let hintCustomCSS = "";
+let hintCSS = "";
 
 type LinkMode = "current-tab" | "new-tab";
 
@@ -512,19 +511,18 @@ const getDefaultHintMarkerCSS = (): string => {
 };
 
 const applyHintStyles = (): void => {
-  const css = hintStyling === "custom" ? hintCustomCSS : getDefaultHintMarkerCSS();
   const existing = document.getElementById(STYLE_ID);
 
   if (existing instanceof HTMLStyleElement) {
-    if (existing.textContent !== css) {
-      existing.textContent = css;
+    if (existing.textContent !== hintCSS) {
+      existing.textContent = hintCSS;
     }
     return;
   }
 
   const style = document.createElement("style");
   style.id = STYLE_ID;
-  style.textContent = css;
+  style.textContent = hintCSS;
   document.head.appendChild(style);
 };
 
@@ -904,12 +902,8 @@ export const setShowCapitalizedLetters = (nextShowCapitalizedLetters: boolean): 
   }
 };
 
-export const setHintStyling = (
-  nextHintStyling: "default" | "custom",
-  nextHintCustomCSS: string
-): void => {
-  hintStyling = nextHintStyling;
-  hintCustomCSS = nextHintCustomCSS;
+export const setHintCSS = (nextHintCSS: string): void => {
+  hintCSS = nextHintCSS || getDefaultHintMarkerCSS();
   applyHintStyles();
 };
 

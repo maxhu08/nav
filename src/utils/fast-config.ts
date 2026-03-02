@@ -1,4 +1,4 @@
-import { type Config, getConfig } from "~/src/utils/config";
+import { DEFAULT_HINT_CUSTOM_CSS, type Config, getConfig } from "~/src/utils/config";
 import {
   type ActionName,
   DEFAULT_HINT_CHARSET,
@@ -24,8 +24,7 @@ export type FastConfig = {
   hints: {
     showCapitalizedLetters: boolean;
     showActivationIndicator: boolean;
-    styling: "default" | "custom";
-    customCSS: string;
+    css: string;
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
     preferredSearchLabels: string[];
@@ -36,13 +35,16 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
   return (
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.showActivationIndicator === "boolean" &&
-    (value?.hints?.styling === "default" || value?.hints?.styling === "custom") &&
-    typeof value?.hints?.customCSS === "string" &&
+    typeof value?.hints?.css === "string" &&
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
     value?.hints?.avoidAdjacentPairs !== null &&
     Array.isArray(value?.hints?.preferredSearchLabels)
   );
+};
+
+const resolveHintCSS = (config: Config): string => {
+  return config.hints.styling === "default" ? DEFAULT_HINT_CUSTOM_CSS : config.hints.customCSS;
 };
 
 const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionName>> => {
@@ -242,8 +244,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,
       showActivationIndicator: config.hints.showActivationIndicator,
-      styling: config.hints.styling,
-      customCSS: config.hints.customCSS,
+      css: resolveHintCSS(config),
       charset: parseHintCharsetValue(config.hints.charset),
       avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),
       preferredSearchLabels: parsePreferredSearchLabelsValue(config.hints.preferredSearchLabels)
