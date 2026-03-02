@@ -20,7 +20,7 @@ const ROOT = process.cwd();
 const DIST_DIR = resolve(ROOT, "dist");
 const OUTPUT_DIR = resolve(ROOT, "output");
 const SRC_DIR = resolve(ROOT, "src");
-const ASSETS_DIR = resolve(SRC_DIR, "assets");
+const STATIC_DIR = resolve(SRC_DIR, "static");
 const DIST_CORE_DIR = resolve(DIST_DIR, "core");
 const ENTRY_FILES = [
   resolve(ROOT, "src", "background.ts"),
@@ -199,7 +199,7 @@ function ensureDist() {
 }
 
 function syncStaticFiles() {
-  copyDirectoryContents(ASSETS_DIR, DIST_DIR);
+  copyDirectoryContents(STATIC_DIR, DIST_DIR);
 }
 
 function flattenDistCoreDirectory() {
