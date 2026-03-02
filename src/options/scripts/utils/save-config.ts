@@ -1,5 +1,7 @@
 import {
+  hotkeysHintsCharsetStatusEl,
   hotkeysHintsAvoidAdjacentPairsStatusEl,
+  hotkeysHintsPreferredSearchLabelsStatusEl,
   hotkeysMappingsStatusEl,
   rulesUrlsStatusEl
 } from "~/src/options/scripts/ui";
@@ -20,6 +22,8 @@ const setConfigAndFastConfig = (config: Config): Promise<void> => {
 const hasUnresolvedEditorErrors = (): boolean =>
   hasEditorError(rulesUrlsStatusEl) ||
   hasEditorError(hotkeysMappingsStatusEl) ||
+  hasEditorError(hotkeysHintsCharsetStatusEl) ||
+  hasEditorError(hotkeysHintsPreferredSearchLabelsStatusEl) ||
   hasEditorError(hotkeysHintsAvoidAdjacentPairsStatusEl);
 
 export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<Config> => {

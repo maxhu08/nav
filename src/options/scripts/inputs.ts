@@ -26,6 +26,12 @@ import {
   syncHotkeysHintsAvoidAdjacentPairsHighlightScroll
 } from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
 import {
+  syncHotkeysHintsCharsetHighlight,
+  syncHotkeysHintsCharsetHighlightScroll,
+  syncHotkeysHintsPreferredSearchLabelsHighlight,
+  syncHotkeysHintsPreferredSearchLabelsHighlightScroll
+} from "~/src/options/scripts/utils/hints-inline-highlight";
+import {
   syncRulesUrlsHighlight,
   syncRulesUrlsHighlightScroll
 } from "~/src/options/scripts/utils/rules-highlight";
@@ -88,6 +94,15 @@ export const listenToInputs = (): void => {
     hotkeysHintsCharsetContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
+  hotkeysHintsCharsetInputEl.addEventListener("input", () => {
+    syncHotkeysHintsCharsetHighlight();
+    syncHotkeysHintsCharsetHighlightScroll();
+  });
+
+  hotkeysHintsCharsetInputEl.addEventListener("scroll", () => {
+    syncHotkeysHintsCharsetHighlightScroll();
+  });
+
   hotkeysHintsCharsetInputEl.addEventListener("blur", () => {
     hotkeysHintsCharsetContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
@@ -97,6 +112,15 @@ export const listenToInputs = (): void => {
       "border-transparent",
       "border-sky-500"
     );
+  });
+
+  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("input", () => {
+    syncHotkeysHintsPreferredSearchLabelsHighlight();
+    syncHotkeysHintsPreferredSearchLabelsHighlightScroll();
+  });
+
+  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("scroll", () => {
+    syncHotkeysHintsPreferredSearchLabelsHighlightScroll();
   });
 
   hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("blur", () => {

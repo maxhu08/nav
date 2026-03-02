@@ -8,6 +8,10 @@ import {
 } from "~/src/options/scripts/ui";
 import { syncHotkeysHintsAvoidAdjacentPairsHighlight } from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
 import {
+  syncHotkeysHintsCharsetHighlight,
+  syncHotkeysHintsPreferredSearchLabelsHighlight
+} from "~/src/options/scripts/utils/hints-inline-highlight";
+import {
   syncHotkeysMappingsHighlight,
   syncHotkeysMappingsHighlightScroll
 } from "~/src/options/scripts/utils/hotkeys-highlight";
@@ -19,7 +23,9 @@ export const fillHotkeysInputs = (config: Config): void => {
   hotkeysHintsPreferredSearchLabelsInputEl.value = config.hotkeys.hints.preferredSearchLabels;
   hotkeysHintsShowActivationIndicatorCheckboxEl.checked =
     config.hotkeys.hints.showActivationIndicator;
+  syncHotkeysHintsCharsetHighlight();
   syncHotkeysHintsAvoidAdjacentPairsHighlight();
+  syncHotkeysHintsPreferredSearchLabelsHighlight();
   syncHotkeysMappingsHighlight();
   syncHotkeysMappingsHighlightScroll();
 };

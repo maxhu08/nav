@@ -27,19 +27,30 @@
         <section id="rules-urls" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
             <p class="text-base text-white">rules.urls</p>
-            <p class="text-base text-neutral-500">Use this field to define URL-based rules. Each rule starts with a website regex pattern.</p>
-            <p class="text-base text-neutral-500"><span class="text-[#569cd6]">*</span> <span class="text-white">&lt;regex-pattern&gt;</span></p>
-            <p class="text-base text-neutral-500">Starts a new rule block. The `* ` prefix is required before every website regex pattern.</p>
+            <p class="text-base text-neutral-500">
+              Use this field to define URL-based rules. Each rule starts with a website regex pattern.
+              <br /><br />
+              <span class="text-[#569cd6]">*</span> <span class="text-white">&lt;regex-pattern&gt;</span> <br /><br />
+              Starts a new rule block. The `* ` prefix is required before every website regex pattern.
+            </p>
             <br />
-            <p class="text-base text-neutral-500"><span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span></p>
-            <p class="text-base text-neutral-500">Blocks all actions except the listed action names for URLs matching the regex pattern above.</p>
-            <p class="text-base text-neutral-500"><span class="text-[#c586c0]">-</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span></p>
-            <p class="text-base text-neutral-500">Allows all actions except the listed action names for URLs matching the regex pattern above.</p>
-            <p class="text-base text-neutral-500">You can list any number of action names on a `+` or `-` line.</p>
-            <p class="text-base text-neutral-500">A `+` or `-` line must go on the next consecutive line immediately after its `* &lt;regex-pattern&gt;` line.</p>
-            <p class="text-base text-neutral-500">If a rule block contains only `* &lt;regex-pattern&gt;`, all actions are blocked for matching URLs.</p>
-            <p class="text-base text-neutral-500">Separate action names with spaces.</p>
-            <p class="text-base text-neutral-500">Lines starting with # are ignored.</p>
+            <p class="text-base text-neutral-500">
+              <span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span> <br /><br />
+              Blocks all actions except the listed action names for URLs matching the regex pattern above.
+              <br /><br />
+              <span class="text-[#c586c0]">-</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span> <br /><br />
+              Allows all actions except the listed action names for URLs matching the regex pattern above.
+              <br /><br />
+              You can list any number of action names on a `+` or `-` line.
+              <br /><br />
+              A `+` or `-` line must go on the next consecutive line immediately after its `* &lt;regex-pattern&gt;` line.
+              <br /><br />
+              If a rule block contains only `* &lt;regex-pattern&gt;`, all actions are blocked for matching URLs.
+              <br /><br />
+              Separate action names with spaces.
+              <br /><br />
+              Lines starting with # are ignored.
+            </p>
             <br />
             <p class="text-base text-neutral-500">Example:</p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
@@ -58,9 +69,13 @@
         <section id="hotkeys-mappings" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
             <p class="text-base text-white">hotkeys.hints.charset</p>
-            <p class="text-base text-neutral-500">Controls which letters are used to generate hint labels.</p>
-            <p class="text-base text-neutral-500">Letters earlier in the charset are prioritized first when labels are assigned.</p>
-            <p class="text-base text-neutral-500">Use unique letters. Invalid characters and duplicates are ignored.</p>
+            <p class="text-base text-neutral-500">
+              Controls which letters are used to generate hint labels.
+              <br /><br />
+              Letters earlier in the charset are prioritized first when labels are assigned.
+              <br /><br />
+              Use unique letters. Invalid characters and duplicates are ignored.
+            </p>
             <br />
             <p class="text-base text-neutral-500">Example:</p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
@@ -69,15 +84,19 @@
             <p class="text-base text-neutral-500">This favors `s`, then `a`, then `d`, and so on when generating hint labels.</p>
             <br />
             <p class="text-base text-white">hotkeys.mappings</p>
-            <p class="text-base text-neutral-500">Each line maps one key sequence to one action name.</p>
-            <p class="text-base text-neutral-500"><span class="text-[#569cd6]">&lt;key-sequence&gt;</span> <span class="text-[#dcdcaa]">&lt;action-name&gt;</span></p>
-            <p class="text-base text-neutral-500">Put one mapping on each line.</p>
             <p class="text-base text-neutral-500">
+              Each line maps one key sequence to one action name.
+              <br /><br />
+              <span class="text-[#569cd6]">&lt;key-sequence&gt;</span> <span class="text-[#dcdcaa]">&lt;action-name&gt;</span> <br /><br />
+              Put one mapping on each line.
+              <br /><br />
               Modifier keys are specified as `&lt;c-x&gt;`, `&lt;m-x&gt;`, and `&lt;a-x&gt;` for ctrl+x, meta+x, and alt+x. Combined modifiers are written like `&lt;c-a-x&gt;` or `&lt;c-m-x&gt;`. Use
               `&lt;space&gt;` for the space key.
+              <br /><br />
+              Lines starting with # are ignored.
+              <br /><br />
+              If an action name is invalid, it is highlighted in red in the editor.
             </p>
-            <p class="text-base text-neutral-500">Lines starting with # are ignored.</p>
-            <p class="text-base text-neutral-500">If an action name is invalid, it is highlighted in red in the editor.</p>
             <br />
             <p class="text-base text-neutral-500">Example:</p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
