@@ -128,6 +128,23 @@
             </div>
           </div>
           <div class="grid gap-2">
+            <p class="text-base text-white">hotkeys.hints.preferredSearchLabels</p>
+            <p class="text-base text-neutral-500">
+              Controls which hint labels are preferred for the page's primary search bar or composer. Later labels are used when the page needs longer hint labels.
+            </p>
+            <p class="text-base text-neutral-500">Separate labels with spaces. Invalid entries and duplicates are ignored when saved.</p>
+            <div id="hotkeys-hints-preferred-search-labels-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input
+                id="hotkeys-hints-preferred-search-labels-input"
+                type="text"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
+              />
+            </div>
+          </div>
+          <div class="grid gap-2">
             <div class="grid w-full grid-cols-[max-content_auto] place-items-center">
               <p class="text-base text-white">hotkeys.hints.showActivationIndicator</p>
               <div class="ml-auto">

@@ -13,6 +13,12 @@ export const [hotkeysHintsAvoidAdjacentPairsContainerEl, hotkeysHintsAvoidAdjace
 export const hotkeysHintsAvoidAdjacentPairsHighlightEl = getElement<HTMLPreElement>(
   "hotkeys-hints-avoid-adjacent-pairs-highlight"
 );
+export const hotkeysHintsPreferredSearchLabelsContainerEl = getElement<HTMLDivElement>(
+  "hotkeys-hints-preferred-search-labels-container"
+);
+export const hotkeysHintsPreferredSearchLabelsInputEl = getElement<HTMLInputElement>(
+  "hotkeys-hints-preferred-search-labels-input"
+);
 export const hotkeysHintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>(
   "hotkeys-hints-show-activation-indicator-checkbox"
 );

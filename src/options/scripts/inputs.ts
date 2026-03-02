@@ -4,6 +4,8 @@ import {
   exportButtonEl,
   hotkeysHintsCharsetContainerEl,
   hotkeysHintsCharsetInputEl,
+  hotkeysHintsPreferredSearchLabelsContainerEl,
+  hotkeysHintsPreferredSearchLabelsInputEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
   importButtonEl,
@@ -88,6 +90,20 @@ export const listenToInputs = (): void => {
 
   hotkeysHintsCharsetInputEl.addEventListener("blur", () => {
     hotkeysHintsCharsetContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("focus", () => {
+    hotkeysHintsPreferredSearchLabelsContainerEl.classList.replace(
+      "border-transparent",
+      "border-sky-500"
+    );
+  });
+
+  hotkeysHintsPreferredSearchLabelsInputEl.addEventListener("blur", () => {
+    hotkeysHintsPreferredSearchLabelsContainerEl.classList.replace(
+      "border-sky-500",
+      "border-transparent"
+    );
   });
 
   hotkeysHintsAvoidAdjacentPairsTextareaEl.addEventListener("focus", () => {

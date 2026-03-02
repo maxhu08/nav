@@ -14,6 +14,7 @@ const IS_MAC = navigator.userAgent.includes("Mac");
 let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
+let preferredSearchLabels: string[] = [];
 
 type LinkMode = "current-tab" | "new-tab";
 
@@ -229,12 +230,17 @@ const getHintableElements = (): HTMLElement[] => {
   return elements;
 };
 
-const buildHintLabels = (count: number): string[] => {
-  if (count <= 0) return [];
+const buildHintLabels = (
+  count: number,
+  reservedLabel: string | null = null
+): { labelLength: number; labels: string[] } => {
+  if (count <= 0) {
+    return { labelLength: 0, labels: [] };
+  }
 
   const buildLabels = (
     blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
-  ): string[] => {
+  ): { labelLength: number; labels: string[] } => {
     const alphabet = hintAlphabet.split("");
     const firstCharacters = alphabet.filter((char) => !reservedHintPrefixes.has(char));
     const leadingAlphabet = firstCharacters.length > 0 ? firstCharacters : alphabet;
@@ -285,7 +291,7 @@ const buildHintLabels = (count: number): string[] => {
       const nextCapacity = getSubtreeCapacity(null, nextLength, true);
 
       if (nextCapacity <= capacity) {
-        return [];
+        return { labelLength, labels: [] };
       }
 
       labelLength = nextLength;
@@ -317,6 +323,10 @@ const buildHintLabels = (count: number): string[] => {
 
         if (bucketCount <= 0) continue;
 
+        if (remainingLength === 1 && nextLabel === reservedLabel) {
+          continue;
+        }
+
         if (remainingLength === 1) {
           labels.push(nextLabel);
         } else {
@@ -334,11 +344,127 @@ const buildHintLabels = (count: number): string[] => {
       labels.length = count;
     }
 
-    return labels.slice(0, count);
+    return {
+      labelLength,
+      labels: labels.slice(0, count - (reservedLabel ? 1 : 0))
+    };
   };
 
   const labels = buildLabels(avoidedAdjacentHintPairs);
-  return labels.length === count ? labels : buildLabels({});
+  if (labels.labels.length === count - (reservedLabel ? 1 : 0)) {
+    return labels;
+  }
+
+  return buildLabels({});
+};
+
+const SEARCH_ATTRIBUTE_PATTERNS = [
+  /search/i,
+  /find/i,
+  /query/i,
+  /prompt/i,
+  /ask/i,
+  /chat/i,
+  /message/i,
+  /composer/i
+];
+
+const getSearchCandidateScore = (element: HTMLElement): number => {
+  if (!isSelectableElement(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const rect = getMarkerRect(element);
+  if (!rect) return Number.NEGATIVE_INFINITY;
+
+  let score = 100;
+  const attributeText = [
+    element.getAttribute("type"),
+    element.getAttribute("name"),
+    element.getAttribute("id"),
+    element.getAttribute("placeholder"),
+    element.getAttribute("aria-label"),
+    element.getAttribute("data-testid"),
+    element.getAttribute("role")
+  ]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ");
+
+  for (const pattern of SEARCH_ATTRIBUTE_PATTERNS) {
+    if (pattern.test(attributeText)) {
+      score += 120;
+      break;
+    }
+  }
+
+  if (element === getDeepActiveElement()) {
+    score += 80;
+  }
+
+  if (
+    element instanceof HTMLInputElement &&
+    ["search", "text", "email", "url", "tel"].includes(element.type)
+  ) {
+    score += 40;
+  }
+
+  if (element instanceof HTMLTextAreaElement || element.isContentEditable) {
+    score += 60;
+  }
+
+  if (element.closest("search, [role='search'], form")) {
+    score += 30;
+  }
+
+  score += Math.min(400, rect.width) / 4;
+  score += Math.min(120, rect.height) / 6;
+
+  return score;
+};
+
+const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null => {
+  let bestIndex: number | null = null;
+  let bestScore = 180;
+
+  elements.forEach((element, index) => {
+    const score = getSearchCandidateScore(element);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+};
+
+const isPreferredSearchLabelValid = (label: string, labelLength: number): boolean => {
+  if (label.length !== labelLength) return false;
+
+  const alphabet = new Set(hintAlphabet.split(""));
+  if (label.length === 0 || reservedHintPrefixes.has(label[0] ?? "")) {
+    return false;
+  }
+
+  for (let index = 0; index < label.length; index += 1) {
+    if (!alphabet.has(label[index]!)) {
+      return false;
+    }
+
+    if (
+      index > 0 &&
+      avoidedAdjacentHintPairs[label[index - 1] ?? ""]?.[label[index] ?? ""] === true
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const getPreferredSearchLabel = (labelLength: number): string | null => {
+  const label = preferredSearchLabels[labelLength - 1];
+  return label && isPreferredSearchLabelValid(label, labelLength) ? label : null;
 };
 
 const createOverlay = (): HTMLDivElement => {
@@ -644,15 +770,27 @@ export const activateHints = (mode: LinkMode): boolean => {
   const elements = getHintableElements();
   if (elements.length === 0) return false;
 
-  const labels = buildHintLabels(elements.length);
+  const preferredSearchElementIndex = getPreferredSearchElementIndex(elements);
+  const initialLabelPlan = buildHintLabels(elements.length);
+  const reservedPreferredLabel =
+    preferredSearchElementIndex === null
+      ? null
+      : getPreferredSearchLabel(initialLabelPlan.labelLength);
+  const { labels } = buildHintLabels(elements.length, reservedPreferredLabel);
   const overlay = createOverlay();
   const markers: HintMarker[] = [];
+  let labelIndex = 0;
 
   elements.forEach((element, index) => {
     const rect = getMarkerRect(element);
     if (!rect) return;
 
-    const label = labels[index];
+    const label =
+      reservedPreferredLabel && index === preferredSearchElementIndex
+        ? reservedPreferredLabel
+        : labels[labelIndex++];
+
+    if (!label) return;
     const marker = createMarker(label, rect);
 
     overlay.appendChild(marker);
@@ -698,6 +836,14 @@ export const setAvoidedAdjacentHintPairs = (
   pairs: Partial<Record<string, Partial<Record<string, true>>>>
 ): void => {
   avoidedAdjacentHintPairs = pairs;
+
+  if (hintState.active) {
+    exitHints();
+  }
+};
+
+export const setPreferredSearchLabels = (labels: string[]): void => {
+  preferredSearchLabels = labels;
 
   if (hintState.active) {
     exitHints();

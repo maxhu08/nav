@@ -49,6 +49,7 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
 ].join("\n");
 
 export const DEFAULT_HINT_CHARSET = "sadfjklewcmpgh";
+export const DEFAULT_HINT_PREFERRED_SEARCH_LABELS = "k kj kjf kjfd";
 
 export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = [
   "# double letters",

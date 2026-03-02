@@ -2,6 +2,7 @@ import { type Config, getConfig } from "~/src/utils/config";
 import {
   type ActionName,
   DEFAULT_HINT_CHARSET,
+  DEFAULT_HINT_PREFERRED_SEARCH_LABELS,
   DEFAULT_HOTKEY_MAPPINGS,
   isActionName
 } from "~/src/utils/hotkeys";
@@ -22,6 +23,7 @@ export type FastConfig = {
     hints: {
       charset: string;
       avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
+      preferredSearchLabels: string[];
       showActivationIndicator: boolean;
     };
   };
@@ -32,6 +34,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hotkeys?.hints?.charset === "string" &&
     typeof value?.hotkeys?.hints?.avoidAdjacentPairs === "object" &&
     value?.hotkeys?.hints?.avoidAdjacentPairs !== null &&
+    Array.isArray(value?.hotkeys?.hints?.preferredSearchLabels) &&
     typeof value?.hotkeys?.hints?.showActivationIndicator === "boolean"
   );
 };
@@ -129,6 +132,27 @@ const parseAvoidAdjacentPairsValue = (
   return normalizedPairs;
 };
 
+const parsePreferredSearchLabelsValue = (value: string): string[] => {
+  const normalizedLabels: string[] = [];
+  const seenLabels = new Set<string>();
+
+  for (const segment of value
+    .toLowerCase()
+    .split(/\s+/)
+    .map((part) => part.trim())) {
+    if (!/^[a-z]+$/.test(segment) || seenLabels.has(segment)) {
+      continue;
+    }
+
+    seenLabels.add(segment);
+    normalizedLabels.push(segment);
+  }
+
+  return normalizedLabels.length > 0
+    ? normalizedLabels
+    : parsePreferredSearchLabelsValue(DEFAULT_HINT_PREFERRED_SEARCH_LABELS);
+};
+
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
   const actions: Partial<Record<ActionName, true>> = {};
 
@@ -206,6 +230,9 @@ export const buildFastConfig = (config: Config): FastConfig => {
       hints: {
         charset: parseHintCharsetValue(config.hotkeys.hints.charset),
         avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hotkeys.hints.avoidAdjacentPairs),
+        preferredSearchLabels: parsePreferredSearchLabelsValue(
+          config.hotkeys.hints.preferredSearchLabels
+        ),
         showActivationIndicator: config.hotkeys.hints.showActivationIndicator
       }
     }

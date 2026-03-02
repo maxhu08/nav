@@ -4,6 +4,7 @@ import {
   handleHintsKeydown,
   setAvoidedAdjacentHintPairs,
   setHintCharset,
+  setPreferredSearchLabels,
   setReservedHintPrefixes
 } from "~/src/core/actions/hints";
 import {
@@ -327,6 +328,7 @@ const syncFastConfig = (): void => {
     applyUrlRules(fastConfig.rules.urls);
     setHintCharset(fastConfig.hotkeys.hints.charset);
     setAvoidedAdjacentHintPairs(fastConfig.hotkeys.hints.avoidAdjacentPairs);
+    setPreferredSearchLabels(fastConfig.hotkeys.hints.preferredSearchLabels);
     showActivationIndicator = fastConfig.hotkeys.hints.showActivationIndicator;
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
@@ -348,6 +350,7 @@ const handleStorageChange = (
       hints?: {
         charset?: string;
         avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
+        preferredSearchLabels?: string[];
         showActivationIndicator?: boolean;
       };
       mappings?: Partial<Record<string, ActionName>>;
@@ -365,6 +368,10 @@ const handleStorageChange = (
 
   if (nextFastConfig.hotkeys?.hints?.avoidAdjacentPairs) {
     setAvoidedAdjacentHintPairs(nextFastConfig.hotkeys.hints.avoidAdjacentPairs);
+  }
+
+  if (nextFastConfig.hotkeys?.hints?.preferredSearchLabels) {
+    setPreferredSearchLabels(nextFastConfig.hotkeys.hints.preferredSearchLabels);
   }
 
   if (typeof nextFastConfig.hotkeys?.hints?.showActivationIndicator === "boolean") {

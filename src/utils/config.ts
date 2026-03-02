@@ -2,6 +2,7 @@ import { deepMerge } from "~/src/utils/deep-merge";
 import {
   DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
   DEFAULT_HINT_CHARSET,
+  DEFAULT_HINT_PREFERRED_SEARCH_LABELS,
   DEFAULT_HOTKEY_MAPPINGS
 } from "~/src/utils/hotkeys";
 
@@ -28,6 +29,7 @@ export const defaultConfig: Config = {
     hints: {
       charset: DEFAULT_HINT_CHARSET,
       avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
+      preferredSearchLabels: DEFAULT_HINT_PREFERRED_SEARCH_LABELS,
       showActivationIndicator: true
     }
   }
@@ -42,6 +44,7 @@ export type Config = {
     hints: {
       charset: string;
       avoidAdjacentPairs: string;
+      preferredSearchLabels: string;
       showActivationIndicator: boolean;
     };
   };
