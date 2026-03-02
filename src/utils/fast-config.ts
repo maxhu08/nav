@@ -24,6 +24,7 @@ export type FastConfig = {
       charset: string;
       avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
       preferredSearchLabels: string[];
+      showCapitalizedLetters: boolean;
       showActivationIndicator: boolean;
     };
   };
@@ -35,6 +36,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hotkeys?.hints?.avoidAdjacentPairs === "object" &&
     value?.hotkeys?.hints?.avoidAdjacentPairs !== null &&
     Array.isArray(value?.hotkeys?.hints?.preferredSearchLabels) &&
+    typeof value?.hotkeys?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hotkeys?.hints?.showActivationIndicator === "boolean"
   );
 };
@@ -233,6 +235,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
         preferredSearchLabels: parsePreferredSearchLabelsValue(
           config.hotkeys.hints.preferredSearchLabels
         ),
+        showCapitalizedLetters: config.hotkeys.hints.showCapitalizedLetters,
         showActivationIndicator: config.hotkeys.hints.showActivationIndicator
       }
     }

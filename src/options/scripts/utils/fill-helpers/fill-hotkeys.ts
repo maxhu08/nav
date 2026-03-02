@@ -3,6 +3,7 @@ import {
   hotkeysHintsAvoidAdjacentPairsTextareaEl,
   hotkeysHintsCharsetInputEl,
   hotkeysHintsPreferredSearchLabelsInputEl,
+  hotkeysHintsShowCapitalizedLettersCheckboxEl,
   hotkeysHintsShowActivationIndicatorCheckboxEl,
   hotkeysMappingsTextareaEl
 } from "~/src/options/scripts/ui";
@@ -21,6 +22,8 @@ export const fillHotkeysInputs = (config: Config): void => {
   hotkeysHintsCharsetInputEl.value = config.hotkeys.hints.charset;
   hotkeysHintsAvoidAdjacentPairsTextareaEl.value = config.hotkeys.hints.avoidAdjacentPairs;
   hotkeysHintsPreferredSearchLabelsInputEl.value = config.hotkeys.hints.preferredSearchLabels;
+  hotkeysHintsShowCapitalizedLettersCheckboxEl.checked =
+    config.hotkeys.hints.showCapitalizedLetters;
   hotkeysHintsShowActivationIndicatorCheckboxEl.checked =
     config.hotkeys.hints.showActivationIndicator;
   syncHotkeysHintsCharsetHighlight();

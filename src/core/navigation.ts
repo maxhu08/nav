@@ -7,7 +7,8 @@ import {
   setAvoidedAdjacentHintPairs,
   setHintCharset,
   setPreferredSearchLabels,
-  setReservedHintPrefixes
+  setReservedHintPrefixes,
+  setShowCapitalizedLetters
 } from "~/src/core/actions/hints";
 import {
   installScrollTracking,
@@ -340,12 +341,41 @@ const getActionName = (keyToken: string): KeyParseResult => {
   return { actionName, consumed: true };
 };
 
+const isToggleHintsAction = (
+  actionName: ActionName | null
+): actionName is "toggle-hints-current-tab" | "toggle-hints-new-tab" =>
+  actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab";
+
+const getToggleHintsActionName = (keyToken: string): KeyParseResult => {
+  const nextSequence = `${pendingSequence}${keyToken}`;
+  const directMatch = keyActions[nextSequence];
+
+  if (isToggleHintsAction(directMatch ?? null)) {
+    clearPendingSequence();
+    return { actionName: directMatch ?? null, consumed: true };
+  }
+
+  const hasLongerToggleMatch = Object.entries(keyActions).some(
+    ([sequence, actionName]) =>
+      isToggleHintsAction(actionName ?? null) && sequence.startsWith(nextSequence)
+  );
+
+  if (hasLongerToggleMatch) {
+    startPendingSequence(nextSequence);
+    return { actionName: null, consumed: true };
+  }
+
+  clearPendingSequence();
+  return { actionName: null, consumed: false };
+};
+
 const syncFastConfig = (): void => {
   void getFastConfig().then((fastConfig) => {
     applyUrlRules(fastConfig.rules.urls);
     setHintCharset(fastConfig.hotkeys.hints.charset);
     setAvoidedAdjacentHintPairs(fastConfig.hotkeys.hints.avoidAdjacentPairs);
     setPreferredSearchLabels(fastConfig.hotkeys.hints.preferredSearchLabels);
+    setShowCapitalizedLetters(fastConfig.hotkeys.hints.showCapitalizedLetters);
     showActivationIndicator = fastConfig.hotkeys.hints.showActivationIndicator;
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
@@ -368,6 +398,7 @@ const handleStorageChange = (
         charset?: string;
         avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
         preferredSearchLabels?: string[];
+        showCapitalizedLetters?: boolean;
         showActivationIndicator?: boolean;
       };
       mappings?: Partial<Record<string, ActionName>>;
@@ -391,6 +422,10 @@ const handleStorageChange = (
     setPreferredSearchLabels(nextFastConfig.hotkeys.hints.preferredSearchLabels);
   }
 
+  if (typeof nextFastConfig.hotkeys?.hints?.showCapitalizedLetters === "boolean") {
+    setShowCapitalizedLetters(nextFastConfig.hotkeys.hints.showCapitalizedLetters);
+  }
+
   if (typeof nextFastConfig.hotkeys?.hints?.showActivationIndicator === "boolean") {
     showActivationIndicator = nextFastConfig.hotkeys.hints.showActivationIndicator;
   }
@@ -405,9 +440,9 @@ const handleKeydown = (event: KeyboardEvent): void => {
     const keyToken = getKeyToken(event);
 
     if (keyToken && (pendingSequence || areHintsPendingSelection())) {
-      const { actionName, consumed } = getActionName(keyToken);
+      const { actionName, consumed } = getToggleHintsActionName(keyToken);
 
-      if (actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab") {
+      if (isToggleHintsAction(actionName)) {
         if (ACTIONS[actionName]()) {
           event.preventDefault();
           event.stopImmediatePropagation();

@@ -15,6 +15,7 @@ let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 let preferredSearchLabels: string[] = [];
+let showCapitalizedLetters = true;
 
 type LinkMode = "current-tab" | "new-tab";
 
@@ -487,7 +488,9 @@ const createOverlay = (): HTMLDivElement => {
 const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string): void => {
   marker.replaceChildren();
 
-  for (const [index, char] of Array.from(label.toUpperCase()).entries()) {
+  const displayLabel = showCapitalizedLetters ? label.toUpperCase() : label.toLowerCase();
+
+  for (const [index, char] of Array.from(displayLabel).entries()) {
     const letter = document.createElement("span");
     const isTyped = typed.length > 0 && index < typed.length && label[index] === typed[index];
 
@@ -850,6 +853,19 @@ export const setPreferredSearchLabels = (labels: string[]): void => {
 
   if (hintState.active) {
     exitHints();
+  }
+};
+
+export const setShowCapitalizedLetters = (nextShowCapitalizedLetters: boolean): void => {
+  showCapitalizedLetters = nextShowCapitalizedLetters;
+
+  if (!hintState.active) {
+    return;
+  }
+
+  for (const hint of hintState.markers) {
+    const isMatch = hintState.typed.length === 0 || hint.label.startsWith(hintState.typed);
+    renderMarkerText(hint.marker, hint.label, isMatch ? hintState.typed : "");
   }
 };
 

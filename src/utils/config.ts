@@ -30,6 +30,7 @@ export const defaultConfig: Config = {
       charset: DEFAULT_HINT_CHARSET,
       avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
       preferredSearchLabels: DEFAULT_HINT_PREFERRED_SEARCH_LABELS,
+      showCapitalizedLetters: true,
       showActivationIndicator: true
     }
   }
@@ -45,6 +46,7 @@ export type Config = {
       charset: string;
       avoidAdjacentPairs: string;
       preferredSearchLabels: string;
+      showCapitalizedLetters: boolean;
       showActivationIndicator: boolean;
     };
   };
