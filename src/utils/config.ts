@@ -6,6 +6,31 @@ import {
   DEFAULT_HOTKEY_MAPPINGS
 } from "~/src/utils/hotkeys";
 
+export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
+[data-nav-hint-marker] {
+  transform: translate(-20%, -20%);
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #eab308;
+  color: #2b1d00;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  white-space: nowrap;
+}
+
+[data-nav-hint-marker-letter="pending"] {
+  color: #000000;
+}
+
+[data-nav-hint-marker-letter="typed"] {
+  color: #ffffff;
+}
+`;
+
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
     chrome.storage.local.get(["config"], (data) => {
@@ -30,6 +55,8 @@ export const defaultConfig: Config = {
   hints: {
     showCapitalizedLetters: false,
     showActivationIndicator: true,
+    styling: "default",
+    customCSS: DEFAULT_HINT_CUSTOM_CSS,
     charset: DEFAULT_HINT_CHARSET,
     avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
     preferredSearchLabels: DEFAULT_HINT_PREFERRED_SEARCH_LABELS
@@ -46,6 +73,8 @@ export type Config = {
   hints: {
     showCapitalizedLetters: boolean;
     showActivationIndicator: boolean;
+    styling: "default" | "custom";
+    customCSS: string;
     charset: string;
     avoidAdjacentPairs: string;
     preferredSearchLabels: string;

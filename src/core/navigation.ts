@@ -6,6 +6,7 @@ import {
   handleHintsKeydown,
   setAvoidedAdjacentHintPairs,
   setHintCharset,
+  setHintStyling,
   setPreferredSearchLabels,
   setReservedHintPrefixes,
   setShowCapitalizedLetters
@@ -432,6 +433,7 @@ const syncFastConfig = (): void => {
     setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
     setPreferredSearchLabels(fastConfig.hints.preferredSearchLabels);
     setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
+    setHintStyling(fastConfig.hints.styling, fastConfig.hints.customCSS);
     showActivationIndicator = fastConfig.hints.showActivationIndicator;
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
@@ -454,6 +456,8 @@ const handleStorageChange = (
       prefixes?: Partial<Record<string, true>>;
     };
     hints?: {
+      styling?: "default" | "custom";
+      customCSS?: string;
       charset?: string;
       avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
       preferredSearchLabels?: string[];
@@ -480,6 +484,13 @@ const handleStorageChange = (
 
   if (typeof nextFastConfig.hints?.showCapitalizedLetters === "boolean") {
     setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
+  }
+
+  if (
+    (nextFastConfig.hints?.styling === "default" || nextFastConfig.hints?.styling === "custom") &&
+    typeof nextFastConfig.hints?.customCSS === "string"
+  ) {
+    setHintStyling(nextFastConfig.hints.styling, nextFastConfig.hints.customCSS);
   }
 
   if (typeof nextFastConfig.hints?.showActivationIndicator === "boolean") {

@@ -13,6 +13,7 @@ import {
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
 import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
+import { initHotkeysHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
 import { showTextareaDialog } from "~/src/options/scripts/utils/input-dialog";
 import {
   syncRulesUrlsHighlight,
@@ -49,6 +50,7 @@ initCoreNavigation();
 (document.getElementById("user-agent-text") as HTMLSpanElement).textContent += getUserAgent();
 
 void createCollapseGroups();
+initHotkeysHintsCustomCSSHighlight();
 
 void getConfig().then((config) => {
   fillInputs(config);

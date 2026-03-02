@@ -199,6 +199,36 @@
             </div>
             <p id="hotkeys-hints-preferred-search-labels-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
+          <div class="grid gap-2">
+            <p class="text-base text-white">hints.styling</p>
+            <p class="text-base text-neutral-500">Use the built-in hint marker look, or switch to editable CSS for full control.</p>
+            <div class="grid grid-cols-2 gap-2 text-base">
+              <button id="hotkeys-hints-styling-default-button" type="button" aria-pressed="true" class="rounded-md bg-yellow-500 py-2 outline-none transition hover:bg-yellow-600">
+                <span class="text-white">default</span>
+              </button>
+              <button id="hotkeys-hints-styling-custom-button" type="button" aria-pressed="false" class="rounded-md bg-neutral-800 py-2 outline-none transition hover:bg-neutral-700">
+                <span class="text-white">custom</span>
+              </button>
+            </div>
+          </div>
+          <div id="hotkeys-hints-custom-css-section" class="hidden gap-2">
+            <p class="text-base text-white">hints.customCSS</p>
+            <p class="text-base text-neutral-500">Applied to rendered hint markers when <code>hints.styling</code> is set to <code>custom</code>.</p>
+            <div id="hotkeys-hints-custom-css-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <div class="custom-css-editor">
+                <pre id="hotkeys-hints-custom-css-highlight" aria-hidden="true" class="custom-css-highlight"></pre>
+                <textarea
+                  id="hotkeys-hints-custom-css-textarea"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  wrap="off"
+                  rows="16"
+                  class="custom-css-textarea w-full resize-none bg-transparent text-white placeholder-neutral-500 outline-none"
+                ></textarea>
+              </div>
+            </div>
+          </div>
         </section>
         <div class="my-12 grid grid-flow-row place-items-center gap-4 py-4">
           <div class="grid w-full grid-flow-row place-items-center gap-4">

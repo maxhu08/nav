@@ -9,6 +9,10 @@ import {
 const HINT_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
 const OVERLAY_ID = `${HINT_NAMESPACE_PREFIX}link-hints-overlay`;
 const MARKER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker`;
+const LETTER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker-letter`;
+const MARKER_STYLE_ATTRIBUTE = "data-nav-hint-marker";
+const LETTER_STYLE_ATTRIBUTE = "data-nav-hint-marker-letter";
+const STYLE_ID = `${HINT_NAMESPACE_PREFIX}link-hints-style`;
 const FOCUS_INDICATOR_EVENT = `${HINT_NAMESPACE_PREFIX}focus-indicator`;
 const IS_MAC = navigator.userAgent.includes("Mac");
 let hintAlphabet = DEFAULT_HINT_CHARSET;
@@ -16,6 +20,8 @@ let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 let preferredSearchLabels: string[] = [];
 let showCapitalizedLetters = true;
+let hintStyling: "default" | "custom" = "default";
+let hintCustomCSS = "";
 
 type LinkMode = "current-tab" | "new-tab";
 
@@ -493,9 +499,33 @@ const createOverlay = (): HTMLDivElement => {
   overlay.style.inset = "0";
   overlay.style.zIndex = "2147483647";
   overlay.style.pointerEvents = "none";
-  overlay.style.fontFamily = '"JetBrains Mono", monospace';
 
   return overlay;
+};
+
+const getDefaultHintMarkerCSS = (): string => {
+  const markerSelector = `[${MARKER_STYLE_ATTRIBUTE}]`;
+  const pendingSelector = `[${LETTER_STYLE_ATTRIBUTE}="pending"]`;
+  const typedSelector = `[${LETTER_STYLE_ATTRIBUTE}="typed"]`;
+
+  return `${markerSelector}{transform:translate(-20%,-20%);padding:1px 4px;border-radius:3px;background:#eab308;color:#2b1d00;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.28);white-space:nowrap;}${pendingSelector}{color:#000000;}${typedSelector}{color:#ffffff;}`;
+};
+
+const applyHintStyles = (): void => {
+  const css = hintStyling === "custom" ? hintCustomCSS : getDefaultHintMarkerCSS();
+  const existing = document.getElementById(STYLE_ID);
+
+  if (existing instanceof HTMLStyleElement) {
+    if (existing.textContent !== css) {
+      existing.textContent = css;
+    }
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = css;
+  document.head.appendChild(style);
 };
 
 const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string): void => {
@@ -508,7 +538,8 @@ const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string)
     const isTyped = typed.length > 0 && index < typed.length && label[index] === typed[index];
 
     letter.textContent = char;
-    letter.style.color = isTyped ? "#ffffff" : "#000000";
+    letter.setAttribute(LETTER_ATTRIBUTE, isTyped ? "typed" : "pending");
+    letter.setAttribute(LETTER_STYLE_ATTRIBUTE, isTyped ? "typed" : "pending");
 
     marker.appendChild(letter);
   }
@@ -517,22 +548,11 @@ const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string)
 const createMarker = (label: string, rect: DOMRect): HTMLSpanElement => {
   const marker = document.createElement("span");
   marker.setAttribute(MARKER_ATTRIBUTE, "true");
+  marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
 
   marker.style.position = "fixed";
   marker.style.left = `${Math.max(0, Math.round(rect.left))}px`;
   marker.style.top = `${Math.max(0, Math.round(rect.top))}px`;
-  marker.style.transform = "translate(-20%, -20%)";
-  marker.style.padding = "1px 4px";
-  marker.style.borderRadius = "3px";
-  marker.style.background = "#eab308";
-  marker.style.color = "#2b1d00";
-  marker.style.fontFamily = '"JetBrains Mono", monospace';
-  marker.style.fontSize = "12px";
-  marker.style.fontWeight = "700";
-  marker.style.letterSpacing = "0.08em";
-  marker.style.lineHeight = "1.2";
-  marker.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.28)";
-  marker.style.whiteSpace = "nowrap";
 
   renderMarkerText(marker, label, "");
 
@@ -783,6 +803,7 @@ const applyFilter = (): void => {
 
 export const activateHints = (mode: LinkMode): boolean => {
   exitHints();
+  applyHintStyles();
 
   const elements = getHintableElements();
   if (elements.length === 0) return false;
@@ -881,6 +902,15 @@ export const setShowCapitalizedLetters = (nextShowCapitalizedLetters: boolean): 
     const isMatch = hintState.typed.length === 0 || hint.label.startsWith(hintState.typed);
     renderMarkerText(hint.marker, hint.label, isMatch ? hintState.typed : "");
   }
+};
+
+export const setHintStyling = (
+  nextHintStyling: "default" | "custom",
+  nextHintCustomCSS: string
+): void => {
+  hintStyling = nextHintStyling;
+  hintCustomCSS = nextHintCustomCSS;
+  applyHintStyles();
 };
 
 export const handleHintsKeydown = (event: KeyboardEvent): boolean => {

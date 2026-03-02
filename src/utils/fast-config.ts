@@ -24,6 +24,8 @@ export type FastConfig = {
   hints: {
     showCapitalizedLetters: boolean;
     showActivationIndicator: boolean;
+    styling: "default" | "custom";
+    customCSS: string;
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
     preferredSearchLabels: string[];
@@ -34,6 +36,8 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
   return (
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.showActivationIndicator === "boolean" &&
+    (value?.hints?.styling === "default" || value?.hints?.styling === "custom") &&
+    typeof value?.hints?.customCSS === "string" &&
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
     value?.hints?.avoidAdjacentPairs !== null &&
@@ -238,6 +242,8 @@ export const buildFastConfig = (config: Config): FastConfig => {
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,
       showActivationIndicator: config.hints.showActivationIndicator,
+      styling: config.hints.styling,
+      customCSS: config.hints.customCSS,
       charset: parseHintCharsetValue(config.hints.charset),
       avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),
       preferredSearchLabels: parsePreferredSearchLabelsValue(config.hints.preferredSearchLabels)

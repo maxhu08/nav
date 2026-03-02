@@ -19,6 +19,11 @@ export const hotkeysHintsPreferredSearchLabelsHighlightEl = getElement<HTMLPreEl
 export const hotkeysHintsPreferredSearchLabelsStatusEl = getElement<HTMLParagraphElement>("hotkeys-hints-preferred-search-labels-status");
 export const hotkeysHintsShowCapitalizedLettersCheckboxEl = getElement<HTMLInputElement>("hotkeys-hints-show-capitalized-letters-checkbox");
 export const hotkeysHintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>("hotkeys-hints-show-activation-indicator-checkbox");
+export const hotkeysHintsStylingDefaultButtonEl = getElement<HTMLButtonElement>("hotkeys-hints-styling-default-button");
+export const hotkeysHintsStylingCustomButtonEl = getElement<HTMLButtonElement>("hotkeys-hints-styling-custom-button");
+export const hotkeysHintsCustomCSSSectionEl = getElement<HTMLDivElement>("hotkeys-hints-custom-css-section");
+export const [hotkeysHintsCustomCSSContainerEl, hotkeysHintsCustomCSSTextareaEl] = getContainerAndTextarea("hotkeys-hints-custom-css");
+export const hotkeysHintsCustomCSSHighlightEl = getElement<HTMLPreElement>("hotkeys-hints-custom-css-highlight");
 
 export const saveButtonEl = getButton("save");
 export const exportButtonEl = getButton("export");

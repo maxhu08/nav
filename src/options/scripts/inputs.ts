@@ -1,11 +1,15 @@
 import {
   hotkeysHintsAvoidAdjacentPairsContainerEl,
   hotkeysHintsAvoidAdjacentPairsTextareaEl,
+  hotkeysHintsCustomCSSContainerEl,
+  hotkeysHintsCustomCSSTextareaEl,
   exportButtonEl,
   hotkeysHintsCharsetContainerEl,
   hotkeysHintsCharsetInputEl,
   hotkeysHintsPreferredSearchLabelsContainerEl,
   hotkeysHintsPreferredSearchLabelsInputEl,
+  hotkeysHintsStylingCustomButtonEl,
+  hotkeysHintsStylingDefaultButtonEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
   importButtonEl,
@@ -26,11 +30,16 @@ import {
   syncHotkeysHintsAvoidAdjacentPairsHighlightScroll
 } from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
 import {
+  refreshHotkeysHintsCustomCSSHighlight,
+  syncHotkeysHintsCustomCSSHighlightScroll
+} from "~/src/options/scripts/utils/hints-custom-css-highlight";
+import {
   syncHotkeysHintsCharsetHighlight,
   syncHotkeysHintsCharsetHighlightScroll,
   syncHotkeysHintsPreferredSearchLabelsHighlight,
   syncHotkeysHintsPreferredSearchLabelsHighlightScroll
 } from "~/src/options/scripts/utils/hints-inline-highlight";
+import { syncHintsStylingControls } from "~/src/options/scripts/utils/fill-helpers/fill-hints";
 import {
   syncRulesUrlsHighlight,
   syncRulesUrlsHighlightScroll
@@ -164,6 +173,30 @@ export const listenToInputs = (): void => {
       "border-sky-500",
       "border-transparent"
     );
+  });
+
+  hotkeysHintsStylingDefaultButtonEl.addEventListener("click", () => {
+    syncHintsStylingControls("default");
+  });
+
+  hotkeysHintsStylingCustomButtonEl.addEventListener("click", () => {
+    syncHintsStylingControls("custom");
+  });
+
+  hotkeysHintsCustomCSSTextareaEl.addEventListener("focus", () => {
+    hotkeysHintsCustomCSSContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  hotkeysHintsCustomCSSTextareaEl.addEventListener("input", () => {
+    refreshHotkeysHintsCustomCSSHighlight();
+  });
+
+  hotkeysHintsCustomCSSTextareaEl.addEventListener("scroll", () => {
+    syncHotkeysHintsCustomCSSHighlightScroll();
+  });
+
+  hotkeysHintsCustomCSSTextareaEl.addEventListener("blur", () => {
+    hotkeysHintsCustomCSSContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   tippy("#save-button", {
