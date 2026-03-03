@@ -129,6 +129,8 @@ const INTERACTIVE_ARIA_ATTRIBUTES = [
   "aria-selected"
 ] as const;
 
+const INTERACTIVE_DATA_ATTRIBUTES = ["data-state"] as const;
+
 const getElementTabIndex = (element: HTMLElement): number | null => {
   const tabIndexValue = element.getAttribute("tabindex");
   if (tabIndexValue === null) return null;
@@ -144,6 +146,9 @@ const hasInteractiveRole = (element: HTMLElement): boolean => {
 
 const hasInteractiveAriaState = (element: HTMLElement): boolean =>
   INTERACTIVE_ARIA_ATTRIBUTES.some((attributeName) => element.hasAttribute(attributeName));
+
+const hasInteractiveDataState = (element: HTMLElement): boolean =>
+  INTERACTIVE_DATA_ATTRIBUTES.some((attributeName) => element.hasAttribute(attributeName));
 
 const hasDirectActionAttribute = (element: HTMLElement): boolean =>
   element.hasAttribute("onclick") || element.hasAttribute("jsaction");
@@ -188,17 +193,18 @@ const isCustomActivatableElement = (element: HTMLElement): boolean => {
   const tabIndex = getElementTabIndex(element);
   const isFocusable = tabIndex !== null && tabIndex >= 0;
   const style = window.getComputedStyle(element);
-  const looksInteractive = style.cursor === "pointer" || hasInteractiveAriaState(element);
+  const hasInteractiveState = hasInteractiveAriaState(element) || hasInteractiveDataState(element);
+  const looksInteractive = style.cursor === "pointer" || hasInteractiveState;
 
   if (hasInteractiveRole(element)) {
     return isFocusable || isEditableHintTarget(element) || looksInteractive;
   }
 
-  if (!hasDirectActionAttribute(element)) {
-    return false;
+  if (hasDirectActionAttribute(element)) {
+    return isFocusable || looksInteractive;
   }
 
-  return isFocusable || looksInteractive;
+  return isFocusable && looksInteractive;
 };
 
 const isActivatableElement = (element: HTMLElement): boolean => {
@@ -263,6 +269,7 @@ const getHintableElements = (): HTMLElement[] => {
     "summary",
     "[onclick]",
     "[role]",
+    "[tabindex]",
     "[contenteditable='true']",
     "[contenteditable='']",
     "[jsaction]"
