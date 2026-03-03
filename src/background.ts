@@ -1,4 +1,6 @@
 type TabCommand =
+  | "tab-go-prev"
+  | "tab-go-next"
   | "close-current-tab"
   | "create-new-tab"
   | "reload-current-tab"
@@ -23,6 +25,51 @@ const sendTabCommandResponse = (
   sendResponse({ ok });
 };
 
+const activateAdjacentTab = (
+  sender: chrome.runtime.MessageSender,
+  typedMessage: TabCommandMessage,
+  direction: -1 | 1,
+  sendResponse: (response: TabCommandResponse) => void
+): boolean => {
+  const windowId = typedMessage.windowId ?? sender.tab?.windowId;
+  const tabIndex = typedMessage.tabIndex ?? sender.tab?.index;
+
+  if (typeof windowId !== "number" || typeof tabIndex !== "number") {
+    sendTabCommandResponse(sendResponse, false);
+    return false;
+  }
+
+  chrome.tabs.query({ windowId }, (tabs) => {
+    if (chrome.runtime.lastError || tabs.length === 0) {
+      sendTabCommandResponse(sendResponse, false);
+      return;
+    }
+
+    const sortedTabs = [...tabs].sort((firstTab, secondTab) => firstTab.index - secondTab.index);
+    const currentTabPosition = sortedTabs.findIndex((tab) => tab.index === tabIndex);
+
+    if (currentTabPosition === -1) {
+      sendTabCommandResponse(sendResponse, false);
+      return;
+    }
+
+    const nextTabPosition =
+      (currentTabPosition + direction + sortedTabs.length) % sortedTabs.length;
+    const nextTabId = sortedTabs[nextTabPosition]?.id;
+
+    if (typeof nextTabId !== "number") {
+      sendTabCommandResponse(sendResponse, false);
+      return;
+    }
+
+    chrome.tabs.update(nextTabId, { active: true }, () => {
+      sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
+    });
+  });
+
+  return true;
+};
+
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
   if (
     !message ||
@@ -33,6 +80,14 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
   }
 
   const typedMessage = message as TabCommandMessage;
+
+  if (typedMessage.command === "tab-go-prev") {
+    return activateAdjacentTab(sender, typedMessage, -1, sendResponse);
+  }
+
+  if (typedMessage.command === "tab-go-next") {
+    return activateAdjacentTab(sender, typedMessage, 1, sendResponse);
+  }
 
   if (typedMessage.command === "create-new-tab") {
     const windowId = typedMessage.windowId ?? sender.tab?.windowId;

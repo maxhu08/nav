@@ -1,6 +1,8 @@
 export type ActionName =
   | "history-go-prev"
   | "history-go-next"
+  | "tab-go-prev"
+  | "tab-go-next"
   | "close-current-tab"
   | "create-new-tab"
   | "reload-current-tab"
@@ -20,6 +22,8 @@ export type ActionName =
 export const VALID_ACTION_NAMES = new Set<ActionName>([
   "history-go-prev",
   "history-go-next",
+  "tab-go-prev",
+  "tab-go-next",
   "close-current-tab",
   "create-new-tab",
   "reload-current-tab",
@@ -56,11 +60,15 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
   "H history-go-prev",
   "L history-go-next",
 
+  // tabs
+  "J tab-go-prev",
+  "K tab-go-next",
+
   // hints
   "f toggle-hints-current-tab",
   "F toggle-hints-new-tab",
 
-  // tabs
+  // tab actions
   "# t create-new-tab",
   "# x close-current-tab",
   "# r reload-current-tab",

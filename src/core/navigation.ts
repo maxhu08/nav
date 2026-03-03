@@ -31,6 +31,8 @@ import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 
 type ActionHandler = (count?: number) => boolean;
 type TabCommand =
+  | "tab-go-prev"
+  | "tab-go-next"
   | "close-current-tab"
   | "create-new-tab"
   | "reload-current-tab"
@@ -148,13 +150,17 @@ const runTabCommand = (command: TabCommand): boolean => {
 
         const toast = getToastApi();
         const actionLabel =
-          command === "close-current-tab"
-            ? "close current tab"
-            : command === "create-new-tab"
-              ? "create new tab"
-              : command === "reload-current-tab"
-                ? "reload current tab"
-                : "hard reload current tab";
+          command === "tab-go-prev"
+            ? "go to previous tab"
+            : command === "tab-go-next"
+              ? "go to next tab"
+              : command === "close-current-tab"
+                ? "close current tab"
+                : command === "create-new-tab"
+                  ? "create new tab"
+                  : command === "reload-current-tab"
+                    ? "reload current tab"
+                    : "hard reload current tab";
 
         toast?.error(`Could not ${actionLabel}`);
       }
@@ -172,6 +178,8 @@ const isOptionsPage = (): boolean => {
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "history-go-prev": (count = 1) => goHistory(-count),
   "history-go-next": (count = 1) => goHistory(count),
+  "tab-go-prev": () => runTabCommand("tab-go-prev"),
+  "tab-go-next": () => runTabCommand("tab-go-next"),
   "close-current-tab": () => runTabCommand("close-current-tab"),
   "create-new-tab": () => runTabCommand("create-new-tab"),
   "reload-current-tab": () => runTabCommand("reload-current-tab"),
