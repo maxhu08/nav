@@ -24,7 +24,7 @@ let showCapitalizedLetters = true;
 let highlightThumbnails = false;
 let hintCSS = "";
 
-type LinkMode = "current-tab" | "new-tab";
+type LinkMode = "current-tab" | "new-tab" | "copy-link";
 
 type HintMarker = {
   element: HTMLElement;
@@ -45,6 +45,7 @@ type HintState = {
   typed: string;
   markers: HintMarker[];
   overlay: HTMLDivElement | null;
+  onActivate: ((element: HTMLElement) => void) | null;
   frameHandle: number | null;
   revealedVideoHoverElements: Array<{
     element: HTMLElement;
@@ -58,6 +59,7 @@ const hintState: HintState = {
   typed: "",
   markers: [],
   overlay: null,
+  onActivate: null,
   frameHandle: null,
   revealedVideoHoverElements: []
 };
@@ -460,25 +462,28 @@ const isHintable = (element: HTMLElement): boolean => {
   );
 };
 
-const getHintableElements = (): HTMLElement[] => {
-  const selectors = [
-    "a[href]",
-    "area[href]",
-    "button",
-    "input:not([type='hidden'])",
-    "select",
-    "textarea",
-    "object",
-    "embed",
-    "label",
-    "summary",
-    "[onclick]",
-    "[role]",
-    "[tabindex]",
-    "[contenteditable='true']",
-    "[contenteditable='']",
-    "[jsaction]"
-  ];
+const getHintableElements = (mode: LinkMode): HTMLElement[] => {
+  const selectors =
+    mode === "copy-link"
+      ? ["a[href]", "area[href]"]
+      : [
+          "a[href]",
+          "area[href]",
+          "button",
+          "input:not([type='hidden'])",
+          "select",
+          "textarea",
+          "object",
+          "embed",
+          "label",
+          "summary",
+          "[onclick]",
+          "[role]",
+          "[tabindex]",
+          "[contenteditable='true']",
+          "[contenteditable='']",
+          "[jsaction]"
+        ];
 
   const seen = new Set<HTMLElement>();
   const elements: HTMLElement[] = [];
@@ -1373,14 +1378,21 @@ export const exitHints = (): void => {
   hintState.typed = "";
   hintState.markers = [];
   hintState.overlay = null;
+  hintState.onActivate = null;
 };
 
 const activateHint = (hint: HintMarker): void => {
   const mode = hintState.mode;
+  const onActivate = hintState.onActivate;
   exitHints();
 
   if (mode === "new-tab") {
     openHintInNewTab(hint.element);
+    return;
+  }
+
+  if (mode === "copy-link") {
+    onActivate?.(hint.element);
     return;
   }
 
@@ -1403,11 +1415,16 @@ const applyFilter = (): void => {
   }
 };
 
-export const activateHints = (mode: LinkMode): boolean => {
+export const activateHints = (
+  mode: LinkMode,
+  options: {
+    onActivate?: (element: HTMLElement) => void;
+  } = {}
+): boolean => {
   exitHints();
   applyHintStyles();
 
-  const elements = getHintableElements();
+  const elements = getHintableElements(mode);
   if (elements.length === 0) return false;
 
   const preferredSearchElementIndex = getPreferredSearchElementIndex(elements);
@@ -1446,6 +1463,7 @@ export const activateHints = (mode: LinkMode): boolean => {
   hintState.typed = "";
   hintState.markers = markers;
   hintState.overlay = overlay;
+  hintState.onActivate = options.onActivate ?? null;
   revealVideoHintControls(markers);
 
   updateMarkerPositions();

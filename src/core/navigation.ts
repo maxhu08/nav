@@ -70,11 +70,24 @@ const writeClipboard = async (text: string): Promise<boolean> => {
   }
 };
 
-const getNormalizedCurrentUrl = (): string => {
-  const url = new URL(window.location.href);
+const getNormalizedUrl = (value: string): string => {
+  const url = new URL(value);
   const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
 
   return `${url.origin}${pathname}${url.search}${url.hash}`;
+};
+
+const getNormalizedCurrentUrl = (): string => getNormalizedUrl(window.location.href);
+
+const getLinkUrl = (element: HTMLElement): string | null => {
+  if (
+    (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) &&
+    element.href
+  ) {
+    return getNormalizedUrl(element.href);
+  }
+
+  return null;
 };
 
 const showYankToast = (type: "success" | "error", message: string, description: string): void => {
@@ -100,6 +113,34 @@ const yankCurrentTabUrl = (): boolean => {
 
     showYankToast("error", "Could not yank current tab URL", "Clipboard access was denied.");
   });
+
+  return true;
+};
+
+const yankLinkUrl = (): boolean => {
+  const didActivate = activateHints("copy-link", {
+    onActivate: (element) => {
+      const linkUrl = getLinkUrl(element);
+
+      if (!linkUrl) {
+        showYankToast("error", "Could not yank link URL", "The selected target is not a link.");
+        return;
+      }
+
+      void writeClipboard(linkUrl).then((didCopy) => {
+        if (didCopy) {
+          showYankToast("success", "Link URL yanked", linkUrl);
+          return;
+        }
+
+        showYankToast("error", "Could not yank link URL", "Clipboard access was denied.");
+      });
+    }
+  });
+
+  if (!didActivate) {
+    showYankToast("error", "Could not yank link URL", "No visible links were found.");
+  }
 
   return true;
 };
@@ -209,6 +250,7 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
 
     return activateHints("new-tab");
   },
+  "yank-link-url": yankLinkUrl,
   "yank-current-tab-url": yankCurrentTabUrl,
   "scroll-down": scrollDown,
   "scroll-half-page-down": scrollHalfPageDown,
