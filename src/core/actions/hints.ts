@@ -57,7 +57,7 @@ const hintState: HintState = {
 
 const MARKER_VIEWPORT_PADDING = 4;
 const MARKER_COLLISION_GAP = 2;
-const MARKER_POSITION_SEARCH_RADIUS = 6;
+const MARKER_ANCHOR_INSET = 2;
 
 const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   const rects = Array.from(element.getClientRects()).filter(
@@ -201,19 +201,150 @@ const isEditableHintTarget = (element: HTMLElement): boolean => {
   return !!contentEditable && ["", "contenteditable", "true"].includes(contentEditable);
 };
 
-const getEquivalentNativeAncestor = (element: HTMLElement): HTMLElement | null =>
-  element.parentElement?.closest<HTMLElement>("a[href],area[href],button,label,summary") ?? null;
+const areRectsEquivalent = (leftRect: DOMRect, rightRect: DOMRect): boolean =>
+  Math.abs(leftRect.top - rightRect.top) < 1 &&
+  Math.abs(leftRect.left - rightRect.left) < 1 &&
+  Math.abs(leftRect.width - rightRect.width) < 1 &&
+  Math.abs(leftRect.height - rightRect.height) < 1;
+
+const getHintIdentity = (element: HTMLElement): string | null => {
+  if (
+    (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) &&
+    element.href
+  ) {
+    return `href:${element.href}`;
+  }
+
+  const rawHref = element.getAttribute("href");
+  if (rawHref) {
+    return `href:${rawHref}`;
+  }
+
+  if (element instanceof HTMLLabelElement && element.control) {
+    const controlId = element.control.id || element.control.getAttribute("name") || "";
+    return `label:${element.control.tagName}:${controlId}`;
+  }
+
+  const ariaLabel = element.getAttribute("aria-label")?.trim();
+  if (ariaLabel) {
+    return `label:${ariaLabel}`;
+  }
+
+  const title = element.getAttribute("title")?.trim();
+  if (title) {
+    return `title:${title}`;
+  }
+
+  const text = element.textContent?.replace(/\s+/g, " ").trim();
+  if (text) {
+    return `text:${text}`;
+  }
+
+  return null;
+};
+
+const getHintTargetPreference = (element: HTMLElement): number => {
+  let score = 0;
+
+  if (
+    (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) &&
+    element.href
+  ) {
+    score += 500;
+  }
+
+  if (element instanceof HTMLButtonElement) {
+    score += 450;
+  }
+
+  if (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLSelectElement ||
+    element instanceof HTMLTextAreaElement
+  ) {
+    score += 425;
+  }
+
+  if (element instanceof HTMLLabelElement && element.control) {
+    score += 400;
+  }
+
+  if (isSelectableElement(element)) {
+    score += 350;
+  }
+
+  if (hasInteractiveRole(element)) {
+    score += 250;
+  }
+
+  const tabIndex = getElementTabIndex(element);
+  if (tabIndex !== null && tabIndex >= 0) {
+    score += 125;
+  }
+
+  score += getDomDepth(element);
+  return score;
+};
+
+const areEquivalentHintTargets = (leftElement: HTMLElement, rightElement: HTMLElement): boolean => {
+  if (!leftElement.contains(rightElement) && !rightElement.contains(leftElement)) {
+    return false;
+  }
+
+  const leftRect = getMarkerRect(leftElement);
+  const rightRect = getMarkerRect(rightElement);
+  if (!leftRect || !rightRect || !areRectsEquivalent(leftRect, rightRect)) {
+    return false;
+  }
+
+  const leftIdentity = getHintIdentity(leftElement);
+  const rightIdentity = getHintIdentity(rightElement);
+
+  if (leftIdentity && rightIdentity) {
+    return leftIdentity === rightIdentity;
+  }
+
+  const leftRole = leftElement.getAttribute("role")?.toLowerCase() ?? null;
+  const rightRole = rightElement.getAttribute("role")?.toLowerCase() ?? null;
+
+  if (leftRole || rightRole) {
+    return leftRole === rightRole;
+  }
+
+  return leftElement.tagName === rightElement.tagName;
+};
+
+const dedupeHintTargets = (elements: HTMLElement[]): HTMLElement[] => {
+  const deduped: HTMLElement[] = [];
+
+  for (const element of elements) {
+    const duplicateIndex = deduped.findIndex((candidate) =>
+      areEquivalentHintTargets(candidate, element)
+    );
+
+    if (duplicateIndex === -1) {
+      deduped.push(element);
+      continue;
+    }
+
+    const existing = deduped[duplicateIndex];
+    if (!existing) {
+      deduped.push(element);
+      continue;
+    }
+
+    if (getHintTargetPreference(element) > getHintTargetPreference(existing)) {
+      deduped[duplicateIndex] = element;
+    }
+  }
+
+  return deduped;
+};
 
 const hasEquivalentAncestorTarget = (
   element: HTMLElement,
   candidates: ReadonlySet<HTMLElement>
 ): boolean => {
-  const nativeAncestor = getEquivalentNativeAncestor(element);
-
-  if (nativeAncestor && candidates.has(nativeAncestor)) {
-    return true;
-  }
-
   if (!(element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement)) {
     return false;
   }
@@ -239,10 +370,7 @@ const hasEquivalentAncestorTarget = (
       if (
         currentRect &&
         elementRect &&
-        Math.abs(currentRect.top - elementRect.top) < 1 &&
-        Math.abs(currentRect.left - elementRect.left) < 1 &&
-        Math.abs(currentRect.width - elementRect.width) < 1 &&
-        Math.abs(currentRect.height - elementRect.height) < 1 &&
+        areRectsEquivalent(currentRect, elementRect) &&
         (!currentHref || currentHref === resolvedHref)
       ) {
         return true;
@@ -354,8 +482,9 @@ const getHintableElements = (): HTMLElement[] => {
   const dedupedElements = elements.filter(
     (element) => !hasEquivalentAncestorTarget(element, candidateSet)
   );
+  const uniqueElements = dedupeHintTargets(dedupedElements);
 
-  dedupedElements.sort((leftElement, rightElement) => {
+  uniqueElements.sort((leftElement, rightElement) => {
     const leftRect = getMarkerRect(leftElement);
     const rightRect = getMarkerRect(rightElement);
 
@@ -365,7 +494,7 @@ const getHintableElements = (): HTMLElement[] => {
     return getDomDepth(leftElement) - getDomDepth(rightElement);
   });
 
-  return dedupedElements;
+  return uniqueElements;
 };
 
 const buildHintLabels = (
@@ -734,8 +863,6 @@ const getMarkerPositionCandidates = (
   markerWidth: number,
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
-  const horizontalStep = Math.max(12, Math.round(markerWidth * 0.7));
-  const verticalStep = Math.max(10, Math.round(markerHeight * 0.85));
   const candidates: Array<Pick<PlacedMarkerRect, "left" | "top">> = [];
   const seen = new Set<string>();
   const pushCandidate = (left: number, top: number): void => {
@@ -747,15 +874,20 @@ const getMarkerPositionCandidates = (
     candidates.push(clamped);
   };
 
-  for (let radius = 0; radius <= MARKER_POSITION_SEARCH_RADIUS; radius += 1) {
-    for (let y = -radius; y <= radius; y += 1) {
-      for (let x = -radius; x <= radius; x += 1) {
-        if (Math.max(Math.abs(x), Math.abs(y)) !== radius) continue;
+  const left = targetRect.left + MARKER_ANCHOR_INSET;
+  const top = targetRect.top + MARKER_ANCHOR_INSET;
+  const right = Math.max(targetRect.left, targetRect.right - markerWidth - MARKER_ANCHOR_INSET);
+  const bottom = Math.max(targetRect.top, targetRect.bottom - markerHeight - MARKER_ANCHOR_INSET);
+  const centerLeft = targetRect.left + (targetRect.width - markerWidth) / 2;
+  const centerTop = targetRect.top + (targetRect.height - markerHeight) / 2;
 
-        pushCandidate(targetRect.left + x * horizontalStep, targetRect.top + y * verticalStep);
-      }
-    }
-  }
+  pushCandidate(left, top);
+  pushCandidate(right, top);
+  pushCandidate(left, bottom);
+  pushCandidate(right, bottom);
+  pushCandidate(centerLeft, top);
+  pushCandidate(left, centerTop);
+  pushCandidate(centerLeft, centerTop);
 
   return candidates;
 };
