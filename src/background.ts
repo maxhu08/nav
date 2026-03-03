@@ -1,6 +1,7 @@
 type TabCommand =
   | "tab-go-prev"
   | "tab-go-next"
+  | "duplicate-current-tab"
   | "close-current-tab"
   | "create-new-tab"
   | "reload-current-tab"
@@ -105,6 +106,21 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
     }
 
     chrome.tabs.create(createProperties, () => {
+      sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
+    });
+
+    return true;
+  }
+
+  if (typedMessage.command === "duplicate-current-tab") {
+    const tabId = typedMessage.tabId ?? sender.tab?.id;
+
+    if (typeof tabId !== "number") {
+      sendTabCommandResponse(sendResponse, false);
+      return false;
+    }
+
+    chrome.tabs.duplicate(tabId, () => {
       sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
     });
 
