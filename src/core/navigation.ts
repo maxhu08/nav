@@ -611,7 +611,7 @@ const syncFastConfig = (): void => {
     setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
     setPreferredSearchLabels(fastConfig.hints.preferredSearchLabels);
     setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
-    setHighlightThumbnails(fastConfig.hints.highlightThumbnails);
+    setHighlightThumbnails(fastConfig.hints.improveThumbnailMarkers);
     setHintCSS(fastConfig.hints.css);
     showActivationIndicator = fastConfig.hints.showActivationIndicator;
     activationIndicatorColor = fastConfig.hints.showActivationIndicatorColor;
@@ -642,7 +642,7 @@ const handleStorageChange = (
       avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
       preferredSearchLabels?: string[];
       showCapitalizedLetters?: boolean;
-      highlightThumbnails?: boolean;
+      improveThumbnailMarkers?: boolean;
       showActivationIndicator?: boolean;
       showActivationIndicatorColor?: string;
     };
@@ -668,8 +668,8 @@ const handleStorageChange = (
     setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
   }
 
-  if (typeof nextFastConfig.hints?.highlightThumbnails === "boolean") {
-    setHighlightThumbnails(nextFastConfig.hints.highlightThumbnails);
+  if (typeof nextFastConfig.hints?.improveThumbnailMarkers === "boolean") {
+    setHighlightThumbnails(nextFastConfig.hints.improveThumbnailMarkers);
   }
 
   if (typeof nextFastConfig.hints?.css === "string") {

@@ -1,10 +1,10 @@
 import { type Config } from "~/src/utils/config";
 import {
   hintsAvoidAdjacentPairsTextareaEl,
-  hintsHighlightThumbnailsCheckboxEl,
   hintsCharsetInputEl,
   hintsCustomCSSSectionEl,
   hintsCustomCSSTextareaEl,
+  hintsImproveThumbnailMarkersCheckboxEl,
   hintsPreferredSearchLabelsInputEl,
   hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorColorSectionEl,
@@ -51,7 +51,7 @@ export const syncHintsActivationIndicatorColorControls = (
 
 export const fillHintsInputs = (config: Config): void => {
   hintsShowCapitalizedLettersCheckboxEl.checked = config.hints.showCapitalizedLetters;
-  hintsHighlightThumbnailsCheckboxEl.checked = config.hints.highlightThumbnails;
+  hintsImproveThumbnailMarkersCheckboxEl.checked = config.hints.improveThumbnailMarkers;
   hintsShowActivationIndicatorCheckboxEl.checked = config.hints.showActivationIndicator;
   hintsShowActivationIndicatorColorInputEl.value = config.hints.showActivationIndicatorColor;
   hintsCustomCSSTextareaEl.value = config.hints.customCSS;

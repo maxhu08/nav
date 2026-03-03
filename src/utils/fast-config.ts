@@ -28,7 +28,7 @@ export type FastConfig = {
   };
   hints: {
     showCapitalizedLetters: boolean;
-    highlightThumbnails: boolean;
+    improveThumbnailMarkers: boolean;
     showActivationIndicator: boolean;
     showActivationIndicatorColor: string;
     css: string;
@@ -41,7 +41,7 @@ export type FastConfig = {
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
   return (
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
-    typeof value?.hints?.highlightThumbnails === "boolean" &&
+    typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
     typeof value?.hints?.showActivationIndicator === "boolean" &&
     typeof value?.hints?.showActivationIndicatorColor === "string" &&
     typeof value?.hints?.css === "string" &&
@@ -267,7 +267,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
     },
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,
-      highlightThumbnails: config.hints.highlightThumbnails,
+      improveThumbnailMarkers: config.hints.improveThumbnailMarkers,
       showActivationIndicator: config.hints.showActivationIndicator,
       showActivationIndicatorColor: parseActivationIndicatorColorValue(
         config.hints.showActivationIndicatorColor

@@ -1,9 +1,9 @@
 import { type Config } from "~/src/utils/config";
 import {
   hintsAvoidAdjacentPairsTextareaEl,
-  hintsHighlightThumbnailsCheckboxEl,
   hintsCharsetInputEl,
   hintsCustomCSSTextareaEl,
+  hintsImproveThumbnailMarkersCheckboxEl,
   hintsPreferredSearchLabelsInputEl,
   hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorCheckboxEl,
@@ -13,7 +13,7 @@ import {
 
 export const saveHintsSettingsToDraft = (draft: Config): void => {
   draft.hints.showCapitalizedLetters = hintsShowCapitalizedLettersCheckboxEl.checked;
-  draft.hints.highlightThumbnails = hintsHighlightThumbnailsCheckboxEl.checked;
+  draft.hints.improveThumbnailMarkers = hintsImproveThumbnailMarkersCheckboxEl.checked;
   draft.hints.showActivationIndicator = hintsShowActivationIndicatorCheckboxEl.checked;
   draft.hints.showActivationIndicatorColor = hintsShowActivationIndicatorColorInputEl.value;
   draft.hints.styling =

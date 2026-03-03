@@ -47,21 +47,6 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 
 export const DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR = "#eab308";
 
-const normalizeConfig = (config: Config): Config => {
-  const legacyHints = config.hints as Config["hints"] & {
-    centerOnThumbnails?: boolean;
-  };
-
-  if (
-    typeof legacyHints.highlightThumbnails !== "boolean" &&
-    typeof legacyHints.centerOnThumbnails === "boolean"
-  ) {
-    legacyHints.highlightThumbnails = legacyHints.centerOnThumbnails;
-  }
-
-  return config;
-};
-
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
     chrome.storage.local.get(["config"], (data) => {
@@ -71,7 +56,7 @@ export const getConfig = (): Promise<Config> => {
         return;
       }
 
-      resolve(normalizeConfig(deepMerge(structuredClone(defaultConfig), data.config)));
+      resolve(deepMerge(structuredClone(defaultConfig), data.config));
     });
   });
 };
@@ -85,7 +70,7 @@ export const defaultConfig: Config = {
   },
   hints: {
     showCapitalizedLetters: false,
-    highlightThumbnails: false,
+    improveThumbnailMarkers: false,
     showActivationIndicator: true,
     showActivationIndicatorColor: DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
     styling: "default",
@@ -105,7 +90,7 @@ export type Config = {
   };
   hints: {
     showCapitalizedLetters: boolean;
-    highlightThumbnails: boolean;
+    improveThumbnailMarkers: boolean;
     showActivationIndicator: boolean;
     showActivationIndicatorColor: string;
     styling: "default" | "custom";
