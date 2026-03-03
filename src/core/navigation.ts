@@ -205,6 +205,19 @@ const getLinkUrl = (element: HTMLElement): string | null => {
   return null;
 };
 
+const getImageUrl = (element: HTMLElement): string | null => {
+  if (!(element instanceof HTMLImageElement)) {
+    return null;
+  }
+
+  const source = element.currentSrc || element.src;
+  if (!source) {
+    return null;
+  }
+
+  return getNormalizedUrl(source);
+};
+
 const showYankToast = (type: "success" | "error", message: string, description: string): void => {
   ensureToastWrapper();
   const toast = getToastApi();
@@ -335,6 +348,34 @@ const yankImage = (): boolean => {
   return true;
 };
 
+const yankImageUrl = (): boolean => {
+  const didActivate = activateHints("copy-image", {
+    onActivate: (element) => {
+      const imageUrl = getImageUrl(element);
+
+      if (!imageUrl) {
+        showYankToast("error", "Could not yank image URL", "The selected target is not an image.");
+        return;
+      }
+
+      void writeClipboard(imageUrl).then((didCopy) => {
+        if (didCopy) {
+          showYankToast("success", "Image URL yanked", imageUrl);
+          return;
+        }
+
+        showYankToast("error", "Could not yank image URL", "Clipboard access was denied.");
+      });
+    }
+  });
+
+  if (!didActivate) {
+    showYankToast("error", "Could not yank image URL", "No visible images were found.");
+  }
+
+  return true;
+};
+
 const goHistory = (offset: number): boolean => {
   if (offset === 0 || window.history.length < 1) {
     return false;
@@ -442,6 +483,7 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   },
   "yank-link-url": yankLinkUrl,
   "yank-image": yankImage,
+  "yank-image-url": yankImageUrl,
   "yank-current-tab-url": yankCurrentTabUrl,
   "scroll-down": scrollDown,
   "scroll-half-page-down": scrollHalfPageDown,
@@ -630,6 +672,9 @@ const normalizeBaseKey = (key: string): string | null => {
 
   return null;
 };
+
+const isModifierKey = (key: string): boolean =>
+  key === "Shift" || key === "Control" || key === "Alt" || key === "Meta";
 
 const getKeyToken = (event: KeyboardEvent): string | null => {
   const normalizedKey = normalizeBaseKey(event.key);
@@ -966,6 +1011,10 @@ const handleKeydown = (event: KeyboardEvent): void => {
   const keyToken = getKeyToken(event);
 
   if (!keyToken) {
+    if (isModifierKey(event.key)) {
+      return;
+    }
+
     clearPendingState();
     return;
   }
