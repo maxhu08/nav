@@ -70,6 +70,18 @@ const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   return rects[0] ?? null;
 };
 
+const getDomDepth = (element: HTMLElement): number => {
+  let depth = 0;
+  let current: HTMLElement | null = element;
+
+  while (current) {
+    depth += 1;
+    current = current.parentElement;
+  }
+
+  return depth;
+};
+
 const getTopElementAtPoint = (
   x: number,
   y: number,
@@ -189,6 +201,60 @@ const isEditableHintTarget = (element: HTMLElement): boolean => {
   return !!contentEditable && ["", "contenteditable", "true"].includes(contentEditable);
 };
 
+const getEquivalentNativeAncestor = (element: HTMLElement): HTMLElement | null =>
+  element.parentElement?.closest<HTMLElement>("a[href],area[href],button,label,summary") ?? null;
+
+const hasEquivalentAncestorTarget = (
+  element: HTMLElement,
+  candidates: ReadonlySet<HTMLElement>
+): boolean => {
+  const nativeAncestor = getEquivalentNativeAncestor(element);
+
+  if (nativeAncestor && candidates.has(nativeAncestor)) {
+    return true;
+  }
+
+  if (!(element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement)) {
+    return false;
+  }
+
+  const resolvedHref = element.href;
+  if (!resolvedHref) {
+    return false;
+  }
+
+  let current = element.parentElement;
+
+  while (current) {
+    if (
+      candidates.has(current) &&
+      current.contains(element) &&
+      (current.getAttribute("role")?.toLowerCase() === "link" ||
+        getElementTabIndex(current) !== null)
+    ) {
+      const currentRect = getMarkerRect(current);
+      const elementRect = getMarkerRect(element);
+      const currentHref = current.getAttribute("href");
+
+      if (
+        currentRect &&
+        elementRect &&
+        Math.abs(currentRect.top - elementRect.top) < 1 &&
+        Math.abs(currentRect.left - elementRect.left) < 1 &&
+        Math.abs(currentRect.width - elementRect.width) < 1 &&
+        Math.abs(currentRect.height - elementRect.height) < 1 &&
+        (!currentHref || currentHref === resolvedHref)
+      ) {
+        return true;
+      }
+    }
+
+    current = current.parentElement;
+  }
+
+  return false;
+};
+
 const isCustomActivatableElement = (element: HTMLElement): boolean => {
   const tabIndex = getElementTabIndex(element);
   const isFocusable = tabIndex !== null && tabIndex >= 0;
@@ -284,16 +350,22 @@ const getHintableElements = (): HTMLElement[] => {
     elements.push(element);
   }
 
-  elements.sort((leftElement, rightElement) => {
+  const candidateSet = new Set(elements);
+  const dedupedElements = elements.filter(
+    (element) => !hasEquivalentAncestorTarget(element, candidateSet)
+  );
+
+  dedupedElements.sort((leftElement, rightElement) => {
     const leftRect = getMarkerRect(leftElement);
     const rightRect = getMarkerRect(rightElement);
 
     if (!leftRect || !rightRect) return 0;
     if (leftRect.top !== rightRect.top) return leftRect.top - rightRect.top;
-    return leftRect.left - rightRect.left;
+    if (leftRect.left !== rightRect.left) return leftRect.left - rightRect.left;
+    return getDomDepth(leftElement) - getDomDepth(rightElement);
   });
 
-  return elements;
+  return dedupedElements;
 };
 
 const buildHintLabels = (
