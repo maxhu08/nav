@@ -70,7 +70,7 @@ export const defaultConfig: Config = {
   },
   hints: {
     showCapitalizedLetters: false,
-    improveThumbnailMarkers: false,
+    improveThumbnailMarkers: true,
     showActivationIndicator: true,
     showActivationIndicatorColor: DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
     styling: "default",
