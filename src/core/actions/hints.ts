@@ -24,7 +24,7 @@ let showCapitalizedLetters = true;
 let highlightThumbnails = false;
 let hintCSS = "";
 
-type LinkMode = "current-tab" | "new-tab" | "copy-link";
+type LinkMode = "current-tab" | "new-tab" | "copy-link" | "copy-image";
 
 type HintMarker = {
   element: HTMLElement;
@@ -71,6 +71,8 @@ const MIN_THUMBNAIL_WIDTH = 96;
 const MIN_THUMBNAIL_HEIGHT = 54;
 const MIN_THUMBNAIL_MEDIA_AREA_RATIO = 0.45;
 const MIN_THUMBNAIL_ASPECT_RATIO = 1.15;
+const MIN_COPY_IMAGE_THUMBNAIL_WIDTH = 180;
+const MIN_COPY_IMAGE_THUMBNAIL_HEIGHT = 120;
 
 const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   const rects = Array.from(element.getClientRects()).filter(
@@ -462,34 +464,75 @@ const isHintable = (element: HTMLElement): boolean => {
   );
 };
 
+const isVisibleHintTarget = (element: HTMLElement): boolean => {
+  if (
+    element.hasAttribute("disabled") ||
+    element.hasAttribute("inert") ||
+    element.getAttribute("aria-disabled") === "true" ||
+    element.closest("[inert],[aria-disabled='true'],fieldset[disabled]")
+  ) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    style.visibility === "collapse" ||
+    Number.parseFloat(style.opacity) === 0
+  ) {
+    return false;
+  }
+
+  const rect = getMarkerRect(element);
+  if (!rect) return false;
+
+  return (
+    rect.bottom >= 0 &&
+    rect.right >= 0 &&
+    rect.top <= window.innerHeight &&
+    rect.left <= window.innerWidth &&
+    hasClickablePoint(element, rect)
+  );
+};
+
 const getHintableElements = (mode: LinkMode): HTMLElement[] => {
   const selectors =
     mode === "copy-link"
       ? ["a[href]", "area[href]"]
-      : [
-          "a[href]",
-          "area[href]",
-          "button",
-          "input:not([type='hidden'])",
-          "select",
-          "textarea",
-          "object",
-          "embed",
-          "label",
-          "summary",
-          "[onclick]",
-          "[role]",
-          "[tabindex]",
-          "[contenteditable='true']",
-          "[contenteditable='']",
-          "[jsaction]"
-        ];
+      : mode === "copy-image"
+        ? ["img"]
+        : [
+            "a[href]",
+            "area[href]",
+            "button",
+            "input:not([type='hidden'])",
+            "select",
+            "textarea",
+            "object",
+            "embed",
+            "label",
+            "summary",
+            "[onclick]",
+            "[role]",
+            "[tabindex]",
+            "[contenteditable='true']",
+            "[contenteditable='']",
+            "[jsaction]"
+          ];
 
   const seen = new Set<HTMLElement>();
   const elements: HTMLElement[] = [];
 
   for (const element of Array.from(document.querySelectorAll<HTMLElement>(selectors.join(",")))) {
-    if (seen.has(element) || !isHintable(element)) continue;
+    const isEligible =
+      mode === "copy-image"
+        ? element instanceof HTMLImageElement &&
+          !!(element.currentSrc || element.src) &&
+          isVisibleHintTarget(element)
+        : isHintable(element);
+
+    if (seen.has(element) || !isEligible) continue;
     seen.add(element);
     elements.push(element);
   }
@@ -1007,6 +1050,21 @@ const isThumbnailLikeTarget = (element: HTMLElement, targetRect: DOMRect): boole
   return thumbnailRect.width / thumbnailRect.height >= MIN_THUMBNAIL_ASPECT_RATIO;
 };
 
+const shouldUseThumbnailMarker = (element: HTMLElement, targetRect: DOMRect): boolean => {
+  if (!highlightThumbnails) {
+    return false;
+  }
+
+  if (hintState.mode === "copy-image" && element instanceof HTMLImageElement) {
+    return (
+      targetRect.width >= MIN_COPY_IMAGE_THUMBNAIL_WIDTH &&
+      targetRect.height >= MIN_COPY_IMAGE_THUMBNAIL_HEIGHT
+    );
+  }
+
+  return isThumbnailLikeTarget(element, targetRect);
+};
+
 const getMarkerPositionCandidates = (
   element: HTMLElement,
   targetRect: DOMRect,
@@ -1024,7 +1082,7 @@ const getMarkerPositionCandidates = (
     candidates.push(clamped);
   };
 
-  const shouldHighlightThumbnail = isThumbnailLikeTarget(element, targetRect);
+  const shouldHighlightThumbnail = shouldUseThumbnailMarker(element, targetRect);
   const anchorRect = shouldHighlightThumbnail
     ? (getPreferredThumbnailRect(element, targetRect) ?? targetRect)
     : targetRect;
@@ -1069,7 +1127,7 @@ const updateMarkerPositions = (): void => {
     hint.marker.style.display = "";
     hint.marker.setAttribute(
       MARKER_VARIANT_STYLE_ATTRIBUTE,
-      isThumbnailLikeTarget(hint.element, targetRect) ? "thumbnail" : "default"
+      shouldUseThumbnailMarker(hint.element, targetRect) ? "thumbnail" : "default"
     );
 
     const markerRect = hint.marker.getBoundingClientRect();
@@ -1391,7 +1449,8 @@ const activateHint = (hint: HintMarker): void => {
     return;
   }
 
-  if (mode === "copy-link") {
+  if (mode === "copy-link" || mode === "copy-image") {
+    dispatchFocusIndicator(hint.element);
     onActivate?.(hint.element);
     return;
   }

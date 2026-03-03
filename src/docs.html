@@ -112,11 +112,12 @@
               <p><span class="text-[#569cd6]">&lt;space&gt;</span> <span class="text-[#dcdcaa]">toggle-hints-current-tab</span></p>
               <p><span class="text-[#569cd6]">&lt;c-y&gt;</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
               <p><span class="text-[#569cd6]">yl</span> <span class="text-[#dcdcaa]">yank-link-url</span></p>
+              <p><span class="text-[#569cd6]">yi</span> <span class="text-[#dcdcaa]">yank-image</span></p>
               <p><span class="text-[#569cd6]">yy</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
             </div>
             <p class="text-base text-neutral-500">
-              This maps `j` to scroll down, `gg` to jump to the top of the page, `&lt;space&gt;` to toggle hints in the current tab, `&lt;c-y&gt;` to ctrl+y, `yl` to copy a hinted link URL, and `yy`
-              to copy the current tab URL.
+              This maps `j` to scroll down, `gg` to jump to the top of the page, `&lt;space&gt;` to toggle hints in the current tab, `&lt;c-y&gt;` to ctrl+y, `yl` to copy a hinted link URL, `yi` to
+              copy a hinted image, and `yy` to copy the current tab URL.
             </p>
           </div>
         </section>
@@ -137,6 +138,7 @@
               <p>toggle-hints-current-tab</p>
               <p>toggle-hints-new-tab</p>
               <p>yank-link-url</p>
+              <p>yank-image</p>
               <p>yank-current-tab-url</p>
               <p>scroll-down</p>
               <p>scroll-half-page-down</p>
@@ -191,6 +193,10 @@
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">yank-link-url</p>
                 <p class="text-base text-neutral-500">Shows link hints for visible links and copies the selected link URL to the clipboard.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">yank-image</p>
+                <p class="text-base text-neutral-500">Shows hints for visible images and copies the selected image to the clipboard.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">yank-current-tab-url</p>

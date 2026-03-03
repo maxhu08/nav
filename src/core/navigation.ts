@@ -41,6 +41,13 @@ type TabCommand =
   | "reload-current-tab"
   | "reload-current-tab-hard";
 type TabCommandResponse = { ok: boolean };
+type FetchImageResponse = {
+  ok: boolean;
+  bytes?: number[];
+  mimeType?: string;
+};
+
+type ImageClipboardResult = "success" | "unsupported" | "error";
 
 let keyActions: Partial<Record<string, ActionName>> = {};
 let keyActionPrefixes: Partial<Record<string, true>> = {};
@@ -67,6 +74,114 @@ const writeClipboard = async (text: string): Promise<boolean> => {
     } finally {
       textarea.remove();
     }
+  }
+};
+
+const writeClipboardImage = async (image: HTMLImageElement): Promise<ImageClipboardResult> => {
+  if (typeof ClipboardItem === "undefined" || typeof navigator.clipboard?.write !== "function") {
+    return "unsupported";
+  }
+
+  const source = image.currentSrc || image.src;
+  if (!source) {
+    return "error";
+  }
+
+  const convertBlobToClipboardBlob = async (blob: Blob): Promise<Blob | null> => {
+    if (!blob.type.startsWith("image/")) {
+      return null;
+    }
+
+    try {
+      if (blob.type === "image/png") {
+        return blob;
+      }
+
+      const bitmap = await createImageBitmap(blob);
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+
+      const context = canvas.getContext("2d");
+      if (!context) {
+        bitmap.close();
+        return null;
+      }
+
+      context.drawImage(bitmap, 0, 0);
+      bitmap.close();
+
+      return await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((nextBlob) => resolve(nextBlob), "image/png");
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  const writeBlobToClipboard = async (blob: Blob): Promise<ImageClipboardResult> => {
+    const clipboardBlob = await convertBlobToClipboardBlob(blob);
+    if (!clipboardBlob) {
+      return "error";
+    }
+
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [clipboardBlob.type]: clipboardBlob
+        })
+      ]);
+
+      return "success";
+    } catch {
+      return "error";
+    }
+  };
+
+  const fetchImageBlobFromBackground = async (): Promise<Blob | null> => {
+    try {
+      const response = await new Promise<FetchImageResponse>((resolve) => {
+        chrome.runtime.sendMessage(
+          {
+            type: "fetch-image",
+            url: source
+          },
+          (result?: FetchImageResponse) => {
+            resolve(result ?? { ok: false });
+          }
+        );
+      });
+
+      if (!response.ok || !response.mimeType || !response.bytes) {
+        return null;
+      }
+
+      return new Blob([new Uint8Array(response.bytes)], { type: response.mimeType });
+    } catch {
+      return null;
+    }
+  };
+
+  try {
+    const response = await fetch(source);
+    if (!response.ok) {
+      const backgroundBlob = await fetchImageBlobFromBackground();
+      if (!backgroundBlob) {
+        return "error";
+      }
+
+      return writeBlobToClipboard(backgroundBlob);
+    }
+
+    const blob = await response.blob();
+    return writeBlobToClipboard(blob);
+  } catch {
+    const backgroundBlob = await fetchImageBlobFromBackground();
+    if (!backgroundBlob) {
+      return "error";
+    }
+
+    return writeBlobToClipboard(backgroundBlob);
   }
 };
 
@@ -100,6 +215,50 @@ const showYankToast = (type: "success" | "error", message: string, description: 
   }
 
   toast?.error(message, { description });
+};
+
+const showImageYankToast = (image: HTMLImageElement): void => {
+  ensureToastWrapper();
+  const toast = getToastApi();
+  const source = image.currentSrc || image.src;
+  const altText = image.alt.trim();
+  const toastEl = toast?.success("Image yanked", { description: " " });
+
+  if (!(toastEl instanceof HTMLElement) || !source) {
+    return;
+  }
+
+  const descriptionEl = toastEl.querySelector("[data-description]");
+  if (!(descriptionEl instanceof HTMLElement)) {
+    return;
+  }
+
+  descriptionEl.textContent = "";
+  descriptionEl.style.whiteSpace = "normal";
+  descriptionEl.style.overflow = "visible";
+  descriptionEl.style.textOverflow = "clip";
+  descriptionEl.style.marginTop = "8px";
+
+  const preview = document.createElement("img");
+  preview.src = source;
+  preview.alt = altText || "Yanked image preview";
+  preview.style.display = "block";
+  preview.style.width = "100%";
+  preview.style.maxHeight = "160px";
+  preview.style.objectFit = "contain";
+  preview.style.borderRadius = "8px";
+  preview.style.background = "rgba(255, 255, 255, 0.04)";
+  descriptionEl.append(preview);
+
+  if (altText) {
+    const caption = document.createElement("div");
+    caption.textContent = altText;
+    caption.style.marginTop = "8px";
+    caption.style.color = "#a3a3a3";
+    caption.style.fontSize = "14px";
+    caption.style.lineHeight = "20px";
+    descriptionEl.append(caption);
+  }
 };
 
 const yankCurrentTabUrl = (): boolean => {
@@ -140,6 +299,37 @@ const yankLinkUrl = (): boolean => {
 
   if (!didActivate) {
     showYankToast("error", "Could not yank link URL", "No visible links were found.");
+  }
+
+  return true;
+};
+
+const yankImage = (): boolean => {
+  const didActivate = activateHints("copy-image", {
+    onActivate: (element) => {
+      if (!(element instanceof HTMLImageElement)) {
+        showYankToast("error", "Could not yank image", "The selected target is not an image.");
+        return;
+      }
+
+      void writeClipboardImage(element).then((result) => {
+        if (result === "success") {
+          showImageYankToast(element);
+          return;
+        }
+
+        if (result === "unsupported") {
+          showYankToast("error", "Could not yank image", "Image clipboard support is unavailable.");
+          return;
+        }
+
+        showYankToast("error", "Could not yank image", "The image could not be copied.");
+      });
+    }
+  });
+
+  if (!didActivate) {
+    showYankToast("error", "Could not yank image", "No visible images were found.");
   }
 
   return true;
@@ -251,6 +441,7 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
     return activateHints("new-tab");
   },
   "yank-link-url": yankLinkUrl,
+  "yank-image": yankImage,
   "yank-current-tab-url": yankCurrentTabUrl,
   "scroll-down": scrollDown,
   "scroll-half-page-down": scrollHalfPageDown,

@@ -12,6 +12,7 @@ export type ActionName =
   | "toggle-hints-current-tab"
   | "toggle-hints-new-tab"
   | "yank-link-url"
+  | "yank-image"
   | "yank-current-tab-url"
   | "scroll-down"
   | "scroll-half-page-down"
@@ -36,6 +37,7 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "toggle-hints-current-tab",
   "toggle-hints-new-tab",
   "yank-link-url",
+  "yank-image",
   "yank-current-tab-url",
   "scroll-down",
   "scroll-half-page-down",
@@ -77,6 +79,7 @@ W move-current-tab-to-new-window
 
 # clipboard
 yl yank-link-url
+yi yank-image
 yy yank-current-tab-url
 
 # history

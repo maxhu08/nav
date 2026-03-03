@@ -8,6 +8,11 @@ type TabCommand =
   | "reload-current-tab"
   | "reload-current-tab-hard";
 
+type FetchImageMessage = {
+  type: "fetch-image";
+  url: string;
+};
+
 type TabCommandMessage = {
   type: "tab-command";
   command: TabCommand;
@@ -20,11 +25,24 @@ type TabCommandResponse = {
   ok: boolean;
 };
 
+type FetchImageResponse = {
+  ok: boolean;
+  bytes?: number[];
+  mimeType?: string;
+};
+
 const sendTabCommandResponse = (
   sendResponse: (response: TabCommandResponse) => void,
   ok: boolean
 ): void => {
   sendResponse({ ok });
+};
+
+const sendFetchImageResponse = (
+  sendResponse: (response: FetchImageResponse) => void,
+  response: FetchImageResponse
+): void => {
+  sendResponse(response);
 };
 
 const activateAdjacentTab = (
@@ -73,6 +91,40 @@ const activateAdjacentTab = (
 };
 
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+  if (
+    message &&
+    typeof message === "object" &&
+    (message as { type?: string }).type === "fetch-image"
+  ) {
+    const typedMessage = message as FetchImageMessage;
+
+    void fetch(typedMessage.url)
+      .then(async (response) => {
+        if (!response.ok) {
+          sendFetchImageResponse(sendResponse, { ok: false });
+          return;
+        }
+
+        const blob = await response.blob();
+        if (!blob.type.startsWith("image/")) {
+          sendFetchImageResponse(sendResponse, { ok: false });
+          return;
+        }
+
+        const bytes = Array.from(new Uint8Array(await blob.arrayBuffer()));
+        sendFetchImageResponse(sendResponse, {
+          ok: true,
+          bytes,
+          mimeType: blob.type
+        });
+      })
+      .catch(() => {
+        sendFetchImageResponse(sendResponse, { ok: false });
+      });
+
+    return true;
+  }
+
   if (
     !message ||
     typeof message !== "object" ||
