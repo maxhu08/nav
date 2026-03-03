@@ -2,6 +2,7 @@ type TabCommand =
   | "tab-go-prev"
   | "tab-go-next"
   | "duplicate-current-tab"
+  | "move-current-tab-to-new-window"
   | "close-current-tab"
   | "create-new-tab"
   | "reload-current-tab"
@@ -122,6 +123,21 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
 
     chrome.tabs.duplicate(tabId, () => {
       sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
+    });
+
+    return true;
+  }
+
+  if (typedMessage.command === "move-current-tab-to-new-window") {
+    const tabId = typedMessage.tabId ?? sender.tab?.id;
+
+    if (typeof tabId !== "number") {
+      sendTabCommandResponse(sendResponse, false);
+      return false;
+    }
+
+    chrome.windows.create({ tabId }, (createdWindow) => {
+      sendTabCommandResponse(sendResponse, !chrome.runtime.lastError && Boolean(createdWindow));
     });
 
     return true;

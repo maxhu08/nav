@@ -4,6 +4,7 @@ export type ActionName =
   | "tab-go-prev"
   | "tab-go-next"
   | "duplicate-current-tab"
+  | "move-current-tab-to-new-window"
   | "close-current-tab"
   | "create-new-tab"
   | "reload-current-tab"
@@ -26,6 +27,7 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "tab-go-prev",
   "tab-go-next",
   "duplicate-current-tab",
+  "move-current-tab-to-new-window",
   "close-current-tab",
   "create-new-tab",
   "reload-current-tab",
@@ -71,6 +73,7 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
   "F toggle-hints-new-tab",
 
   // tab actions
+  "W move-current-tab-to-new-window",
   "yt duplicate-current-tab",
   "# t create-new-tab",
   "# x close-current-tab",
