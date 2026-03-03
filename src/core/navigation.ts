@@ -196,6 +196,19 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "scroll-to-top": scrollToTop
 };
 
+const isScrollAction = (actionName: ActionName): boolean => {
+  return (
+    actionName === "scroll-down" ||
+    actionName === "scroll-half-page-down" ||
+    actionName === "scroll-half-page-up" ||
+    actionName === "scroll-left" ||
+    actionName === "scroll-right" ||
+    actionName === "scroll-up" ||
+    actionName === "scroll-to-bottom" ||
+    actionName === "scroll-to-top"
+  );
+};
+
 const KEY_SEQUENCE_TIMEOUT_MS = 1000;
 
 let pendingSequence = "";
@@ -714,7 +727,7 @@ const handleKeydown = (event: KeyboardEvent): void => {
 
   const didHandle = ACTIONS[actionName](resolveCount());
 
-  if (!didHandle) {
+  if (!didHandle && !isScrollAction(actionName)) {
     return;
   }
 
