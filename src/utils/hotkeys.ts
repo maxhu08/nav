@@ -67,7 +67,7 @@ export const DEFAULT_HOTKEY_MAPPINGS = [
   "yy yank-current-tab-url"
 ].join("\n");
 
-export const DEFAULT_HINT_CHARSET = "sadfjklewcmpgh";
+export const DEFAULT_HINT_CHARSET = "sadfjklewcmurpgh";
 export const DEFAULT_HINT_PREFERRED_SEARCH_LABELS = "kj kjf kjfd";
 
 export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = [
@@ -78,5 +78,5 @@ export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = [
   "cd ce dc de ec ed fg gf hj hm jh jm mh mj sw ws",
   "",
   "# other",
-  "aw sa wa"
+  "aw sa wa "
 ].join("\n");
