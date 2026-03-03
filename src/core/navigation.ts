@@ -30,7 +30,11 @@ import { type ActionName } from "~/src/utils/hotkeys";
 import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 
 type ActionHandler = (count?: number) => boolean;
-type TabCommand = "close-current-tab" | "create-new-tab" | "reload-current-tab";
+type TabCommand =
+  | "close-current-tab"
+  | "create-new-tab"
+  | "reload-current-tab"
+  | "reload-current-tab-hard";
 type TabCommandResponse = { ok: boolean };
 
 let keyActions: Partial<Record<string, ActionName>> = {};
@@ -148,7 +152,9 @@ const runTabCommand = (command: TabCommand): boolean => {
             ? "close current tab"
             : command === "create-new-tab"
               ? "create new tab"
-              : "reload current tab";
+              : command === "reload-current-tab"
+                ? "reload current tab"
+                : "hard reload current tab";
 
         toast?.error(`Could not ${actionLabel}`);
       }
@@ -169,6 +175,7 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "close-current-tab": () => runTabCommand("close-current-tab"),
   "create-new-tab": () => runTabCommand("create-new-tab"),
   "reload-current-tab": () => runTabCommand("reload-current-tab"),
+  "reload-current-tab-hard": () => runTabCommand("reload-current-tab-hard"),
   "toggle-hints-current-tab": () => {
     if (areHintsPendingSelection()) {
       exitHints();
