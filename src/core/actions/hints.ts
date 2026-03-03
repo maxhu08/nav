@@ -11,6 +11,7 @@ const OVERLAY_ID = `${HINT_NAMESPACE_PREFIX}link-hints-overlay`;
 const MARKER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker`;
 const LETTER_ATTRIBUTE = `data-${HINT_NAMESPACE_PREFIX}link-hint-marker-letter`;
 const MARKER_STYLE_ATTRIBUTE = "data-nav-hint-marker";
+const MARKER_VARIANT_STYLE_ATTRIBUTE = "data-nav-hint-marker-variant";
 const LETTER_STYLE_ATTRIBUTE = "data-nav-hint-marker-letter";
 const STYLE_ID = `${HINT_NAMESPACE_PREFIX}link-hints-style`;
 const FOCUS_INDICATOR_EVENT = `${HINT_NAMESPACE_PREFIX}focus-indicator`;
@@ -20,6 +21,7 @@ let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 let preferredSearchLabels: string[] = [];
 let showCapitalizedLetters = true;
+let highlightThumbnails = false;
 let hintCSS = "";
 
 type LinkMode = "current-tab" | "new-tab";
@@ -58,6 +60,10 @@ const hintState: HintState = {
 const MARKER_VIEWPORT_PADDING = 4;
 const MARKER_COLLISION_GAP = 2;
 const MARKER_ANCHOR_INSET = 2;
+const MIN_THUMBNAIL_WIDTH = 96;
+const MIN_THUMBNAIL_HEIGHT = 54;
+const MIN_THUMBNAIL_MEDIA_AREA_RATIO = 0.45;
+const MIN_THUMBNAIL_ASPECT_RATIO = 1.15;
 
 const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   const rects = Array.from(element.getClientRects()).filter(
@@ -771,10 +777,11 @@ const createOverlay = (): HTMLDivElement => {
 
 const getDefaultHintMarkerCSS = (): string => {
   const markerSelector = `[${MARKER_STYLE_ATTRIBUTE}]`;
+  const thumbnailMarkerSelector = `[${MARKER_VARIANT_STYLE_ATTRIBUTE}="thumbnail"]`;
   const pendingSelector = `[${LETTER_STYLE_ATTRIBUTE}="pending"]`;
   const typedSelector = `[${LETTER_STYLE_ATTRIBUTE}="typed"]`;
 
-  return `${markerSelector}{transform:translate(-20%,-20%);transition:none !important;transition-duration:0ms !important;transition-property:none !important;padding:1px 4px;border-radius:3px;background:#eab308;color:#2b1d00;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.28);white-space:nowrap;}${pendingSelector}{color:#000000;}${typedSelector}{color:#ffffff;}`;
+  return `${markerSelector}{transform:translate(-20%,-20%);transition:none !important;transition-duration:0ms !important;transition-property:none !important;padding:1px 4px;border-radius:3px;background:#eab308;color:#2b1d00;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.28);white-space:nowrap;}${thumbnailMarkerSelector}{transform:translate(0,0);padding:4px 10px;border-radius:6px;font-size:18px;font-weight:800;letter-spacing:.12em;line-height:1.1;box-shadow:0 3px 10px rgba(0,0,0,.4);}${pendingSelector}{color:#000000;}${typedSelector}{color:#ffffff;}`;
 };
 
 const applyHintStyles = (): void => {
@@ -814,6 +821,7 @@ const createMarker = (label: string): HTMLSpanElement => {
   const marker = document.createElement("span");
   marker.setAttribute(MARKER_ATTRIBUTE, "true");
   marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
+  marker.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, "default");
 
   marker.style.position = "fixed";
   marker.style.left = "0px";
@@ -858,7 +866,104 @@ const createPlacedMarkerRect = (
   bottom: top + height
 });
 
+const getRectArea = (rect: Pick<DOMRect, "width" | "height">): number =>
+  Math.max(0, rect.width) * Math.max(0, rect.height);
+
+const hasThumbnailKeyword = (value: string | null | undefined): boolean =>
+  !!value && /(thumbnail|thumb|poster|preview|cover)/i.test(value);
+
+const THUMBNAIL_SELECTOR = [
+  "img",
+  "picture",
+  "video",
+  "canvas",
+  "svg",
+  "[role='img']",
+  "[data-thumbnail]",
+  "[id*='thumbnail']",
+  "[class*='thumbnail']",
+  "[data-testid*='thumbnail']",
+  "yt-thumbnail-view-model",
+  "ytd-thumbnail"
+].join(", ");
+
+const getThumbnailRects = (element: HTMLElement): DOMRect[] => {
+  const thumbnailElements = [
+    element,
+    ...Array.from(element.querySelectorAll<HTMLElement>(THUMBNAIL_SELECTOR))
+  ].filter((candidate, index, candidates): candidate is HTMLElement => {
+    return candidate instanceof HTMLElement && candidates.indexOf(candidate) === index;
+  });
+
+  const rects: DOMRect[] = [];
+
+  for (const thumbnailElement of thumbnailElements) {
+    const rect = getMarkerRect(thumbnailElement);
+
+    if (rect) {
+      rects.push(rect);
+    }
+  }
+
+  return rects;
+};
+
+const getPreferredThumbnailRect = (element: HTMLElement, targetRect: DOMRect): DOMRect | null => {
+  const targetArea = getRectArea(targetRect);
+
+  if (targetArea === 0) {
+    return null;
+  }
+
+  const thumbnailRects = getThumbnailRects(element)
+    .filter((rect) => rect.width >= MIN_THUMBNAIL_WIDTH && rect.height >= MIN_THUMBNAIL_HEIGHT)
+    .filter((rect) => getRectArea(rect) / targetArea >= MIN_THUMBNAIL_MEDIA_AREA_RATIO)
+    .sort((leftRect, rightRect) => getRectArea(rightRect) - getRectArea(leftRect));
+
+  return thumbnailRects[0] ?? null;
+};
+
+const isThumbnailLikeTarget = (element: HTMLElement, targetRect: DOMRect): boolean => {
+  if (!highlightThumbnails) {
+    return false;
+  }
+
+  if (targetRect.width < MIN_THUMBNAIL_WIDTH || targetRect.height < MIN_THUMBNAIL_HEIGHT) {
+    return false;
+  }
+
+  const thumbnailRect = getPreferredThumbnailRect(element, targetRect);
+
+  if (!thumbnailRect) {
+    return false;
+  }
+
+  const thumbnailElements = [
+    element,
+    ...Array.from(element.querySelectorAll<HTMLElement>(THUMBNAIL_SELECTOR))
+  ].filter((candidate, index, candidates): candidate is HTMLElement => {
+    return candidate instanceof HTMLElement && candidates.indexOf(candidate) === index;
+  });
+
+  const hasExplicitThumbnailSignal = thumbnailElements.some((mediaElement) => {
+    return (
+      hasThumbnailKeyword(mediaElement.id) ||
+      hasThumbnailKeyword(mediaElement.className) ||
+      hasThumbnailKeyword(mediaElement.tagName) ||
+      hasThumbnailKeyword(mediaElement.getAttribute("data-testid")) ||
+      hasThumbnailKeyword(mediaElement.getAttribute("data-e2e"))
+    );
+  });
+
+  if (hasExplicitThumbnailSignal) {
+    return true;
+  }
+
+  return thumbnailRect.width / thumbnailRect.height >= MIN_THUMBNAIL_ASPECT_RATIO;
+};
+
 const getMarkerPositionCandidates = (
+  element: HTMLElement,
   targetRect: DOMRect,
   markerWidth: number,
   markerHeight: number
@@ -874,12 +979,22 @@ const getMarkerPositionCandidates = (
     candidates.push(clamped);
   };
 
-  const left = targetRect.left + MARKER_ANCHOR_INSET;
-  const top = targetRect.top + MARKER_ANCHOR_INSET;
-  const right = Math.max(targetRect.left, targetRect.right - markerWidth - MARKER_ANCHOR_INSET);
-  const bottom = Math.max(targetRect.top, targetRect.bottom - markerHeight - MARKER_ANCHOR_INSET);
-  const centerLeft = targetRect.left + (targetRect.width - markerWidth) / 2;
-  const centerTop = targetRect.top + (targetRect.height - markerHeight) / 2;
+  const shouldHighlightThumbnail = isThumbnailLikeTarget(element, targetRect);
+  const anchorRect = shouldHighlightThumbnail
+    ? (getPreferredThumbnailRect(element, targetRect) ?? targetRect)
+    : targetRect;
+  const left = anchorRect.left + MARKER_ANCHOR_INSET;
+  const top = anchorRect.top + MARKER_ANCHOR_INSET;
+  const right = Math.max(anchorRect.left, anchorRect.right - markerWidth - MARKER_ANCHOR_INSET);
+  const bottom = Math.max(anchorRect.top, anchorRect.bottom - markerHeight - MARKER_ANCHOR_INSET);
+  const centerLeft = anchorRect.left + (anchorRect.width - markerWidth) / 2;
+  const centerTop = anchorRect.top + (anchorRect.height - markerHeight) / 2;
+
+  if (shouldHighlightThumbnail) {
+    pushCandidate(centerLeft, centerTop);
+    pushCandidate(centerLeft, top);
+    pushCandidate(left, centerTop);
+  }
 
   pushCandidate(left, top);
   pushCandidate(right, top);
@@ -887,7 +1002,10 @@ const getMarkerPositionCandidates = (
   pushCandidate(right, bottom);
   pushCandidate(centerLeft, top);
   pushCandidate(left, centerTop);
-  pushCandidate(centerLeft, centerTop);
+
+  if (!shouldHighlightThumbnail) {
+    pushCandidate(centerLeft, centerTop);
+  }
 
   return candidates;
 };
@@ -904,11 +1022,20 @@ const updateMarkerPositions = (): void => {
     }
 
     hint.marker.style.display = "";
+    hint.marker.setAttribute(
+      MARKER_VARIANT_STYLE_ATTRIBUTE,
+      isThumbnailLikeTarget(hint.element, targetRect) ? "thumbnail" : "default"
+    );
 
     const markerRect = hint.marker.getBoundingClientRect();
     const markerWidth = Math.max(1, Math.round(markerRect.width));
     const markerHeight = Math.max(1, Math.round(markerRect.height));
-    const candidates = getMarkerPositionCandidates(targetRect, markerWidth, markerHeight);
+    const candidates = getMarkerPositionCandidates(
+      hint.element,
+      targetRect,
+      markerWidth,
+      markerHeight
+    );
 
     let chosenRect: PlacedMarkerRect | null = null;
 
@@ -1276,6 +1403,14 @@ export const setShowCapitalizedLetters = (nextShowCapitalizedLetters: boolean): 
   for (const hint of hintState.markers) {
     const isMatch = hintState.typed.length === 0 || hint.label.startsWith(hintState.typed);
     renderMarkerText(hint.marker, hint.label, isMatch ? hintState.typed : "");
+  }
+};
+
+export const setHighlightThumbnails = (nextHighlightThumbnails: boolean): void => {
+  highlightThumbnails = nextHighlightThumbnails;
+
+  if (hintState.active) {
+    schedulePositionUpdate();
   }
 };
 

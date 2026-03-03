@@ -21,6 +21,9 @@ export const hotkeysMappingsStatusEl = getElement<HTMLParagraphElement>("hotkeys
 export const hintsShowCapitalizedLettersCheckboxEl = getElement<HTMLInputElement>(
   "hints-show-capitalized-letters-checkbox"
 );
+export const hintsHighlightThumbnailsCheckboxEl = getElement<HTMLInputElement>(
+  "hints-highlight-thumbnails-checkbox"
+);
 export const hintsShowActivationIndicatorCheckboxEl = getElement<HTMLInputElement>(
   "hints-show-activation-indicator-checkbox"
 );

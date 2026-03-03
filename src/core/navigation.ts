@@ -5,6 +5,7 @@ import {
   exitHints,
   handleHintsKeydown,
   setAvoidedAdjacentHintPairs,
+  setHighlightThumbnails,
   setHintCSS,
   setHintCharset,
   setPreferredSearchLabels,
@@ -610,6 +611,7 @@ const syncFastConfig = (): void => {
     setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
     setPreferredSearchLabels(fastConfig.hints.preferredSearchLabels);
     setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
+    setHighlightThumbnails(fastConfig.hints.highlightThumbnails);
     setHintCSS(fastConfig.hints.css);
     showActivationIndicator = fastConfig.hints.showActivationIndicator;
     activationIndicatorColor = fastConfig.hints.showActivationIndicatorColor;
@@ -640,6 +642,7 @@ const handleStorageChange = (
       avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
       preferredSearchLabels?: string[];
       showCapitalizedLetters?: boolean;
+      highlightThumbnails?: boolean;
       showActivationIndicator?: boolean;
       showActivationIndicatorColor?: string;
     };
@@ -663,6 +666,10 @@ const handleStorageChange = (
 
   if (typeof nextFastConfig.hints?.showCapitalizedLetters === "boolean") {
     setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
+  }
+
+  if (typeof nextFastConfig.hints?.highlightThumbnails === "boolean") {
+    setHighlightThumbnails(nextFastConfig.hints.highlightThumbnails);
   }
 
   if (typeof nextFastConfig.hints?.css === "string") {

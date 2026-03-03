@@ -25,6 +25,17 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
   white-space: nowrap;
 }
 
+[data-nav-hint-marker-variant="thumbnail"] {
+  transform: translate(0, 0);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
 [data-nav-hint-marker-letter="pending"] {
   color: #000000;
 }
@@ -36,6 +47,21 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 
 export const DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR = "#eab308";
 
+const normalizeConfig = (config: Config): Config => {
+  const legacyHints = config.hints as Config["hints"] & {
+    centerOnThumbnails?: boolean;
+  };
+
+  if (
+    typeof legacyHints.highlightThumbnails !== "boolean" &&
+    typeof legacyHints.centerOnThumbnails === "boolean"
+  ) {
+    legacyHints.highlightThumbnails = legacyHints.centerOnThumbnails;
+  }
+
+  return config;
+};
+
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
     chrome.storage.local.get(["config"], (data) => {
@@ -45,7 +71,7 @@ export const getConfig = (): Promise<Config> => {
         return;
       }
 
-      resolve(deepMerge(structuredClone(defaultConfig), data.config));
+      resolve(normalizeConfig(deepMerge(structuredClone(defaultConfig), data.config)));
     });
   });
 };
@@ -59,6 +85,7 @@ export const defaultConfig: Config = {
   },
   hints: {
     showCapitalizedLetters: false,
+    highlightThumbnails: false,
     showActivationIndicator: true,
     showActivationIndicatorColor: DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
     styling: "default",
@@ -78,6 +105,7 @@ export type Config = {
   };
   hints: {
     showCapitalizedLetters: boolean;
+    highlightThumbnails: boolean;
     showActivationIndicator: boolean;
     showActivationIndicatorColor: string;
     styling: "default" | "custom";

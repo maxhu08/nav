@@ -1,6 +1,7 @@
 import { type Config } from "~/src/utils/config";
 import {
   hintsAvoidAdjacentPairsTextareaEl,
+  hintsHighlightThumbnailsCheckboxEl,
   hintsCharsetInputEl,
   hintsCustomCSSSectionEl,
   hintsCustomCSSTextareaEl,
@@ -50,6 +51,7 @@ export const syncHintsActivationIndicatorColorControls = (
 
 export const fillHintsInputs = (config: Config): void => {
   hintsShowCapitalizedLettersCheckboxEl.checked = config.hints.showCapitalizedLetters;
+  hintsHighlightThumbnailsCheckboxEl.checked = config.hints.highlightThumbnails;
   hintsShowActivationIndicatorCheckboxEl.checked = config.hints.showActivationIndicator;
   hintsShowActivationIndicatorColorInputEl.value = config.hints.showActivationIndicatorColor;
   hintsCustomCSSTextareaEl.value = config.hints.customCSS;
