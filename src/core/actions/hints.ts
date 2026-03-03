@@ -46,6 +46,10 @@ type HintState = {
   markers: HintMarker[];
   overlay: HTMLDivElement | null;
   frameHandle: number | null;
+  revealedVideoHoverElements: Array<{
+    element: HTMLElement;
+    inlineStyle: string | null;
+  }>;
 };
 
 const hintState: HintState = {
@@ -54,7 +58,8 @@ const hintState: HintState = {
   typed: "",
   markers: [],
   overlay: null,
-  frameHandle: null
+  frameHandle: null,
+  revealedVideoHoverElements: []
 };
 
 const MARKER_VIEWPORT_PADDING = 4;
@@ -1074,6 +1079,67 @@ const updateMarkerPositions = (): void => {
   }
 };
 
+const getVideoHintContainer = (element: HTMLElement): HTMLElement | null => {
+  if (element instanceof HTMLVideoElement) {
+    return element;
+  }
+
+  let current: HTMLElement | null = element;
+
+  while (current) {
+    if (current.querySelector("video")) {
+      return current;
+    }
+
+    current = current.parentElement;
+  }
+
+  return null;
+};
+
+const revealVideoHintControls = (markers: HintMarker[]): void => {
+  const seen = new Set<HTMLElement>();
+
+  for (const { element } of markers) {
+    const videoContainer = getVideoHintContainer(element);
+    if (!videoContainer) continue;
+
+    let current: HTMLElement | null = element;
+
+    while (current) {
+      if (!seen.has(current)) {
+        seen.add(current);
+        hintState.revealedVideoHoverElements.push({
+          element: current,
+          inlineStyle: current.getAttribute("style")
+        });
+
+        current.style.setProperty("opacity", "1", "important");
+        current.style.setProperty("visibility", "visible", "important");
+      }
+
+      if (current === videoContainer) {
+        break;
+      }
+
+      current = current.parentElement;
+    }
+  }
+};
+
+const restoreRevealedVideoHintControls = (): void => {
+  for (const { element, inlineStyle } of hintState.revealedVideoHoverElements) {
+    if (inlineStyle === null) {
+      element.removeAttribute("style");
+      continue;
+    }
+
+    element.setAttribute("style", inlineStyle);
+  }
+
+  hintState.revealedVideoHoverElements = [];
+};
+
 const schedulePositionUpdate = (): void => {
   if (!hintState.active || hintState.frameHandle !== null) return;
 
@@ -1264,6 +1330,7 @@ export const exitHints = (): void => {
   window.removeEventListener("resize", onViewportChange, true);
   window.removeEventListener("blur", exitHints, true);
 
+  restoreRevealedVideoHintControls();
   hintState.overlay?.remove();
 
   hintState.active = false;
@@ -1344,6 +1411,7 @@ export const activateHints = (mode: LinkMode): boolean => {
   hintState.typed = "";
   hintState.markers = markers;
   hintState.overlay = overlay;
+  revealVideoHintControls(markers);
 
   updateMarkerPositions();
 
