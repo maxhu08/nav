@@ -877,12 +877,14 @@ const getRectArea = (rect: Pick<DOMRect, "width" | "height">): number =>
 const hasThumbnailKeyword = (value: string | null | undefined): boolean =>
   !!value && /(thumbnail|thumb|poster|preview|cover)/i.test(value);
 
+const hasNonThumbnailMediaKeyword = (value: string | null | undefined): boolean =>
+  !!value && /(logo|icon|avatar|badge|brand|wordmark)/i.test(value);
+
 const THUMBNAIL_SELECTOR = [
   "img",
   "picture",
   "video",
   "canvas",
-  "svg",
   "[role='img']",
   "[data-thumbnail]",
   "[id*='thumbnail']",
@@ -891,6 +893,37 @@ const THUMBNAIL_SELECTOR = [
   "yt-thumbnail-view-model",
   "ytd-thumbnail"
 ].join(", ");
+
+const hasExplicitThumbnailSignal = (element: HTMLElement): boolean =>
+  hasThumbnailKeyword(element.id) ||
+  hasThumbnailKeyword(element.className) ||
+  hasThumbnailKeyword(element.tagName) ||
+  hasThumbnailKeyword(element.getAttribute("data-testid")) ||
+  hasThumbnailKeyword(element.getAttribute("data-e2e")) ||
+  hasThumbnailKeyword(element.getAttribute("data-thumbnail")) ||
+  hasThumbnailKeyword(element.getAttribute("aria-label")) ||
+  hasThumbnailKeyword(element.getAttribute("title"));
+
+const hasNonThumbnailMediaSignal = (element: HTMLElement): boolean =>
+  hasNonThumbnailMediaKeyword(element.id) ||
+  hasNonThumbnailMediaKeyword(element.className) ||
+  hasNonThumbnailMediaKeyword(element.tagName) ||
+  hasNonThumbnailMediaKeyword(element.getAttribute("data-testid")) ||
+  hasNonThumbnailMediaKeyword(element.getAttribute("data-e2e")) ||
+  hasNonThumbnailMediaKeyword(element.getAttribute("aria-label")) ||
+  hasNonThumbnailMediaKeyword(element.getAttribute("title"));
+
+const isImplicitThumbnailElement = (element: HTMLElement): boolean => {
+  const tagName = element.tagName.toLowerCase();
+
+  return (
+    tagName === "img" ||
+    tagName === "picture" ||
+    tagName === "video" ||
+    tagName === "canvas" ||
+    element.getAttribute("role")?.toLowerCase() === "img"
+  );
+};
 
 const getThumbnailRects = (element: HTMLElement): DOMRect[] => {
   const thumbnailElements = [
@@ -950,18 +983,20 @@ const isThumbnailLikeTarget = (element: HTMLElement, targetRect: DOMRect): boole
     return candidate instanceof HTMLElement && candidates.indexOf(candidate) === index;
   });
 
-  const hasExplicitThumbnailSignal = thumbnailElements.some((mediaElement) => {
-    return (
-      hasThumbnailKeyword(mediaElement.id) ||
-      hasThumbnailKeyword(mediaElement.className) ||
-      hasThumbnailKeyword(mediaElement.tagName) ||
-      hasThumbnailKeyword(mediaElement.getAttribute("data-testid")) ||
-      hasThumbnailKeyword(mediaElement.getAttribute("data-e2e"))
-    );
-  });
+  const hasExplicitSignal = thumbnailElements.some((mediaElement) =>
+    hasExplicitThumbnailSignal(mediaElement)
+  );
 
-  if (hasExplicitThumbnailSignal) {
+  if (hasExplicitSignal) {
     return true;
+  }
+
+  if (thumbnailElements.some((mediaElement) => hasNonThumbnailMediaSignal(mediaElement))) {
+    return false;
+  }
+
+  if (!thumbnailElements.some((mediaElement) => isImplicitThumbnailElement(mediaElement))) {
+    return false;
   }
 
   return thumbnailRect.width / thumbnailRect.height >= MIN_THUMBNAIL_ASPECT_RATIO;

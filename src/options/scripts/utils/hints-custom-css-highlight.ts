@@ -6,7 +6,6 @@ const escapeHtml = (value: string): string =>
 const wrapToken = (className: string, value: string): string =>
   `<span class="${className}">${escapeHtml(value)}</span>`;
 
-const isWhitespace = (char: string | undefined): boolean => char !== undefined && /\s/.test(char);
 const isDigit = (char: string | undefined): boolean => char !== undefined && /[0-9]/.test(char);
 const isIdentifierStart = (char: string | undefined): boolean =>
   char !== undefined && /[A-Za-z_-]/.test(char);
