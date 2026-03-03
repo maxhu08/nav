@@ -95,6 +95,15 @@ const yankCurrentTabUrl = (): boolean => {
   return true;
 };
 
+const goHistory = (offset: number): boolean => {
+  if (offset === 0 || window.history.length < 1) {
+    return false;
+  }
+
+  window.history.go(offset);
+  return true;
+};
+
 const getCurrentExtensionPageTabContext = async (): Promise<{
   tabId?: number;
   tabIndex?: number;
@@ -155,6 +164,8 @@ const isOptionsPage = (): boolean => {
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
+  "history-go-prev": (count = 1) => goHistory(-count),
+  "history-go-next": (count = 1) => goHistory(count),
   "close-current-tab": () => runTabCommand("close-current-tab"),
   "create-new-tab": () => runTabCommand("create-new-tab"),
   "reload-current-tab": () => runTabCommand("reload-current-tab"),
