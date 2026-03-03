@@ -1,23 +1,37 @@
 const SCROLL_STEP_SIZE = 60;
-const HALF_PAGE_RATIO = 0.5;
-const MIN_CALIBRATION = 0.5;
-const MAX_CALIBRATION = 1.6;
-const CALIBRATION_BOUNDARY = 150;
 
 let activatedElement: Element | null = null;
 
-type ScrollDirection = "up" | "down";
 type ScrollAxis = "x" | "y";
-type ScrollMovementDirection = "up" | "down" | "left" | "right";
 
 const scrollState = {
   time: 0,
-  keyDownCode: null as string | null,
-  lastKeydownWasRepeat: false
+  lastEvent: null as KeyboardEvent | null,
+  keyDownCode: null as string | null
 };
 
+const scrollProperties = {
+  x: {
+    axisName: "scrollLeft",
+    max: "scrollWidth",
+    viewSize: "clientWidth"
+  },
+  y: {
+    axisName: "scrollTop",
+    max: "scrollHeight",
+    viewSize: "clientHeight"
+  }
+} satisfies Record<
+  ScrollAxis,
+  {
+    axisName: "scrollLeft" | "scrollTop";
+    max: "scrollWidth" | "scrollHeight";
+    viewSize: "clientWidth" | "clientHeight";
+  }
+>;
+
 const getScrollingElement = (): HTMLElement | null => {
-  const element = document.scrollingElement ?? document.documentElement ?? document.body;
+  const element = document.scrollingElement ?? document.body;
   return element instanceof HTMLElement ? element : null;
 };
 
@@ -26,7 +40,7 @@ const getEventTarget = (event: Event): Element | null => {
   return target instanceof Element ? target : null;
 };
 
-const getParentElement = (element: Element): Element | null => {
+const getContainingElement = (element: Element): Element | null => {
   if (element.parentElement) {
     return element.parentElement;
   }
@@ -35,109 +49,215 @@ const getParentElement = (element: Element): Element | null => {
   return root instanceof ShadowRoot ? root.host : null;
 };
 
-const getScrollAxis = (direction: ScrollMovementDirection): ScrollAxis => {
-  return direction === "left" || direction === "right" ? "x" : "y";
+const getSign = (value: number): -1 | 0 | 1 => {
+  if (!value) {
+    return 0;
+  }
+
+  return value < 0 ? -1 : 1;
 };
 
-const performScroll = (element: Element, amount: number, axis: ScrollAxis = "y"): boolean => {
+const getDimension = (
+  element: HTMLElement,
+  direction: ScrollAxis,
+  amount: number | "max" | "viewSize"
+): number => {
+  if (typeof amount === "number") {
+    return amount;
+  }
+
+  if (amount === "viewSize" && element === getScrollingElement()) {
+    return direction === "x" ? window.innerWidth : window.innerHeight;
+  }
+
+  return element[scrollProperties[direction][amount]];
+};
+
+const performScroll = (element: Element, direction: ScrollAxis, amount: number): boolean => {
   if (!(element instanceof HTMLElement)) {
     return false;
   }
 
-  if (axis === "x") {
-    const before = element.scrollLeft;
-    element.scrollLeft += amount;
-    return element.scrollLeft !== before;
+  const axisName = scrollProperties[direction].axisName;
+  const before = element[axisName];
+
+  if (element.scrollBy) {
+    const scrollArg =
+      direction === "x"
+        ? { left: amount, behavior: "instant" as const }
+        : { top: amount, behavior: "instant" as const };
+    element.scrollBy(scrollArg);
+  } else {
+    element[axisName] += amount;
   }
 
-  const before = element.scrollTop;
-  element.scrollTop += amount;
-  return element.scrollTop !== before;
+  return element[axisName] !== before;
 };
 
-const canScroll = (element: Element, direction: ScrollMovementDirection): boolean => {
+const shouldScroll = (element: Element, direction: ScrollAxis): boolean => {
   if (!(element instanceof HTMLElement)) {
     return false;
   }
 
-  const style = window.getComputedStyle(element);
-  const axis = getScrollAxis(direction);
-
-  if (
-    style.display === "none" ||
-    style.visibility === "hidden" ||
-    style.visibility === "collapse" ||
-    (axis === "x" ? style.overflowX === "hidden" : style.overflowY === "hidden")
-  ) {
+  const computedStyle = window.getComputedStyle(element);
+  if (computedStyle.getPropertyValue(`overflow-${direction}`) === "hidden") {
     return false;
   }
 
-  if (axis === "x") {
-    if (element.scrollWidth <= element.clientWidth) {
-      return false;
-    }
-
-    if (direction === "right") {
-      return element.scrollLeft + element.clientWidth < element.scrollWidth;
-    }
-
-    return element.scrollLeft > 0;
-  }
-
-  if (element.scrollHeight <= element.clientHeight) {
+  if (["hidden", "collapse"].includes(computedStyle.getPropertyValue("visibility"))) {
     return false;
   }
 
-  if (direction === "down") {
-    return element.scrollTop + element.clientHeight < element.scrollHeight;
+  if (computedStyle.getPropertyValue("display") === "none") {
+    return false;
   }
 
-  return element.scrollTop > 0;
+  return true;
+};
+
+const doesScroll = (
+  element: Element,
+  direction: ScrollAxis,
+  amount: number | "max" | "viewSize",
+  factor: number
+): boolean => {
+  if (!(element instanceof HTMLElement)) {
+    return false;
+  }
+
+  let delta = factor * getDimension(element, direction, amount);
+  delta = getSign(delta || -1);
+
+  return performScroll(element, direction, delta) && performScroll(element, direction, -delta);
+};
+
+const isScrollableElement = (
+  element: Element,
+  direction: ScrollAxis = "y",
+  amount: number | "max" | "viewSize" = 1,
+  factor = 1
+): boolean => {
+  return doesScroll(element, direction, amount, factor) && shouldScroll(element, direction);
 };
 
 const findScrollableElement = (
-  start: Element | null,
-  direction: ScrollMovementDirection
+  element: Element,
+  direction: ScrollAxis,
+  amount: number | "max" | "viewSize",
+  factor: number
 ): HTMLElement | null => {
-  let current = start;
   const scrollingElement = getScrollingElement();
 
-  while (current) {
-    if (canScroll(current, direction) && current instanceof HTMLElement) {
-      return current;
-    }
-
-    if (current === scrollingElement) {
-      break;
-    }
-
-    current = getParentElement(current);
+  while (element !== scrollingElement && !isScrollableElement(element, direction, amount, factor)) {
+    element = getContainingElement(element) ?? scrollingElement ?? element;
   }
 
-  if (scrollingElement && canScroll(scrollingElement, direction)) {
-    return scrollingElement;
+  return element instanceof HTMLElement ? element : scrollingElement;
+};
+
+const getVisibleArea = (element: Element): number => {
+  if (!(element instanceof HTMLElement)) {
+    return 0;
+  }
+
+  const rect = element.getBoundingClientRect();
+  const visibleWidth = Math.max(
+    0,
+    Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0)
+  );
+  const visibleHeight = Math.max(
+    0,
+    Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+  );
+  return visibleWidth * visibleHeight;
+};
+
+const firstScrollableElement = (element: Element | null = null): HTMLElement | null => {
+  if (!element) {
+    const scrollingElement = getScrollingElement();
+    if (
+      scrollingElement &&
+      (doesScroll(scrollingElement, "y", 1, 1) || doesScroll(scrollingElement, "y", -1, 1))
+    ) {
+      return scrollingElement;
+    }
+
+    element = document.body ?? scrollingElement;
+  }
+
+  if (!(element instanceof HTMLElement)) {
+    return null;
+  }
+
+  if (doesScroll(element, "y", 1, 1) || doesScroll(element, "y", -1, 1)) {
+    return element;
+  }
+
+  const children = Array.from(element.children)
+    .map((child) => ({ element: child, area: getVisibleArea(child) }))
+    .filter(({ area }) => area > 0)
+    .sort((a, b) => b.area - a.area);
+
+  for (const child of children) {
+    const found = firstScrollableElement(child.element);
+    if (found) {
+      return found;
+    }
   }
 
   return null;
 };
 
-const smoothScroll = (
-  element: HTMLElement,
-  amount: number,
-  keyCode: string,
-  continuous = true,
-  axis: ScrollAxis = "y"
-): void => {
-  if (amount === 0) {
+const checkVisibility = (element: HTMLElement): void => {
+  if (!(activatedElement instanceof HTMLElement)) {
     return;
   }
 
-  if (scrollState.lastKeydownWasRepeat) {
-    return;
+  const rect = activatedElement.getBoundingClientRect();
+  if (
+    rect.bottom < 0 ||
+    rect.top > window.innerHeight ||
+    rect.right < 0 ||
+    rect.left > window.innerWidth
+  ) {
+    activatedElement = element;
+  }
+};
+
+const MIN_CALIBRATION = 0.5;
+const MAX_CALIBRATION = 1.6;
+const CALIBRATION_BOUNDARY = 150;
+
+const resetScrollState = (): void => {
+  scrollState.time = 0;
+  scrollState.lastEvent = null;
+  scrollState.keyDownCode = null;
+  activatedElement = null;
+};
+
+const wouldNotInitiateScroll = (): boolean => {
+  return scrollState.lastEvent?.repeat === true;
+};
+
+const animateScroll = (
+  element: HTMLElement,
+  direction: ScrollAxis,
+  amount: number,
+  continuous = true
+): boolean => {
+  if (!amount) {
+    return false;
+  }
+
+  if (wouldNotInitiateScroll()) {
+    return false;
   }
 
   const activationTime = ++scrollState.time;
-  const sign = Math.sign(amount);
+  const keyIsStillDown = () =>
+    activationTime === scrollState.time && scrollState.keyDownCode != null;
+
+  const sign = getSign(amount);
   const absoluteAmount = Math.abs(amount);
   const duration = Math.max(100, 20 * Math.log(absoluteAmount));
 
@@ -145,9 +265,6 @@ const smoothScroll = (
   let totalElapsed = 0;
   let calibration = 1;
   let previousTimestamp: number | null = null;
-
-  const keyIsStillDown = () =>
-    continuous && scrollState.time === activationTime && scrollState.keyDownCode === keyCode;
 
   const animate = (timestamp: number) => {
     if (previousTimestamp == null) {
@@ -166,7 +283,7 @@ const smoothScroll = (
     if (
       keyIsStillDown() &&
       totalElapsed >= 75 &&
-      calibration >= MIN_CALIBRATION &&
+      MIN_CALIBRATION <= calibration &&
       calibration <= MAX_CALIBRATION
     ) {
       if (1.05 * calibration * absoluteAmount < CALIBRATION_BOUNDARY) {
@@ -179,92 +296,80 @@ const smoothScroll = (
     }
 
     let delta = Math.ceil(absoluteAmount * (elapsed / duration) * calibration);
+    delta = keyIsStillDown() ? delta : Math.max(0, Math.min(delta, absoluteAmount - totalDelta));
 
-    if (!keyIsStillDown()) {
-      delta = Math.max(0, Math.min(delta, absoluteAmount - totalDelta));
-    }
-
-    if (delta > 0 && performScroll(element, sign * delta, axis)) {
+    if (delta && performScroll(element, direction, sign * delta)) {
       totalDelta += delta;
       requestAnimationFrame(animate);
+      return;
     }
+
+    checkVisibility(element);
   };
 
+  if (!continuous) {
+    ++scrollState.time;
+  }
+
   requestAnimationFrame(animate);
-};
-
-const scrollToPosition = (position: "top" | "bottom", count = 1): boolean => {
-  const start = activatedElement ?? document.activeElement ?? getScrollingElement();
-  const direction = position === "top" ? "up" : "down";
-  const scrollableElement = findScrollableElement(start, direction);
-
-  if (!scrollableElement || !scrollState.keyDownCode) {
-    return false;
-  }
-
-  activatedElement = scrollableElement;
-
-  const targetTop =
-    position === "top"
-      ? Math.max(0, (count - 1) * SCROLL_STEP_SIZE)
-      : scrollableElement.scrollHeight;
-
-  const amount = targetTop - scrollableElement.scrollTop;
-  smoothScroll(scrollableElement, amount, scrollState.keyDownCode, false);
-
   return true;
 };
 
-const scroll = (direction: ScrollDirection, count = 1): boolean => {
-  const start = activatedElement ?? document.activeElement ?? getScrollingElement();
-  const scrollableElement = findScrollableElement(start, direction);
+const ensureActivatedElement = (): HTMLElement | null => {
+  const scrollingElement = getScrollingElement();
 
-  if (!scrollableElement || !scrollState.keyDownCode) {
-    return false;
+  if (!activatedElement) {
+    activatedElement = (scrollingElement && firstScrollableElement()) || scrollingElement;
   }
 
-  const amount = (direction === "down" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE) * count;
-
-  activatedElement = scrollableElement;
-  smoothScroll(scrollableElement, amount, scrollState.keyDownCode);
-
-  return true;
+  return activatedElement instanceof HTMLElement ? activatedElement : null;
 };
 
-const scrollHalfPage = (direction: ScrollDirection, count = 1): boolean => {
-  const start = activatedElement ?? document.activeElement ?? getScrollingElement();
-  const scrollableElement = findScrollableElement(start, direction);
-
-  if (!scrollableElement || !scrollState.keyDownCode) {
+const scrollBy = (
+  direction: ScrollAxis,
+  amount: number | "viewSize",
+  factor = 1,
+  continuous = true
+): boolean => {
+  const baseElement = ensureActivatedElement();
+  if (!baseElement) {
     return false;
   }
 
-  const halfPageSize = Math.max(1, Math.round(scrollableElement.clientHeight * HALF_PAGE_RATIO));
-  const amount = (direction === "down" ? halfPageSize : -halfPageSize) * count;
+  if (wouldNotInitiateScroll()) {
+    return false;
+  }
 
-  activatedElement = scrollableElement;
-  smoothScroll(scrollableElement, amount, scrollState.keyDownCode);
+  const element = findScrollableElement(baseElement, direction, amount, factor);
+  if (!element) {
+    return false;
+  }
 
-  return true;
+  const elementAmount = factor * getDimension(element, direction, amount);
+  activatedElement = element;
+  return animateScroll(element, direction, elementAmount, continuous);
 };
 
-const scrollHorizontal = (direction: "left" | "right", count = 1): boolean => {
-  const start = activatedElement ?? document.activeElement ?? getScrollingElement();
-  const scrollableElement = findScrollableElement(start, direction);
-
-  if (!scrollableElement || !scrollState.keyDownCode) {
+const scrollTo = (direction: ScrollAxis, pos: number | "max"): boolean => {
+  const baseElement = ensureActivatedElement();
+  if (!baseElement) {
     return false;
   }
 
-  const amount = (direction === "right" ? SCROLL_STEP_SIZE : -SCROLL_STEP_SIZE) * count;
+  const element = findScrollableElement(baseElement, direction, pos, 1);
+  if (!element) {
+    return false;
+  }
 
-  activatedElement = scrollableElement;
-  smoothScroll(scrollableElement, amount, scrollState.keyDownCode, true, "x");
-
-  return true;
+  const amount =
+    getDimension(element, direction, pos) - element[scrollProperties[direction].axisName];
+  activatedElement = element;
+  return animateScroll(element, direction, amount);
 };
 
 export const installScrollTracking = (): void => {
+  resetScrollState();
+
   document.addEventListener(
     "click",
     (event) => {
@@ -276,12 +381,12 @@ export const installScrollTracking = (): void => {
   window.addEventListener(
     "keydown",
     (event) => {
-      scrollState.keyDownCode = event.code;
-      scrollState.lastKeydownWasRepeat = event.repeat;
-
       if (!event.repeat) {
         scrollState.time += 1;
       }
+
+      scrollState.keyDownCode = event.code;
+      scrollState.lastEvent = event;
     },
     true
   );
@@ -291,7 +396,6 @@ export const installScrollTracking = (): void => {
     (event) => {
       if (event.code === scrollState.keyDownCode) {
         scrollState.keyDownCode = null;
-        scrollState.lastKeydownWasRepeat = false;
         scrollState.time += 1;
       }
     },
@@ -302,7 +406,6 @@ export const installScrollTracking = (): void => {
     "blur",
     () => {
       scrollState.keyDownCode = null;
-      scrollState.lastKeydownWasRepeat = false;
       scrollState.time += 1;
     },
     true
@@ -310,33 +413,33 @@ export const installScrollTracking = (): void => {
 };
 
 export const scrollDown = (count = 1): boolean => {
-  return scroll("down", count);
+  return scrollBy("y", SCROLL_STEP_SIZE * count);
 };
 
 export const scrollUp = (count = 1): boolean => {
-  return scroll("up", count);
+  return scrollBy("y", -SCROLL_STEP_SIZE * count);
 };
 
 export const scrollHalfPageDown = (count = 1): boolean => {
-  return scrollHalfPage("down", count);
+  return scrollBy("y", "viewSize", 0.5 * count);
 };
 
 export const scrollHalfPageUp = (count = 1): boolean => {
-  return scrollHalfPage("up", count);
+  return scrollBy("y", "viewSize", -0.5 * count);
 };
 
 export const scrollLeft = (count = 1): boolean => {
-  return scrollHorizontal("left", count);
+  return scrollBy("x", -SCROLL_STEP_SIZE * count);
 };
 
 export const scrollRight = (count = 1): boolean => {
-  return scrollHorizontal("right", count);
+  return scrollBy("x", SCROLL_STEP_SIZE * count);
 };
 
 export const scrollToTop = (count = 1): boolean => {
-  return scrollToPosition("top", count);
+  return scrollTo("y", (count - 1) * SCROLL_STEP_SIZE);
 };
 
-export const scrollToBottom = (count = 1): boolean => {
-  return scrollToPosition("bottom", count);
+export const scrollToBottom = (): boolean => {
+  return scrollTo("y", "max");
 };
