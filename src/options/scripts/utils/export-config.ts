@@ -8,8 +8,8 @@ export const saveAndExportConfig = async (): Promise<void> => {
 
   try {
     await navigator.clipboard.writeText(formattedSave);
-    getToastApi()?.success("options saved & copied to clipboard");
+    getToastApi()?.success("config saved & copied to clipboard");
   } catch {
-    getToastApi()?.error("could not copy config to clipboard");
+    getToastApi()?.error("could not save config to clipboard");
   }
 };

@@ -55,7 +55,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   await setConfigAndFastConfig(config);
 
   if (notify) {
-    getToastApi()?.success("options saved");
+    getToastApi()?.success("changes saved");
   }
 
   return config;
