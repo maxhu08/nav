@@ -241,6 +241,7 @@ const showImageYankToast = (image: HTMLImageElement): void => {
   const toast = getToastApi();
   const source = image.currentSrc || image.src;
   const altText = image.alt.trim();
+  const captionText = /^(true|false)$/i.test(altText) ? "" : altText;
   const toastEl = toast?.success("Image yanked", { description: " " });
 
   if (!(toastEl instanceof HTMLElement) || !source) {
@@ -260,7 +261,7 @@ const showImageYankToast = (image: HTMLImageElement): void => {
 
   const preview = document.createElement("img");
   preview.src = source;
-  preview.alt = altText || "Yanked image preview";
+  preview.alt = captionText || "Yanked image preview";
   preview.style.display = "block";
   preview.style.width = "100%";
   preview.style.maxHeight = "160px";
@@ -269,9 +270,9 @@ const showImageYankToast = (image: HTMLImageElement): void => {
   preview.style.background = "rgba(255, 255, 255, 0.04)";
   descriptionEl.append(preview);
 
-  if (altText) {
+  if (captionText) {
     const caption = document.createElement("div");
-    caption.textContent = altText;
+    caption.textContent = captionText;
     caption.style.marginTop = "8px";
     caption.style.color = "#a3a3a3";
     caption.style.fontSize = "14px";
