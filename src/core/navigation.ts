@@ -1388,9 +1388,7 @@ const getCurrentUrlRule = (): FastRule | null => {
   return null;
 };
 
-const isActionAllowed = (actionName: ActionName): boolean => {
-  const rule = getCurrentUrlRule();
-
+const isActionAllowedForRule = (actionName: ActionName, rule: FastRule | null): boolean => {
   if (!rule) {
     return true;
   }
@@ -1402,6 +1400,47 @@ const isActionAllowed = (actionName: ActionName): boolean => {
   }
 
   return !isListedAction;
+};
+
+const isActionAllowed = (actionName: ActionName): boolean => {
+  return isActionAllowedForRule(actionName, getCurrentUrlRule());
+};
+
+const getAllowedActionForSequence = (sequence: string): ActionName | null => {
+  const actionName = keyActions[sequence] ?? null;
+
+  if (!actionName || !isActionAllowed(actionName)) {
+    return null;
+  }
+
+  return actionName;
+};
+
+const hasAllowedActionPrefix = (
+  sequence: string,
+  predicate?: (actionName: ActionName) => boolean
+): boolean => {
+  const rule = getCurrentUrlRule();
+
+  return Object.entries(keyActions).some(([candidate, actionName]) => {
+    if (!actionName || candidate.length <= sequence.length || !candidate.startsWith(sequence)) {
+      return false;
+    }
+
+    if (predicate && !predicate(actionName)) {
+      return false;
+    }
+
+    return isActionAllowedForRule(actionName, rule);
+  });
+};
+
+const hasAllowedActionMappings = (): boolean => {
+  const rule = getCurrentUrlRule();
+
+  return Object.values(keyActions).some((actionName) => {
+    return actionName ? isActionAllowedForRule(actionName, rule) : false;
+  });
 };
 
 const blurActiveEditableTarget = (): boolean => {
@@ -1479,20 +1518,21 @@ const resolveCount = (): number => {
 };
 
 const getActionName = (keyToken: string): KeyParseResult => {
-  if (isCountKey(keyToken)) {
+  if (isCountKey(keyToken) && hasAllowedActionMappings()) {
     consumeCountKey(keyToken);
     return { actionName: null, consumed: true };
   }
 
   const nextSequence = `${pendingSequence}${keyToken}`;
-  const directMatch = keyActions[nextSequence];
+  const directMatch = getAllowedActionForSequence(nextSequence);
 
   if (directMatch) {
     clearPendingSequence();
     return { actionName: directMatch, consumed: true };
   }
 
-  const hasLongerMatch = keyActionPrefixes[nextSequence] === true;
+  const hasLongerMatch =
+    keyActionPrefixes[nextSequence] === true && hasAllowedActionPrefix(nextSequence);
 
   if (hasLongerMatch) {
     startPendingSequence(nextSequence);
@@ -1501,7 +1541,7 @@ const getActionName = (keyToken: string): KeyParseResult => {
 
   clearPendingSequence();
 
-  const actionName = keyActions[keyToken] ?? null;
+  const actionName = getAllowedActionForSequence(keyToken);
 
   if (!actionName) {
     clearPendingCount();
@@ -1518,16 +1558,15 @@ const isToggleHintsAction = (
 
 const getToggleHintsActionName = (keyToken: string): KeyParseResult => {
   const nextSequence = `${pendingSequence}${keyToken}`;
-  const directMatch = keyActions[nextSequence];
+  const directMatch = getAllowedActionForSequence(nextSequence);
 
   if (isToggleHintsAction(directMatch ?? null)) {
     clearPendingSequence();
     return { actionName: directMatch ?? null, consumed: true };
   }
 
-  const hasLongerToggleMatch = Object.entries(keyActions).some(
-    ([sequence, actionName]) =>
-      isToggleHintsAction(actionName ?? null) && sequence.startsWith(nextSequence)
+  const hasLongerToggleMatch = hasAllowedActionPrefix(nextSequence, (actionName) =>
+    isToggleHintsAction(actionName)
   );
 
   if (hasLongerToggleMatch) {
