@@ -73,7 +73,8 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     description: "vim style keyboard navigation for the web",
     permissions: ["storage", "tabs"],
     background: {
-      service_worker: "background.js"
+      service_worker: "background.js",
+      scripts: ["background.js"]
     },
     host_permissions: ["<all_urls>"],
     action: {
@@ -101,7 +102,10 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     },
     browser_specific_settings: {
       gecko: {
-        id: "contact@maxhu.dev"
+        id: "nav-extension@maxhu.dev",
+        data_collection_permissions: {
+          required: ["none"]
+        }
       }
     }
   }
