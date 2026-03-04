@@ -508,6 +508,17 @@ const hideFindBar = (): void => {
 const isFindModeActive = (): boolean =>
   getFindBar()?.getAttribute("data-visible") === "true" || isFindStatusVisible;
 
+const isFindInputFocused = (): boolean => {
+  const root = getFindUiRoot();
+  const input = getFindInput();
+
+  if (!root || !input) {
+    return false;
+  }
+
+  return getDeepActiveElement(root) === input || getDeepActiveElement() === input;
+};
+
 const clearFindInput = (): void => {
   const input = getFindInput();
   if (!input) {
@@ -1646,6 +1657,16 @@ const handleKeydown = (event: KeyboardEvent): void => {
     exitFindMode();
     event.preventDefault();
     event.stopImmediatePropagation();
+    return;
+  }
+
+  if (isFindModeActive() && (isFindUiElement(event.target) || isFindInputFocused())) {
+    clearPendingState();
+
+    if (event.key !== "Escape") {
+      event.stopImmediatePropagation();
+    }
+
     return;
   }
 
