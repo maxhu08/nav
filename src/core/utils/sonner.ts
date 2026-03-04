@@ -315,8 +315,7 @@ function applyToastClasses(toastEl) {
 
   const accent = "#eab308";
 
-  toastEl.style.background =
-    "linear-gradient(135deg, rgba(10, 10, 10, 0.96), rgba(28, 28, 28, 0.94))";
+  toastEl.style.background = "linear-gradient(135deg, #0a0a0a, #1c1c1c)";
   toastEl.style.color = "#f5f5f5";
   toastEl.style.border = `2px solid ${accent}`;
   toastEl.style.boxShadow = `0 18px 45px rgba(0, 0, 0, 0.38), 0 0 0 1px ${accent}22 inset`;
@@ -461,7 +460,6 @@ style.innerHTML = `
   gap: 15px;
   font-family: "JetBrains Mono", monospace;
   pointer-events: auto;
-  backdrop-filter: blur(18px);
 }
 
 #${TOASTER_WRAPPER_ID} [data-sonner-toaster] .${TOAST_CLASS}[data-y-position="top"] {
