@@ -430,6 +430,7 @@ const isActivatableElement = (element: HTMLElement): boolean => {
 
 const isHintable = (element: HTMLElement): boolean => {
   if (
+    element.closest("[data-sonner-toaster]") ||
     element.hasAttribute("disabled") ||
     element.hasAttribute("inert") ||
     element.getAttribute("aria-disabled") === "true" ||
@@ -466,6 +467,7 @@ const isHintable = (element: HTMLElement): boolean => {
 
 const isVisibleHintTarget = (element: HTMLElement): boolean => {
   if (
+    element.closest("[data-sonner-toaster]") ||
     element.hasAttribute("disabled") ||
     element.hasAttribute("inert") ||
     element.getAttribute("aria-disabled") === "true" ||
