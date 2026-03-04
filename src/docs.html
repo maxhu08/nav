@@ -26,12 +26,16 @@
       <main class="grid grid-flow-row pt-16">
         <section id="rules-urls" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p class="text-base text-white">rules.urls.mode</p>
+            <p id="rules-urls-mode" class="text-base text-white">
+              <a href="#rules-urls-mode">rules.urls.mode</a>
+            </p>
             <p class="text-base text-neutral-500">
               Chooses which list is enforced at runtime. Use `blacklist` to allow navigation by default and block matching URLs, or `whitelist` to block navigation by default and allow matching URLs.
             </p>
             <br />
-            <p class="text-base text-white">rules.urls.blacklist / rules.urls.whitelist</p>
+            <p id="rules-urls-lists" class="text-base text-white">
+              <a href="#rules-urls-lists">rules.urls.blacklist / rules.urls.whitelist</a>
+            </p>
             <p class="text-base text-neutral-500">
               These fields define URL-based rules. Both fields use the same syntax, and `rules.urls.mode` decides which one is active.
               <br /><br />
@@ -76,7 +80,9 @@
 
         <section id="hotkeys-mappings" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p class="text-base text-white">hints.charset</p>
+            <p id="hints-charset" class="text-base text-white">
+              <a href="#hints-charset">hints.charset</a>
+            </p>
             <p class="text-base text-neutral-500">
               Controls which letters are used to generate hint labels.
               <br /><br />
@@ -91,14 +97,18 @@
             </div>
             <p class="text-base text-neutral-500">This favors `s`, then `a`, then `d`, and so on when generating hint labels.</p>
             <br />
-            <p class="text-base text-white">hints.showCapitalizedLetters</p>
+            <p id="hints-show-capitalized-letters" class="text-base text-white">
+              <a href="#hints-show-capitalized-letters">hints.showCapitalizedLetters</a>
+            </p>
             <p class="text-base text-neutral-500">
               Controls whether generated hint labels are displayed with uppercase letters.
               <br /><br />
               The required key presses stay lowercase. When disabled, the same labels are shown in lowercase instead.
             </p>
             <br />
-            <p class="text-base text-white">hotkeys.mappings</p>
+            <p id="hotkeys-mappings" class="text-base text-white">
+              <a href="#hotkeys-mappings">hotkeys.mappings</a>
+            </p>
             <p class="text-base text-neutral-500">
               Each line maps one key sequence to one action name.
               <br /><br />
@@ -136,43 +146,96 @@
 
         <section id="action-names" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p class="text-base text-white">action.names</p>
+            <p id="action-names" class="text-base text-white">
+              <a href="#action-names">action.names</a>
+            </p>
             <p class="text-base text-neutral-500">These are the currently valid action names.</p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-[#dcdcaa]">
-              <p>close-current-tab</p>
-              <p>create-new-tab</p>
+              <p class="text-neutral-500"># navigating the current page</p>
+              <p>scroll-left</p>
+              <p>scroll-down</p>
+              <p>scroll-up</p>
+              <p>scroll-right</p>
+              <p>scroll-to-top</p>
+              <p>scroll-to-bottom</p>
+              <p>scroll-half-page-down</p>
+              <p>scroll-half-page-up</p>
+              <p>toggle-hints-current-tab</p>
+              <p>toggle-hints-new-tab</p>
+              <p>reload-current-tab</p>
+              <p>reload-current-tab-hard</p>
+              <br />
+              <p class="text-neutral-500"># using find</p>
               <p>enable-find-mode</p>
               <p>cycle-match-next</p>
               <p>cycle-match-prev</p>
-              <p>tab-go-prev</p>
-              <p>tab-go-next</p>
-              <p>duplicate-current-tab</p>
-              <p>move-current-tab-to-new-window</p>
-              <p>reload-current-tab</p>
-              <p>reload-current-tab-hard</p>
-              <p>toggle-hints-current-tab</p>
-              <p>toggle-hints-new-tab</p>
+              <br />
+              <p class="text-neutral-500"># clipboard actions</p>
               <p>yank-link-url</p>
               <p>yank-image</p>
               <p>yank-image-url</p>
               <p>yank-current-tab-url</p>
-              <p>scroll-down</p>
-              <p>scroll-half-page-down</p>
-              <p>scroll-half-page-up</p>
-              <p>scroll-left</p>
-              <p>scroll-right</p>
-              <p>scroll-up</p>
-              <p>scroll-to-bottom</p>
-              <p>scroll-to-top</p>
+              <br />
+              <p class="text-neutral-500"># navigating your history</p>
+              <p>history-go-prev</p>
+              <p>history-go-next</p>
+              <br />
+              <p class="text-neutral-500"># manipulating tabs</p>
+              <p>tab-go-prev</p>
+              <p>tab-go-next</p>
+              <p>create-new-tab</p>
+              <p>close-current-tab</p>
+              <p>duplicate-current-tab</p>
+              <p>move-current-tab-to-new-window</p>
             </div>
             <div class="grid gap-4">
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">close-current-tab</p>
-                <p class="text-base text-neutral-500">Closes the active browser tab.</p>
+                <p class="text-base text-[#dcdcaa]">scroll-left</p>
+                <p class="text-base text-neutral-500">Scrolls left in the current scrollable area.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">create-new-tab</p>
-                <p class="text-base text-neutral-500">Opens a new browser tab.</p>
+                <p class="text-base text-[#dcdcaa]">scroll-down</p>
+                <p class="text-base text-neutral-500">Scrolls downward from the current scrollable area.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">scroll-up</p>
+                <p class="text-base text-neutral-500">Scrolls upward from the current scrollable area.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">scroll-right</p>
+                <p class="text-base text-neutral-500">Scrolls right in the current scrollable area.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">scroll-to-top</p>
+                <p class="text-base text-neutral-500">Jumps to the top of the current scrollable area.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">scroll-to-bottom</p>
+                <p class="text-base text-neutral-500">Jumps to the bottom of the current scrollable area.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">scroll-half-page-down</p>
+                <p class="text-base text-neutral-500">Scrolls down by about half a page.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">scroll-half-page-up</p>
+                <p class="text-base text-neutral-500">Scrolls up by about half a page.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">toggle-hints-current-tab</p>
+                <p class="text-base text-neutral-500">Shows link hints and opens the selected target in the current tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">toggle-hints-new-tab</p>
+                <p class="text-base text-neutral-500">Shows link hints and opens the selected link in a new tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">reload-current-tab</p>
+                <p class="text-base text-neutral-500">Reloads the current page.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">reload-current-tab-hard</p>
+                <p class="text-base text-neutral-500">Hard reloads the current page and bypasses cache.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">enable-find-mode</p>
@@ -185,38 +248,6 @@
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">cycle-match-prev</p>
                 <p class="text-base text-neutral-500">Moves to the previous in-page search match.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">tab-go-prev</p>
-                <p class="text-base text-neutral-500">Activates the previous tab in the current window.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">tab-go-next</p>
-                <p class="text-base text-neutral-500">Activates the next tab in the current window.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">duplicate-current-tab</p>
-                <p class="text-base text-neutral-500">Duplicates the active browser tab.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">move-current-tab-to-new-window</p>
-                <p class="text-base text-neutral-500">Moves the active browser tab into a new window.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">reload-current-tab</p>
-                <p class="text-base text-neutral-500">Reloads the current page.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">reload-current-tab-hard</p>
-                <p class="text-base text-neutral-500">Hard reloads the current page and bypasses cache.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">toggle-hints-current-tab</p>
-                <p class="text-base text-neutral-500">Shows link hints and opens the selected target in the current tab.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">toggle-hints-new-tab</p>
-                <p class="text-base text-neutral-500">Shows link hints and opens the selected link in a new tab.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">yank-link-url</p>
@@ -235,36 +266,36 @@
                 <p class="text-base text-neutral-500">Copies the current tab URL to the clipboard.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-down</p>
-                <p class="text-base text-neutral-500">Scrolls downward from the current scrollable area.</p>
+                <p class="text-base text-[#dcdcaa]">history-go-prev</p>
+                <p class="text-base text-neutral-500">Navigates back in the current tab's history.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-half-page-down</p>
-                <p class="text-base text-neutral-500">Scrolls down by about half a page.</p>
+                <p class="text-base text-[#dcdcaa]">history-go-next</p>
+                <p class="text-base text-neutral-500">Navigates forward in the current tab's history.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-half-page-up</p>
-                <p class="text-base text-neutral-500">Scrolls up by about half a page.</p>
+                <p class="text-base text-[#dcdcaa]">tab-go-prev</p>
+                <p class="text-base text-neutral-500">Activates the previous tab in the current window.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-left</p>
-                <p class="text-base text-neutral-500">Scrolls left in the current scrollable area.</p>
+                <p class="text-base text-[#dcdcaa]">tab-go-next</p>
+                <p class="text-base text-neutral-500">Activates the next tab in the current window.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-right</p>
-                <p class="text-base text-neutral-500">Scrolls right in the current scrollable area.</p>
+                <p class="text-base text-[#dcdcaa]">create-new-tab</p>
+                <p class="text-base text-neutral-500">Opens a new browser tab.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-up</p>
-                <p class="text-base text-neutral-500">Scrolls upward from the current scrollable area.</p>
+                <p class="text-base text-[#dcdcaa]">close-current-tab</p>
+                <p class="text-base text-neutral-500">Closes the active browser tab.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-to-bottom</p>
-                <p class="text-base text-neutral-500">Jumps to the bottom of the current scrollable area.</p>
+                <p class="text-base text-[#dcdcaa]">duplicate-current-tab</p>
+                <p class="text-base text-neutral-500">Duplicates the active browser tab.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">scroll-to-top</p>
-                <p class="text-base text-neutral-500">Jumps to the top of the current scrollable area.</p>
+                <p class="text-base text-[#dcdcaa]">move-current-tab-to-new-window</p>
+                <p class="text-base text-neutral-500">Moves the active browser tab into a new window.</p>
               </div>
             </div>
           </div>
