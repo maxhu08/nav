@@ -972,7 +972,7 @@ const renderFocusStyles = (): string => `
     width: 0;
     height: 0;
     pointer-events: none;
-    z-index: 2147483647;
+    z-index: 2147483646;
     border-radius: 0.375rem;
     box-sizing: border-box;
     opacity: 0;

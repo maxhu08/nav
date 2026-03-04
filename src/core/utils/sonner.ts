@@ -403,7 +403,7 @@ style.innerHTML = `
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 999999999;
+  z-index: 2147483647;
 }
 
 #${TOASTER_WRAPPER_ID} [data-sonner-toaster] {
@@ -414,7 +414,7 @@ style.innerHTML = `
   margin: 0;
   list-style: none;
   outline: none;
-  z-index: 999999999;
+  z-index: 2147483647;
   --border-radius: 8px;
 }
 
