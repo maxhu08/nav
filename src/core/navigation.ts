@@ -1563,66 +1563,19 @@ const handleStorageChange = (
     return;
   }
 
-  const nextFastConfig = changes.fastConfig.newValue as {
-    rules?: {
-      urls?: FastConfig["rules"]["urls"];
-    };
-    hotkeys?: {
-      mappings?: Partial<Record<string, ActionName>>;
-      prefixes?: Partial<Record<string, true>>;
-    };
-    hints?: {
-      css?: string;
-      charset?: string;
-      avoidAdjacentPairs?: Partial<Record<string, Partial<Record<string, true>>>>;
-      preferredSearchLabels?: string[];
-      showCapitalizedLetters?: boolean;
-      improveThumbnailMarkers?: boolean;
-      showActivationIndicator?: boolean;
-      showActivationIndicatorColor?: string;
-    };
-  };
+  const nextFastConfig = changes.fastConfig.newValue as FastConfig;
 
-  if (nextFastConfig.rules?.urls) {
-    applyUrlRules(nextFastConfig.rules.urls);
-  }
-
-  if (nextFastConfig.hints?.charset) {
-    setHintCharset(nextFastConfig.hints.charset);
-  }
-
-  if (nextFastConfig.hints?.avoidAdjacentPairs) {
-    setAvoidedAdjacentHintPairs(nextFastConfig.hints.avoidAdjacentPairs);
-  }
-
-  if (nextFastConfig.hints?.preferredSearchLabels) {
-    setPreferredSearchLabels(nextFastConfig.hints.preferredSearchLabels);
-  }
-
-  if (typeof nextFastConfig.hints?.showCapitalizedLetters === "boolean") {
-    setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
-  }
-
-  if (typeof nextFastConfig.hints?.improveThumbnailMarkers === "boolean") {
-    setHighlightThumbnails(nextFastConfig.hints.improveThumbnailMarkers);
-  }
-
-  if (typeof nextFastConfig.hints?.css === "string") {
-    setHintCSS(nextFastConfig.hints.css);
-  }
-
-  if (typeof nextFastConfig.hints?.showActivationIndicator === "boolean") {
-    showActivationIndicator = nextFastConfig.hints.showActivationIndicator;
-  }
-
-  if (typeof nextFastConfig.hints?.showActivationIndicatorColor === "string") {
-    activationIndicatorColor = nextFastConfig.hints.showActivationIndicatorColor;
-    syncFocusStyles();
-  }
-
-  if (nextFastConfig.hotkeys?.mappings && nextFastConfig.hotkeys.prefixes) {
-    applyHotkeyMappings(nextFastConfig.hotkeys.mappings, nextFastConfig.hotkeys.prefixes);
-  }
+  applyUrlRules(nextFastConfig.rules.urls);
+  setHintCharset(nextFastConfig.hints.charset);
+  setAvoidedAdjacentHintPairs(nextFastConfig.hints.avoidAdjacentPairs);
+  setPreferredSearchLabels(nextFastConfig.hints.preferredSearchLabels);
+  setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
+  setHighlightThumbnails(nextFastConfig.hints.improveThumbnailMarkers);
+  setHintCSS(nextFastConfig.hints.css);
+  showActivationIndicator = nextFastConfig.hints.showActivationIndicator;
+  activationIndicatorColor = nextFastConfig.hints.showActivationIndicatorColor;
+  syncFocusStyles();
+  applyHotkeyMappings(nextFastConfig.hotkeys.mappings, nextFastConfig.hotkeys.prefixes);
 };
 
 const handleKeydown = (event: KeyboardEvent): void => {
