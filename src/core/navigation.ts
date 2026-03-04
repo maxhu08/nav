@@ -302,42 +302,55 @@ const clearFindHighlights = (): void => {
 };
 
 const getFindBar = (): HTMLDivElement | null =>
-  document.getElementById(FIND_BAR_ID) as HTMLDivElement | null;
+  getFindUiRoot()?.getElementById(FIND_BAR_ID) as HTMLDivElement | null;
 
 const getFindInput = (): HTMLInputElement | null =>
-  document.getElementById(FIND_INPUT_ID) as HTMLInputElement | null;
+  getFindUiRoot()?.getElementById(FIND_INPUT_ID) as HTMLInputElement | null;
 
 const getFindMatchCount = (): HTMLSpanElement | null =>
-  document.getElementById(FIND_MATCH_COUNT_ID) as HTMLSpanElement | null;
+  getFindUiRoot()?.getElementById(FIND_MATCH_COUNT_ID) as HTMLSpanElement | null;
 
 const getFindBarActions = (): HTMLDivElement | null =>
-  document.querySelector(`#${FIND_BAR_ID} .nav-find-bar-actions`) as HTMLDivElement | null;
+  getFindUiRoot()?.querySelector(".nav-find-bar-actions") as HTMLDivElement | null;
 
 const getFindStatus = (): HTMLDivElement | null =>
-  document.getElementById(FIND_STATUS_ID) as HTMLDivElement | null;
+  getFindUiRoot()?.getElementById(FIND_STATUS_ID) as HTMLDivElement | null;
 
 const getFindStatusText = (): HTMLSpanElement | null =>
-  document.getElementById(FIND_STATUS_TEXT_ID) as HTMLSpanElement | null;
+  getFindUiRoot()?.getElementById(FIND_STATUS_TEXT_ID) as HTMLSpanElement | null;
 
 const getFindPrevButton = (): HTMLButtonElement | null =>
-  document.getElementById(FIND_PREV_BUTTON_ID) as HTMLButtonElement | null;
+  getFindUiRoot()?.getElementById(FIND_PREV_BUTTON_ID) as HTMLButtonElement | null;
 
 const getFindNextButton = (): HTMLButtonElement | null =>
-  document.getElementById(FIND_NEXT_BUTTON_ID) as HTMLButtonElement | null;
+  getFindUiRoot()?.getElementById(FIND_NEXT_BUTTON_ID) as HTMLButtonElement | null;
 
 const getFindClearButton = (): HTMLButtonElement | null =>
-  document.getElementById(FIND_CLEAR_BUTTON_ID) as HTMLButtonElement | null;
+  getFindUiRoot()?.getElementById(FIND_CLEAR_BUTTON_ID) as HTMLButtonElement | null;
 
 const getFindCountLabel = (count: number): string => `${count} Matches`;
 
-const getFindStatusLabel = (index: number, count: number): string =>
-  count > 0
-    ? `<span class="nav-find-status-number">${index + 1}</span><span class="nav-find-status-separator"> / </span><span class="nav-find-status-number">${count}</span>`
-    : `<span class="nav-find-status-number">0</span><span class="nav-find-status-separator"> / </span><span class="nav-find-status-number">0</span>`;
+const renderFindStatusLabel = (container: HTMLElement, index: number, count: number): void => {
+  container.replaceChildren();
+
+  const current = document.createElement("span");
+  current.className = "nav-find-status-number";
+  current.textContent = `${count > 0 ? index + 1 : 0}`;
+
+  const separator = document.createElement("span");
+  separator.className = "nav-find-status-separator";
+  separator.textContent = " / ";
+
+  const total = document.createElement("span");
+  total.className = "nav-find-status-number";
+  total.textContent = `${count}`;
+
+  container.append(current, separator, total);
+};
 
 const updateFindUiCounts = (): void => {
   getFindMatchCount()!.textContent = getFindCountLabel(findMatches.length);
-  getFindStatusText()!.innerHTML = getFindStatusLabel(currentFindMatchIndex, findMatches.length);
+  renderFindStatusLabel(getFindStatusText()!, currentFindMatchIndex, findMatches.length);
 
   const hasMatches = findMatches.length > 0;
   const hasQuery = findQuery.length > 0;
@@ -826,6 +839,7 @@ const FOCUS_OVERLAY_HIDE_MS = 920;
 const FOCUS_OVERLAY_FADE_OUT_MS = 220;
 const FIND_HIGHLIGHT_NAME = `nav-${getExtensionNamespace()}-find-match`;
 const FIND_CURRENT_HIGHLIGHT_NAME = `nav-${getExtensionNamespace()}-find-current-match`;
+const FIND_OVERLAY_ID = `nav-${getExtensionNamespace()}-find-overlay`;
 const FIND_STYLE_ID = `nav-${getExtensionNamespace()}-find-style`;
 const FIND_BAR_ID = `nav-${getExtensionNamespace()}-find-bar`;
 const FIND_INPUT_ID = `nav-${getExtensionNamespace()}-find-input`;
@@ -904,6 +918,11 @@ const colorToRgba = (color: string, alpha: number): string => {
   return `rgba(234, 179, 8, ${alpha})`;
 };
 
+const getFindOverlay = (): HTMLDivElement | null =>
+  document.getElementById(FIND_OVERLAY_ID) as HTMLDivElement | null;
+
+const getFindUiRoot = (): ShadowRoot | null => getFindOverlay()?.shadowRoot ?? null;
+
 const renderFocusStyles = (): string => `
   @keyframes nav-focus-pulse {
     0% {
@@ -972,17 +991,19 @@ const renderFocusStyles = (): string => `
 
 const renderFindStyles = (): string => `
   #${FIND_BAR_ID} {
+    all: initial;
     position: fixed;
     top: 20%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 2147483647;
     display: none;
-    width: min(40rem, calc(100vw - 32px));
+    pointer-events: auto;
+    width: min(640px, calc(100vw - 32px));
     grid-template-columns: max-content auto max-content;
     align-items: center;
     gap: 0;
-    padding: 0.25rem 0.5rem;
+    padding: 10px 12px;
     border: 2px solid #eab308;
     border-radius: 0.5rem;
     background: #171717;
@@ -997,7 +1018,13 @@ const renderFindStyles = (): string => `
     display: grid;
   }
 
+  #${FIND_BAR_ID} *,
+  #${FIND_STATUS_ID} * {
+    box-sizing: border-box;
+  }
+
   .nav-find-icon {
+    all: unset;
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
@@ -1017,7 +1044,9 @@ const renderFindStyles = (): string => `
   }
 
   #${FIND_INPUT_ID} {
+    all: unset;
     flex: 1 1 auto;
+    display: block;
     min-width: 0;
     border: 0;
     background: transparent;
@@ -1043,7 +1072,9 @@ const renderFindStyles = (): string => `
   }
 
   #${FIND_MATCH_COUNT_ID} {
+    all: unset;
     flex: 0 0 auto;
+    display: inline-block;
     color: #a1a1aa;
     font-size: 24px;
     line-height: 32px;
@@ -1052,6 +1083,7 @@ const renderFindStyles = (): string => `
   }
 
   .nav-find-bar-actions {
+    all: unset;
     display: none;
     align-items: center;
     gap: 0.5rem;
@@ -1063,15 +1095,17 @@ const renderFindStyles = (): string => `
   }
 
   #${FIND_STATUS_ID} {
+    all: initial;
     position: fixed;
     right: 24px;
     bottom: 24px;
     z-index: 2147483647;
     display: none;
+    pointer-events: auto;
     grid-auto-flow: column;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 10px 12px;
     border: 2px solid #eab308;
     border-radius: 0.5rem;
     background: #171717;
@@ -1087,6 +1121,8 @@ const renderFindStyles = (): string => `
   }
 
   #${FIND_STATUS_TEXT_ID} {
+    all: unset;
+    display: inline-block;
     min-width: 52px;
     font-size: 24px;
     line-height: 32px;
@@ -1104,6 +1140,7 @@ const renderFindStyles = (): string => `
 
   .nav-find-nav,
   .nav-find-clear {
+    all: unset;
     position: relative;
     display: grid;
     align-items: center;
@@ -1181,31 +1218,83 @@ const renderFindStyles = (): string => `
   }
 `;
 
-const SEARCH_ICON_SVG = `
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="11" cy="11" r="7"></circle>
-    <path d="M20 20l-3.5-3.5"></path>
-  </svg>
-`;
+type SvgNodeDefinition = {
+  tag: "circle" | "path";
+  attributes: Record<string, string>;
+};
 
-const ARROW_UP_ICON_SVG = `
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M6 15l6-6 6 6"></path>
-  </svg>
-`;
+const createFindIconSvg = (nodes: SvgNodeDefinition[]): SVGSVGElement => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
 
-const ARROW_DOWN_ICON_SVG = `
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M6 9l6 6 6-6"></path>
-  </svg>
-`;
+  for (const node of nodes) {
+    const child = document.createElementNS("http://www.w3.org/2000/svg", node.tag);
 
-const CLOSE_ICON_SVG = `
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M18 6L6 18"></path>
-    <path d="M6 6l12 12"></path>
-  </svg>
-`;
+    for (const [name, value] of Object.entries(node.attributes)) {
+      child.setAttribute(name, value);
+    }
+
+    svg.appendChild(child);
+  }
+
+  return svg;
+};
+
+const SEARCH_ICON_NODES: SvgNodeDefinition[] = [
+  {
+    tag: "circle",
+    attributes: {
+      cx: "11",
+      cy: "11",
+      r: "7"
+    }
+  },
+  {
+    tag: "path",
+    attributes: {
+      d: "M20 20l-3.5-3.5"
+    }
+  }
+];
+
+const ARROW_UP_ICON_NODES: SvgNodeDefinition[] = [
+  {
+    tag: "path",
+    attributes: {
+      d: "M6 15l6-6 6 6"
+    }
+  }
+];
+
+const ARROW_DOWN_ICON_NODES: SvgNodeDefinition[] = [
+  {
+    tag: "path",
+    attributes: {
+      d: "M6 9l6 6 6-6"
+    }
+  }
+];
+
+const CLOSE_ICON_NODES: SvgNodeDefinition[] = [
+  {
+    tag: "path",
+    attributes: {
+      d: "M18 6L6 18"
+    }
+  },
+  {
+    tag: "path",
+    attributes: {
+      d: "M6 6l12 12"
+    }
+  }
+];
 
 const syncFocusStyles = (): void => {
   const style = document.getElementById(FOCUS_STYLE_ID);
@@ -1627,8 +1716,12 @@ const ensureFocusStyles = (): void => {
   styleRoot.append(style);
 };
 
-const ensureFindStyles = (): void => {
-  const existingStyle = document.getElementById(FIND_STYLE_ID);
+const ensureFindStyles = (root: ShadowRoot): void => {
+  if (!root) {
+    return;
+  }
+
+  const existingStyle = root.getElementById(FIND_STYLE_ID);
 
   if (existingStyle instanceof HTMLStyleElement) {
     existingStyle.textContent = renderFindStyles();
@@ -1638,9 +1731,7 @@ const ensureFindStyles = (): void => {
   const style = document.createElement("style");
   style.id = FIND_STYLE_ID;
   style.textContent = renderFindStyles();
-
-  const styleRoot = document.head ?? document.documentElement;
-  styleRoot.append(style);
+  root.append(style);
 };
 
 const getFocusOverlay = (): HTMLDivElement => {
@@ -1664,7 +1755,11 @@ const isFindUiElement = (target: EventTarget | null): boolean => {
     return false;
   }
 
-  return getFindBar()?.contains(target) === true || getFindStatus()?.contains(target) === true;
+  return (
+    getFindOverlay()?.contains(target) === true ||
+    getFindBar()?.contains(target) === true ||
+    getFindStatus()?.contains(target) === true
+  );
 };
 
 const ensureFindUi = (): void => {
@@ -1672,30 +1767,80 @@ const ensureFindUi = (): void => {
     return;
   }
 
+  const existingOverlay = getFindOverlay();
+  const overlay = existingOverlay ?? document.createElement("div");
+  overlay.id = FIND_OVERLAY_ID;
+  overlay.style.all = "initial";
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.pointerEvents = "none";
+  overlay.style.zIndex = "2147483647";
+
+  const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
+  ensureFindStyles(root);
+
   const bar = document.createElement("div");
   bar.id = FIND_BAR_ID;
   bar.setAttribute("data-visible", "false");
-  bar.innerHTML = `
-    <span class="nav-find-icon" data-find-icon="">${SEARCH_ICON_SVG}</span>
-    <input id="${FIND_INPUT_ID}" type="text" spellcheck="false" autocomplete="off" placeholder="find..." />
-    <div class="nav-find-bar-actions">
-      <span id="${FIND_MATCH_COUNT_ID}">0 Matches</span>
-      <button id="${FIND_CLEAR_BUTTON_ID}" class="nav-find-clear" type="button" aria-label="Clear find input">${CLOSE_ICON_SVG}</button>
-    </div>
-  `;
+  const icon = document.createElement("span");
+  icon.className = "nav-find-icon";
+  icon.setAttribute("data-find-icon", "");
+  icon.appendChild(createFindIconSvg(SEARCH_ICON_NODES));
+
+  const input = document.createElement("input");
+  input.id = FIND_INPUT_ID;
+  input.type = "text";
+  input.spellcheck = false;
+  input.autocomplete = "off";
+  input.placeholder = "find...";
+
+  const actions = document.createElement("div");
+  actions.className = "nav-find-bar-actions";
+
+  const matchCount = document.createElement("span");
+  matchCount.id = FIND_MATCH_COUNT_ID;
+  matchCount.textContent = "0 Matches";
+
+  const clearButton = document.createElement("button");
+  clearButton.id = FIND_CLEAR_BUTTON_ID;
+  clearButton.className = "nav-find-clear";
+  clearButton.type = "button";
+  clearButton.setAttribute("aria-label", "Clear find input");
+  clearButton.appendChild(createFindIconSvg(CLOSE_ICON_NODES));
+
+  actions.append(matchCount, clearButton);
+  bar.append(icon, input, actions);
 
   const status = document.createElement("div");
   status.id = FIND_STATUS_ID;
   status.setAttribute("data-visible", "false");
-  status.innerHTML = `
-    <span id="${FIND_STATUS_TEXT_ID}">0 / 0</span>
-    <button id="${FIND_PREV_BUTTON_ID}" class="nav-find-nav" data-find-nav="" type="button" aria-label="Previous match">${ARROW_UP_ICON_SVG}</button>
-    <button id="${FIND_NEXT_BUTTON_ID}" class="nav-find-nav" data-find-nav="" type="button" aria-label="Next match">${ARROW_DOWN_ICON_SVG}</button>
-  `;
+  const statusText = document.createElement("span");
+  statusText.id = FIND_STATUS_TEXT_ID;
+  statusText.textContent = "0 / 0";
 
-  document.documentElement.append(bar, status);
+  const prevButton = document.createElement("button");
+  prevButton.id = FIND_PREV_BUTTON_ID;
+  prevButton.className = "nav-find-nav";
+  prevButton.setAttribute("data-find-nav", "");
+  prevButton.type = "button";
+  prevButton.setAttribute("aria-label", "Previous match");
+  prevButton.appendChild(createFindIconSvg(ARROW_UP_ICON_NODES));
 
-  const input = getFindInput();
+  const nextButton = document.createElement("button");
+  nextButton.id = FIND_NEXT_BUTTON_ID;
+  nextButton.className = "nav-find-nav";
+  nextButton.setAttribute("data-find-nav", "");
+  nextButton.type = "button";
+  nextButton.setAttribute("aria-label", "Next match");
+  nextButton.appendChild(createFindIconSvg(ARROW_DOWN_ICON_NODES));
+
+  status.append(statusText, prevButton, nextButton);
+  root.append(bar, status);
+
+  if (!existingOverlay) {
+    document.documentElement.append(overlay);
+  }
+
   input?.addEventListener("input", () => {
     setFindQuery(input.value);
   });
@@ -1867,7 +2012,6 @@ export const initCoreNavigation = (): void => {
   installScrollTracking();
   if (!isOptionsPage()) {
     ensureFocusStyles();
-    ensureFindStyles();
     getFocusOverlay();
     ensureFindUi();
     window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
