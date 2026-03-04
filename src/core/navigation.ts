@@ -970,7 +970,7 @@ const renderFocusStyles = (): string => `
 const renderFindStyles = (): string => `
   #${FIND_BAR_ID} {
     position: fixed;
-    top: 50%;
+    top: 20%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 2147483647;
