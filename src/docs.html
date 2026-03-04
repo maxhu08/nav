@@ -26,13 +26,6 @@
       <main class="grid grid-flow-row pt-16">
         <section id="rules-urls" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p id="rules-urls-mode" class="text-base text-white">
-              <a href="#rules-urls-mode">rules.urls.mode</a>
-            </p>
-            <p class="text-base text-neutral-500">
-              Chooses which list is enforced at runtime. Use `blacklist` to allow navigation by default and block matching URLs, or `whitelist` to block navigation by default and allow matching URLs.
-            </p>
-            <br />
             <p id="rules-urls-lists" class="text-base text-white">
               <a href="#rules-urls-lists">rules.urls.blacklist / rules.urls.whitelist</a>
             </p>
@@ -80,34 +73,8 @@
 
         <section id="hotkeys-mappings" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p id="hints-charset" class="text-base text-white">
-              <a href="#hints-charset">hints.charset</a>
-            </p>
-            <p class="text-base text-neutral-500">
-              Controls which letters are used to generate hint labels.
-              <br /><br />
-              Letters earlier in the charset are prioritized first when labels are assigned.
-              <br /><br />
-              Use unique letters. Invalid characters and duplicates are ignored.
-            </p>
-            <br />
-            <p class="text-base text-neutral-500">Example:</p>
-            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
-              <p><span class="text-[#569cd6]">sadfjklewcmpgh</span></p>
-            </div>
-            <p class="text-base text-neutral-500">This favors `s`, then `a`, then `d`, and so on when generating hint labels.</p>
-            <br />
-            <p id="hints-show-capitalized-letters" class="text-base text-white">
-              <a href="#hints-show-capitalized-letters">hints.showCapitalizedLetters</a>
-            </p>
-            <p class="text-base text-neutral-500">
-              Controls whether generated hint labels are displayed with uppercase letters.
-              <br /><br />
-              The required key presses stay lowercase. When disabled, the same labels are shown in lowercase instead.
-            </p>
-            <br />
-            <p id="hotkeys-mappings" class="text-base text-white">
-              <a href="#hotkeys-mappings">hotkeys.mappings</a>
+            <p id="hotkeys-mappings-heading" class="text-base text-white">
+              <a href="#hotkeys-mappings-heading">hotkeys.mappings</a>
             </p>
             <p class="text-base text-neutral-500">
               Each line maps one key sequence to one action name.
@@ -146,8 +113,8 @@
 
         <section id="action-names" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p id="action-names" class="text-base text-white">
-              <a href="#action-names">action.names</a>
+            <p id="action-names-heading" class="text-base text-white">
+              <a href="#action-names-heading">action.names</a>
             </p>
             <p class="text-base text-neutral-500">These are the currently valid action names.</p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-[#dcdcaa]">
