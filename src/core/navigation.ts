@@ -48,6 +48,10 @@ type FetchImageResponse = {
 };
 
 type ImageClipboardResult = "success" | "unsupported" | "error";
+type FindMatch = {
+  range: Range;
+  element: HTMLElement;
+};
 
 let keyActions: Partial<Record<string, ActionName>> = {};
 let keyActionPrefixes: Partial<Record<string, true>> = {};
@@ -274,6 +278,299 @@ const showImageYankToast = (image: HTMLImageElement): void => {
   }
 };
 
+const getCssHighlights = (): {
+  set: (name: string, highlight: unknown) => void;
+  delete: (name: string) => void;
+} | null => {
+  const cssObject = globalThis.CSS as unknown as {
+    highlights?: {
+      set: (name: string, highlight: unknown) => void;
+      delete: (name: string) => void;
+    };
+  };
+
+  return cssObject.highlights ?? null;
+};
+
+const clearFindHighlights = (): void => {
+  const highlights = getCssHighlights();
+  highlights?.delete(FIND_HIGHLIGHT_NAME);
+  highlights?.delete(FIND_CURRENT_HIGHLIGHT_NAME);
+};
+
+const getFindBar = (): HTMLDivElement | null =>
+  document.getElementById(FIND_BAR_ID) as HTMLDivElement | null;
+
+const getFindInput = (): HTMLInputElement | null =>
+  document.getElementById(FIND_INPUT_ID) as HTMLInputElement | null;
+
+const getFindMatchCount = (): HTMLSpanElement | null =>
+  document.getElementById(FIND_MATCH_COUNT_ID) as HTMLSpanElement | null;
+
+const getFindBarActions = (): HTMLDivElement | null =>
+  document.querySelector(`#${FIND_BAR_ID} .nav-find-bar-actions`) as HTMLDivElement | null;
+
+const getFindStatus = (): HTMLDivElement | null =>
+  document.getElementById(FIND_STATUS_ID) as HTMLDivElement | null;
+
+const getFindStatusText = (): HTMLSpanElement | null =>
+  document.getElementById(FIND_STATUS_TEXT_ID) as HTMLSpanElement | null;
+
+const getFindPrevButton = (): HTMLButtonElement | null =>
+  document.getElementById(FIND_PREV_BUTTON_ID) as HTMLButtonElement | null;
+
+const getFindNextButton = (): HTMLButtonElement | null =>
+  document.getElementById(FIND_NEXT_BUTTON_ID) as HTMLButtonElement | null;
+
+const getFindClearButton = (): HTMLButtonElement | null =>
+  document.getElementById(FIND_CLEAR_BUTTON_ID) as HTMLButtonElement | null;
+
+const getFindCountLabel = (count: number): string => `${count} Matches`;
+
+const getFindStatusLabel = (index: number, count: number): string =>
+  count > 0
+    ? `<span class="nav-find-status-number">${index + 1}</span><span class="nav-find-status-separator"> / </span><span class="nav-find-status-number">${count}</span>`
+    : `<span class="nav-find-status-number">0</span><span class="nav-find-status-separator"> / </span><span class="nav-find-status-number">0</span>`;
+
+const updateFindUiCounts = (): void => {
+  getFindMatchCount()!.textContent = getFindCountLabel(findMatches.length);
+  getFindStatusText()!.innerHTML = getFindStatusLabel(currentFindMatchIndex, findMatches.length);
+
+  const hasMatches = findMatches.length > 0;
+  const hasQuery = findQuery.length > 0;
+  getFindBarActions()!.setAttribute("data-visible", hasQuery ? "true" : "false");
+  getFindPrevButton()!.disabled = !hasMatches;
+  getFindNextButton()!.disabled = !hasMatches;
+  getFindClearButton()!.disabled = !hasQuery;
+};
+
+const applyFindHighlights = (): void => {
+  clearFindHighlights();
+
+  if (findMatches.length === 0 || typeof Highlight === "undefined") {
+    return;
+  }
+
+  const highlights = getCssHighlights();
+  if (!highlights) {
+    return;
+  }
+
+  highlights.set(
+    FIND_HIGHLIGHT_NAME,
+    new Highlight(...findMatches.map((match) => match.range.cloneRange()))
+  );
+
+  const currentMatch = findMatches[currentFindMatchIndex];
+  if (currentMatch) {
+    highlights.set(FIND_CURRENT_HIGHLIGHT_NAME, new Highlight(currentMatch.range.cloneRange()));
+  }
+};
+
+const isFindableTextContainer = (element: HTMLElement | null): element is HTMLElement => {
+  if (!element) {
+    return false;
+  }
+
+  if (
+    element.closest(`#${FIND_BAR_ID}`) ||
+    element.closest(`#${FIND_STATUS_ID}`) ||
+    element.closest("[data-sonner-toaster]") ||
+    element.closest("script, style, noscript, textarea, select, option")
+  ) {
+    return false;
+  }
+
+  if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) {
+    return false;
+  }
+
+  if (
+    isEditableTarget(element) ||
+    element.closest("[contenteditable='true'], [contenteditable='']")
+  ) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  return (
+    style.display !== "none" &&
+    style.visibility !== "hidden" &&
+    style.visibility !== "collapse" &&
+    Number.parseFloat(style.opacity) !== 0
+  );
+};
+
+const collectFindMatches = (query: string): FindMatch[] => {
+  const normalizedQuery = query.toLowerCase();
+  if (!normalizedQuery || !document.body) {
+    return [];
+  }
+
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const matches: FindMatch[] = [];
+  let currentNode = walker.nextNode();
+
+  while (currentNode) {
+    if (currentNode instanceof Text) {
+      const parentElement = currentNode.parentElement;
+
+      if (isFindableTextContainer(parentElement)) {
+        const text = currentNode.textContent ?? "";
+        const normalizedText = text.toLowerCase();
+        let searchIndex = 0;
+
+        while (searchIndex < normalizedText.length) {
+          const matchIndex = normalizedText.indexOf(normalizedQuery, searchIndex);
+          if (matchIndex === -1) {
+            break;
+          }
+
+          const range = document.createRange();
+          range.setStart(currentNode, matchIndex);
+          range.setEnd(currentNode, matchIndex + normalizedQuery.length);
+
+          if (range.getClientRects().length > 0) {
+            matches.push({
+              range,
+              element: parentElement
+            });
+          }
+
+          searchIndex = matchIndex + normalizedQuery.length;
+        }
+      }
+    }
+
+    currentNode = walker.nextNode();
+  }
+
+  return matches;
+};
+
+const focusCurrentFindMatch = (): void => {
+  const currentMatch = findMatches[currentFindMatchIndex];
+
+  if (!currentMatch) {
+    updateFindUiCounts();
+    applyFindHighlights();
+    return;
+  }
+
+  currentMatch.element.scrollIntoView({
+    block: "center",
+    inline: "nearest",
+    behavior: "auto"
+  });
+
+  if (showActivationIndicator) {
+    window.dispatchEvent(
+      new CustomEvent(FOCUS_INDICATOR_EVENT, {
+        detail: {
+          element: currentMatch.element
+        }
+      })
+    );
+  }
+
+  updateFindUiCounts();
+  applyFindHighlights();
+};
+
+const setFindQuery = (query: string): void => {
+  findQuery = query;
+  findMatches = collectFindMatches(query);
+  currentFindMatchIndex = findMatches.length > 0 ? 0 : -1;
+  updateFindUiCounts();
+  applyFindHighlights();
+};
+
+const hideFindBar = (): void => {
+  getFindBar()?.setAttribute("data-visible", "false");
+};
+
+const isFindModeActive = (): boolean =>
+  getFindBar()?.getAttribute("data-visible") === "true" || isFindStatusVisible;
+
+const clearFindInput = (): void => {
+  const input = getFindInput();
+  if (!input) {
+    return;
+  }
+
+  input.value = "";
+  setFindQuery("");
+  input.focus();
+};
+
+const syncFindStatusVisibility = (): void => {
+  getFindStatus()?.setAttribute("data-visible", isFindStatusVisible ? "true" : "false");
+};
+
+const clearFindSession = (): void => {
+  findQuery = "";
+  findMatches = [];
+  currentFindMatchIndex = -1;
+  isFindStatusVisible = false;
+  clearFindHighlights();
+  updateFindUiCounts();
+  syncFindStatusVisibility();
+  hideFindBar();
+};
+
+const exitFindMode = (): void => {
+  clearFindSession();
+
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+};
+
+const commitFindQuery = (): boolean => {
+  const query = getFindInput()?.value ?? "";
+  setFindQuery(query);
+  hideFindBar();
+
+  if (query.length === 0) {
+    isFindStatusVisible = false;
+    syncFindStatusVisibility();
+    clearFindHighlights();
+    return false;
+  }
+
+  isFindStatusVisible = true;
+  syncFindStatusVisibility();
+  focusCurrentFindMatch();
+  return true;
+};
+
+const cycleFindMatch = (direction: 1 | -1): boolean => {
+  if (findQuery.length === 0 || findMatches.length === 0) {
+    return false;
+  }
+
+  currentFindMatchIndex =
+    (currentFindMatchIndex + direction + findMatches.length) % findMatches.length;
+  focusCurrentFindMatch();
+  return true;
+};
+
+const openFindMode = (): boolean => {
+  const bar = getFindBar();
+  const input = getFindInput();
+
+  if (!bar || !input) {
+    return false;
+  }
+
+  input.value = findQuery;
+  setFindQuery(input.value);
+  bar.setAttribute("data-visible", "true");
+  input.focus();
+  input.select();
+  return true;
+};
+
 const yankCurrentTabUrl = (): boolean => {
   const currentUrl = getNormalizedCurrentUrl();
 
@@ -455,6 +752,9 @@ const isOptionsPage = (): boolean => {
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
+  "enable-find-mode": openFindMode,
+  "cycle-match-next": () => cycleFindMatch(1),
+  "cycle-match-prev": () => cycleFindMatch(-1),
   "history-go-prev": (count = 1) => goHistory(-count),
   "history-go-next": (count = 1) => goHistory(count),
   "tab-go-prev": () => runTabCommand("tab-go-prev"),
@@ -521,12 +821,26 @@ const FOCUS_INDICATOR_EVENT = `nav-${getExtensionNamespace()}-focus-indicator`;
 const FOCUS_OVERLAY_DURATION_MS = 1000;
 const FOCUS_OVERLAY_HIDE_MS = 920;
 const FOCUS_OVERLAY_FADE_OUT_MS = 220;
-
+const FIND_HIGHLIGHT_NAME = `nav-${getExtensionNamespace()}-find-match`;
+const FIND_CURRENT_HIGHLIGHT_NAME = `nav-${getExtensionNamespace()}-find-current-match`;
+const FIND_STYLE_ID = `nav-${getExtensionNamespace()}-find-style`;
+const FIND_BAR_ID = `nav-${getExtensionNamespace()}-find-bar`;
+const FIND_INPUT_ID = `nav-${getExtensionNamespace()}-find-input`;
+const FIND_MATCH_COUNT_ID = `nav-${getExtensionNamespace()}-find-match-count`;
+const FIND_STATUS_ID = `nav-${getExtensionNamespace()}-find-status`;
+const FIND_STATUS_TEXT_ID = `nav-${getExtensionNamespace()}-find-status-text`;
+const FIND_PREV_BUTTON_ID = `nav-${getExtensionNamespace()}-find-prev`;
+const FIND_NEXT_BUTTON_ID = `nav-${getExtensionNamespace()}-find-next`;
+const FIND_CLEAR_BUTTON_ID = `nav-${getExtensionNamespace()}-find-clear`;
 let focusedOverlayTarget: HTMLElement | null = null;
 let focusOverlayFrame: number | null = null;
 let focusOverlayTimeout: number | null = null;
 let showActivationIndicator = true;
 let activationIndicatorColor = DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
+let findMatches: FindMatch[] = [];
+let findQuery = "";
+let currentFindMatchIndex = -1;
+let isFindStatusVisible = false;
 
 type KeyParseResult = {
   actionName: ActionName | null;
@@ -651,6 +965,243 @@ const renderFocusStyles = (): string => `
     animation: nav-focus-pulse ${FOCUS_OVERLAY_DURATION_MS}ms cubic-bezier(0.2, 0.9, 0.2, 1)
       !important;
   }
+`;
+
+const renderFindStyles = (): string => `
+  #${FIND_BAR_ID} {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2147483647;
+    display: none;
+    width: min(40rem, calc(100vw - 32px));
+    grid-template-columns: max-content auto max-content;
+    align-items: center;
+    gap: 0;
+    padding: 0.25rem 0.5rem;
+    border: 2px solid #eab308;
+    border-radius: 0.5rem;
+    background: #171717;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    color: #f5f5f5;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  #${FIND_BAR_ID}[data-visible="true"] {
+    display: grid;
+  }
+
+  .nav-find-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5em;
+    height: 1.5em;
+    color: #a1a1aa;
+    font-size: 24px;
+    line-height: 32px;
+    margin-right: 0.25rem;
+  }
+
+  .nav-find-icon svg {
+    width: 1em;
+    height: 1em;
+    display: block;
+  }
+
+  #${FIND_INPUT_ID} {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #fafafa;
+    font-size: 24px;
+    line-height: 32px;
+    outline: none;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: inherit;
+    padding-right: 0.25rem;
+  }
+
+  #${FIND_INPUT_ID}:focus,
+  #${FIND_INPUT_ID}:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  #${FIND_INPUT_ID}::placeholder {
+    color: #a1a1aa;
+  }
+
+  #${FIND_MATCH_COUNT_ID} {
+    flex: 0 0 auto;
+    color: #a1a1aa;
+    font-size: 24px;
+    line-height: 32px;
+    white-space: nowrap;
+    padding-left: 0.25rem;
+  }
+
+  .nav-find-bar-actions {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 0.25rem;
+  }
+
+  .nav-find-bar-actions[data-visible="true"] {
+    display: inline-flex;
+  }
+
+  #${FIND_STATUS_ID} {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 2147483647;
+    display: none;
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 2px solid #eab308;
+    border-radius: 0.5rem;
+    background: #171717;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    color: #f5f5f5;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  #${FIND_STATUS_ID}[data-visible="true"] {
+    display: grid;
+  }
+
+  #${FIND_STATUS_TEXT_ID} {
+    min-width: 52px;
+    font-size: 24px;
+    line-height: 32px;
+    text-align: center;
+    padding: 0 0.25rem;
+  }
+
+  .nav-find-status-number {
+    color: #fafafa;
+  }
+
+  .nav-find-status-separator {
+    color: #a1a1aa;
+  }
+
+  .nav-find-nav,
+  .nav-find-clear {
+    position: relative;
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    width: 1.5em;
+    height: 1.5em;
+    padding: 0;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: #a1a1aa;
+    cursor: pointer;
+    transition:
+      background-color 250ms ease,
+      color 250ms ease;
+    font-size: 24px;
+    line-height: 32px;
+    outline: none;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .nav-find-nav::before,
+  .nav-find-clear::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0.375rem;
+    background: rgba(255, 255, 255, 0.12);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms ease;
+  }
+
+  .nav-find-nav:hover:not(:disabled)::before,
+  .nav-find-nav:focus-visible:not(:disabled)::before,
+  .nav-find-clear:hover:not(:disabled)::before,
+  .nav-find-clear:focus-visible:not(:disabled)::before {
+    opacity: 1;
+  }
+
+  .nav-find-nav:disabled,
+  .nav-find-clear:disabled {
+    cursor: default;
+    opacity: 0.35;
+    color: #737373;
+  }
+
+  .nav-find-nav svg,
+  .nav-find-clear svg {
+    width: 1em;
+    height: 1em;
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .nav-find-nav:focus,
+  .nav-find-nav:focus-visible,
+  .nav-find-clear:focus,
+  .nav-find-clear:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  ::highlight(${FIND_HIGHLIGHT_NAME}) {
+    background: rgba(234, 179, 8, 0.18);
+    color: inherit;
+  }
+
+  ::highlight(${FIND_CURRENT_HIGHLIGHT_NAME}) {
+    background: rgba(234, 179, 8, 0.82);
+    color: #111111;
+  }
+`;
+
+const SEARCH_ICON_SVG = `
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="11" cy="11" r="7"></circle>
+    <path d="M20 20l-3.5-3.5"></path>
+  </svg>
+`;
+
+const ARROW_UP_ICON_SVG = `
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M6 15l6-6 6 6"></path>
+  </svg>
+`;
+
+const ARROW_DOWN_ICON_SVG = `
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M6 9l6 6 6-6"></path>
+  </svg>
+`;
+
+const CLOSE_ICON_SVG = `
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M18 6L6 18"></path>
+    <path d="M6 6l12 12"></path>
+  </svg>
 `;
 
 const syncFocusStyles = (): void => {
@@ -996,6 +1547,13 @@ const handleKeydown = (event: KeyboardEvent): void => {
     return;
   }
 
+  if (event.key === "Escape" && isFindModeActive()) {
+    exitFindMode();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+
   if (event.key === "Escape" && blurActiveEditableTarget()) {
     clearPendingState();
     event.preventDefault();
@@ -1063,6 +1621,22 @@ const ensureFocusStyles = (): void => {
   styleRoot.append(style);
 };
 
+const ensureFindStyles = (): void => {
+  const existingStyle = document.getElementById(FIND_STYLE_ID);
+
+  if (existingStyle instanceof HTMLStyleElement) {
+    existingStyle.textContent = renderFindStyles();
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = FIND_STYLE_ID;
+  style.textContent = renderFindStyles();
+
+  const styleRoot = document.head ?? document.documentElement;
+  styleRoot.append(style);
+};
+
 const getFocusOverlay = (): HTMLDivElement => {
   const existing = document.getElementById(FOCUS_OVERLAY_ID);
 
@@ -1077,6 +1651,80 @@ const getFocusOverlay = (): HTMLDivElement => {
   overlay.setAttribute("data-hiding", "false");
   document.documentElement.append(overlay);
   return overlay;
+};
+
+const isFindUiElement = (target: EventTarget | null): boolean => {
+  if (!(target instanceof Node)) {
+    return false;
+  }
+
+  return getFindBar()?.contains(target) === true || getFindStatus()?.contains(target) === true;
+};
+
+const ensureFindUi = (): void => {
+  if (getFindBar() && getFindStatus()) {
+    return;
+  }
+
+  const bar = document.createElement("div");
+  bar.id = FIND_BAR_ID;
+  bar.setAttribute("data-visible", "false");
+  bar.innerHTML = `
+    <span class="nav-find-icon" data-find-icon="">${SEARCH_ICON_SVG}</span>
+    <input id="${FIND_INPUT_ID}" type="text" spellcheck="false" autocomplete="off" placeholder="find..." />
+    <div class="nav-find-bar-actions">
+      <span id="${FIND_MATCH_COUNT_ID}">0 Matches</span>
+      <button id="${FIND_CLEAR_BUTTON_ID}" class="nav-find-clear" type="button" aria-label="Clear find input">${CLOSE_ICON_SVG}</button>
+    </div>
+  `;
+
+  const status = document.createElement("div");
+  status.id = FIND_STATUS_ID;
+  status.setAttribute("data-visible", "false");
+  status.innerHTML = `
+    <span id="${FIND_STATUS_TEXT_ID}">0 / 0</span>
+    <button id="${FIND_PREV_BUTTON_ID}" class="nav-find-nav" data-find-nav="" type="button" aria-label="Previous match">${ARROW_UP_ICON_SVG}</button>
+    <button id="${FIND_NEXT_BUTTON_ID}" class="nav-find-nav" data-find-nav="" type="button" aria-label="Next match">${ARROW_DOWN_ICON_SVG}</button>
+  `;
+
+  document.documentElement.append(bar, status);
+
+  const input = getFindInput();
+  input?.addEventListener("input", () => {
+    setFindQuery(input.value);
+  });
+
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      commitFindQuery();
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      exitFindMode();
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      return;
+    }
+  });
+
+  getFindPrevButton()?.addEventListener("click", () => {
+    cycleFindMatch(-1);
+  });
+
+  getFindNextButton()?.addEventListener("click", () => {
+    cycleFindMatch(1);
+  });
+
+  getFindClearButton()?.addEventListener("click", () => {
+    clearFindInput();
+  });
+
+  updateFindUiCounts();
+  syncFindStatusVisibility();
 };
 
 const clearFocusOverlayFrame = (): void => {
@@ -1213,12 +1861,19 @@ export const initCoreNavigation = (): void => {
   installScrollTracking();
   if (!isOptionsPage()) {
     ensureFocusStyles();
+    ensureFindStyles();
     getFocusOverlay();
+    ensureFindUi();
     window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
     window.addEventListener("beforeinput", handleEditableBeforeInput, true);
     window.addEventListener("compositionstart", handleEditableBeforeInput, true);
     window.addEventListener("resize", scheduleFocusOverlayPosition, true);
     window.addEventListener("scroll", scheduleFocusOverlayPosition, true);
+    document.addEventListener("mousedown", (event) => {
+      if (!isFindUiElement(event.target)) {
+        hideFindBar();
+      }
+    });
   }
   ensureToastWrapper();
   syncFastConfig();

@@ -28,6 +28,11 @@
   -webkit-mask-image: url("../assets/remixicon/close-line.svg");
 }
 
+.ri-close-large-line {
+  mask-image: url("../assets/remixicon/close-large-line.svg");
+  -webkit-mask-image: url("../assets/remixicon/close-large-line.svg");
+}
+
 .ri-expand-horizontal-s-line {
   mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");
   -webkit-mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");

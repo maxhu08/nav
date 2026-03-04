@@ -108,6 +108,9 @@
             <p class="text-base text-neutral-500">Example:</p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
               <p><span class="text-[#569cd6]">j</span> <span class="text-[#dcdcaa]">scroll-down</span></p>
+              <p><span class="text-[#569cd6]">/</span> <span class="text-[#dcdcaa]">enable-find-mode</span></p>
+              <p><span class="text-[#569cd6]">n</span> <span class="text-[#dcdcaa]">cycle-match-next</span></p>
+              <p><span class="text-[#569cd6]">N</span> <span class="text-[#dcdcaa]">cycle-match-prev</span></p>
               <p><span class="text-[#569cd6]">gg</span> <span class="text-[#dcdcaa]">scroll-to-top</span></p>
               <p><span class="text-[#569cd6]">&lt;space&gt;</span> <span class="text-[#dcdcaa]">toggle-hints-current-tab</span></p>
               <p><span class="text-[#569cd6]">&lt;c-y&gt;</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
@@ -117,8 +120,8 @@
               <p><span class="text-[#569cd6]">yy</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
             </div>
             <p class="text-base text-neutral-500">
-              This maps `j` to scroll down, `gg` to jump to the top of the page, `&lt;space&gt;` to toggle hints in the current tab, `&lt;c-y&gt;` to ctrl+y, `yl` to copy a hinted link URL, `yi` to
-              copy a hinted image, `yI` to copy a hinted image URL, and `yy` to copy the current tab URL.
+              This maps `j` to scroll down, `/` to open find mode, `n` and `N` to cycle through matches, `gg` to jump to the top of the page, `&lt;space&gt;` to toggle hints in the current tab,
+              `&lt;c-y&gt;` to ctrl+y, `yl` to copy a hinted link URL, `yi` to copy a hinted image, `yI` to copy a hinted image URL, and `yy` to copy the current tab URL.
             </p>
           </div>
         </section>
@@ -130,6 +133,9 @@
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-[#dcdcaa]">
               <p>close-current-tab</p>
               <p>create-new-tab</p>
+              <p>enable-find-mode</p>
+              <p>cycle-match-next</p>
+              <p>cycle-match-prev</p>
               <p>tab-go-prev</p>
               <p>tab-go-next</p>
               <p>duplicate-current-tab</p>
@@ -159,6 +165,18 @@
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">create-new-tab</p>
                 <p class="text-base text-neutral-500">Opens a new browser tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">enable-find-mode</p>
+                <p class="text-base text-neutral-500">Opens the in-page find bar and previews the current query's match count.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">cycle-match-next</p>
+                <p class="text-base text-neutral-500">Moves to the next in-page search match.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">cycle-match-prev</p>
+                <p class="text-base text-neutral-500">Moves to the previous in-page search match.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">tab-go-prev</p>

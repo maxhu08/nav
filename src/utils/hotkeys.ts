@@ -1,4 +1,7 @@
 export type ActionName =
+  | "enable-find-mode"
+  | "cycle-match-next"
+  | "cycle-match-prev"
   | "history-go-prev"
   | "history-go-next"
   | "tab-go-prev"
@@ -25,6 +28,9 @@ export type ActionName =
   | "scroll-to-top";
 
 export const VALID_ACTION_NAMES = new Set<ActionName>([
+  "enable-find-mode",
+  "cycle-match-next",
+  "cycle-match-prev",
   "history-go-prev",
   "history-go-next",
   "tab-go-prev",
@@ -60,10 +66,15 @@ j scroll-down
 k scroll-up
 h scroll-left
 l scroll-right
+n cycle-match-next
+N cycle-match-prev
 d scroll-half-page-down
 u scroll-half-page-up
 gg scroll-to-top
 G scroll-to-bottom
+
+# find
+/ enable-find-mode
 
 # hints
 f toggle-hints-current-tab
