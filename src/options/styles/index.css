@@ -41,7 +41,8 @@
   transform: translateY(0) scale(1);
 }
 
-#rules-urls-container {
+#rules-urls-blacklist-container,
+#rules-urls-whitelist-container {
   display: grid;
 }
 
@@ -58,7 +59,8 @@
   line-height: 1.5rem;
 }
 
-#rules-urls-highlight {
+#rules-urls-blacklist-highlight,
+#rules-urls-whitelist-highlight {
   pointer-events: none;
   color: #fafafa;
 }

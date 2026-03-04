@@ -17,8 +17,12 @@ import {
   hotkeysMappingsTextareaEl,
   importButtonEl,
   resetConfigButtonEl,
-  rulesUrlsContainerEl,
-  rulesUrlsTextareaEl,
+  rulesUrlsBlacklistContainerEl,
+  rulesUrlsBlacklistTextareaEl,
+  rulesUrlsModeBlacklistButtonEl,
+  rulesUrlsModeWhitelistButtonEl,
+  rulesUrlsWhitelistContainerEl,
+  rulesUrlsWhitelistTextareaEl,
   saveButtonEl
 } from "~/src/options/scripts/ui";
 import { saveAndExportConfig } from "~/src/options/scripts/utils/export-config";
@@ -46,6 +50,7 @@ import {
   syncHintsActivationIndicatorColorControls,
   syncHintsStylingControls
 } from "~/src/options/scripts/utils/fill-helpers/fill-hints";
+import { syncRulesUrlsModeControls } from "~/src/options/scripts/utils/fill-helpers/fill-rules";
 import {
   syncRulesUrlsHighlight,
   syncRulesUrlsHighlightScroll
@@ -71,21 +76,46 @@ export const listenToInputs = (): void => {
     setDefaultConfig();
   });
 
-  rulesUrlsTextareaEl.addEventListener("focus", () => {
-    rulesUrlsContainerEl.classList.replace("border-transparent", "border-sky-500");
+  rulesUrlsModeBlacklistButtonEl.addEventListener("click", () => {
+    syncRulesUrlsModeControls("blacklist");
   });
 
-  rulesUrlsTextareaEl.addEventListener("input", () => {
+  rulesUrlsModeWhitelistButtonEl.addEventListener("click", () => {
+    syncRulesUrlsModeControls("whitelist");
+  });
+
+  rulesUrlsBlacklistTextareaEl.addEventListener("focus", () => {
+    rulesUrlsBlacklistContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  rulesUrlsBlacklistTextareaEl.addEventListener("input", () => {
     syncRulesUrlsHighlight();
     syncRulesUrlsHighlightScroll();
   });
 
-  rulesUrlsTextareaEl.addEventListener("scroll", () => {
+  rulesUrlsBlacklistTextareaEl.addEventListener("scroll", () => {
     syncRulesUrlsHighlightScroll();
   });
 
-  rulesUrlsTextareaEl.addEventListener("blur", () => {
-    rulesUrlsContainerEl.classList.replace("border-sky-500", "border-transparent");
+  rulesUrlsBlacklistTextareaEl.addEventListener("blur", () => {
+    rulesUrlsBlacklistContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  rulesUrlsWhitelistTextareaEl.addEventListener("focus", () => {
+    rulesUrlsWhitelistContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  rulesUrlsWhitelistTextareaEl.addEventListener("input", () => {
+    syncRulesUrlsHighlight();
+    syncRulesUrlsHighlightScroll();
+  });
+
+  rulesUrlsWhitelistTextareaEl.addEventListener("scroll", () => {
+    syncRulesUrlsHighlightScroll();
+  });
+
+  rulesUrlsWhitelistTextareaEl.addEventListener("blur", () => {
+    rulesUrlsWhitelistContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   hotkeysMappingsTextareaEl.addEventListener("focus", () => {

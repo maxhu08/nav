@@ -26,9 +26,14 @@
       <main class="grid grid-flow-row pt-16">
         <section id="rules-urls" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p class="text-base text-white">rules.urls</p>
+            <p class="text-base text-white">rules.urls.mode</p>
             <p class="text-base text-neutral-500">
-              Use this field to define URL-based rules. Each rule starts with a website regex pattern.
+              Chooses which list is enforced at runtime. Use `blacklist` to allow navigation by default and block matching URLs, or `whitelist` to block navigation by default and allow matching URLs.
+            </p>
+            <br />
+            <p class="text-base text-white">rules.urls.blacklist / rules.urls.whitelist</p>
+            <p class="text-base text-neutral-500">
+              These fields define URL-based rules. Both fields use the same syntax, and `rules.urls.mode` decides which one is active.
               <br /><br />
               <span class="text-[#569cd6]">*</span> <span class="text-white">&lt;regex-pattern&gt;</span> <br /><br />
               Starts a new rule block. The `* ` prefix is required before every website regex pattern.
@@ -62,7 +67,10 @@
               </p>
               <p><span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">toggle-hints-current-tab</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
             </div>
-            <p class="text-base text-neutral-500">This blocks every action on GitHub pages except `toggle-hints-current-tab` and `yank-current-tab-url`.</p>
+            <p class="text-base text-neutral-500">
+              In `rules.urls.blacklist`, this blocks every action on GitHub pages except `toggle-hints-current-tab` and `yank-current-tab-url`. In `rules.urls.whitelist`, the same rule would allow
+              only those actions on GitHub pages.
+            </p>
           </div>
         </section>
 

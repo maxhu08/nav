@@ -19,16 +19,16 @@ Use this map to decide where new code should go.
 - Content script entry: `src/core/index.ts`
 - Action handlers: `src/core/actions/`
 - Core utilities: `src/core/utils/`
-- `src/core/navigation.ts` is the single place where parsed hotkeys and parsed `rules.urls` are enforced at runtime.
+- `src/core/navigation.ts` is the single place where parsed hotkeys and parsed URL rule lists are enforced at runtime.
 - `src/core/index.ts` only boots the shared runtime for normal webpages.
 
 ## Config Layers
 
 - `src/utils/config.ts`: defines the persisted `config` object stored in `chrome.storage.local`.
 - `config` keeps option values in the same shape the options UI edits them.
-- Example: `config.rules.urls` is stored as the raw textarea string.
+- Example: `config.rules.urls.mode` stores the active list, while `config.rules.urls.blacklist` and `config.rules.urls.whitelist` store the raw textarea strings.
 - `src/utils/fast-config.ts`: defines `fastConfig`, a derived runtime cache built from `config`.
-- `fastConfig.rules.urls` is a parsed array of URL rules.
+- `fastConfig.rules.urls` stores the active mode plus parsed blacklist and whitelist rule arrays.
 - `fastConfig.hotkeys.mappings` is a parsed key-to-action map.
 - `fastConfig.hotkeys.prefixes` is a derived lookup used for multi-key sequence matching.
 - `src/options/scripts/utils/save-config.ts` writes both `config` and a rebuilt `fastConfig` together.

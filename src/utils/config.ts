@@ -63,7 +63,11 @@ export const getConfig = (): Promise<Config> => {
 
 export const defaultConfig: Config = {
   rules: {
-    urls: ""
+    urls: {
+      mode: "blacklist",
+      blacklist: "",
+      whitelist: ""
+    }
   },
   hotkeys: {
     mappings: DEFAULT_HOTKEY_MAPPINGS
@@ -83,7 +87,11 @@ export const defaultConfig: Config = {
 
 export type Config = {
   rules: {
-    urls: string;
+    urls: {
+      mode: "blacklist" | "whitelist";
+      blacklist: string;
+      whitelist: string;
+    };
   };
   hotkeys: {
     mappings: string;

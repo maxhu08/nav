@@ -3,7 +3,8 @@ import {
   hintsAvoidAdjacentPairsStatusEl,
   hintsPreferredSearchLabelsStatusEl,
   hotkeysMappingsStatusEl,
-  rulesUrlsStatusEl
+  rulesUrlsBlacklistStatusEl,
+  rulesUrlsWhitelistStatusEl
 } from "~/src/options/scripts/ui";
 import { hasEditorError } from "~/src/options/scripts/utils/editor-status";
 import { getToastApi } from "~/src/options/scripts/utils/sonner";
@@ -21,7 +22,8 @@ const setConfigAndFastConfig = (config: Config): Promise<void> => {
 };
 
 const SAVE_ERROR_FIELDS = [
-  { path: "rules.urls", statusEl: rulesUrlsStatusEl },
+  { path: "rules.urls.blacklist", statusEl: rulesUrlsBlacklistStatusEl },
+  { path: "rules.urls.whitelist", statusEl: rulesUrlsWhitelistStatusEl },
   { path: "hotkeys.mappings", statusEl: hotkeysMappingsStatusEl },
   { path: "hints.charset", statusEl: hintsCharsetStatusEl },
   { path: "hints.preferredSearchLabels", statusEl: hintsPreferredSearchLabelsStatusEl },

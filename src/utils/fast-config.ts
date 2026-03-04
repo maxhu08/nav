@@ -20,7 +20,11 @@ export type FastRule = {
 
 export type FastConfig = {
   rules: {
-    urls: FastRule[];
+    urls: {
+      mode: "blacklist" | "whitelist";
+      blacklist: FastRule[];
+      whitelist: FastRule[];
+    };
   };
   hotkeys: {
     mappings: Partial<Record<string, ActionName>>;
@@ -259,7 +263,11 @@ export const buildFastConfig = (config: Config): FastConfig => {
 
   return {
     rules: {
-      urls: parseRulesUrlsValue(config.rules.urls)
+      urls: {
+        mode: config.rules.urls.mode,
+        blacklist: parseRulesUrlsValue(config.rules.urls.blacklist),
+        whitelist: parseRulesUrlsValue(config.rules.urls.whitelist)
+      }
     },
     hotkeys: {
       mappings,

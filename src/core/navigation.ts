@@ -26,7 +26,7 @@ import {
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 import { getExtensionNamespace } from "~/src/utils/extension-id";
-import { type FastRule, getFastConfig } from "~/src/utils/fast-config";
+import { type FastConfig, type FastRule, getFastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 
@@ -55,7 +55,9 @@ type FindMatch = {
 
 let keyActions: Partial<Record<string, ActionName>> = {};
 let keyActionPrefixes: Partial<Record<string, true>> = {};
-let urlRules: FastRule[] = [];
+let urlRulesMode: FastConfig["rules"]["urls"]["mode"] = "blacklist";
+let urlBlacklistRules: FastRule[] = [];
+let urlWhitelistRules: FastRule[] = [];
 
 const writeClipboard = async (text: string): Promise<boolean> => {
   try {
@@ -1265,15 +1267,18 @@ const applyHotkeyMappings = (
   clearPendingState();
 };
 
-const applyUrlRules = (rules: FastRule[]): void => {
-  urlRules = rules;
+const applyUrlRules = (rules: FastConfig["rules"]["urls"]): void => {
+  urlRulesMode = rules.mode;
+  urlBlacklistRules = rules.blacklist;
+  urlWhitelistRules = rules.whitelist;
   clearPendingState();
 };
 
 const getCurrentUrlRule = (): FastRule | null => {
   const currentUrl = window.location.href;
+  const activeRules = urlRulesMode === "whitelist" ? urlWhitelistRules : urlBlacklistRules;
 
-  for (const rule of urlRules) {
+  for (const rule of activeRules) {
     if (new RegExp(rule.pattern).test(currentUrl)) {
       return rule;
     }
@@ -1459,7 +1464,7 @@ const handleStorageChange = (
 
   const nextFastConfig = changes.fastConfig.newValue as {
     rules?: {
-      urls?: FastRule[];
+      urls?: FastConfig["rules"]["urls"];
     };
     hotkeys?: {
       mappings?: Partial<Record<string, ActionName>>;

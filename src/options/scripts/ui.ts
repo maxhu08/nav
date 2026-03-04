@@ -10,9 +10,34 @@ export const exportButtonEl = getButton("export");
 export const importButtonEl = getButton("import");
 export const resetConfigButtonEl = getButton("reset-config");
 
-export const [rulesUrlsContainerEl, rulesUrlsTextareaEl] = getContainerAndTextarea("rules-urls");
-export const rulesUrlsHighlightEl = getElement<HTMLPreElement>("rules-urls-highlight");
-export const rulesUrlsStatusEl = getElement<HTMLParagraphElement>("rules-urls-status");
+export const rulesUrlsModeBlacklistButtonEl = getElement<HTMLButtonElement>(
+  "rules-urls-mode-blacklist-button"
+);
+export const rulesUrlsModeWhitelistButtonEl = getElement<HTMLButtonElement>(
+  "rules-urls-mode-whitelist-button"
+);
+export const rulesUrlsBlacklistSectionEl = getElement<HTMLDivElement>(
+  "rules-urls-blacklist-section"
+);
+export const [rulesUrlsBlacklistContainerEl, rulesUrlsBlacklistTextareaEl] =
+  getContainerAndTextarea("rules-urls-blacklist");
+export const rulesUrlsBlacklistHighlightEl = getElement<HTMLPreElement>(
+  "rules-urls-blacklist-highlight"
+);
+export const rulesUrlsBlacklistStatusEl = getElement<HTMLParagraphElement>(
+  "rules-urls-blacklist-status"
+);
+export const rulesUrlsWhitelistSectionEl = getElement<HTMLDivElement>(
+  "rules-urls-whitelist-section"
+);
+export const [rulesUrlsWhitelistContainerEl, rulesUrlsWhitelistTextareaEl] =
+  getContainerAndTextarea("rules-urls-whitelist");
+export const rulesUrlsWhitelistHighlightEl = getElement<HTMLPreElement>(
+  "rules-urls-whitelist-highlight"
+);
+export const rulesUrlsWhitelistStatusEl = getElement<HTMLParagraphElement>(
+  "rules-urls-whitelist-status"
+);
 
 export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] = getContainerAndTextarea("hotkeys-mappings");
 export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-mappings-highlight");

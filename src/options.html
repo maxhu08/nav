@@ -44,7 +44,15 @@
         </div>
         <section id="rules-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p class="text-base text-white">rules.urls</p>
+            <p class="text-base text-white">rules.urls.mode</p>
+            <p class="text-base text-neutral-500">Controls which URL rules list is enforced at runtime.</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="rules-urls-mode-blacklist-button" type="button" class="rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700">blacklist</button>
+              <button id="rules-urls-mode-whitelist-button" type="button" class="rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700">whitelist</button>
+            </div>
+          </div>
+          <div id="rules-urls-blacklist-section" class="grid gap-2">
+            <p class="text-base text-white">rules.urls.blacklist</p>
             <p class="text-base text-neutral-500">
               See
               <a href="docs.html#rules-urls" target="_blank" rel="noopener noreferrer" class="text-blue-500 transition hover:text-blue-600">docs#rules-urls</a>
@@ -52,17 +60,32 @@
               <a href="docs.html#action-names" target="_blank" rel="noopener noreferrer" class="text-blue-500 transition hover:text-blue-600">docs#action-names</a>
               for valid action names.
             </p>
-            <div id="rules-urls-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
-              <pre id="rules-urls-highlight" aria-hidden="true" class="rules-urls-editor-layer"></pre>
+            <div id="rules-urls-blacklist-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <pre id="rules-urls-blacklist-highlight" aria-hidden="true" class="rules-urls-editor-layer"></pre>
               <textarea
-                id="rules-urls-textarea"
+                id="rules-urls-blacklist-textarea"
                 autocomplete="off"
                 spellcheck="false"
                 rows="12"
                 class="rules-urls-editor-layer rules-urls-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
               ></textarea>
             </div>
-            <p id="rules-urls-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="rules-urls-blacklist-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+          </div>
+          <div id="rules-urls-whitelist-section" class="grid gap-2">
+            <p class="text-base text-white">rules.urls.whitelist</p>
+            <p class="text-base text-neutral-500">Uses the same syntax as the blacklist editor. These rules are only enforced when `rules.urls.mode` is `whitelist`.</p>
+            <div id="rules-urls-whitelist-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <pre id="rules-urls-whitelist-highlight" aria-hidden="true" class="rules-urls-editor-layer"></pre>
+              <textarea
+                id="rules-urls-whitelist-textarea"
+                autocomplete="off"
+                spellcheck="false"
+                rows="12"
+                class="rules-urls-editor-layer rules-urls-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
+              ></textarea>
+            </div>
+            <p id="rules-urls-whitelist-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
         </section>
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">

@@ -7,8 +7,10 @@ import {
   hintsAvoidAdjacentPairsTextareaEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
-  rulesUrlsContainerEl,
-  rulesUrlsTextareaEl
+  rulesUrlsBlacklistContainerEl,
+  rulesUrlsBlacklistTextareaEl,
+  rulesUrlsWhitelistContainerEl,
+  rulesUrlsWhitelistTextareaEl
 } from "~/src/options/scripts/ui";
 import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-option";
 import { initColorInputControls } from "~/src/options/scripts/utils/color-inputs";
@@ -57,7 +59,8 @@ initColorInputControls();
 void getConfig().then((config) => {
   fillInputs(config);
 
-  lockTextareaContainerHeight(rulesUrlsContainerEl, rulesUrlsTextareaEl);
+  lockTextareaContainerHeight(rulesUrlsBlacklistContainerEl, rulesUrlsBlacklistTextareaEl);
+  lockTextareaContainerHeight(rulesUrlsWhitelistContainerEl, rulesUrlsWhitelistTextareaEl);
   lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
   lockTextareaContainerHeight(
     hintsAvoidAdjacentPairsContainerEl,
@@ -101,9 +104,10 @@ const maybeShowPendingExcludeSiteDialog = async (): Promise<void> => {
     }
 
     const config = await getConfig();
-    const snippet = await showTextareaDialog("Exclude site", {
-      defaultValue: getManagedWebsiteRuleSnippet(config.rules.urls, url),
-      note: "This will be added to rules.urls",
+    const isWhitelistMode = config.rules.urls.mode === "whitelist";
+    const snippet = await showTextareaDialog(isWhitelistMode ? "Include site" : "Exclude site", {
+      defaultValue: getManagedWebsiteRuleSnippet(config, url),
+      note: `This will be added to rules.urls.${config.rules.urls.mode}`,
       confirmText: "add",
       cancelText: "cancel"
     });
@@ -118,19 +122,27 @@ const maybeShowPendingExcludeSiteDialog = async (): Promise<void> => {
       return;
     }
 
-    rulesUrlsTextareaEl.value = [rulesUrlsTextareaEl.value.trimEnd(), normalizedSnippet]
+    const activeRulesTextareaEl = isWhitelistMode
+      ? rulesUrlsWhitelistTextareaEl
+      : rulesUrlsBlacklistTextareaEl;
+
+    activeRulesTextareaEl.value = [activeRulesTextareaEl.value.trimEnd(), normalizedSnippet]
       .filter(Boolean)
       .join("\n");
     syncRulesUrlsHighlight();
     syncRulesUrlsHighlightScroll();
-    rulesUrlsContainerEl.scrollIntoView({
+    const activeRulesContainerEl = isWhitelistMode
+      ? rulesUrlsWhitelistContainerEl
+      : rulesUrlsBlacklistContainerEl;
+
+    activeRulesContainerEl.scrollIntoView({
       behavior: "smooth",
       block: "center"
     });
-    rulesUrlsTextareaEl.focus();
-    rulesUrlsTextareaEl.setSelectionRange(
-      rulesUrlsTextareaEl.value.length,
-      rulesUrlsTextareaEl.value.length
+    activeRulesTextareaEl.focus();
+    activeRulesTextareaEl.setSelectionRange(
+      activeRulesTextareaEl.value.length,
+      activeRulesTextareaEl.value.length
     );
     await saveConfigAndFastConfig();
   })();

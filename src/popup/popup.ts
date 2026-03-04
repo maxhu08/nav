@@ -1,4 +1,5 @@
 import { updateOptionsData } from "~/src/utils/options-storage";
+import { getConfig } from "~/src/utils/config";
 
 const logo = document.getElementById("nav-logo") as HTMLImageElement | null;
 
@@ -21,6 +22,16 @@ const openOptionsPage = (): void => {
     window.open(chrome.runtime.getURL("options.html"));
   }
 };
+
+void getConfig().then((config) => {
+  const excludeButtonLabelEl = document.querySelector("#exclude-button span");
+
+  if (!excludeButtonLabelEl) {
+    return;
+  }
+
+  excludeButtonLabelEl.textContent = config.rules.urls.mode === "whitelist" ? "include" : "exclude";
+});
 
 document.getElementById("options-button")?.addEventListener("click", () => {
   openOptionsPage();

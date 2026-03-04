@@ -1,6 +1,15 @@
 import { type Config } from "~/src/utils/config";
-import { rulesUrlsTextareaEl } from "~/src/options/scripts/ui";
+import {
+  rulesUrlsBlacklistTextareaEl,
+  rulesUrlsModeWhitelistButtonEl,
+  rulesUrlsWhitelistTextareaEl
+} from "~/src/options/scripts/ui";
 
 export const saveRulesSettingsToDraft = (draft: Config): void => {
-  draft.rules.urls = rulesUrlsTextareaEl.value;
+  draft.rules.urls.mode =
+    rulesUrlsModeWhitelistButtonEl.getAttribute("aria-pressed") === "true"
+      ? "whitelist"
+      : "blacklist";
+  draft.rules.urls.blacklist = rulesUrlsBlacklistTextareaEl.value;
+  draft.rules.urls.whitelist = rulesUrlsWhitelistTextareaEl.value;
 };

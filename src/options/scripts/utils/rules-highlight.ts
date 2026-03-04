@@ -1,7 +1,10 @@
 import {
-  rulesUrlsHighlightEl,
-  rulesUrlsStatusEl,
-  rulesUrlsTextareaEl
+  rulesUrlsBlacklistHighlightEl,
+  rulesUrlsBlacklistStatusEl,
+  rulesUrlsBlacklistTextareaEl,
+  rulesUrlsWhitelistHighlightEl,
+  rulesUrlsWhitelistStatusEl,
+  rulesUrlsWhitelistTextareaEl
 } from "~/src/options/scripts/ui";
 import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { isActionName } from "~/src/utils/hotkeys";
@@ -199,15 +202,33 @@ export const renderRulesUrlsValue = (
   };
 };
 
+const syncRulesUrlsEditorHighlight = (
+  textareaEl: HTMLTextAreaElement,
+  highlightEl: HTMLPreElement,
+  statusEl: HTMLParagraphElement
+): void => {
+  const renderedValue = renderRulesUrlsValue(textareaEl.value);
+
+  highlightEl.innerHTML = renderedValue.html;
+  setEditorStatus(statusEl, renderedValue.hasError);
+};
+
 export const syncRulesUrlsHighlight = (): void => {
-  const renderedValue = renderRulesUrlsValue(rulesUrlsTextareaEl.value);
-
-  rulesUrlsHighlightEl.innerHTML = renderedValue.html;
-
-  setEditorStatus(rulesUrlsStatusEl, renderedValue.hasError);
+  syncRulesUrlsEditorHighlight(
+    rulesUrlsBlacklistTextareaEl,
+    rulesUrlsBlacklistHighlightEl,
+    rulesUrlsBlacklistStatusEl
+  );
+  syncRulesUrlsEditorHighlight(
+    rulesUrlsWhitelistTextareaEl,
+    rulesUrlsWhitelistHighlightEl,
+    rulesUrlsWhitelistStatusEl
+  );
 };
 
 export const syncRulesUrlsHighlightScroll = (): void => {
-  rulesUrlsHighlightEl.scrollTop = rulesUrlsTextareaEl.scrollTop;
-  rulesUrlsHighlightEl.scrollLeft = rulesUrlsTextareaEl.scrollLeft;
+  rulesUrlsBlacklistHighlightEl.scrollTop = rulesUrlsBlacklistTextareaEl.scrollTop;
+  rulesUrlsBlacklistHighlightEl.scrollLeft = rulesUrlsBlacklistTextareaEl.scrollLeft;
+  rulesUrlsWhitelistHighlightEl.scrollTop = rulesUrlsWhitelistTextareaEl.scrollTop;
+  rulesUrlsWhitelistHighlightEl.scrollLeft = rulesUrlsWhitelistTextareaEl.scrollLeft;
 };

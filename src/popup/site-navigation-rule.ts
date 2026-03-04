@@ -64,7 +64,23 @@ const findManagedRuleStartIndex = (lines: string[], pattern: string): number => 
   });
 };
 
-export const getManagedWebsiteRuleSnippet = (rulesUrls: string, url: URL): string => {
+const getActiveRulesUrls = (config: Config): string => {
+  return config.rules.urls.mode === "whitelist"
+    ? config.rules.urls.whitelist
+    : config.rules.urls.blacklist;
+};
+
+const setActiveRulesUrls = (config: Config, value: string): void => {
+  if (config.rules.urls.mode === "whitelist") {
+    config.rules.urls.whitelist = value;
+    return;
+  }
+
+  config.rules.urls.blacklist = value;
+};
+
+export const getManagedWebsiteRuleSnippet = (config: Config, url: URL): string => {
+  const rulesUrls = getActiveRulesUrls(config);
   const lines = splitLines(rulesUrls);
   const pattern = getWebsiteRulePattern(url);
   const startIndex = findManagedRuleStartIndex(lines, pattern);
@@ -92,7 +108,8 @@ export const getManagedWebsiteRuleSnippet = (rulesUrls: string, url: URL): strin
   return joinLines(snippetLines);
 };
 
-export const isPageNavigationEnabled = (rulesUrls: string, url: URL): boolean => {
+export const isPageNavigationEnabled = (config: Config, url: URL): boolean => {
+  const rulesUrls = getActiveRulesUrls(config);
   const lines = splitLines(rulesUrls);
   const pattern = getWebsiteRulePattern(url);
   const startIndex = findManagedRuleStartIndex(lines, pattern);
@@ -110,7 +127,7 @@ export const setPageNavigationEnabled = (
   enabled: boolean,
   snippet: string
 ): Config => {
-  const lines = splitLines(config.rules.urls);
+  const lines = splitLines(getActiveRulesUrls(config));
   const managedPageRule = buildManagedPageRule(url, snippet);
   const nextLines = lines.filter((line) => !isManagedRuleLine(line, managedPageRule));
 
@@ -119,11 +136,11 @@ export const setPageNavigationEnabled = (
   } else if (lines.some((line) => isManagedRuleLine(line, managedPageRule))) {
     nextLines.unshift(...managedPageRule.commentedLines);
   } else {
-    config.rules.urls = joinLines(nextLines);
+    setActiveRulesUrls(config, joinLines(nextLines));
 
     return config;
   }
 
-  config.rules.urls = joinLines(nextLines);
+  setActiveRulesUrls(config, joinLines(nextLines));
   return config;
 };
