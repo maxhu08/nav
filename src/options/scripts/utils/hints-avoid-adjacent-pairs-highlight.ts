@@ -25,10 +25,13 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
     };
   }
 
+  const commentStartIndex = line.indexOf("#");
+  const lineWithoutComment = commentStartIndex === -1 ? line : line.slice(0, commentStartIndex);
+  const inlineComment = commentStartIndex === -1 ? "" : line.slice(commentStartIndex);
   const tokens: string[] = [];
   let hasError = false;
 
-  for (const match of line.matchAll(/\s+|\S+/g)) {
+  for (const match of lineWithoutComment.matchAll(/\s+|\S+/g)) {
     const segment = match[0];
 
     if (/^\s+$/.test(segment)) {
@@ -48,16 +51,11 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
     );
   }
 
-  return { hasError, html: tokens.join("") };
-};
+  if (inlineComment) {
+    tokens.push(wrapToken("hints-avoid-adjacent-pairs-token-comment", inlineComment));
+  }
 
-export const normalizeAvoidAdjacentPairsValue = (value: string): string => {
-  return value
-    .replaceAll("\r", "")
-    .replaceAll(/[^\S\n]+/g, " ")
-    .replaceAll(/[^\sa-zA-Z#]/g, " ")
-    .replaceAll(/ +\n/g, "\n")
-    .replaceAll(/\n +/g, "\n");
+  return { hasError, html: tokens.join("") };
 };
 
 export const syncHintsAvoidAdjacentPairsHighlight = (): void => {

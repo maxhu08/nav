@@ -32,7 +32,6 @@ import {
   syncHotkeysMappingsHighlightScroll
 } from "~/src/options/scripts/utils/hotkeys-highlight";
 import {
-  normalizeAvoidAdjacentPairsValue,
   syncHintsAvoidAdjacentPairsHighlight,
   syncHintsAvoidAdjacentPairsHighlightScroll
 } from "~/src/options/scripts/utils/hints-avoid-adjacent-pairs-highlight";
@@ -192,19 +191,6 @@ export const listenToInputs = (): void => {
   });
 
   hintsAvoidAdjacentPairsTextareaEl.addEventListener("input", () => {
-    const normalizedValue = normalizeAvoidAdjacentPairsValue(
-      hintsAvoidAdjacentPairsTextareaEl.value
-    );
-
-    if (hintsAvoidAdjacentPairsTextareaEl.value !== normalizedValue) {
-      const selectionStart = hintsAvoidAdjacentPairsTextareaEl.selectionStart;
-      hintsAvoidAdjacentPairsTextareaEl.value = normalizedValue;
-
-      if (selectionStart !== null) {
-        hintsAvoidAdjacentPairsTextareaEl.setSelectionRange(selectionStart, selectionStart);
-      }
-    }
-
     syncHintsAvoidAdjacentPairsHighlight();
     syncHintsAvoidAdjacentPairsHighlightScroll();
   });

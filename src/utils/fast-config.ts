@@ -144,7 +144,9 @@ const parseAvoidAdjacentPairsValue = (
   const normalizedPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 
   for (const line of value.toLowerCase().split("\n")) {
-    const trimmedLine = line.trim();
+    const commentStartIndex = line.indexOf("#");
+    const lineWithoutComment = commentStartIndex === -1 ? line : line.slice(0, commentStartIndex);
+    const trimmedLine = lineWithoutComment.trim();
 
     if (!trimmedLine || trimmedLine.startsWith("#")) {
       continue;
