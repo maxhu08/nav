@@ -72,7 +72,7 @@ N cycle-match-prev # requires find mode
 # watch
 w toggle-video-controls
 f toggle-fullscreen # requires watch mode
-k toggle-play-pause # requires watch mode
+e toggle-play-pause # requires watch mode
 ```
 
 These bindings are fully configurable in the options page.

@@ -204,7 +204,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     const overlay = getWatchHintsOverlay();
     overlay.replaceChildren();
     const fullscreenSequence = deps.getActionSequence("toggle-fullscreen", "f");
-    const pauseSequence = deps.getActionSequence("toggle-play-pause", "k");
+    const pauseSequence = deps.getActionSequence("toggle-play-pause", "e");
     const playPauseIconPath =
       video.paused || video.ended ? WATCH_PLAY_ICON_PATH : WATCH_PAUSE_ICON_PATH;
 
@@ -261,7 +261,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     },
     getWatchActionSequences: (): { fullscreenSequence: string; pauseSequence: string } => ({
       fullscreenSequence: deps.getActionSequence("toggle-fullscreen", "f"),
-      pauseSequence: deps.getActionSequence("toggle-play-pause", "k")
+      pauseSequence: deps.getActionSequence("toggle-play-pause", "e")
     }),
     isWatchModeActive: (): boolean => getActiveWatchVideo() !== null,
     exitWatchMode,

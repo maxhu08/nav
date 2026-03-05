@@ -256,7 +256,7 @@ N cycle-match-prev # requires find mode
 # watch
 w toggle-video-controls
 f toggle-fullscreen # requires watch mode
-k toggle-play-pause # requires watch mode
+e toggle-play-pause # requires watch mode
 `.trim();
 
 export const DEFAULT_HINT_CHARSET = "sadfjklewcmupgh";
