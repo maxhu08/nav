@@ -79,6 +79,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     marker.style.left = "auto";
     marker.style.top = "auto";
     marker.style.transform = "none";
+    marker.style.textShadow = "none";
 
     const display = watchShowCapitalizedLetters ? key.toUpperCase() : key.toLowerCase();
     const label = document.createElement("span");
@@ -88,11 +89,13 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     label.style.fontSize = "15px";
     label.style.fontWeight = "800";
     label.style.lineHeight = "1";
+    label.style.textShadow = "none";
 
     for (const char of Array.from(display)) {
       const letter = document.createElement("span");
       letter.textContent = char;
       letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
+      letter.style.textShadow = "none";
       label.append(letter);
     }
 
