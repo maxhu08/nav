@@ -29,64 +29,49 @@ nav is a browser extension that brings vim style keyboard navigation to the web.
 
 Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x respectively. For shift+x and ctrl-shift-x, just type `X` and `<c-X>`.
 
-Navigating the current page:
-
 ```text
-h       scroll left
-j       scroll down
-l       scroll right
-gg      scroll to top of the page
-G       scroll to bottom of the page
-d       scroll down half a page
-u       scroll up half a page
-F       open a hinted link in a new tab
-r       reload the current page
-R       hard reload the current page
-```
+# scroll
+j scroll-down
+j scroll-up
+h scroll-left
+l scroll-right
+d scroll-half-page-down
+u scroll-half-page-up
+gg scroll-to-top
+G scroll-to-bottom
 
-Watch controls:
+# watch
+w toggle-video-controls
+f toggle-fullscreen # requires watch mode
+k toggle-play-pause # requires watch mode
 
-```text
-w       focus the active video and show watch hints
-f       while watch mode is active, toggle fullscreen for the active video
-k       while watch mode is active, pause the active video
-```
+# find
+/ enable-find-mode
+n cycle-match-next # requires find mode
+N cycle-match-prev # requires find mode
 
-After triggering fullscreen or pause from watch mode, watch mode closes automatically.
+# hints
+F toggle-hints-new-tab
 
-Using find:
+# tab actions
+t create-new-tab
+x close-current-tab
+r reload-current-tab
+R reload-current-tab-hard
+J tab-go-prev
+K tab-go-next
+yt duplicate-current-tab
+W move-current-tab-to-new-window
 
-```text
-/       enter find mode
-n       cycle forward to the next find match
-N       cycle backward to the previous find match
-```
+# clipboard
+yl yank-link-url
+yi yank-image
+yI yank-image-url
+yy yank-current-tab-url
 
-Clipboard actions:
-
-```text
-yl      copy a hinted link URL
-yi      copy a hinted image
-yI      copy a hinted image URL
-yy      copy the current tab URL
-```
-
-Navigating your history:
-
-```text
-H       go back in history
-L       go forward in history
-```
-
-Manipulating tabs:
-
-```text
-J       go one tab left
-K       go one tab right
-t       create a new tab
-x       close the current tab
-yt      duplicate the current tab
-W       move the current tab to a new window
+# history
+H history-go-prev
+L history-go-next
 ```
 
 These bindings are fully configurable in the options page.

@@ -37,11 +37,18 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
 
   const sequence = line.slice(0, separatorIndex);
   const spacingAndAction = line.slice(separatorIndex);
-  const trimmedAction = spacingAndAction.trim();
   const spacingLength = spacingAndAction.length - spacingAndAction.trimStart().length;
   const spacing = spacingAndAction.slice(0, spacingLength);
-  const action = spacingAndAction.slice(spacingLength);
-  const hasError = !isActionName(trimmedAction);
+  const rawActionAndComment = spacingAndAction.slice(spacingLength);
+  const commentStartIndex = rawActionAndComment.indexOf("#");
+  const action =
+    commentStartIndex === -1
+      ? rawActionAndComment
+      : rawActionAndComment.slice(0, commentStartIndex);
+  const inlineComment =
+    commentStartIndex === -1 ? "" : rawActionAndComment.slice(commentStartIndex);
+  const actionName = action.trim();
+  const hasError = !isActionName(actionName);
   const actionClass = hasError ? "hotkeys-mappings-token-invalid" : "hotkeys-mappings-token-action";
 
   return {
@@ -49,7 +56,8 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
     html: [
       wrapToken("hotkeys-mappings-token-sequence", sequence),
       escapeHtml(spacing),
-      wrapToken(actionClass, action)
+      wrapToken(actionClass, action),
+      inlineComment ? wrapToken("hotkeys-mappings-token-comment", inlineComment) : ""
     ].join("")
   };
 };

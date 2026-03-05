@@ -69,10 +69,9 @@ export const isActionName = (value: string): value is ActionName => {
 
 export const DEFAULT_HOTKEY_MAPPINGS = `# scroll
 j scroll-down
+j scroll-up
 h scroll-left
 l scroll-right
-n cycle-match-next
-N cycle-match-prev
 d scroll-half-page-down
 u scroll-half-page-up
 gg scroll-to-top
@@ -80,11 +79,13 @@ G scroll-to-bottom
 
 # watch
 w toggle-video-controls
-f toggle-fullscreen
-k toggle-play-pause
+f toggle-fullscreen # requires watch mode
+k toggle-play-pause # requires watch mode
 
 # find
 / enable-find-mode
+n cycle-match-next # requires find mode
+N cycle-match-prev # requires find mode
 
 # hints
 F toggle-hints-new-tab
