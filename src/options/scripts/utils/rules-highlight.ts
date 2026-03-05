@@ -6,7 +6,7 @@ import {
   rulesUrlsWhitelistStatusEl,
   rulesUrlsWhitelistTextareaEl
 } from "~/src/options/scripts/ui";
-import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
+import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { isActionName } from "~/src/utils/hotkeys";
 
 const escapeHtml = (value: string): string =>
@@ -14,6 +14,30 @@ const escapeHtml = (value: string): string =>
 
 const wrapToken = (className: string, value: string): string =>
   `<span class="${className}">${escapeHtml(value)}</span>`;
+
+const isValidRegexPattern = (value: string): boolean => {
+  try {
+    void new RegExp(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const createRuleError = (
+  code:
+    | "invalid-prefix"
+    | "missing-pattern"
+    | "invalid-pattern"
+    | "dangling-operator"
+    | "missing-action"
+    | "invalid-action",
+  lineNumber: number,
+  message: string
+): EditorStatusError => ({
+  code,
+  message: `line ${lineNumber}: ${message}`
+});
 
 const tokenizeRegexPattern = (value: string): string => {
   const tokens: string[] = [];
@@ -100,9 +124,14 @@ const tokenizeRegexPattern = (value: string): string => {
   return tokens.join("");
 };
 
-const renderActions = (value: string): { hasError: boolean; html: string } => {
+const renderActions = (
+  value: string,
+  lineNumber: number
+): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
   const tokens: string[] = [];
+  const errors: EditorStatusError[] = [];
   let hasError = false;
+  let hasNonWhitespaceSegment = false;
 
   for (const token of value.matchAll(/\s+|\S+/g)) {
     const segment = token[0];
@@ -112,34 +141,50 @@ const renderActions = (value: string): { hasError: boolean; html: string } => {
       continue;
     }
 
+    hasNonWhitespaceSegment = true;
     const isValid = isActionName(segment);
-    hasError ||= !isValid;
+    if (!isValid) {
+      hasError = true;
+      errors.push(createRuleError("invalid-action", lineNumber, `Invalid action "${segment}".`));
+    }
     tokens.push(
       wrapToken(isValid ? "rules-urls-token-action" : "rules-urls-token-invalid", segment)
     );
   }
 
-  return { hasError, html: tokens.join("") };
+  if (!hasNonWhitespaceSegment) {
+    hasError = true;
+    errors.push(
+      createRuleError("missing-action", lineNumber, "Expected at least one action name.")
+    );
+  }
+
+  return { hasError, html: tokens.join(""), errors };
 };
 
 const renderLine = (
   line: string,
+  lineNumber: number,
   canAttachActions: boolean
-): { hasError: boolean; html: string } => {
+): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
   const trimmedLine = line.trim();
 
   if (!trimmedLine) {
-    return { hasError: false, html: "" };
+    return { hasError: false, html: "", errors: [] };
   }
 
   if (trimmedLine.startsWith("#")) {
-    return { hasError: false, html: wrapToken("rules-urls-token-comment", line) };
+    return { hasError: false, html: wrapToken("rules-urls-token-comment", line), errors: [] };
   }
 
   const prefix = line[0];
 
   if (prefix !== "*" && prefix !== "+" && prefix !== "-") {
-    return { hasError: true, html: wrapToken("rules-urls-token-invalid", line) };
+    return {
+      hasError: true,
+      html: wrapToken("rules-urls-token-invalid", line),
+      errors: [createRuleError("invalid-prefix", lineNumber, `Invalid rule prefix "${prefix}".`)]
+    };
   }
 
   const rest = line.slice(1);
@@ -148,8 +193,24 @@ const renderLine = (
   const value = rest.slice(leadingSpaceLength);
 
   if (prefix === "*") {
+    const normalizedPattern = value.trim();
+    const errors: EditorStatusError[] = [];
+
+    if (!normalizedPattern) {
+      errors.push(createRuleError("missing-pattern", lineNumber, "Regex pattern cannot be empty."));
+    } else if (!isValidRegexPattern(normalizedPattern)) {
+      errors.push(
+        createRuleError(
+          "invalid-pattern",
+          lineNumber,
+          `Invalid regex pattern "${normalizedPattern}".`
+        )
+      );
+    }
+
     return {
-      hasError: false,
+      hasError: errors.length > 0,
+      errors,
       html: [
         wrapToken("rules-urls-token-prefix", prefix),
         escapeHtml(spacing),
@@ -159,13 +220,24 @@ const renderLine = (
   }
 
   if (!canAttachActions) {
-    return { hasError: true, html: wrapToken("rules-urls-token-invalid", line) };
+    return {
+      hasError: true,
+      html: wrapToken("rules-urls-token-invalid", line),
+      errors: [
+        createRuleError(
+          "dangling-operator",
+          lineNumber,
+          `Operator "${prefix}" must follow a "*" pattern line.`
+        )
+      ]
+    };
   }
 
-  const renderedActions = renderActions(value);
+  const renderedActions = renderActions(value, lineNumber);
 
   return {
     hasError: renderedActions.hasError,
+    errors: renderedActions.errors,
     html: [
       wrapToken("rules-urls-token-operator", prefix),
       escapeHtml(spacing),
@@ -179,18 +251,21 @@ export const renderRulesUrlsValue = (
 ): {
   hasError: boolean;
   html: string;
+  errors: EditorStatusError[];
 } => {
   let previousLineWasRuleStart = false;
   let hasError = false;
+  const errors: EditorStatusError[] = [];
 
   const html = value
     .split("\n")
-    .map((line) => {
-      const renderedLine = renderLine(line, previousLineWasRuleStart);
+    .map((line, index) => {
+      const renderedLine = renderLine(line, index + 1, previousLineWasRuleStart);
       const trimmedLine = line.trim();
 
       previousLineWasRuleStart = trimmedLine.startsWith("*");
       hasError ||= renderedLine.hasError;
+      errors.push(...renderedLine.errors);
 
       return renderedLine.html;
     })
@@ -198,7 +273,8 @@ export const renderRulesUrlsValue = (
 
   return {
     hasError,
-    html
+    html,
+    errors
   };
 };
 
@@ -210,7 +286,7 @@ const syncRulesUrlsEditorHighlight = (
   const renderedValue = renderRulesUrlsValue(textareaEl.value);
 
   highlightEl.innerHTML = renderedValue.html;
-  setEditorStatus(statusEl, renderedValue.hasError);
+  setEditorStatus(statusEl, renderedValue.errors);
 };
 
 export const syncRulesUrlsHighlight = (): void => {

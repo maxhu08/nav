@@ -6,7 +6,7 @@ import {
   hintsPreferredSearchLabelsInputEl,
   hintsPreferredSearchLabelsStatusEl
 } from "~/src/options/scripts/ui";
-import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
+import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -14,12 +14,16 @@ const escapeHtml = (value: string): string =>
 const wrapToken = (className: string, value: string): string =>
   `<span class="${className}">${escapeHtml(value)}</span>`;
 
-const renderCharsetHighlight = (value: string): { hasError: boolean; html: string } => {
+const renderCharsetHighlight = (
+  value: string
+): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
   const seenCharacters = new Set<string>();
+  const uniqueCharacters = new Set<string>();
+  const errors: EditorStatusError[] = [];
   let hasError = false;
   let html = "";
 
-  for (const char of value) {
+  for (const [index, char] of Array.from(value).entries()) {
     const normalizedChar = char.toLowerCase();
     const isValidCharacter = /^[a-z]$/i.test(char);
     const isDuplicate = isValidCharacter && seenCharacters.has(normalizedChar);
@@ -28,13 +32,42 @@ const renderCharsetHighlight = (value: string): { hasError: boolean; html: strin
 
     if (isValidCharacter) {
       seenCharacters.add(normalizedChar);
+      uniqueCharacters.add(normalizedChar);
     }
 
-    hasError ||= !isValid;
+    if (!isValid) {
+      hasError = true;
+
+      if (isSpace) {
+        errors.push({
+          code: "space-character",
+          message: `position ${index + 1}: Spaces are not allowed in hints.charset.`
+        });
+      } else if (!isValidCharacter) {
+        errors.push({
+          code: "invalid-character",
+          message: `position ${index + 1}: "${char}" is not a letter a-z.`
+        });
+      } else if (isDuplicate) {
+        errors.push({
+          code: "duplicate-character",
+          message: `position ${index + 1}: "${char}" is duplicated.`
+        });
+      }
+    }
+
     html += wrapToken(isValid ? "hints-inline-token-valid" : "hints-inline-token-invalid", char);
   }
 
-  return { hasError, html };
+  if (uniqueCharacters.size < 2) {
+    hasError = true;
+    errors.push({
+      code: "insufficient-charset",
+      message: "hints.charset must contain at least 2 unique letters."
+    });
+  }
+
+  return { hasError, html, errors };
 };
 
 type PreferredSearchToken = {
@@ -53,8 +86,10 @@ const tokenizePreferredSearchLabels = (value: string): PreferredSearchToken[] =>
 
 const renderPreferredSearchLabelsHighlight = (
   value: string
-): { hasError: boolean; html: string } => {
+): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
   const tokens = tokenizePreferredSearchLabels(value);
+  const seenLabels = new Set<string>();
+  const errors: EditorStatusError[] = [];
   let previousLabelLength: number | null = null;
   let hasError = false;
   let html = "";
@@ -68,7 +103,13 @@ const renderPreferredSearchLabelsHighlight = (
         tokens[index + 1]?.type === "label";
       const isValid = !isBoundarySpace && isSingleSeparator;
 
-      hasError ||= !isValid;
+      if (!isValid) {
+        hasError = true;
+        errors.push({
+          code: "invalid-separator",
+          message: `Expected a single space between labels near "${token.value}".`
+        });
+      }
       html += wrapToken(
         isValid ? "hints-inline-token-separator" : "hints-inline-token-invalid",
         token.value
@@ -79,26 +120,56 @@ const renderPreferredSearchLabelsHighlight = (
     const isValidLabel = /^[a-z]+$/i.test(token.value);
     const hasExpectedLength =
       previousLabelLength === null || token.value.length === previousLabelLength + 1;
-    const isValid = isValidLabel && hasExpectedLength;
+    const isDuplicate = isValidLabel && seenLabels.has(token.value.toLowerCase());
+    const isValid = isValidLabel && hasExpectedLength && !isDuplicate;
 
     if (isValidLabel) {
       previousLabelLength = token.value.length;
+      seenLabels.add(token.value.toLowerCase());
     }
 
-    hasError ||= !isValid;
+    if (!isValid) {
+      hasError = true;
+
+      if (!isValidLabel) {
+        errors.push({
+          code: "invalid-label",
+          message: `Label "${token.value}" must contain only letters a-z.`
+        });
+      } else if (!hasExpectedLength) {
+        errors.push({
+          code: "invalid-label-length",
+          message: `Label "${token.value}" must be exactly one character longer than the previous label.`
+        });
+      } else if (isDuplicate) {
+        errors.push({
+          code: "duplicate-label",
+          message: `Label "${token.value}" is duplicated.`
+        });
+      }
+    }
+
     html += wrapToken(
       isValid ? "hints-inline-token-valid" : "hints-inline-token-invalid",
       token.value
     );
   });
 
-  return { hasError, html };
+  if (tokens.filter((token) => token.type === "label").length === 0) {
+    hasError = true;
+    errors.push({
+      code: "missing-labels",
+      message: "hints.preferredSearchLabels requires at least one label."
+    });
+  }
+
+  return { hasError, html, errors };
 };
 
 export const syncHintsCharsetHighlight = (): void => {
-  const { hasError, html } = renderCharsetHighlight(hintsCharsetInputEl.value);
+  const { html, errors } = renderCharsetHighlight(hintsCharsetInputEl.value);
   hintsCharsetHighlightEl.innerHTML = html;
-  setEditorStatus(hintsCharsetStatusEl, hasError);
+  setEditorStatus(hintsCharsetStatusEl, errors);
 };
 
 export const syncHintsCharsetHighlightScroll = (): void => {
@@ -106,12 +177,12 @@ export const syncHintsCharsetHighlightScroll = (): void => {
 };
 
 export const syncHintsPreferredSearchLabelsHighlight = (): void => {
-  const { hasError, html } = renderPreferredSearchLabelsHighlight(
+  const { html, errors } = renderPreferredSearchLabelsHighlight(
     hintsPreferredSearchLabelsInputEl.value
   );
 
   hintsPreferredSearchLabelsHighlightEl.innerHTML = html;
-  setEditorStatus(hintsPreferredSearchLabelsStatusEl, hasError);
+  setEditorStatus(hintsPreferredSearchLabelsStatusEl, errors);
 };
 
 export const syncHintsPreferredSearchLabelsHighlightScroll = (): void => {

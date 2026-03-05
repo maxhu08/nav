@@ -3,7 +3,7 @@ import {
   hintsAvoidAdjacentPairsStatusEl,
   hintsAvoidAdjacentPairsTextareaEl
 } from "~/src/options/scripts/ui";
-import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
+import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -11,17 +11,22 @@ const escapeHtml = (value: string): string =>
 const wrapToken = (className: string, value: string): string =>
   `<span class="${className}">${escapeHtml(value)}</span>`;
 
-const renderLine = (line: string): { hasError: boolean; html: string } => {
+const renderLine = (
+  line: string,
+  lineNumber: number,
+  seenPairs: Set<string>
+): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
   const trimmedLine = line.trim();
 
   if (!trimmedLine) {
-    return { hasError: false, html: "" };
+    return { hasError: false, html: "", errors: [] };
   }
 
   if (trimmedLine.startsWith("#")) {
     return {
       hasError: false,
-      html: wrapToken("hints-avoid-adjacent-pairs-token-comment", line)
+      html: wrapToken("hints-avoid-adjacent-pairs-token-comment", line),
+      errors: []
     };
   }
 
@@ -29,6 +34,7 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
   const lineWithoutComment = commentStartIndex === -1 ? line : line.slice(0, commentStartIndex);
   const inlineComment = commentStartIndex === -1 ? "" : line.slice(commentStartIndex);
   const tokens: string[] = [];
+  const errors: EditorStatusError[] = [];
   let hasError = false;
 
   for (const match of lineWithoutComment.matchAll(/\s+|\S+/g)) {
@@ -39,8 +45,30 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
       continue;
     }
 
-    const isValid = /^[a-z]{2}$/i.test(segment);
-    hasError ||= !isValid;
+    const isValidPair = /^[a-z]{2}$/i.test(segment);
+    const normalizedSegment = segment.toLowerCase();
+    const isDuplicate = isValidPair && seenPairs.has(normalizedSegment);
+    const isValid = isValidPair && !isDuplicate;
+
+    if (isValidPair) {
+      seenPairs.add(normalizedSegment);
+    }
+
+    if (!isValid) {
+      hasError = true;
+      if (!isValidPair) {
+        errors.push({
+          code: "invalid-pair",
+          message: `line ${lineNumber}: "${segment}" must be exactly 2 letters (a-z).`
+        });
+      } else if (isDuplicate) {
+        errors.push({
+          code: "duplicate-pair",
+          message: `line ${lineNumber}: "${segment}" is duplicated.`
+        });
+      }
+    }
+
     tokens.push(
       wrapToken(
         isValid
@@ -55,22 +83,23 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
     tokens.push(wrapToken("hints-avoid-adjacent-pairs-token-comment", inlineComment));
   }
 
-  return { hasError, html: tokens.join("") };
+  return { hasError, html: tokens.join(""), errors };
 };
 
 export const syncHintsAvoidAdjacentPairsHighlight = (): void => {
-  let hasError = false;
+  const seenPairs = new Set<string>();
+  const errors: EditorStatusError[] = [];
 
   hintsAvoidAdjacentPairsHighlightEl.innerHTML = hintsAvoidAdjacentPairsTextareaEl.value
     .split("\n")
-    .map((line) => {
-      const result = renderLine(line);
-      hasError ||= result.hasError;
+    .map((line, index) => {
+      const result = renderLine(line, index + 1, seenPairs);
+      errors.push(...result.errors);
       return result.html;
     })
     .join("\n");
 
-  setEditorStatus(hintsAvoidAdjacentPairsStatusEl, hasError);
+  setEditorStatus(hintsAvoidAdjacentPairsStatusEl, errors);
 };
 
 export const syncHintsAvoidAdjacentPairsHighlightScroll = (): void => {
