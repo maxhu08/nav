@@ -4,13 +4,7 @@ import {
   areHintsPendingSelection,
   exitHints,
   handleHintsKeydown,
-  setAvoidedAdjacentHintPairs,
-  setHighlightThumbnails,
-  setHintCSS,
-  setHintCharset,
-  setPreferredSearchLabels,
-  setReservedHintPrefixes,
-  setShowCapitalizedLetters
+  setReservedHintPrefixes
 } from "~/src/core/actions/hints";
 import {
   installScrollTracking,
@@ -23,31 +17,18 @@ import {
   scrollToTop,
   scrollUp
 } from "~/src/core/actions/scroll";
+import { goHistory, createTabCommandAction } from "~/src/core/actions/tabs";
+import { yankCurrentTabUrl, yankImage, yankImageUrl, yankLinkUrl } from "~/src/core/actions/yank";
+import { createStorageChangeHandler, syncFastConfig } from "~/src/core/utils/fast-config-sync";
+import { ensureFocusStyles, syncFocusStyles } from "~/src/core/utils/focus-styles";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
-import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
+import { ensureToastWrapper } from "~/src/core/utils/sonner";
 import { getExtensionNamespace } from "~/src/utils/extension-id";
-import { type FastConfig, type FastRule, getFastConfig } from "~/src/utils/fast-config";
+import { type FastConfig, type FastRule } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 
 type ActionHandler = (count?: number) => boolean;
-type TabCommand =
-  | "tab-go-prev"
-  | "tab-go-next"
-  | "duplicate-current-tab"
-  | "move-current-tab-to-new-window"
-  | "close-current-tab"
-  | "create-new-tab"
-  | "reload-current-tab"
-  | "reload-current-tab-hard";
-type TabCommandResponse = { ok: boolean };
-type FetchImageResponse = {
-  ok: boolean;
-  bytes?: number[];
-  mimeType?: string;
-};
-
-type ImageClipboardResult = "success" | "unsupported" | "error";
 type FindMatch = {
   range: Range;
   element: HTMLElement;
@@ -62,228 +43,6 @@ let watchVideoElement: HTMLVideoElement | null = null;
 let watchModeActive = false;
 let watchShowCapitalizedLetters = false;
 let watchHighlightThumbnails = true;
-
-const writeClipboard = async (text: string): Promise<boolean> => {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.setAttribute("readonly", "true");
-    textarea.style.position = "fixed";
-    textarea.style.top = "-9999px";
-    textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
-
-    textarea.focus();
-    textarea.select();
-
-    try {
-      return document.execCommand("copy");
-    } finally {
-      textarea.remove();
-    }
-  }
-};
-
-const writeClipboardImage = async (image: HTMLImageElement): Promise<ImageClipboardResult> => {
-  if (typeof ClipboardItem === "undefined" || typeof navigator.clipboard?.write !== "function") {
-    return "unsupported";
-  }
-
-  const source = image.currentSrc || image.src;
-  if (!source) {
-    return "error";
-  }
-
-  const convertBlobToClipboardBlob = async (blob: Blob): Promise<Blob | null> => {
-    if (!blob.type.startsWith("image/")) {
-      return null;
-    }
-
-    try {
-      if (blob.type === "image/png") {
-        return blob;
-      }
-
-      const bitmap = await createImageBitmap(blob);
-      const canvas = document.createElement("canvas");
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-
-      const context = canvas.getContext("2d");
-      if (!context) {
-        bitmap.close();
-        return null;
-      }
-
-      context.drawImage(bitmap, 0, 0);
-      bitmap.close();
-
-      return await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((nextBlob) => resolve(nextBlob), "image/png");
-      });
-    } catch {
-      return null;
-    }
-  };
-
-  const writeBlobToClipboard = async (blob: Blob): Promise<ImageClipboardResult> => {
-    const clipboardBlob = await convertBlobToClipboardBlob(blob);
-    if (!clipboardBlob) {
-      return "error";
-    }
-
-    try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          [clipboardBlob.type]: clipboardBlob
-        })
-      ]);
-
-      return "success";
-    } catch {
-      return "error";
-    }
-  };
-
-  const fetchImageBlobFromBackground = async (): Promise<Blob | null> => {
-    try {
-      const response = await new Promise<FetchImageResponse>((resolve) => {
-        chrome.runtime.sendMessage(
-          {
-            type: "fetch-image",
-            url: source
-          },
-          (result?: FetchImageResponse) => {
-            resolve(result ?? { ok: false });
-          }
-        );
-      });
-
-      if (!response.ok || !response.mimeType || !response.bytes) {
-        return null;
-      }
-
-      return new Blob([new Uint8Array(response.bytes)], { type: response.mimeType });
-    } catch {
-      return null;
-    }
-  };
-
-  try {
-    const response = await fetch(source);
-    if (!response.ok) {
-      const backgroundBlob = await fetchImageBlobFromBackground();
-      if (!backgroundBlob) {
-        return "error";
-      }
-
-      return writeBlobToClipboard(backgroundBlob);
-    }
-
-    const blob = await response.blob();
-    return writeBlobToClipboard(blob);
-  } catch {
-    const backgroundBlob = await fetchImageBlobFromBackground();
-    if (!backgroundBlob) {
-      return "error";
-    }
-
-    return writeBlobToClipboard(backgroundBlob);
-  }
-};
-
-const getNormalizedUrl = (value: string): string => {
-  const url = new URL(value);
-  const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
-
-  return `${url.origin}${pathname}${url.search}${url.hash}`;
-};
-
-const getNormalizedCurrentUrl = (): string => getNormalizedUrl(window.location.href);
-
-const getLinkUrl = (element: HTMLElement): string | null => {
-  if (
-    (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) &&
-    element.href
-  ) {
-    return getNormalizedUrl(element.href);
-  }
-
-  return null;
-};
-
-const getImageUrl = (element: HTMLElement): string | null => {
-  if (!(element instanceof HTMLImageElement)) {
-    return null;
-  }
-
-  const source = element.currentSrc || element.src;
-  if (!source) {
-    return null;
-  }
-
-  return getNormalizedUrl(source);
-};
-
-const showYankToast = (type: "success" | "error", message: string, description: string): void => {
-  ensureToastWrapper();
-  const toast = getToastApi();
-
-  if (type === "success") {
-    toast?.success(message, { description });
-    return;
-  }
-
-  toast?.error(message, { description });
-};
-
-const showImageYankToast = (image: HTMLImageElement): void => {
-  ensureToastWrapper();
-  const toast = getToastApi();
-  const source = image.currentSrc || image.src;
-  const altText = image.alt.trim();
-  const captionText = /^(true|false)$/i.test(altText) ? "" : altText;
-  const toastEl = toast?.success("Image yanked", { description: " " });
-
-  if (!(toastEl instanceof HTMLElement) || !source) {
-    return;
-  }
-
-  const descriptionEl = toastEl.querySelector("[data-description]");
-  if (!(descriptionEl instanceof HTMLElement)) {
-    return;
-  }
-
-  descriptionEl.textContent = "";
-  descriptionEl.style.whiteSpace = "normal";
-  descriptionEl.style.overflow = "visible";
-  descriptionEl.style.textOverflow = "clip";
-  descriptionEl.style.marginTop = "8px";
-
-  const preview = document.createElement("img");
-  preview.src = source;
-  preview.alt = captionText || "Yanked image preview";
-  preview.style.display = "block";
-  preview.style.width = "100%";
-  preview.style.maxHeight = "160px";
-  preview.style.objectFit = "contain";
-  preview.style.borderRadius = "8px";
-  preview.style.background = "rgba(255, 255, 255, 0.04)";
-  descriptionEl.append(preview);
-
-  if (captionText) {
-    const caption = document.createElement("div");
-    caption.textContent = captionText;
-    caption.style.marginTop = "8px";
-    caption.style.color = "#a3a3a3";
-    caption.style.fontSize = "14px";
-    caption.style.lineHeight = "20px";
-    descriptionEl.append(caption);
-  }
-};
 
 const getCssHighlights = (): {
   set: (name: string, highlight: unknown) => void;
@@ -602,117 +361,6 @@ const openFindMode = (): boolean => {
   return true;
 };
 
-const yankCurrentTabUrl = (): boolean => {
-  const currentUrl = getNormalizedCurrentUrl();
-
-  void writeClipboard(currentUrl).then((didCopy) => {
-    if (didCopy) {
-      showYankToast("success", "Current tab URL yanked", currentUrl);
-      return;
-    }
-
-    showYankToast("error", "Could not yank current tab URL", "Clipboard access was denied.");
-  });
-
-  return true;
-};
-
-const yankLinkUrl = (): boolean => {
-  const didActivate = activateHints("copy-link", {
-    onActivate: (element) => {
-      const linkUrl = getLinkUrl(element);
-
-      if (!linkUrl) {
-        showYankToast("error", "Could not yank link URL", "The selected target is not a link.");
-        return;
-      }
-
-      void writeClipboard(linkUrl).then((didCopy) => {
-        if (didCopy) {
-          showYankToast("success", "Link URL yanked", linkUrl);
-          return;
-        }
-
-        showYankToast("error", "Could not yank link URL", "Clipboard access was denied.");
-      });
-    }
-  });
-
-  if (!didActivate) {
-    showYankToast("error", "Could not yank link URL", "No visible links were found.");
-  }
-
-  return true;
-};
-
-const yankImage = (): boolean => {
-  const didActivate = activateHints("copy-image", {
-    onActivate: (element) => {
-      if (!(element instanceof HTMLImageElement)) {
-        showYankToast("error", "Could not yank image", "The selected target is not an image.");
-        return;
-      }
-
-      void writeClipboardImage(element).then((result) => {
-        if (result === "success") {
-          showImageYankToast(element);
-          return;
-        }
-
-        if (result === "unsupported") {
-          showYankToast("error", "Could not yank image", "Image clipboard support is unavailable.");
-          return;
-        }
-
-        showYankToast("error", "Could not yank image", "The image could not be copied.");
-      });
-    }
-  });
-
-  if (!didActivate) {
-    showYankToast("error", "Could not yank image", "No visible images were found.");
-  }
-
-  return true;
-};
-
-const yankImageUrl = (): boolean => {
-  const didActivate = activateHints("copy-image", {
-    onActivate: (element) => {
-      const imageUrl = getImageUrl(element);
-
-      if (!imageUrl) {
-        showYankToast("error", "Could not yank image URL", "The selected target is not an image.");
-        return;
-      }
-
-      void writeClipboard(imageUrl).then((didCopy) => {
-        if (didCopy) {
-          showYankToast("success", "Image URL yanked", imageUrl);
-          return;
-        }
-
-        showYankToast("error", "Could not yank image URL", "Clipboard access was denied.");
-      });
-    }
-  });
-
-  if (!didActivate) {
-    showYankToast("error", "Could not yank image URL", "No visible images were found.");
-  }
-
-  return true;
-};
-
-const goHistory = (offset: number): boolean => {
-  if (offset === 0 || window.history.length < 1) {
-    return false;
-  }
-
-  window.history.go(offset);
-  return true;
-};
-
 const isVideoVisible = (video: HTMLVideoElement): boolean => {
   const bounds = video.getBoundingClientRect();
 
@@ -991,70 +639,6 @@ const toggleFullscreen = (): boolean => {
   return true;
 };
 
-const getCurrentExtensionPageTabContext = async (): Promise<{
-  tabId?: number;
-  tabIndex?: number;
-  windowId?: number;
-}> => {
-  if (typeof chrome.tabs?.getCurrent !== "function") {
-    return {};
-  }
-
-  return new Promise((resolve) => {
-    chrome.tabs.getCurrent((tab) => {
-      if (chrome.runtime.lastError || !tab) {
-        resolve({});
-        return;
-      }
-
-      resolve({
-        tabId: tab.id,
-        tabIndex: tab.index,
-        windowId: tab.windowId
-      });
-    });
-  });
-};
-
-const runTabCommand = (command: TabCommand): boolean => {
-  void getCurrentExtensionPageTabContext().then((tabContext) => {
-    chrome.runtime.sendMessage(
-      {
-        type: "tab-command",
-        command,
-        ...tabContext
-      },
-      (response?: TabCommandResponse) => {
-        if (response?.ok) {
-          return;
-        }
-
-        const toast = getToastApi();
-        const actionLabel =
-          command === "tab-go-prev"
-            ? "go to previous tab"
-            : command === "tab-go-next"
-              ? "go to next tab"
-              : command === "duplicate-current-tab"
-                ? "duplicate current tab"
-                : command === "move-current-tab-to-new-window"
-                  ? "move current tab to new window"
-                  : command === "close-current-tab"
-                    ? "close current tab"
-                    : command === "create-new-tab"
-                      ? "create new tab"
-                      : command === "reload-current-tab"
-                        ? "reload current tab"
-                        : "hard reload current tab";
-
-        toast?.error(`Could not ${actionLabel}`);
-      }
-    );
-  });
-
-  return true;
-};
-
 const isOptionsPage = (): boolean => {
   const optionsUrl = chrome.runtime.getURL("options.html");
   return window.location.href === optionsUrl;
@@ -1069,14 +653,14 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "cycle-match-prev": () => cycleFindMatch(-1),
   "history-go-prev": (count = 1) => goHistory(-count),
   "history-go-next": (count = 1) => goHistory(count),
-  "tab-go-prev": () => runTabCommand("tab-go-prev"),
-  "tab-go-next": () => runTabCommand("tab-go-next"),
-  "duplicate-current-tab": () => runTabCommand("duplicate-current-tab"),
-  "move-current-tab-to-new-window": () => runTabCommand("move-current-tab-to-new-window"),
-  "close-current-tab": () => runTabCommand("close-current-tab"),
-  "create-new-tab": () => runTabCommand("create-new-tab"),
-  "reload-current-tab": () => runTabCommand("reload-current-tab"),
-  "reload-current-tab-hard": () => runTabCommand("reload-current-tab-hard"),
+  "tab-go-prev": createTabCommandAction("tab-go-prev"),
+  "tab-go-next": createTabCommandAction("tab-go-next"),
+  "duplicate-current-tab": createTabCommandAction("duplicate-current-tab"),
+  "move-current-tab-to-new-window": createTabCommandAction("move-current-tab-to-new-window"),
+  "close-current-tab": createTabCommandAction("close-current-tab"),
+  "create-new-tab": createTabCommandAction("create-new-tab"),
+  "reload-current-tab": createTabCommandAction("reload-current-tab"),
+  "reload-current-tab-hard": createTabCommandAction("reload-current-tab-hard"),
   "toggle-hints-current-tab": () => {
     if (areHintsPendingSelection()) {
       exitHints();
@@ -1603,14 +1187,6 @@ const CLOSE_ICON_NODES: SvgNodeDefinition[] = [
   }
 ];
 
-const syncFocusStyles = (): void => {
-  const style = document.getElementById(FOCUS_STYLE_ID);
-
-  if (style instanceof HTMLStyleElement) {
-    style.textContent = renderFocusStyles();
-  }
-};
-
 const normalizeBaseKey = (key: string): string | null => {
   if (key === " ") {
     return "<space>";
@@ -1898,50 +1474,28 @@ const getToggleHintsActionName = (keyToken: string): KeyParseResult => {
   return { actionName: null, consumed: false };
 };
 
-const syncFastConfig = (): void => {
-  void getFastConfig().then((fastConfig) => {
-    applyUrlRules(fastConfig.rules.urls);
-    setHintCharset(fastConfig.hints.charset);
-    setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
-    setPreferredSearchLabels(fastConfig.hints.preferredSearchLabels);
-    setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
-    watchShowCapitalizedLetters = fastConfig.hints.showCapitalizedLetters;
-    setHighlightThumbnails(fastConfig.hints.improveThumbnailMarkers);
-    watchHighlightThumbnails = fastConfig.hints.improveThumbnailMarkers;
-    setHintCSS(fastConfig.hints.css);
-    showActivationIndicator = fastConfig.hints.showActivationIndicator;
-    activationIndicatorColor = fastConfig.hints.showActivationIndicatorColor;
-    syncFocusStyles();
-    syncWatchHintsOverlay();
-    applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
-  });
+const fastConfigSyncDeps = {
+  applyHotkeyMappings,
+  applyUrlRules,
+  setWatchShowCapitalizedLetters: (value: boolean): void => {
+    watchShowCapitalizedLetters = value;
+  },
+  setWatchHighlightThumbnails: (value: boolean): void => {
+    watchHighlightThumbnails = value;
+  },
+  setShowActivationIndicator: (value: boolean): void => {
+    showActivationIndicator = value;
+  },
+  setActivationIndicatorColor: (value: string): void => {
+    activationIndicatorColor = value;
+  },
+  syncFocusStyles: (): void => {
+    syncFocusStyles(FOCUS_STYLE_ID, renderFocusStyles);
+  },
+  syncWatchHintsOverlay
 };
 
-const handleStorageChange = (
-  changes: Record<string, chrome.storage.StorageChange>,
-  areaName: string
-): void => {
-  if (areaName !== "local" || !changes.fastConfig?.newValue) {
-    return;
-  }
-
-  const nextFastConfig = changes.fastConfig.newValue as FastConfig;
-
-  applyUrlRules(nextFastConfig.rules.urls);
-  setHintCharset(nextFastConfig.hints.charset);
-  setAvoidedAdjacentHintPairs(nextFastConfig.hints.avoidAdjacentPairs);
-  setPreferredSearchLabels(nextFastConfig.hints.preferredSearchLabels);
-  setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
-  watchShowCapitalizedLetters = nextFastConfig.hints.showCapitalizedLetters;
-  setHighlightThumbnails(nextFastConfig.hints.improveThumbnailMarkers);
-  watchHighlightThumbnails = nextFastConfig.hints.improveThumbnailMarkers;
-  setHintCSS(nextFastConfig.hints.css);
-  showActivationIndicator = nextFastConfig.hints.showActivationIndicator;
-  activationIndicatorColor = nextFastConfig.hints.showActivationIndicatorColor;
-  syncFocusStyles();
-  syncWatchHintsOverlay();
-  applyHotkeyMappings(nextFastConfig.hotkeys.mappings, nextFastConfig.hotkeys.prefixes);
-};
+const handleStorageChange = createStorageChangeHandler(fastConfigSyncDeps);
 
 const handleKeydown = (event: KeyboardEvent): void => {
   if (areHintsActive()) {
@@ -2068,22 +1622,6 @@ const handleKeydown = (event: KeyboardEvent): void => {
 
   event.preventDefault();
   event.stopImmediatePropagation();
-};
-
-const ensureFocusStyles = (): void => {
-  const existingStyle = document.getElementById(FOCUS_STYLE_ID);
-
-  if (existingStyle instanceof HTMLStyleElement) {
-    existingStyle.textContent = renderFocusStyles();
-    return;
-  }
-
-  const style = document.createElement("style");
-  style.id = FOCUS_STYLE_ID;
-  style.textContent = renderFocusStyles();
-
-  const styleRoot = document.head ?? document.documentElement;
-  styleRoot.append(style);
 };
 
 const ensureFindStyles = (root: ShadowRoot): void => {
@@ -2389,7 +1927,7 @@ export const initCoreNavigation = (): void => {
 
   installScrollTracking();
   if (!isOptionsPage()) {
-    ensureFocusStyles();
+    ensureFocusStyles(FOCUS_STYLE_ID, renderFocusStyles);
     getFocusOverlay();
     ensureFindUi();
     window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
@@ -2410,7 +1948,7 @@ export const initCoreNavigation = (): void => {
     });
   }
   ensureToastWrapper();
-  syncFastConfig();
+  syncFastConfig(fastConfigSyncDeps);
 
   chrome.storage.onChanged.addListener(handleStorageChange);
   window.addEventListener("keydown", handleKeydown, true);
