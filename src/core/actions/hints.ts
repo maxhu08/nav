@@ -30,6 +30,9 @@ type HintMarker = {
   element: HTMLElement;
   marker: HTMLSpanElement;
   label: string;
+  letters: HTMLSpanElement[];
+  visible: boolean;
+  renderedTyped: string;
 };
 
 type PlacedMarkerRect = {
@@ -43,7 +46,10 @@ type HintState = {
   active: boolean;
   mode: LinkMode;
   typed: string;
+  previousTyped: string;
   markers: HintMarker[];
+  visibleMarkers: HintMarker[];
+  markerByLabel: Map<string, HintMarker>;
   overlay: HTMLDivElement | null;
   onActivate: ((element: HTMLElement) => void) | null;
   frameHandle: number | null;
@@ -57,7 +63,10 @@ const hintState: HintState = {
   active: false,
   mode: "current-tab",
   typed: "",
+  previousTyped: "",
   markers: [],
+  visibleMarkers: [],
+  markerByLabel: new Map(),
   overlay: null,
   onActivate: null,
   frameHandle: null,
@@ -855,24 +864,29 @@ const applyHintStyles = (): void => {
   document.head.appendChild(style);
 };
 
-const renderMarkerText = (marker: HTMLSpanElement, label: string, typed: string): void => {
-  marker.replaceChildren();
+const setMarkerTypedState = (hint: HintMarker, typed: string): void => {
+  if (hint.renderedTyped === typed) {
+    return;
+  }
 
-  const displayLabel = showCapitalizedLetters ? label.toUpperCase() : label.toLowerCase();
+  const typedLength = typed.length;
+  const previousTypedLength = hint.renderedTyped.length;
+  const startIndex = Math.min(typedLength, previousTypedLength);
+  const endIndex = Math.max(typedLength, previousTypedLength);
 
-  for (const [index, char] of Array.from(displayLabel).entries()) {
-    const letter = document.createElement("span");
-    const isTyped = typed.length > 0 && index < typed.length && label[index] === typed[index];
+  for (let index = startIndex; index < endIndex; index += 1) {
+    const letter = hint.letters[index];
+    if (!letter) continue;
 
-    letter.textContent = char;
+    const isTyped = index < typedLength;
     letter.setAttribute(LETTER_ATTRIBUTE, isTyped ? "typed" : "pending");
     letter.setAttribute(LETTER_STYLE_ATTRIBUTE, isTyped ? "typed" : "pending");
-
-    marker.appendChild(letter);
   }
+
+  hint.renderedTyped = typed;
 };
 
-const createMarker = (label: string): HTMLSpanElement => {
+const createMarker = (label: string): Pick<HintMarker, "marker" | "letters" | "renderedTyped"> => {
   const marker = document.createElement("span");
   marker.setAttribute(MARKER_ATTRIBUTE, "true");
   marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
@@ -882,9 +896,19 @@ const createMarker = (label: string): HTMLSpanElement => {
   marker.style.left = "0px";
   marker.style.top = "0px";
 
-  renderMarkerText(marker, label, "");
+  const displayLabel = showCapitalizedLetters ? label.toUpperCase() : label.toLowerCase();
+  const letters: HTMLSpanElement[] = [];
 
-  return marker;
+  for (const char of Array.from(displayLabel)) {
+    const letter = document.createElement("span");
+    letter.textContent = char;
+    letter.setAttribute(LETTER_ATTRIBUTE, "pending");
+    letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
+    marker.appendChild(letter);
+    letters.push(letter);
+  }
+
+  return { marker, letters, renderedTyped: "" };
 };
 
 const doPlacedMarkerRectsOverlap = (left: PlacedMarkerRect, right: PlacedMarkerRect): boolean =>
@@ -1436,7 +1460,10 @@ export const exitHints = (): void => {
   hintState.active = false;
   hintState.mode = "current-tab";
   hintState.typed = "";
+  hintState.previousTyped = "";
   hintState.markers = [];
+  hintState.visibleMarkers = [];
+  hintState.markerByLabel.clear();
   hintState.overlay = null;
   hintState.onActivate = null;
 };
@@ -1462,14 +1489,41 @@ const activateHint = (hint: HintMarker): void => {
 
 const applyFilter = (): void => {
   const typed = hintState.typed;
-  const matches = hintState.markers.filter((hint) => hint.label.startsWith(typed));
-  const exactMatch = matches.find((hint) => hint.label === typed);
+  const previousTyped = hintState.previousTyped;
+  const isNarrowing = typed.startsWith(previousTyped);
+  const candidateMarkers = isNarrowing ? hintState.visibleMarkers : hintState.markers;
+  const nextVisibleMarkers =
+    typed.length === 0
+      ? hintState.markers
+      : candidateMarkers.filter((hint) => hint.label.startsWith(typed));
+  const nextVisibleSet = new Set(nextVisibleMarkers);
 
-  for (const hint of hintState.markers) {
-    const isMatch = typed.length === 0 || hint.label.startsWith(typed);
-    renderMarkerText(hint.marker, hint.label, isMatch ? typed : "");
-    hint.marker.style.display = isMatch ? "" : "none";
+  for (const hint of candidateMarkers) {
+    const shouldBeVisible = typed.length === 0 || nextVisibleSet.has(hint);
+
+    if (shouldBeVisible) {
+      if (!hint.visible) {
+        hint.marker.style.display = "";
+        hint.visible = true;
+      }
+
+      setMarkerTypedState(hint, typed);
+      continue;
+    }
+
+    if (hint.visible) {
+      hint.marker.style.display = "none";
+      hint.visible = false;
+    }
+
+    if (hint.renderedTyped.length > 0) {
+      setMarkerTypedState(hint, "");
+    }
   }
+
+  hintState.visibleMarkers = nextVisibleMarkers;
+  hintState.previousTyped = typed;
+  const exactMatch = hintState.markerByLabel.get(typed);
 
   if (exactMatch) {
     activateHint(exactMatch);
@@ -1509,10 +1563,10 @@ export const activateHints = (
         : labels[labelIndex++];
 
     if (!label) return;
-    const marker = createMarker(label);
+    const { marker, letters, renderedTyped } = createMarker(label);
 
     overlay.appendChild(marker);
-    markers.push({ element, marker, label });
+    markers.push({ element, marker, label, letters, visible: true, renderedTyped });
   });
 
   if (markers.length === 0) return false;
@@ -1522,7 +1576,10 @@ export const activateHints = (
   hintState.active = true;
   hintState.mode = mode;
   hintState.typed = "";
+  hintState.previousTyped = "";
   hintState.markers = markers;
+  hintState.visibleMarkers = markers;
+  hintState.markerByLabel = new Map(markers.map((marker) => [marker.label, marker]));
   hintState.overlay = overlay;
   hintState.onActivate = options.onActivate ?? null;
   revealVideoHintControls(markers);
@@ -1584,7 +1641,16 @@ export const setShowCapitalizedLetters = (nextShowCapitalizedLetters: boolean): 
 
   for (const hint of hintState.markers) {
     const isMatch = hintState.typed.length === 0 || hint.label.startsWith(hintState.typed);
-    renderMarkerText(hint.marker, hint.label, isMatch ? hintState.typed : "");
+    setMarkerTypedState(hint, isMatch ? hintState.typed : "");
+    const displayLabel = showCapitalizedLetters
+      ? hint.label.toUpperCase()
+      : hint.label.toLowerCase();
+
+    for (let index = 0; index < hint.letters.length; index += 1) {
+      const letter = hint.letters[index];
+      if (!letter) continue;
+      letter.textContent = displayLabel[index] ?? "";
+    }
   }
 };
 
@@ -1616,8 +1682,8 @@ export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
   }
 
   if (event.key === "Enter") {
-    const matches = hintState.markers.filter((hint) => hint.label.startsWith(hintState.typed));
-    const exactMatch = matches.find((hint) => hint.label === hintState.typed);
+    const matches = hintState.visibleMarkers;
+    const exactMatch = hintState.markerByLabel.get(hintState.typed);
 
     if (exactMatch) {
       activateHint(exactMatch);
