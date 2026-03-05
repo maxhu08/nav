@@ -18,80 +18,31 @@ import {
   scrollUp
 } from "~/src/core/actions/scroll";
 import { createEnableFindModeAction } from "~/src/core/actions/find";
+import { createFindModeController } from "~/src/core/actions/find-mode";
+import { createWatchController } from "~/src/core/actions/watch-mode";
 import { goHistory, createTabCommandAction } from "~/src/core/actions/tabs";
 import { yankCurrentTabUrl, yankImage, yankImageUrl, yankLinkUrl } from "~/src/core/actions/yank";
 import { createStorageChangeHandler, syncFastConfig } from "~/src/core/utils/fast-config-sync";
-import { injectStyles } from "~/src/core/utils/inject-styles";
+import { createFocusIndicatorController } from "~/src/core/utils/focus-indicator";
+import {
+  FIND_STYLE_ID,
+  FOCUS_INDICATOR_EVENT,
+  findStyleParams,
+  getFindBar,
+  getFindInput,
+  isFindUiElement
+} from "~/src/core/utils/get-ui";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
+import { createKeyState, getKeyToken, isModifierKey } from "~/src/core/utils/key-state";
 import { ensureToastWrapper } from "~/src/core/utils/sonner";
-import { getExtensionNamespace } from "~/src/utils/extension-id";
-import { type FastConfig, type FastRule } from "~/src/utils/fast-config";
+import { type FastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
-import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 
 type ActionHandler = (count?: number) => boolean;
 type CoreMode = "normal" | "find" | "watch";
-type FindMatch = {
-  range: Range;
-  element: HTMLElement;
-};
 
-let keyActions: Partial<Record<string, ActionName>> = {};
-let keyActionPrefixes: Partial<Record<string, true>> = {};
-let urlRulesMode: FastConfig["rules"]["urls"]["mode"] = "blacklist";
-let urlBlacklistRules: FastRule[] = [];
-let urlWhitelistRules: FastRule[] = [];
 let currentMode: CoreMode = "normal";
-let watchVideoElement: HTMLVideoElement | null = null;
-let watchShowCapitalizedLetters = false;
-let watchHighlightThumbnails = true;
-
-const getCssHighlights = (): {
-  set: (name: string, highlight: unknown) => void;
-  delete: (name: string) => void;
-} | null => {
-  const cssObject = globalThis.CSS as unknown as {
-    highlights?: {
-      set: (name: string, highlight: unknown) => void;
-      delete: (name: string) => void;
-    };
-  };
-
-  return cssObject.highlights ?? null;
-};
-
-const clearFindHighlights = (): void => {
-  const highlights = getCssHighlights();
-  highlights?.delete(FIND_HIGHLIGHT_NAME);
-  highlights?.delete(FIND_CURRENT_HIGHLIGHT_NAME);
-};
-
-const getFindBar = (): HTMLDivElement | null =>
-  getFindUiRoot()?.getElementById(FIND_BAR_ID) as HTMLDivElement | null;
-
-const getFindInput = (): HTMLInputElement | null =>
-  getFindUiRoot()?.getElementById(FIND_INPUT_ID) as HTMLInputElement | null;
-
-const getFindMatchCount = (): HTMLSpanElement | null =>
-  getFindUiRoot()?.getElementById(FIND_MATCH_COUNT_ID) as HTMLSpanElement | null;
-
-const getFindBarActions = (): HTMLDivElement | null =>
-  getFindUiRoot()?.querySelector(".nav-find-bar-actions") as HTMLDivElement | null;
-
-const getFindStatus = (): HTMLDivElement | null =>
-  getFindUiRoot()?.getElementById(FIND_STATUS_ID) as HTMLDivElement | null;
-
-const getFindStatusText = (): HTMLSpanElement | null =>
-  getFindUiRoot()?.getElementById(FIND_STATUS_TEXT_ID) as HTMLSpanElement | null;
-
-const getFindPrevButton = (): HTMLButtonElement | null =>
-  getFindUiRoot()?.getElementById(FIND_PREV_BUTTON_ID) as HTMLButtonElement | null;
-
-const getFindNextButton = (): HTMLButtonElement | null =>
-  getFindUiRoot()?.getElementById(FIND_NEXT_BUTTON_ID) as HTMLButtonElement | null;
-
-const getFindClearButton = (): HTMLButtonElement | null =>
-  getFindUiRoot()?.getElementById(FIND_CLEAR_BUTTON_ID) as HTMLButtonElement | null;
+let isInitialized = false;
 
 const isMode = (mode: CoreMode): boolean => currentMode === mode;
 
@@ -99,566 +50,57 @@ const setMode = (mode: CoreMode): void => {
   currentMode = mode;
 };
 
-const getFindCountLabel = (count: number): string => `${count} Matches`;
-
-const renderFindStatusLabel = (container: HTMLElement, index: number, count: number): void => {
-  container.replaceChildren();
-
-  const current = document.createElement("span");
-  current.className = "nav-find-status-number";
-  current.textContent = `${count > 0 ? index + 1 : 0}`;
-
-  const separator = document.createElement("span");
-  separator.className = "nav-find-status-separator";
-  separator.textContent = " / ";
-
-  const total = document.createElement("span");
-  total.className = "nav-find-status-number";
-  total.textContent = `${count}`;
-
-  container.append(current, separator, total);
-};
-
-const updateFindUiCounts = (): void => {
-  getFindMatchCount()!.textContent = getFindCountLabel(findMatches.length);
-  renderFindStatusLabel(getFindStatusText()!, currentFindMatchIndex, findMatches.length);
-
-  const hasMatches = findMatches.length > 0;
-  const hasQuery = findQuery.length > 0;
-  getFindBarActions()!.setAttribute("data-visible", hasQuery ? "true" : "false");
-  getFindPrevButton()!.disabled = !hasMatches;
-  getFindNextButton()!.disabled = !hasMatches;
-  getFindClearButton()!.disabled = !hasQuery;
-};
-
-const applyFindHighlights = (): void => {
-  clearFindHighlights();
-
-  if (findMatches.length === 0 || typeof Highlight === "undefined") {
-    return;
-  }
-
-  const highlights = getCssHighlights();
-  if (!highlights) {
-    return;
-  }
-
-  highlights.set(
-    FIND_HIGHLIGHT_NAME,
-    new Highlight(...findMatches.map((match) => match.range.cloneRange()))
-  );
-
-  const currentMatch = findMatches[currentFindMatchIndex];
-  if (currentMatch) {
-    highlights.set(FIND_CURRENT_HIGHLIGHT_NAME, new Highlight(currentMatch.range.cloneRange()));
-  }
-};
-
-const isFindableTextContainer = (element: HTMLElement | null): element is HTMLElement => {
-  if (!element) {
-    return false;
-  }
-
-  if (
-    element.closest(`#${FIND_BAR_ID}`) ||
-    element.closest(`#${FIND_STATUS_ID}`) ||
-    element.closest("[data-sonner-toaster]") ||
-    element.closest("script, style, noscript, textarea, select, option")
-  ) {
-    return false;
-  }
-
-  if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) {
-    return false;
-  }
-
-  if (
-    isEditableTarget(element) ||
-    element.closest("[contenteditable='true'], [contenteditable='']")
-  ) {
-    return false;
-  }
-
-  const style = window.getComputedStyle(element);
-  return (
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    style.visibility !== "collapse" &&
-    Number.parseFloat(style.opacity) !== 0
-  );
-};
-
-const collectFindMatches = (query: string): FindMatch[] => {
-  const normalizedQuery = query.toLowerCase();
-  if (!normalizedQuery || !document.body) {
-    return [];
-  }
-
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  const matches: FindMatch[] = [];
-  let currentNode = walker.nextNode();
-
-  while (currentNode) {
-    if (currentNode instanceof Text) {
-      const parentElement = currentNode.parentElement;
-
-      if (isFindableTextContainer(parentElement)) {
-        const text = currentNode.textContent ?? "";
-        const normalizedText = text.toLowerCase();
-        let searchIndex = 0;
-
-        while (searchIndex < normalizedText.length) {
-          const matchIndex = normalizedText.indexOf(normalizedQuery, searchIndex);
-          if (matchIndex === -1) {
-            break;
-          }
-
-          const range = document.createRange();
-          range.setStart(currentNode, matchIndex);
-          range.setEnd(currentNode, matchIndex + normalizedQuery.length);
-
-          if (range.getClientRects().length > 0) {
-            matches.push({
-              range,
-              element: parentElement
-            });
-          }
-
-          searchIndex = matchIndex + normalizedQuery.length;
-        }
-      }
-    }
-
-    currentNode = walker.nextNode();
-  }
-
-  return matches;
-};
-
-const focusCurrentFindMatch = (): void => {
-  const currentMatch = findMatches[currentFindMatchIndex];
-
-  if (!currentMatch) {
-    updateFindUiCounts();
-    applyFindHighlights();
-    return;
-  }
-
-  currentMatch.element.scrollIntoView({
-    block: "center",
-    inline: "nearest",
-    behavior: "auto"
-  });
-
-  if (showActivationIndicator) {
-    window.dispatchEvent(
-      new CustomEvent(FOCUS_INDICATOR_EVENT, {
-        detail: {
-          element: currentMatch.element
-        }
-      })
-    );
-  }
-
-  updateFindUiCounts();
-  applyFindHighlights();
-};
-
-const setFindQuery = (query: string): void => {
-  findQuery = query;
-  findMatches = collectFindMatches(query);
-  currentFindMatchIndex = findMatches.length > 0 ? 0 : -1;
-  updateFindUiCounts();
-  applyFindHighlights();
-};
-
-const hideFindBar = (): void => {
-  getFindBar()?.setAttribute("data-visible", "false");
-
-  if (!isFindStatusVisible) {
-    setMode("normal");
-  }
-};
-
-const isFindModeActive = (): boolean => isMode("find");
-
-const isFindInputFocused = (): boolean => {
-  const root = getFindUiRoot();
-  const input = getFindInput();
-
-  if (!root || !input) {
-    return false;
-  }
-
-  return getDeepActiveElement(root) === input || getDeepActiveElement() === input;
-};
-
-const clearFindInput = (): void => {
-  const input = getFindInput();
-  if (!input) {
-    return;
-  }
-
-  input.value = "";
-  setFindQuery("");
-  input.focus();
-};
-
-const syncFindStatusVisibility = (): void => {
-  getFindStatus()?.setAttribute("data-visible", isFindStatusVisible ? "true" : "false");
-};
-
-const clearFindSession = (): void => {
-  findQuery = "";
-  findMatches = [];
-  currentFindMatchIndex = -1;
-  isFindStatusVisible = false;
-  clearFindHighlights();
-  updateFindUiCounts();
-  syncFindStatusVisibility();
-  hideFindBar();
-  setMode("normal");
-};
-
-const exitFindMode = (): void => {
-  clearFindSession();
-
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
-};
-
-const commitFindQuery = (): boolean => {
-  const query = getFindInput()?.value ?? "";
-  setFindQuery(query);
-  hideFindBar();
-
-  if (query.length === 0) {
-    isFindStatusVisible = false;
-    syncFindStatusVisibility();
-    clearFindHighlights();
-    setMode("normal");
-    return false;
-  }
-
-  isFindStatusVisible = true;
-  syncFindStatusVisibility();
-  setMode("find");
-  focusCurrentFindMatch();
-  return true;
-};
-
-const cycleFindMatch = (direction: 1 | -1): boolean => {
-  if (findQuery.length === 0 || findMatches.length === 0) {
-    return false;
-  }
-
-  currentFindMatchIndex =
-    (currentFindMatchIndex + direction + findMatches.length) % findMatches.length;
-  focusCurrentFindMatch();
-  return true;
-};
-
-const isVideoVisible = (video: HTMLVideoElement): boolean => {
-  const bounds = video.getBoundingClientRect();
-
-  if (bounds.width < 1 || bounds.height < 1) {
-    return false;
-  }
-
-  if (
-    bounds.bottom < 0 ||
-    bounds.right < 0 ||
-    bounds.top > window.innerHeight ||
-    bounds.left > window.innerWidth
-  ) {
-    return false;
-  }
-
-  const styles = window.getComputedStyle(video);
-  return styles.display !== "none" && styles.visibility !== "hidden";
-};
-
-const getWatchActionSequence = (actionName: WatchActionName, fallback: string): string => {
-  const sequences = Object.entries(keyActions)
-    .filter((entry): entry is [string, ActionName] => !!entry[1])
-    .filter(([, candidateAction]) => candidateAction === actionName)
-    .map(([sequence]) => sequence)
-    .sort((left, right) => left.length - right.length);
-
-  return sequences[0] ?? fallback;
-};
-
-const createWatchIcon = (path: string): SVGSVGElement => {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("width", "1em");
-  svg.setAttribute("height", "1em");
-  svg.setAttribute("fill", "currentColor");
-  svg.setAttribute("aria-hidden", "true");
-
-  const node = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  node.setAttribute("d", path);
-  svg.append(node);
-
-  return svg;
-};
-
-const createWatchHintKey = (key: string, icons: SVGSVGElement[] = []): HTMLSpanElement => {
-  const marker = document.createElement("span");
-  marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
-  marker.setAttribute(
-    MARKER_VARIANT_STYLE_ATTRIBUTE,
-    watchHighlightThumbnails ? "thumbnail" : "default"
-  );
-  marker.style.display = "inline-flex";
-  marker.style.alignItems = "center";
-  marker.style.gap = "0.35em";
-  marker.style.position = "static";
-  marker.style.left = "auto";
-  marker.style.top = "auto";
-  marker.style.transform = "none";
-
-  const display = watchShowCapitalizedLetters ? key.toUpperCase() : key.toLowerCase();
-
-  for (const char of Array.from(display)) {
-    const letter = document.createElement("span");
-    letter.textContent = char;
-    letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
-    marker.append(letter);
-  }
-
-  for (const icon of icons) {
-    marker.append(icon);
-  }
-
-  return marker;
-};
-
-const getWatchHintsOverlay = (): HTMLDivElement => {
-  const existingOverlay = document.getElementById(WATCH_HINTS_ID);
-  if (existingOverlay instanceof HTMLDivElement) {
-    return existingOverlay;
-  }
-
-  const overlay = document.createElement("div");
-  overlay.id = WATCH_HINTS_ID;
-  overlay.setAttribute("aria-hidden", "true");
-  overlay.style.position = "fixed";
-  overlay.style.left = "0";
-  overlay.style.top = "0";
-  overlay.style.transform = "translate(-50%, -50%)";
-  overlay.style.display = "none";
-  overlay.style.pointerEvents = "none";
-  overlay.style.zIndex = "2147483646";
-  overlay.style.alignItems = "center";
-  overlay.style.gap = "12px";
-  overlay.style.color = "#f5f5f5";
-  overlay.style.textTransform = "lowercase";
-  overlay.style.fontFamily = '"JetBrains Mono", monospace';
-  overlay.style.fontSize = "12px";
-  overlay.style.fontWeight = "700";
-  overlay.style.textShadow = "0 2px 8px rgba(0,0,0,0.5)";
-  document.documentElement.append(overlay);
-  return overlay;
-};
-
-const renderWatchHintsOverlay = (video: HTMLVideoElement): void => {
-  const overlay = getWatchHintsOverlay();
-  overlay.replaceChildren();
-  const fullscreenSequence = getWatchActionSequence("toggle-fullscreen", "f");
-  const pauseSequence = getWatchActionSequence("toggle-play-pause", "k");
-  const playPauseIconPath =
-    video.paused || video.ended ? WATCH_PLAY_ICON_PATH : WATCH_PAUSE_ICON_PATH;
-
-  const fullscreenHint = document.createElement("div");
-  fullscreenHint.style.display = "inline-flex";
-  fullscreenHint.append(
-    createWatchHintKey(fullscreenSequence, [createWatchIcon(WATCH_FULLSCREEN_ICON_PATH)])
-  );
-
-  const pauseHint = document.createElement("div");
-  pauseHint.style.display = "inline-flex";
-  pauseHint.append(createWatchHintKey(pauseSequence, [createWatchIcon(playPauseIconPath)]));
-
-  overlay.append(fullscreenHint, pauseHint);
-};
-
-const hideWatchHintsOverlay = (): void => {
-  const overlay = document.getElementById(WATCH_HINTS_ID);
-  if (!(overlay instanceof HTMLDivElement)) {
-    return;
-  }
-
-  overlay.style.display = "none";
-};
-
-const showWatchHintsOverlay = (video: HTMLVideoElement): void => {
-  const overlay = getWatchHintsOverlay();
-  renderWatchHintsOverlay(video);
-  const bounds = video.getBoundingClientRect();
-  overlay.style.left = `${Math.round(bounds.left + bounds.width / 2)}px`;
-  overlay.style.top = `${Math.round(bounds.top + bounds.height / 2)}px`;
-  overlay.style.display = "inline-flex";
-};
-
-const syncWatchHintsOverlay = (): void => {
-  const video = getActiveWatchVideo();
-
-  if (!video || !isVideoVisible(video)) {
-    hideWatchHintsOverlay();
-    return;
-  }
-
-  showWatchHintsOverlay(video);
-};
-
-const getTrackedWatchVideo = (): HTMLVideoElement | null => {
-  if (watchVideoElement && watchVideoElement.isConnected) {
-    return watchVideoElement;
-  }
-
-  watchVideoElement = null;
-  return null;
-};
-
-const getBestWatchVideo = (): HTMLVideoElement | null => {
-  const trackedVideo = getTrackedWatchVideo();
-  if (trackedVideo) {
-    return trackedVideo;
-  }
-
-  const activeElement = getDeepActiveElement();
-  if (activeElement instanceof HTMLVideoElement && isVideoVisible(activeElement)) {
-    return activeElement;
-  }
-
-  const visibleVideos = Array.from(document.querySelectorAll("video")).filter(
-    (video): video is HTMLVideoElement => video instanceof HTMLVideoElement && isVideoVisible(video)
-  );
-
-  if (visibleVideos.length === 0) {
-    return null;
-  }
-
-  const playingVideo = visibleVideos.find((video) => !video.paused && !video.ended);
-  return playingVideo ?? visibleVideos[0] ?? null;
-};
-
-const getActiveWatchVideo = (): HTMLVideoElement | null => {
-  if (!isMode("watch")) {
-    return null;
-  }
-
-  const trackedVideo = getTrackedWatchVideo();
-
-  if (trackedVideo) {
-    return trackedVideo;
-  }
-
-  exitWatchMode();
-  return null;
-};
-
-const isWatchModeActive = (): boolean => getActiveWatchVideo() !== null;
-
-const exitWatchMode = (): void => {
-  setMode("normal");
-  hideWatchHintsOverlay();
-};
-
-const toggleVideoControls = (): boolean => {
-  if (isMode("watch")) {
-    exitWatchMode();
-    return true;
-  }
-
-  const targetVideo = getBestWatchVideo();
-  if (!targetVideo) {
-    return false;
-  }
-
-  watchVideoElement = targetVideo;
-  setMode("watch");
-  targetVideo.focus({ preventScroll: true });
-  syncWatchHintsOverlay();
-  return true;
-};
-
-const toggleWatchPlayPause = (): boolean => {
-  const video = getActiveWatchVideo();
-  if (!video) {
-    return false;
-  }
-
-  if (video.paused || video.ended) {
-    void video.play().catch(() => {});
-  } else {
-    video.pause();
-  }
-
-  exitWatchMode();
-  return true;
-};
-
-const togglePlayPause = (): boolean => {
-  const video = getActiveWatchVideo();
-  if (!video) {
-    return false;
-  }
-
-  if (video.paused || video.ended) {
-    void video.play().catch(() => {});
-    return true;
-  }
-
-  video.pause();
-  return true;
-};
-
-const toggleFullscreen = (): boolean => {
-  const video = getActiveWatchVideo();
-  if (!video) {
-    return false;
-  }
-
-  if (document.fullscreenElement) {
-    void document.exitFullscreen().catch(() => {});
-    exitWatchMode();
-    return true;
-  }
-
-  if (typeof video.requestFullscreen !== "function") {
-    return false;
-  }
-
-  void video.requestFullscreen().catch(() => {});
-  exitWatchMode();
-  return true;
-};
-
 const isOptionsPage = (): boolean => {
   const optionsUrl = chrome.runtime.getURL("options.html");
   return window.location.href === optionsUrl;
 };
 
+const keyState = createKeyState({
+  onReservedHintPrefixesChange: setReservedHintPrefixes
+});
+
+const focusIndicator = createFocusIndicatorController();
+
+const findMode = createFindModeController({
+  getMode: () => currentMode,
+  setMode,
+  onFocusIndicator: (element): void => {
+    window.dispatchEvent(
+      new CustomEvent(FOCUS_INDICATOR_EVENT, {
+        detail: { element }
+      })
+    );
+  },
+  injectFindUiStyles: (root): void => {
+    focusIndicator.syncFindUiStyles(root, FIND_STYLE_ID, findStyleParams);
+  }
+});
+
+const watchController = createWatchController({
+  isWatchMode: () => isMode("watch"),
+  setMode: (mode): void => {
+    setMode(mode);
+  },
+  getActionSequence: keyState.getActionSequence
+});
+
 const enableFindModeAction = createEnableFindModeAction({
   getFindBar,
   getFindInput,
-  getFindQuery: () => findQuery,
-  setFindQuery,
+  getFindQuery: findMode.getFindQuery,
+  setFindQuery: findMode.setFindQuery,
   onEnable: () => {
     setMode("find");
   }
 });
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
-  "toggle-video-controls": toggleVideoControls,
-  "toggle-fullscreen": toggleFullscreen,
-  "toggle-play-pause": togglePlayPause,
+  "toggle-video-controls": watchController.toggleVideoControls,
+  "toggle-fullscreen": watchController.toggleFullscreen,
+  "toggle-play-pause": watchController.togglePlayPause,
   "enable-find-mode": enableFindModeAction,
-  "cycle-match-next": () => cycleFindMatch(1),
-  "cycle-match-prev": () => cycleFindMatch(-1),
+  "cycle-match-next": () => findMode.cycleFindMatch(1),
+  "cycle-match-prev": () => findMode.cycleFindMatch(-1),
   "history-go-prev": (count = 1) => goHistory(-count),
   "history-go-next": (count = 1) => goHistory(count),
   "tab-go-prev": createTabCommandAction("tab-go-prev"),
@@ -712,338 +154,9 @@ const isScrollAction = (actionName: ActionName): boolean => {
   );
 };
 
-const KEY_SEQUENCE_TIMEOUT_MS = 1000;
-
-let pendingSequence = "";
-let pendingSequenceTimer: number | null = null;
-let pendingCount = "";
-let isInitialized = false;
-
-const FOCUS_STYLE_ID = `nav-${getExtensionNamespace()}-focus-style`;
-const FOCUS_OVERLAY_ID = `nav-${getExtensionNamespace()}-focus-overlay`;
-const FOCUS_INDICATOR_EVENT = `nav-${getExtensionNamespace()}-focus-indicator`;
-const FOCUS_OVERLAY_DURATION_MS = 1000;
-const FOCUS_OVERLAY_HIDE_MS = 920;
-const FOCUS_OVERLAY_FADE_OUT_MS = 220;
-const FIND_HIGHLIGHT_NAME = `nav-${getExtensionNamespace()}-find-match`;
-const FIND_CURRENT_HIGHLIGHT_NAME = `nav-${getExtensionNamespace()}-find-current-match`;
-const FIND_OVERLAY_ID = `nav-${getExtensionNamespace()}-find-overlay`;
-const FIND_STYLE_ID = `nav-${getExtensionNamespace()}-find-style`;
-const FIND_BAR_ID = `nav-${getExtensionNamespace()}-find-bar`;
-const FIND_INPUT_ID = `nav-${getExtensionNamespace()}-find-input`;
-const FIND_MATCH_COUNT_ID = `nav-${getExtensionNamespace()}-find-match-count`;
-const FIND_STATUS_ID = `nav-${getExtensionNamespace()}-find-status`;
-const FIND_STATUS_TEXT_ID = `nav-${getExtensionNamespace()}-find-status-text`;
-const FIND_PREV_BUTTON_ID = `nav-${getExtensionNamespace()}-find-prev`;
-const FIND_NEXT_BUTTON_ID = `nav-${getExtensionNamespace()}-find-next`;
-const FIND_CLEAR_BUTTON_ID = `nav-${getExtensionNamespace()}-find-clear`;
-const WATCH_HINTS_ID = `nav-${getExtensionNamespace()}-watch-hints`;
-const MARKER_STYLE_ATTRIBUTE = "data-nav-hint-marker";
-const MARKER_VARIANT_STYLE_ATTRIBUTE = "data-nav-hint-marker-variant";
-const LETTER_STYLE_ATTRIBUTE = "data-nav-hint-marker-letter";
-const WATCH_FULLSCREEN_ICON_PATH =
-  "M8 3V5H4V9H2V3H8ZM2 21V15H4V19H8V21H2ZM22 21H16V19H20V15H22V21ZM22 9H20V5H16V3H22V9Z";
-const WATCH_PLAY_ICON_PATH =
-  "M8 18.3915V5.60846L18.2264 12L8 18.3915ZM6 3.80421V20.1957C6 20.9812 6.86395 21.46 7.53 21.0437L20.6432 12.848C21.2699 12.4563 21.2699 11.5436 20.6432 11.152L7.53 2.95621C6.86395 2.53993 6 3.01878 6 3.80421Z";
-const WATCH_PAUSE_ICON_PATH = "M6 3H8V21H6V3ZM16 3H18V21H16V3Z";
-let focusedOverlayTarget: HTMLElement | null = null;
-let focusOverlayFrame: number | null = null;
-let focusOverlayTimeout: number | null = null;
-let showActivationIndicator = true;
-let activationIndicatorColor = DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
-let findMatches: FindMatch[] = [];
-let findQuery = "";
-let currentFindMatchIndex = -1;
-let isFindStatusVisible = false;
-
-type KeyParseResult = {
-  actionName: ActionName | null;
-  consumed: boolean;
-};
-
-type WatchActionName = "toggle-fullscreen" | "toggle-play-pause";
-
-const colorParsingContext = document.createElement("canvas").getContext("2d");
-
-const rgbStringToRgba = (value: string, alpha: number): string | null => {
-  const matches = value.match(/\d*\.?\d+/g);
-
-  if (!matches || matches.length < 3) {
-    return null;
-  }
-
-  const [red, green, blue, sourceAlpha] = matches.map((match) => Number.parseFloat(match));
-  const resolvedAlpha = Math.max(0, Math.min(1, (sourceAlpha ?? 1) * alpha));
-
-  return `rgba(${red}, ${green}, ${blue}, ${resolvedAlpha})`;
-};
-
-const hexToRgba = (value: string, alpha: number): string | null => {
-  const normalizedHex = value.toLowerCase();
-  const expandedHex =
-    normalizedHex.length === 4
-      ? `#${normalizedHex[1]}${normalizedHex[1]}${normalizedHex[2]}${normalizedHex[2]}${normalizedHex[3]}${normalizedHex[3]}`
-      : normalizedHex;
-
-  if (!/^#[0-9a-f]{6}$/.test(expandedHex)) {
-    return null;
-  }
-
-  const red = Number.parseInt(expandedHex.slice(1, 3), 16);
-  const green = Number.parseInt(expandedHex.slice(3, 5), 16);
-  const blue = Number.parseInt(expandedHex.slice(5, 7), 16);
-
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-};
-
-const colorToRgba = (color: string, alpha: number): string => {
-  if (!colorParsingContext) {
-    return `rgba(234, 179, 8, ${alpha})`;
-  }
-
-  colorParsingContext.fillStyle = "#000000";
-  colorParsingContext.fillStyle = color;
-
-  const normalized = colorParsingContext.fillStyle.toLowerCase();
-
-  if (normalized.startsWith("#")) {
-    return hexToRgba(normalized, alpha) ?? `rgba(234, 179, 8, ${alpha})`;
-  }
-
-  if (normalized.startsWith("rgb")) {
-    return rgbStringToRgba(normalized, alpha) ?? `rgba(234, 179, 8, ${alpha})`;
-  }
-
-  return `rgba(234, 179, 8, ${alpha})`;
-};
-
-const getFindOverlay = (): HTMLDivElement | null =>
-  document.getElementById(FIND_OVERLAY_ID) as HTMLDivElement | null;
-
-const getFindUiRoot = (): ShadowRoot | null => getFindOverlay()?.shadowRoot ?? null;
-
-const getFocusStyleParams = () => ({
-  overlayId: FOCUS_OVERLAY_ID,
-  fadeOutMs: FOCUS_OVERLAY_FADE_OUT_MS,
-  durationMs: FOCUS_OVERLAY_DURATION_MS,
-  activationIndicatorColor,
-  colorToRgba
-});
-
-const findStyleParams = {
-  findBarId: FIND_BAR_ID,
-  findStatusId: FIND_STATUS_ID,
-  findInputId: FIND_INPUT_ID,
-  findMatchCountId: FIND_MATCH_COUNT_ID,
-  findStatusTextId: FIND_STATUS_TEXT_ID,
-  findHighlightName: FIND_HIGHLIGHT_NAME,
-  findCurrentHighlightName: FIND_CURRENT_HIGHLIGHT_NAME
-};
-
-type SvgNodeDefinition = {
-  tag: "circle" | "path";
-  attributes: Record<string, string>;
-};
-
-const createFindIconSvg = (nodes: SvgNodeDefinition[]): SVGSVGElement => {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "2");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
-  svg.setAttribute("aria-hidden", "true");
-
-  for (const node of nodes) {
-    const child = document.createElementNS("http://www.w3.org/2000/svg", node.tag);
-
-    for (const [name, value] of Object.entries(node.attributes)) {
-      child.setAttribute(name, value);
-    }
-
-    svg.appendChild(child);
-  }
-
-  return svg;
-};
-
-const SEARCH_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "circle",
-    attributes: {
-      cx: "11",
-      cy: "11",
-      r: "7"
-    }
-  },
-  {
-    tag: "path",
-    attributes: {
-      d: "M20 20l-3.5-3.5"
-    }
-  }
-];
-
-const ARROW_UP_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "path",
-    attributes: {
-      d: "M6 15l6-6 6 6"
-    }
-  }
-];
-
-const ARROW_DOWN_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "path",
-    attributes: {
-      d: "M6 9l6 6 6-6"
-    }
-  }
-];
-
-const CLOSE_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "path",
-    attributes: {
-      d: "M18 6L6 18"
-    }
-  },
-  {
-    tag: "path",
-    attributes: {
-      d: "M6 6l12 12"
-    }
-  }
-];
-
-const normalizeBaseKey = (key: string): string | null => {
-  if (key === " ") {
-    return "<space>";
-  }
-
-  if (key.length === 1) {
-    return key;
-  }
-
-  return null;
-};
-
-const isModifierKey = (key: string): boolean =>
-  key === "Shift" || key === "Control" || key === "Alt" || key === "Meta";
-
-const getKeyToken = (event: KeyboardEvent): string | null => {
-  const normalizedKey = normalizeBaseKey(event.key);
-
-  if (!normalizedKey) {
-    return null;
-  }
-
-  const modifiers: string[] = [];
-
-  if (event.ctrlKey) {
-    modifiers.push("c");
-  }
-
-  if (event.metaKey) {
-    modifiers.push("m");
-  }
-
-  if (event.altKey) {
-    modifiers.push("a");
-  }
-
-  if (modifiers.length > 0) {
-    return `<${modifiers.join("-")}-${normalizedKey}>`;
-  }
-
-  return normalizedKey;
-};
-
-const applyHotkeyMappings = (
-  mappings: Partial<Record<string, ActionName>>,
-  prefixes: Partial<Record<string, true>>
-): void => {
-  keyActions = mappings;
-  keyActionPrefixes = prefixes;
-  setReservedHintPrefixes(getReservedHintPrefixes(mappings));
-  clearPendingState();
-};
-
-const applyUrlRules = (rules: FastConfig["rules"]["urls"]): void => {
-  urlRulesMode = rules.mode;
-  urlBlacklistRules = rules.blacklist;
-  urlWhitelistRules = rules.whitelist;
-  clearPendingState();
-};
-
-const getCurrentUrlRule = (): FastRule | null => {
-  const currentUrl = window.location.href;
-  const activeRules = urlRulesMode === "whitelist" ? urlWhitelistRules : urlBlacklistRules;
-
-  for (const rule of activeRules) {
-    if (new RegExp(rule.pattern).test(currentUrl)) {
-      return rule;
-    }
-  }
-
-  return null;
-};
-
-const isActionAllowedForRule = (actionName: ActionName, rule: FastRule | null): boolean => {
-  if (!rule) {
-    return true;
-  }
-
-  const isListedAction = rule.actions[actionName] === true;
-
-  if (rule.mode === "allow") {
-    return isListedAction;
-  }
-
-  return !isListedAction;
-};
-
-const isActionAllowed = (actionName: ActionName): boolean => {
-  return isActionAllowedForRule(actionName, getCurrentUrlRule());
-};
-
-const getAllowedActionForSequence = (sequence: string): ActionName | null => {
-  const actionName = keyActions[sequence] ?? null;
-
-  if (!actionName || !isActionAllowed(actionName)) {
-    return null;
-  }
-
-  return actionName;
-};
-
-const hasAllowedActionPrefix = (
-  sequence: string,
-  predicate?: (actionName: ActionName) => boolean
-): boolean => {
-  const rule = getCurrentUrlRule();
-
-  return Object.entries(keyActions).some(([candidate, actionName]) => {
-    if (!actionName || candidate.length <= sequence.length || !candidate.startsWith(sequence)) {
-      return false;
-    }
-
-    if (predicate && !predicate(actionName)) {
-      return false;
-    }
-
-    return isActionAllowedForRule(actionName, rule);
-  });
-};
-
-const hasAllowedActionMappings = (): boolean => {
-  const rule = getCurrentUrlRule();
-
-  return Object.values(keyActions).some((actionName) => {
-    return actionName ? isActionAllowedForRule(actionName, rule) : false;
-  });
+const consumeKeyboardEvent = (event: KeyboardEvent): void => {
+  event.preventDefault();
+  event.stopImmediatePropagation();
 };
 
 const blurActiveEditableTarget = (): boolean => {
@@ -1057,185 +170,6 @@ const blurActiveEditableTarget = (): boolean => {
   return true;
 };
 
-const clearPendingSequence = (): void => {
-  pendingSequence = "";
-
-  if (pendingSequenceTimer !== null) {
-    window.clearTimeout(pendingSequenceTimer);
-    pendingSequenceTimer = null;
-  }
-};
-
-const clearPendingCount = (): void => {
-  pendingCount = "";
-};
-
-const clearPendingState = (): void => {
-  clearPendingSequence();
-  clearPendingCount();
-};
-
-const startPendingSequence = (sequence: string): void => {
-  clearPendingSequence();
-  pendingSequence = sequence;
-
-  pendingSequenceTimer = window.setTimeout(() => {
-    clearPendingSequence();
-  }, KEY_SEQUENCE_TIMEOUT_MS);
-};
-
-const isCountKey = (key: string): boolean => {
-  if (pendingCount) {
-    return key >= "0" && key <= "9";
-  }
-
-  return key >= "1" && key <= "9";
-};
-
-const getReservedHintPrefixes = (mappings: Partial<Record<string, ActionName>>): Set<string> => {
-  const reservedPrefixes = new Set<string>();
-
-  for (const [sequence, actionName] of Object.entries(mappings)) {
-    if (actionName !== "toggle-hints-current-tab" && actionName !== "toggle-hints-new-tab") {
-      continue;
-    }
-
-    const firstCharacter = sequence[0]?.toLowerCase();
-    if (firstCharacter && /[a-z]/.test(firstCharacter)) {
-      reservedPrefixes.add(firstCharacter);
-    }
-  }
-
-  return reservedPrefixes;
-};
-
-const consumeCountKey = (key: string): void => {
-  pendingCount = pendingSequence ? key : `${pendingCount}${key}`;
-  clearPendingSequence();
-};
-
-const resolveCount = (): number => {
-  const count = pendingCount ? Number.parseInt(pendingCount, 10) : 1;
-  clearPendingCount();
-  return count;
-};
-
-const getActionName = (keyToken: string): KeyParseResult => {
-  if (isCountKey(keyToken) && hasAllowedActionMappings()) {
-    consumeCountKey(keyToken);
-    return { actionName: null, consumed: true };
-  }
-
-  const nextSequence = `${pendingSequence}${keyToken}`;
-  const directMatch = getAllowedActionForSequence(nextSequence);
-
-  if (directMatch) {
-    clearPendingSequence();
-    return { actionName: directMatch, consumed: true };
-  }
-
-  const hasLongerMatch =
-    keyActionPrefixes[nextSequence] === true && hasAllowedActionPrefix(nextSequence);
-
-  if (hasLongerMatch) {
-    startPendingSequence(nextSequence);
-    return { actionName: null, consumed: true };
-  }
-
-  clearPendingSequence();
-
-  const actionName = getAllowedActionForSequence(keyToken);
-
-  if (!actionName) {
-    clearPendingCount();
-    return { actionName: null, consumed: false };
-  }
-
-  return { actionName, consumed: true };
-};
-
-const getWatchActionName = (keyToken: string): KeyParseResult => {
-  const fullscreenSequence = getWatchActionSequence("toggle-fullscreen", "f");
-  const pauseSequence = getWatchActionSequence("toggle-play-pause", "k");
-  const nextSequence = `${pendingSequence}${keyToken}`;
-
-  if (nextSequence === fullscreenSequence) {
-    clearPendingSequence();
-    return { actionName: "toggle-fullscreen", consumed: true };
-  }
-
-  if (nextSequence === pauseSequence) {
-    clearPendingSequence();
-    return { actionName: "toggle-play-pause", consumed: true };
-  }
-
-  if (fullscreenSequence.startsWith(nextSequence) || pauseSequence.startsWith(nextSequence)) {
-    startPendingSequence(nextSequence);
-    return { actionName: null, consumed: true };
-  }
-
-  clearPendingSequence();
-  return { actionName: null, consumed: false };
-};
-
-const isToggleHintsAction = (
-  actionName: ActionName | null
-): actionName is "toggle-hints-current-tab" | "toggle-hints-new-tab" =>
-  actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab";
-
-const getToggleHintsActionName = (keyToken: string): KeyParseResult => {
-  const nextSequence = `${pendingSequence}${keyToken}`;
-  const directMatch = getAllowedActionForSequence(nextSequence);
-
-  if (isToggleHintsAction(directMatch ?? null)) {
-    clearPendingSequence();
-    return { actionName: directMatch ?? null, consumed: true };
-  }
-
-  const hasLongerToggleMatch = hasAllowedActionPrefix(nextSequence, (actionName) =>
-    isToggleHintsAction(actionName)
-  );
-
-  if (hasLongerToggleMatch) {
-    startPendingSequence(nextSequence);
-    return { actionName: null, consumed: true };
-  }
-
-  clearPendingSequence();
-  return { actionName: null, consumed: false };
-};
-
-const fastConfigSyncDeps = {
-  applyHotkeyMappings,
-  applyUrlRules,
-  setWatchShowCapitalizedLetters: (value: boolean): void => {
-    watchShowCapitalizedLetters = value;
-  },
-  setWatchHighlightThumbnails: (value: boolean): void => {
-    watchHighlightThumbnails = value;
-  },
-  setShowActivationIndicator: (value: boolean): void => {
-    showActivationIndicator = value;
-  },
-  setActivationIndicatorColor: (value: string): void => {
-    activationIndicatorColor = value;
-  },
-  syncFocusStyles: (): void => {
-    injectStyles({
-      focusStyleId: FOCUS_STYLE_ID,
-      focus: getFocusStyleParams()
-    });
-  },
-  syncWatchHintsOverlay
-};
-
-const handleStorageChange = createStorageChangeHandler(fastConfigSyncDeps);
-
-const consumeKeyboardEvent = (event: KeyboardEvent): void => {
-  event.preventDefault();
-  event.stopImmediatePropagation();
-};
-
 const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
   if (!areHintsActive()) {
     return false;
@@ -1243,10 +177,13 @@ const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
 
   const keyToken = getKeyToken(event);
 
-  if (keyToken && (pendingSequence || areHintsPendingSelection())) {
-    const { actionName, consumed } = getToggleHintsActionName(keyToken);
+  if (keyToken) {
+    const { actionName, consumed } = keyState.getToggleHintsActionName(keyToken);
 
-    if (isToggleHintsAction(actionName) && ACTIONS[actionName]()) {
+    if (
+      (actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab") &&
+      ACTIONS[actionName]()
+    ) {
       consumeKeyboardEvent(event);
       return true;
     }
@@ -1269,21 +206,21 @@ const handleEscapeModes = (event: KeyboardEvent): boolean => {
     return false;
   }
 
-  if (isWatchModeActive()) {
-    exitWatchMode();
-    clearPendingState();
+  if (watchController.isWatchModeActive()) {
+    watchController.exitWatchMode();
+    keyState.clearPendingState();
     consumeKeyboardEvent(event);
     return true;
   }
 
-  if (isFindModeActive()) {
-    exitFindMode();
+  if (findMode.isFindModeActive()) {
+    findMode.exitFindMode();
     consumeKeyboardEvent(event);
     return true;
   }
 
   if (blurActiveEditableTarget()) {
-    clearPendingState();
+    keyState.clearPendingState();
     consumeKeyboardEvent(event);
     return true;
   }
@@ -1291,33 +228,24 @@ const handleEscapeModes = (event: KeyboardEvent): boolean => {
   return false;
 };
 
-const shouldIgnoreKeydownInFindUi = (event: KeyboardEvent): boolean => {
-  if (!isFindModeActive() || (!isFindUiElement(event.target) && !isFindInputFocused())) {
-    return false;
-  }
-
-  clearPendingState();
-
-  if (event.key !== "Escape") {
-    event.stopImmediatePropagation();
-  }
-
-  return true;
-};
-
 const handleWatchModeKeydown = (event: KeyboardEvent, keyToken: string): boolean => {
-  if (!isWatchModeActive()) {
+  if (!watchController.isWatchModeActive()) {
     return false;
   }
 
-  const { actionName: watchActionName, consumed } = getWatchActionName(keyToken);
+  const { fullscreenSequence, pauseSequence } = watchController.getWatchActionSequences();
+  const { actionName, consumed } = keyState.getWatchActionName(
+    keyToken,
+    fullscreenSequence,
+    pauseSequence
+  );
 
-  if (watchActionName === "toggle-fullscreen" && toggleFullscreen()) {
+  if (actionName === "toggle-fullscreen" && watchController.toggleFullscreen()) {
     consumeKeyboardEvent(event);
     return true;
   }
 
-  if (watchActionName === "toggle-play-pause" && toggleWatchPlayPause()) {
+  if (actionName === "toggle-play-pause" && watchController.toggleWatchPlayPause()) {
     consumeKeyboardEvent(event);
     return true;
   }
@@ -1331,7 +259,7 @@ const handleWatchModeKeydown = (event: KeyboardEvent, keyToken: string): boolean
 };
 
 const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
-  const { actionName, consumed } = getActionName(keyToken);
+  const { actionName, consumed } = keyState.getActionName(keyToken);
 
   if (!actionName) {
     if (consumed) {
@@ -1341,13 +269,13 @@ const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
     return;
   }
 
-  if (!isActionAllowed(actionName)) {
-    clearPendingCount();
+  if (!keyState.isActionAllowed(actionName)) {
+    keyState.clearPendingCount();
     consumeKeyboardEvent(event);
     return;
   }
 
-  const didHandle = ACTIONS[actionName](resolveCount());
+  const didHandle = ACTIONS[actionName](keyState.resolveCount());
 
   if (!didHandle && !isScrollAction(actionName)) {
     return;
@@ -1365,19 +293,20 @@ const handleKeydown = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (shouldIgnoreKeydownInFindUi(event)) {
+  if (findMode.shouldIgnoreKeydownInFindUi(event)) {
+    keyState.clearPendingState();
     return;
   }
 
   if (isEditableTarget(getDeepActiveElement())) {
-    clearPendingState();
+    keyState.clearPendingState();
     return;
   }
 
   const keyToken = getKeyToken(event);
   if (!keyToken) {
     if (!isModifierKey(event.key)) {
-      clearPendingState();
+      keyState.clearPendingState();
     }
 
     return;
@@ -1390,322 +319,20 @@ const handleKeydown = (event: KeyboardEvent): void => {
   handleActionKeydown(event, keyToken);
 };
 
-const getFocusOverlay = (): HTMLDivElement => {
-  const existing = document.getElementById(FOCUS_OVERLAY_ID);
-
-  if (existing instanceof HTMLDivElement) {
-    return existing;
-  }
-
-  const overlay = document.createElement("div");
-  overlay.id = FOCUS_OVERLAY_ID;
-  overlay.setAttribute("data-visible", "false");
-  overlay.setAttribute("data-animate", "false");
-  overlay.setAttribute("data-hiding", "false");
-  document.documentElement.append(overlay);
-  return overlay;
+const fastConfigSyncDeps = {
+  applyHotkeyMappings: keyState.applyHotkeyMappings,
+  applyUrlRules: (rules: FastConfig["rules"]["urls"]): void => {
+    keyState.applyUrlRules(rules);
+  },
+  setWatchShowCapitalizedLetters: watchController.setWatchShowCapitalizedLetters,
+  setWatchHighlightThumbnails: watchController.setWatchHighlightThumbnails,
+  setShowActivationIndicator: focusIndicator.setShowActivationIndicator,
+  setActivationIndicatorColor: focusIndicator.setActivationIndicatorColor,
+  syncFocusStyles: focusIndicator.syncStyles,
+  syncWatchHintsOverlay: watchController.syncWatchHintsOverlay
 };
 
-const isFindUiElement = (target: EventTarget | null): boolean => {
-  if (!(target instanceof Node)) {
-    return false;
-  }
-
-  return (
-    getFindOverlay()?.contains(target) === true ||
-    getFindBar()?.contains(target) === true ||
-    getFindStatus()?.contains(target) === true
-  );
-};
-
-const createFindOverlay = (): { overlay: HTMLDivElement; existed: boolean } => {
-  const existingOverlay = getFindOverlay();
-  const overlay = existingOverlay ?? document.createElement("div");
-  overlay.id = FIND_OVERLAY_ID;
-  overlay.style.all = "initial";
-  overlay.style.position = "fixed";
-  overlay.style.inset = "0";
-  overlay.style.pointerEvents = "none";
-  overlay.style.zIndex = "2147483647";
-
-  const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
-  injectStyles({
-    focusStyleId: FOCUS_STYLE_ID,
-    focus: getFocusStyleParams(),
-    findStyleId: FIND_STYLE_ID,
-    find: findStyleParams,
-    findRoot: root
-  });
-
-  return { overlay, existed: !!existingOverlay };
-};
-
-const createFindBar = (): {
-  bar: HTMLDivElement;
-  input: HTMLInputElement;
-  clearButton: HTMLButtonElement;
-} => {
-  const bar = document.createElement("div");
-  bar.id = FIND_BAR_ID;
-  bar.setAttribute("data-visible", "false");
-
-  const icon = document.createElement("span");
-  icon.className = "nav-find-icon";
-  icon.setAttribute("data-find-icon", "");
-  icon.appendChild(createFindIconSvg(SEARCH_ICON_NODES));
-
-  const input = document.createElement("input");
-  input.id = FIND_INPUT_ID;
-  input.type = "text";
-  input.spellcheck = false;
-  input.autocomplete = "off";
-  input.placeholder = "find...";
-
-  const actions = document.createElement("div");
-  actions.className = "nav-find-bar-actions";
-
-  const matchCount = document.createElement("span");
-  matchCount.id = FIND_MATCH_COUNT_ID;
-  matchCount.textContent = "0 Matches";
-
-  const clearButton = document.createElement("button");
-  clearButton.id = FIND_CLEAR_BUTTON_ID;
-  clearButton.className = "nav-find-clear";
-  clearButton.type = "button";
-  clearButton.setAttribute("aria-label", "Clear find input");
-  clearButton.appendChild(createFindIconSvg(CLOSE_ICON_NODES));
-
-  actions.append(matchCount, clearButton);
-  bar.append(icon, input, actions);
-  return { bar, input, clearButton };
-};
-
-const createFindStatus = (): {
-  status: HTMLDivElement;
-  prevButton: HTMLButtonElement;
-  nextButton: HTMLButtonElement;
-} => {
-  const status = document.createElement("div");
-  status.id = FIND_STATUS_ID;
-  status.setAttribute("data-visible", "false");
-
-  const statusText = document.createElement("span");
-  statusText.id = FIND_STATUS_TEXT_ID;
-  statusText.textContent = "0 / 0";
-
-  const prevButton = document.createElement("button");
-  prevButton.id = FIND_PREV_BUTTON_ID;
-  prevButton.className = "nav-find-nav";
-  prevButton.setAttribute("data-find-nav", "");
-  prevButton.type = "button";
-  prevButton.setAttribute("aria-label", "Previous match");
-  prevButton.appendChild(createFindIconSvg(ARROW_UP_ICON_NODES));
-
-  const nextButton = document.createElement("button");
-  nextButton.id = FIND_NEXT_BUTTON_ID;
-  nextButton.className = "nav-find-nav";
-  nextButton.setAttribute("data-find-nav", "");
-  nextButton.type = "button";
-  nextButton.setAttribute("aria-label", "Next match");
-  nextButton.appendChild(createFindIconSvg(ARROW_DOWN_ICON_NODES));
-
-  status.append(statusText, prevButton, nextButton);
-  return { status, prevButton, nextButton };
-};
-
-const attachFindUiEventListeners = (
-  input: HTMLInputElement,
-  prevButton: HTMLButtonElement,
-  nextButton: HTMLButtonElement,
-  clearButton: HTMLButtonElement
-): void => {
-  input.addEventListener("input", () => {
-    setFindQuery(input.value);
-  });
-
-  input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      commitFindQuery();
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
-
-    if (event.key === "Escape") {
-      exitFindMode();
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      return;
-    }
-  });
-
-  prevButton.addEventListener("click", () => {
-    cycleFindMatch(-1);
-  });
-
-  nextButton.addEventListener("click", () => {
-    cycleFindMatch(1);
-  });
-
-  clearButton.addEventListener("click", () => {
-    clearFindInput();
-  });
-};
-
-const ensureFindUi = (): void => {
-  if (getFindBar() && getFindStatus()) {
-    return;
-  }
-
-  const { overlay, existed } = createFindOverlay();
-  const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
-  const { bar, input, clearButton } = createFindBar();
-  const { status, prevButton, nextButton } = createFindStatus();
-
-  root.append(bar, status);
-
-  if (!existed) {
-    document.documentElement.append(overlay);
-  }
-
-  attachFindUiEventListeners(input, prevButton, nextButton, clearButton);
-
-  updateFindUiCounts();
-  syncFindStatusVisibility();
-};
-
-const clearFocusOverlayFrame = (): void => {
-  if (focusOverlayFrame === null) {
-    return;
-  }
-
-  window.cancelAnimationFrame(focusOverlayFrame);
-  focusOverlayFrame = null;
-};
-
-const clearFocusOverlayTimeout = (): void => {
-  if (focusOverlayTimeout === null) {
-    return;
-  }
-
-  window.clearTimeout(focusOverlayTimeout);
-  focusOverlayTimeout = null;
-};
-
-const finishHidingFocusOverlay = (): void => {
-  const overlay = getFocusOverlay();
-  overlay.setAttribute("data-visible", "false");
-  overlay.setAttribute("data-animate", "false");
-  overlay.setAttribute("data-hiding", "false");
-};
-
-const hideFocusOverlay = (): void => {
-  focusedOverlayTarget = null;
-  clearFocusOverlayFrame();
-  clearFocusOverlayTimeout();
-
-  const overlay = getFocusOverlay();
-  if (overlay.getAttribute("data-visible") !== "true") {
-    finishHidingFocusOverlay();
-    return;
-  }
-
-  overlay.setAttribute("data-animate", "false");
-  overlay.setAttribute("data-hiding", "true");
-
-  focusOverlayTimeout = window.setTimeout(() => {
-    finishHidingFocusOverlay();
-    focusOverlayTimeout = null;
-  }, FOCUS_OVERLAY_FADE_OUT_MS);
-};
-
-const updateFocusOverlayPosition = (): void => {
-  if (!focusedOverlayTarget || !focusedOverlayTarget.isConnected) {
-    hideFocusOverlay();
-    return;
-  }
-
-  const rect = focusedOverlayTarget.getBoundingClientRect();
-
-  if (rect.width <= 0 || rect.height <= 0) {
-    hideFocusOverlay();
-    return;
-  }
-
-  const overlay = getFocusOverlay();
-  const horizontalInset = 3;
-  const verticalInset = 2;
-  const targetHeight = rect.height + verticalInset * 2;
-  const centeredTop = rect.top + rect.height / 2 - targetHeight / 2;
-
-  overlay.style.top = `${Math.round(centeredTop)}px`;
-  overlay.style.left = `${Math.round(rect.left - horizontalInset)}px`;
-  overlay.style.width = `${Math.round(rect.width + horizontalInset * 2)}px`;
-  overlay.style.height = `${Math.round(targetHeight)}px`;
-  overlay.style.borderRadius = "0.375rem";
-  overlay.style.boxShadow = `0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.95)}`;
-  overlay.setAttribute("data-hiding", "false");
-  overlay.setAttribute("data-visible", "true");
-};
-
-const scheduleFocusOverlayPosition = (): void => {
-  if (focusOverlayFrame !== null) {
-    return;
-  }
-
-  focusOverlayFrame = window.requestAnimationFrame(() => {
-    focusOverlayFrame = null;
-    updateFocusOverlayPosition();
-  });
-};
-
-const animateFocusOverlay = (): void => {
-  const overlay = getFocusOverlay();
-  overlay.setAttribute("data-animate", "false");
-  overlay.setAttribute("data-visible", "true");
-
-  void overlay.offsetWidth;
-
-  overlay.setAttribute("data-animate", "true");
-};
-
-const handleFocusIndicator = (event: Event): void => {
-  if (!showActivationIndicator) {
-    return;
-  }
-
-  const target = (event as CustomEvent<{ element?: HTMLElement }>).detail?.element;
-
-  if (!(target instanceof HTMLElement)) {
-    return;
-  }
-
-  focusedOverlayTarget = target;
-  clearFocusOverlayTimeout();
-  updateFocusOverlayPosition();
-  animateFocusOverlay();
-
-  focusOverlayTimeout = window.setTimeout(() => {
-    hideFocusOverlay();
-  }, FOCUS_OVERLAY_HIDE_MS);
-};
-
-const handleEditableBeforeInput = (event: Event): void => {
-  if (!isEditableTarget(event.target) && !isEditableTarget(getDeepActiveElement())) {
-    return;
-  }
-
-  hideFocusOverlay();
-};
-
-const handleWatchMediaStateChange = (): void => {
-  if (!isMode("watch")) {
-    return;
-  }
-
-  syncWatchHintsOverlay();
-};
+const handleStorageChange = createStorageChangeHandler(fastConfigSyncDeps);
 
 export const initCoreNavigation = (): void => {
   if (isInitialized) {
@@ -1713,35 +340,37 @@ export const initCoreNavigation = (): void => {
   }
 
   isInitialized = true;
-
   installScrollTracking();
+
   if (!isOptionsPage()) {
-    injectStyles({
-      focusStyleId: FOCUS_STYLE_ID,
-      focus: getFocusStyleParams()
-    });
-    getFocusOverlay();
-    ensureFindUi();
-    window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
-    window.addEventListener("beforeinput", handleEditableBeforeInput, true);
-    window.addEventListener("compositionstart", handleEditableBeforeInput, true);
-    window.addEventListener("resize", scheduleFocusOverlayPosition, true);
-    window.addEventListener("scroll", scheduleFocusOverlayPosition, true);
-    window.addEventListener("resize", syncWatchHintsOverlay, true);
-    window.addEventListener("scroll", syncWatchHintsOverlay, true);
-    document.addEventListener("fullscreenchange", syncWatchHintsOverlay, true);
-    document.addEventListener("play", handleWatchMediaStateChange, true);
-    document.addEventListener("pause", handleWatchMediaStateChange, true);
-    document.addEventListener("ended", handleWatchMediaStateChange, true);
+    focusIndicator.syncStyles();
+    focusIndicator.ensureOverlay();
+    findMode.ensureFindUi();
+
+    window.addEventListener(
+      FOCUS_INDICATOR_EVENT,
+      focusIndicator.handleFocusIndicatorEvent as EventListener,
+      true
+    );
+    window.addEventListener("beforeinput", focusIndicator.handleEditableBeforeInput, true);
+    window.addEventListener("compositionstart", focusIndicator.handleEditableBeforeInput, true);
+    window.addEventListener("resize", focusIndicator.scheduleOverlayPosition, true);
+    window.addEventListener("scroll", focusIndicator.scheduleOverlayPosition, true);
+    window.addEventListener("resize", watchController.syncWatchHintsOverlay, true);
+    window.addEventListener("scroll", watchController.syncWatchHintsOverlay, true);
+    document.addEventListener("fullscreenchange", watchController.syncWatchHintsOverlay, true);
+    document.addEventListener("play", watchController.handleWatchMediaStateChange, true);
+    document.addEventListener("pause", watchController.handleWatchMediaStateChange, true);
+    document.addEventListener("ended", watchController.handleWatchMediaStateChange, true);
     document.addEventListener("mousedown", (event) => {
       if (!isFindUiElement(event.target)) {
-        hideFindBar();
+        findMode.hideFindBar();
       }
     });
   }
+
   ensureToastWrapper();
   syncFastConfig(fastConfigSyncDeps);
-
   chrome.storage.onChanged.addListener(handleStorageChange);
   window.addEventListener("keydown", handleKeydown, true);
 };
