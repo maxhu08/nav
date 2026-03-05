@@ -1,5 +1,5 @@
 import { getDeepActiveElement } from "~/src/core/utils/isEditableTarget";
-import { WATCH_HINTS_ID } from "~/src/core/utils/get-ui";
+import { FOCUS_INDICATOR_EVENT, WATCH_HINTS_ID } from "~/src/core/utils/get-ui";
 
 type WatchControllerDeps = {
   isWatchMode: () => boolean;
@@ -42,7 +42,6 @@ const isVideoVisible = (video: HTMLVideoElement): boolean => {
 export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
   let watchShowCapitalizedLetters = false;
-  let watchHighlightThumbnails = true;
 
   const createWatchIcon = (path: string): SVGSVGElement => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -62,32 +61,56 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   const createWatchHintKey = (key: string, icons: SVGSVGElement[] = []): HTMLSpanElement => {
     const marker = document.createElement("span");
     marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
-    marker.setAttribute(
-      MARKER_VARIANT_STYLE_ATTRIBUTE,
-      watchHighlightThumbnails ? "thumbnail" : "default"
-    );
+    marker.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, "watch-action");
     marker.style.display = "inline-flex";
     marker.style.alignItems = "center";
-    marker.style.gap = "0.35em";
+    marker.style.justifyContent = "center";
+    marker.style.flexDirection = "column";
+    marker.style.gap = "0.45em";
+    marker.style.width = "88px";
+    marker.style.height = "88px";
+    marker.style.padding = "10px";
+    marker.style.borderRadius = "12px";
+    marker.style.fontSize = "34px";
+    marker.style.fontWeight = "800";
+    marker.style.letterSpacing = "0";
+    marker.style.lineHeight = "1";
     marker.style.position = "static";
     marker.style.left = "auto";
     marker.style.top = "auto";
     marker.style.transform = "none";
 
     const display = watchShowCapitalizedLetters ? key.toUpperCase() : key.toLowerCase();
+    const label = document.createElement("span");
+    label.style.display = "inline-flex";
+    label.style.alignItems = "center";
+    label.style.gap = "0.08em";
+    label.style.fontSize = "15px";
+    label.style.fontWeight = "800";
+    label.style.lineHeight = "1";
 
     for (const char of Array.from(display)) {
       const letter = document.createElement("span");
       letter.textContent = char;
       letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
-      marker.append(letter);
+      label.append(letter);
     }
 
     for (const icon of icons) {
       marker.append(icon);
     }
 
+    marker.append(label);
+
     return marker;
+  };
+
+  const showWatchActivationIndicator = (video: HTMLVideoElement): void => {
+    window.dispatchEvent(
+      new CustomEvent(FOCUS_INDICATOR_EVENT, {
+        detail: { element: video }
+      })
+    );
   };
 
   const getWatchHintsOverlay = (): HTMLDivElement => {
@@ -223,7 +246,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       watchShowCapitalizedLetters = value;
     },
     setWatchHighlightThumbnails: (value: boolean): void => {
-      watchHighlightThumbnails = value;
+      void value;
     },
     syncWatchHintsOverlay,
     handleWatchMediaStateChange: (): void => {
@@ -262,6 +285,8 @@ export const createWatchController = (deps: WatchControllerDeps) => {
         return false;
       }
 
+      showWatchActivationIndicator(video);
+
       if (video.paused || video.ended) {
         void video.play().catch(() => {});
       } else {
@@ -277,6 +302,8 @@ export const createWatchController = (deps: WatchControllerDeps) => {
         return false;
       }
 
+      showWatchActivationIndicator(video);
+
       if (video.paused || video.ended) {
         void video.play().catch(() => {});
         return true;
@@ -290,6 +317,8 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       if (!video) {
         return false;
       }
+
+      showWatchActivationIndicator(video);
 
       if (document.fullscreenElement) {
         void document.exitFullscreen().catch(() => {});
