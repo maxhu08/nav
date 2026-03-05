@@ -34,17 +34,25 @@ Navigating the current page:
 ```text
 h       scroll left
 j       scroll down
-k       scroll up
 l       scroll right
 gg      scroll to top of the page
 G       scroll to bottom of the page
 d       scroll down half a page
 u       scroll up half a page
-f       open a hinted link in the current tab
 F       open a hinted link in a new tab
 r       reload the current page
 R       hard reload the current page
 ```
+
+Watch controls:
+
+```text
+w       focus the active video and show watch hints
+f       while watch mode is active, toggle fullscreen for the active video
+k       while watch mode is active, pause the active video
+```
+
+After triggering fullscreen or pause from watch mode, watch mode closes automatically.
 
 Using find:
 

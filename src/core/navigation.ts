@@ -58,6 +58,10 @@ let keyActionPrefixes: Partial<Record<string, true>> = {};
 let urlRulesMode: FastConfig["rules"]["urls"]["mode"] = "blacklist";
 let urlBlacklistRules: FastRule[] = [];
 let urlWhitelistRules: FastRule[] = [];
+let watchVideoElement: HTMLVideoElement | null = null;
+let watchModeActive = false;
+let watchShowCapitalizedLetters = false;
+let watchHighlightThumbnails = true;
 
 const writeClipboard = async (text: string): Promise<boolean> => {
   try {
@@ -709,6 +713,284 @@ const goHistory = (offset: number): boolean => {
   return true;
 };
 
+const isVideoVisible = (video: HTMLVideoElement): boolean => {
+  const bounds = video.getBoundingClientRect();
+
+  if (bounds.width < 1 || bounds.height < 1) {
+    return false;
+  }
+
+  if (
+    bounds.bottom < 0 ||
+    bounds.right < 0 ||
+    bounds.top > window.innerHeight ||
+    bounds.left > window.innerWidth
+  ) {
+    return false;
+  }
+
+  const styles = window.getComputedStyle(video);
+  return styles.display !== "none" && styles.visibility !== "hidden";
+};
+
+const getWatchActionSequence = (actionName: WatchActionName, fallback: string): string => {
+  const sequences = Object.entries(keyActions)
+    .filter((entry): entry is [string, ActionName] => !!entry[1])
+    .filter(([, candidateAction]) => candidateAction === actionName)
+    .map(([sequence]) => sequence)
+    .sort((left, right) => left.length - right.length);
+
+  return sequences[0] ?? fallback;
+};
+
+const createWatchIcon = (path: string): SVGSVGElement => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "1em");
+  svg.setAttribute("height", "1em");
+  svg.setAttribute("fill", "currentColor");
+  svg.setAttribute("aria-hidden", "true");
+
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  node.setAttribute("d", path);
+  svg.append(node);
+
+  return svg;
+};
+
+const createWatchHintKey = (key: string, icons: SVGSVGElement[] = []): HTMLSpanElement => {
+  const marker = document.createElement("span");
+  marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
+  marker.setAttribute(
+    MARKER_VARIANT_STYLE_ATTRIBUTE,
+    watchHighlightThumbnails ? "thumbnail" : "default"
+  );
+  marker.style.display = "inline-flex";
+  marker.style.alignItems = "center";
+  marker.style.gap = "0.35em";
+  marker.style.position = "static";
+  marker.style.left = "auto";
+  marker.style.top = "auto";
+  marker.style.transform = "none";
+
+  const display = watchShowCapitalizedLetters ? key.toUpperCase() : key.toLowerCase();
+
+  for (const char of Array.from(display)) {
+    const letter = document.createElement("span");
+    letter.textContent = char;
+    letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
+    marker.append(letter);
+  }
+
+  for (const icon of icons) {
+    marker.append(icon);
+  }
+
+  return marker;
+};
+
+const getWatchHintsOverlay = (): HTMLDivElement => {
+  const existingOverlay = document.getElementById(WATCH_HINTS_ID);
+  if (existingOverlay instanceof HTMLDivElement) {
+    return existingOverlay;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.id = WATCH_HINTS_ID;
+  overlay.setAttribute("aria-hidden", "true");
+  overlay.style.position = "fixed";
+  overlay.style.left = "0";
+  overlay.style.top = "0";
+  overlay.style.transform = "translate(-50%, -50%)";
+  overlay.style.display = "none";
+  overlay.style.pointerEvents = "none";
+  overlay.style.zIndex = "2147483646";
+  overlay.style.alignItems = "center";
+  overlay.style.gap = "12px";
+  overlay.style.color = "#f5f5f5";
+  overlay.style.textTransform = "lowercase";
+  overlay.style.fontFamily = '"JetBrains Mono", monospace';
+  overlay.style.fontSize = "12px";
+  overlay.style.fontWeight = "700";
+  overlay.style.textShadow = "0 2px 8px rgba(0,0,0,0.5)";
+  document.documentElement.append(overlay);
+  return overlay;
+};
+
+const renderWatchHintsOverlay = (video: HTMLVideoElement): void => {
+  const overlay = getWatchHintsOverlay();
+  overlay.replaceChildren();
+  const fullscreenSequence = getWatchActionSequence("toggle-fullscreen", "f");
+  const pauseSequence = getWatchActionSequence("toggle-play-pause", "k");
+  const playPauseIconPath =
+    video.paused || video.ended ? WATCH_PLAY_ICON_PATH : WATCH_PAUSE_ICON_PATH;
+
+  const fullscreenHint = document.createElement("div");
+  fullscreenHint.style.display = "inline-flex";
+  fullscreenHint.append(
+    createWatchHintKey(fullscreenSequence, [createWatchIcon(WATCH_FULLSCREEN_ICON_PATH)])
+  );
+
+  const pauseHint = document.createElement("div");
+  pauseHint.style.display = "inline-flex";
+  pauseHint.append(createWatchHintKey(pauseSequence, [createWatchIcon(playPauseIconPath)]));
+
+  overlay.append(fullscreenHint, pauseHint);
+};
+
+const hideWatchHintsOverlay = (): void => {
+  const overlay = document.getElementById(WATCH_HINTS_ID);
+  if (!(overlay instanceof HTMLDivElement)) {
+    return;
+  }
+
+  overlay.style.display = "none";
+};
+
+const showWatchHintsOverlay = (video: HTMLVideoElement): void => {
+  const overlay = getWatchHintsOverlay();
+  renderWatchHintsOverlay(video);
+  const bounds = video.getBoundingClientRect();
+  overlay.style.left = `${Math.round(bounds.left + bounds.width / 2)}px`;
+  overlay.style.top = `${Math.round(bounds.top + bounds.height / 2)}px`;
+  overlay.style.display = "inline-flex";
+};
+
+const syncWatchHintsOverlay = (): void => {
+  const video = getActiveWatchVideo();
+
+  if (!video || !isVideoVisible(video)) {
+    hideWatchHintsOverlay();
+    return;
+  }
+
+  showWatchHintsOverlay(video);
+};
+
+const getTrackedWatchVideo = (): HTMLVideoElement | null => {
+  if (watchVideoElement && watchVideoElement.isConnected) {
+    return watchVideoElement;
+  }
+
+  watchVideoElement = null;
+  return null;
+};
+
+const getBestWatchVideo = (): HTMLVideoElement | null => {
+  const trackedVideo = getTrackedWatchVideo();
+  if (trackedVideo) {
+    return trackedVideo;
+  }
+
+  const activeElement = getDeepActiveElement();
+  if (activeElement instanceof HTMLVideoElement && isVideoVisible(activeElement)) {
+    return activeElement;
+  }
+
+  const visibleVideos = Array.from(document.querySelectorAll("video")).filter(
+    (video): video is HTMLVideoElement => video instanceof HTMLVideoElement && isVideoVisible(video)
+  );
+
+  if (visibleVideos.length === 0) {
+    return null;
+  }
+
+  const playingVideo = visibleVideos.find((video) => !video.paused && !video.ended);
+  return playingVideo ?? visibleVideos[0] ?? null;
+};
+
+const getActiveWatchVideo = (): HTMLVideoElement | null => {
+  if (!watchModeActive) {
+    return null;
+  }
+
+  const trackedVideo = getTrackedWatchVideo();
+
+  if (trackedVideo) {
+    return trackedVideo;
+  }
+
+  exitWatchMode();
+  return null;
+};
+
+const isWatchModeActive = (): boolean => getActiveWatchVideo() !== null;
+
+const exitWatchMode = (): void => {
+  watchModeActive = false;
+  hideWatchHintsOverlay();
+};
+
+const toggleVideoControls = (): boolean => {
+  if (watchModeActive) {
+    exitWatchMode();
+    return true;
+  }
+
+  const targetVideo = getBestWatchVideo();
+  if (!targetVideo) {
+    return false;
+  }
+
+  watchVideoElement = targetVideo;
+  watchModeActive = true;
+  targetVideo.focus({ preventScroll: true });
+  syncWatchHintsOverlay();
+  return true;
+};
+
+const toggleWatchPlayPause = (): boolean => {
+  const video = getActiveWatchVideo();
+  if (!video) {
+    return false;
+  }
+
+  if (video.paused || video.ended) {
+    void video.play().catch(() => {});
+  } else {
+    video.pause();
+  }
+
+  exitWatchMode();
+  return true;
+};
+
+const togglePlayPause = (): boolean => {
+  const video = getActiveWatchVideo();
+  if (!video) {
+    return false;
+  }
+
+  if (video.paused || video.ended) {
+    void video.play().catch(() => {});
+    return true;
+  }
+
+  video.pause();
+  return true;
+};
+
+const toggleFullscreen = (): boolean => {
+  const video = getActiveWatchVideo();
+  if (!video) {
+    return false;
+  }
+
+  if (document.fullscreenElement) {
+    void document.exitFullscreen().catch(() => {});
+    exitWatchMode();
+    return true;
+  }
+
+  if (typeof video.requestFullscreen !== "function") {
+    return false;
+  }
+
+  void video.requestFullscreen().catch(() => {});
+  exitWatchMode();
+  return true;
+};
+
 const getCurrentExtensionPageTabContext = async (): Promise<{
   tabId?: number;
   tabIndex?: number;
@@ -779,6 +1061,9 @@ const isOptionsPage = (): boolean => {
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
+  "toggle-video-controls": toggleVideoControls,
+  "toggle-fullscreen": toggleFullscreen,
+  "toggle-play-pause": togglePlayPause,
   "enable-find-mode": openFindMode,
   "cycle-match-next": () => cycleFindMatch(1),
   "cycle-match-prev": () => cycleFindMatch(-1),
@@ -860,6 +1145,15 @@ const FIND_STATUS_TEXT_ID = `nav-${getExtensionNamespace()}-find-status-text`;
 const FIND_PREV_BUTTON_ID = `nav-${getExtensionNamespace()}-find-prev`;
 const FIND_NEXT_BUTTON_ID = `nav-${getExtensionNamespace()}-find-next`;
 const FIND_CLEAR_BUTTON_ID = `nav-${getExtensionNamespace()}-find-clear`;
+const WATCH_HINTS_ID = `nav-${getExtensionNamespace()}-watch-hints`;
+const MARKER_STYLE_ATTRIBUTE = "data-nav-hint-marker";
+const MARKER_VARIANT_STYLE_ATTRIBUTE = "data-nav-hint-marker-variant";
+const LETTER_STYLE_ATTRIBUTE = "data-nav-hint-marker-letter";
+const WATCH_FULLSCREEN_ICON_PATH =
+  "M8 3V5H4V9H2V3H8ZM2 21V15H4V19H8V21H2ZM22 21H16V19H20V15H22V21ZM22 9H20V5H16V3H22V9Z";
+const WATCH_PLAY_ICON_PATH =
+  "M8 18.3915V5.60846L18.2264 12L8 18.3915ZM6 3.80421V20.1957C6 20.9812 6.86395 21.46 7.53 21.0437L20.6432 12.848C21.2699 12.4563 21.2699 11.5436 20.6432 11.152L7.53 2.95621C6.86395 2.53993 6 3.01878 6 3.80421Z";
+const WATCH_PAUSE_ICON_PATH = "M6 3H8V21H6V3ZM16 3H18V21H16V3Z";
 let focusedOverlayTarget: HTMLElement | null = null;
 let focusOverlayFrame: number | null = null;
 let focusOverlayTimeout: number | null = null;
@@ -874,6 +1168,8 @@ type KeyParseResult = {
   actionName: ActionName | null;
   consumed: boolean;
 };
+
+type WatchActionName = "toggle-fullscreen" | "toggle-play-pause";
 
 const colorParsingContext = document.createElement("canvas").getContext("2d");
 
@@ -1551,6 +1847,30 @@ const getActionName = (keyToken: string): KeyParseResult => {
   return { actionName, consumed: true };
 };
 
+const getWatchActionName = (keyToken: string): KeyParseResult => {
+  const fullscreenSequence = getWatchActionSequence("toggle-fullscreen", "f");
+  const pauseSequence = getWatchActionSequence("toggle-play-pause", "k");
+  const nextSequence = `${pendingSequence}${keyToken}`;
+
+  if (nextSequence === fullscreenSequence) {
+    clearPendingSequence();
+    return { actionName: "toggle-fullscreen", consumed: true };
+  }
+
+  if (nextSequence === pauseSequence) {
+    clearPendingSequence();
+    return { actionName: "toggle-play-pause", consumed: true };
+  }
+
+  if (fullscreenSequence.startsWith(nextSequence) || pauseSequence.startsWith(nextSequence)) {
+    startPendingSequence(nextSequence);
+    return { actionName: null, consumed: true };
+  }
+
+  clearPendingSequence();
+  return { actionName: null, consumed: false };
+};
+
 const isToggleHintsAction = (
   actionName: ActionName | null
 ): actionName is "toggle-hints-current-tab" | "toggle-hints-new-tab" =>
@@ -1585,11 +1905,14 @@ const syncFastConfig = (): void => {
     setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
     setPreferredSearchLabels(fastConfig.hints.preferredSearchLabels);
     setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
+    watchShowCapitalizedLetters = fastConfig.hints.showCapitalizedLetters;
     setHighlightThumbnails(fastConfig.hints.improveThumbnailMarkers);
+    watchHighlightThumbnails = fastConfig.hints.improveThumbnailMarkers;
     setHintCSS(fastConfig.hints.css);
     showActivationIndicator = fastConfig.hints.showActivationIndicator;
     activationIndicatorColor = fastConfig.hints.showActivationIndicatorColor;
     syncFocusStyles();
+    syncWatchHintsOverlay();
     applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
   });
 };
@@ -1609,11 +1932,14 @@ const handleStorageChange = (
   setAvoidedAdjacentHintPairs(nextFastConfig.hints.avoidAdjacentPairs);
   setPreferredSearchLabels(nextFastConfig.hints.preferredSearchLabels);
   setShowCapitalizedLetters(nextFastConfig.hints.showCapitalizedLetters);
+  watchShowCapitalizedLetters = nextFastConfig.hints.showCapitalizedLetters;
   setHighlightThumbnails(nextFastConfig.hints.improveThumbnailMarkers);
+  watchHighlightThumbnails = nextFastConfig.hints.improveThumbnailMarkers;
   setHintCSS(nextFastConfig.hints.css);
   showActivationIndicator = nextFastConfig.hints.showActivationIndicator;
   activationIndicatorColor = nextFastConfig.hints.showActivationIndicatorColor;
   syncFocusStyles();
+  syncWatchHintsOverlay();
   applyHotkeyMappings(nextFastConfig.hotkeys.mappings, nextFastConfig.hotkeys.prefixes);
 };
 
@@ -1642,6 +1968,14 @@ const handleKeydown = (event: KeyboardEvent): void => {
       event.stopImmediatePropagation();
     }
 
+    return;
+  }
+
+  if (event.key === "Escape" && isWatchModeActive()) {
+    exitWatchMode();
+    clearPendingState();
+    event.preventDefault();
+    event.stopImmediatePropagation();
     return;
   }
 
@@ -1683,6 +2017,29 @@ const handleKeydown = (event: KeyboardEvent): void => {
 
     clearPendingState();
     return;
+  }
+
+  if (isWatchModeActive()) {
+    const { actionName: watchActionName, consumed: consumedWatchKey } =
+      getWatchActionName(keyToken);
+
+    if (watchActionName === "toggle-fullscreen" && toggleFullscreen()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    if (watchActionName === "toggle-play-pause" && toggleWatchPlayPause()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    if (consumedWatchKey) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
   }
 
   const { actionName, consumed } = getActionName(keyToken);
@@ -2015,6 +2372,14 @@ const handleEditableBeforeInput = (event: Event): void => {
   hideFocusOverlay();
 };
 
+const handleWatchMediaStateChange = (): void => {
+  if (!watchModeActive) {
+    return;
+  }
+
+  syncWatchHintsOverlay();
+};
+
 export const initCoreNavigation = (): void => {
   if (isInitialized) {
     return;
@@ -2032,6 +2397,12 @@ export const initCoreNavigation = (): void => {
     window.addEventListener("compositionstart", handleEditableBeforeInput, true);
     window.addEventListener("resize", scheduleFocusOverlayPosition, true);
     window.addEventListener("scroll", scheduleFocusOverlayPosition, true);
+    window.addEventListener("resize", syncWatchHintsOverlay, true);
+    window.addEventListener("scroll", syncWatchHintsOverlay, true);
+    document.addEventListener("fullscreenchange", syncWatchHintsOverlay, true);
+    document.addEventListener("play", handleWatchMediaStateChange, true);
+    document.addEventListener("pause", handleWatchMediaStateChange, true);
+    document.addEventListener("ended", handleWatchMediaStateChange, true);
     document.addEventListener("mousedown", (event) => {
       if (!isFindUiElement(event.target)) {
         hideFindBar();
