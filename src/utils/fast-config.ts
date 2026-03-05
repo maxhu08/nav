@@ -100,6 +100,10 @@ const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionN
       continue;
     }
 
+    if (parsedMappings[sequence]) {
+      continue;
+    }
+
     parsedMappings[sequence] = actionName;
   }
 

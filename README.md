@@ -43,7 +43,6 @@ G scroll-to-bottom
 # watch
 w toggle-video-controls
 f toggle-fullscreen # requires watch mode
-k toggle-play-pause # requires watch mode
 
 # find
 / enable-find-mode
