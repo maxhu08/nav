@@ -79,7 +79,6 @@ G scroll-to-bottom
 
 # watch
 w toggle-video-controls
-f toggle-fullscreen # requires watch mode
 
 # find
 / enable-find-mode
@@ -87,6 +86,7 @@ n cycle-match-next # requires find mode
 N cycle-match-prev # requires find mode
 
 # hints
+f toggle-hints-current-tab
 F toggle-hints-new-tab
 
 # tab actions
