@@ -7,6 +7,13 @@ import {
 } from "~/src/utils/hotkeys";
 
 export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
+:root {
+  --nav-hint-marker-bg: #eab308;
+  --nav-hint-marker-color: #2b1d00;
+  --nav-hint-marker-pending-color: #000000;
+  --nav-hint-marker-typed-color: #ffffff;
+}
+
 [data-nav-hint-marker] {
   transform: translate(-20%, -20%);
   transition: none !important;
@@ -14,8 +21,8 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
   transition-property: none !important;
   padding: 1px 4px;
   border-radius: 3px;
-  background: #eab308;
-  color: #2b1d00;
+  background: var(--nav-hint-marker-bg);
+  color: var(--nav-hint-marker-color);
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
   font-weight: 700;
@@ -37,11 +44,11 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 }
 
 [data-nav-hint-marker-letter="pending"] {
-  color: #000000;
+  color: var(--nav-hint-marker-pending-color);
 }
 
 [data-nav-hint-marker-letter="typed"] {
-  color: #ffffff;
+  color: var(--nav-hint-marker-typed-color);
 }
 `;
 
