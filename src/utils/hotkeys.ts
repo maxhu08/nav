@@ -69,7 +69,7 @@ export const isActionName = (value: string): value is ActionName => {
 
 export const DEFAULT_HOTKEY_MAPPINGS = `# scroll
 j scroll-down
-j scroll-up
+k scroll-up
 h scroll-left
 l scroll-right
 d scroll-half-page-down

@@ -32,7 +32,7 @@ Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x,
 ```text
 # scroll
 j scroll-down
-j scroll-up
+k scroll-up
 h scroll-left
 l scroll-right
 d scroll-half-page-down
