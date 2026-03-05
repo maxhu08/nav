@@ -40,14 +40,6 @@ u scroll-half-page-up
 gg scroll-to-top
 G scroll-to-bottom
 
-# watch
-w toggle-video-controls
-
-# find
-/ enable-find-mode
-n cycle-match-next # requires find mode
-N cycle-match-prev # requires find mode
-
 # hints
 f toggle-hints-current-tab
 F toggle-hints-new-tab
@@ -71,6 +63,16 @@ yy yank-current-tab-url
 # history
 H history-go-prev
 L history-go-next
+
+# find
+/ enable-find-mode
+n cycle-match-next # requires find mode
+N cycle-match-prev # requires find mode
+
+# watch
+w toggle-video-controls
+f toggle-fullscreen # requires watch mode
+k toggle-play-pause # requires watch mode
 ```
 
 These bindings are fully configurable in the options page.

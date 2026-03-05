@@ -9,7 +9,10 @@ import {
   DEFAULT_HINT_CHARSET,
   DEFAULT_HINT_PREFERRED_SEARCH_LABELS,
   DEFAULT_HOTKEY_MAPPINGS,
-  isActionName
+  type HotkeyActionMode,
+  type HotkeyMappings,
+  isActionName,
+  parseHotkeyMappingsValue
 } from "~/src/utils/hotkeys";
 
 export type FastRule = {
@@ -27,7 +30,7 @@ export type FastConfig = {
     };
   };
   hotkeys: {
-    mappings: Partial<Record<string, ActionName>>;
+    mappings: HotkeyMappings;
     prefixes: Partial<Record<string, true>>;
   };
   hints: {
@@ -42,8 +45,37 @@ export type FastConfig = {
   };
 };
 
+const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch"];
+
+const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  for (const bindings of Object.values(value as Record<string, unknown>)) {
+    if (typeof bindings !== "object" || bindings === null) {
+      return false;
+    }
+
+    for (const [mode, action] of Object.entries(bindings as Record<string, unknown>)) {
+      if (!HOTKEY_ACTION_MODES.includes(mode as HotkeyActionMode)) {
+        return false;
+      }
+
+      if (typeof action !== "string" || !isActionName(action)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
+
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
   return (
+    isHotkeyMappingsShapeValid(value?.hotkeys?.mappings) &&
+    typeof value?.hotkeys?.prefixes === "object" &&
+    value?.hotkeys?.prefixes !== null &&
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
     typeof value?.hints?.showActivationIndicator === "boolean" &&
@@ -75,49 +107,14 @@ const parseActivationIndicatorColorValue = (value: string): string => {
   return normalizeCssColor(value.trim()) || DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
 };
 
-const parseHotkeyMappingsValue = (value: string): Partial<Record<string, ActionName>> => {
-  const parsedMappings: Partial<Record<string, ActionName>> = {};
-
-  for (const line of value.split("\n")) {
-    const commentStartIndex = line.indexOf("#");
-    const lineWithoutComment = commentStartIndex === -1 ? line : line.slice(0, commentStartIndex);
-    const trimmedLine = lineWithoutComment.trim();
-
-    if (!trimmedLine || trimmedLine.startsWith("#")) {
-      continue;
-    }
-
-    const separatorIndex = trimmedLine.search(/\s/);
-
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const sequence = trimmedLine.slice(0, separatorIndex);
-    const actionName = trimmedLine.slice(separatorIndex).trim();
-
-    if (!sequence || !isActionName(actionName)) {
-      continue;
-    }
-
-    if (parsedMappings[sequence]) {
-      continue;
-    }
-
-    parsedMappings[sequence] = actionName;
-  }
-
-  return Object.keys(parsedMappings).length > 0
-    ? parsedMappings
-    : parseHotkeyMappingsValue(DEFAULT_HOTKEY_MAPPINGS);
-};
-
-const createHotkeyPrefixes = (
-  mappings: Partial<Record<string, ActionName>>
-): Partial<Record<string, true>> => {
+const createHotkeyPrefixes = (mappings: HotkeyMappings): Partial<Record<string, true>> => {
   const prefixes: Partial<Record<string, true>> = {};
 
-  for (const sequence of Object.keys(mappings)) {
+  for (const [sequence, bindings] of Object.entries(mappings)) {
+    if (!bindings || Object.keys(bindings).length === 0) {
+      continue;
+    }
+
     for (let index = 1; index < sequence.length; index += 1) {
       prefixes[sequence.slice(0, index)] = true;
     }
@@ -267,7 +264,10 @@ const parseRulesUrlsValue = (value: string): FastRule[] => {
 };
 
 export const buildFastConfig = (config: Config): FastConfig => {
-  const mappings = parseHotkeyMappingsValue(config.hotkeys.mappings);
+  const parsedMappings = parseHotkeyMappingsValue(config.hotkeys.mappings);
+  const hasMappings = Object.keys(parsedMappings.mappings).length > 0;
+  const fallbackMappings = parseHotkeyMappingsValue(DEFAULT_HOTKEY_MAPPINGS).mappings;
+  const mappings = hasMappings ? parsedMappings.mappings : fallbackMappings;
 
   return {
     rules: {

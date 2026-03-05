@@ -194,6 +194,14 @@
   color: #dcdcaa;
 }
 
+.hotkeys-mappings-token-action-watch {
+  color: #10b981;
+}
+
+.hotkeys-mappings-token-action-find {
+  color: #f97316;
+}
+
 .hotkeys-mappings-token-invalid {
   color: #f43f5e;
 }
@@ -242,15 +250,14 @@
   border: 0;
   border-radius: 0.25rem;
   background-image:
-    linear-gradient(var(--options-color-preview, transparent), var(--options-color-preview, transparent)),
-    linear-gradient(#404040, #404040),
-    linear-gradient(#262626, #262626),
-    linear-gradient(#404040, #404040),
-    linear-gradient(#262626, #262626),
-    linear-gradient(#404040, #404040),
-    linear-gradient(#262626, #262626),
-    linear-gradient(#404040, #404040),
-    linear-gradient(#262626, #262626),
+    linear-gradient(
+      var(--options-color-preview, transparent),
+      var(--options-color-preview, transparent)
+    ),
+    linear-gradient(#404040, #404040), linear-gradient(#262626, #262626),
+    linear-gradient(#404040, #404040), linear-gradient(#262626, #262626),
+    linear-gradient(#404040, #404040), linear-gradient(#262626, #262626),
+    linear-gradient(#404040, #404040), linear-gradient(#262626, #262626),
     linear-gradient(#404040, #404040);
   background-size:
     100% 100%,

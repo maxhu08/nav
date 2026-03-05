@@ -4,7 +4,7 @@ import {
   hotkeysMappingsTextareaEl
 } from "~/src/options/scripts/ui";
 import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
-import { isActionName } from "~/src/utils/hotkeys";
+import { getActionMode, isActionName, parseHotkeyMappingsValue } from "~/src/utils/hotkeys";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -12,16 +12,38 @@ const escapeHtml = (value: string): string =>
 const wrapToken = (className: string, value: string): string =>
   `<span class="${className}">${escapeHtml(value)}</span>`;
 
-const renderLine = (line: string): { hasError: boolean; html: string } => {
+const getActionClassName = (actionName: string): string => {
+  if (!isActionName(actionName)) {
+    return "hotkeys-mappings-token-invalid";
+  }
+
+  const mode = getActionMode(actionName);
+
+  if (mode === "watch") {
+    return "hotkeys-mappings-token-action-watch";
+  }
+
+  if (mode === "find") {
+    return "hotkeys-mappings-token-action-find";
+  }
+
+  return "hotkeys-mappings-token-action";
+};
+
+const renderLine = (
+  line: string,
+  lineHasError: boolean
+): {
+  html: string;
+} => {
   const trimmedLine = line.trim();
 
   if (!trimmedLine) {
-    return { hasError: false, html: "" };
+    return { html: "" };
   }
 
   if (trimmedLine.startsWith("#")) {
     return {
-      hasError: false,
       html: wrapToken("hotkeys-mappings-token-comment", line)
     };
   }
@@ -30,7 +52,6 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
 
   if (separatorIndex === -1) {
     return {
-      hasError: true,
       html: wrapToken("hotkeys-mappings-token-invalid", line)
     };
   }
@@ -48,13 +69,16 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
   const inlineComment =
     commentStartIndex === -1 ? "" : rawActionAndComment.slice(commentStartIndex);
   const actionName = action.trim();
-  const hasError = !isActionName(actionName);
-  const actionClass = hasError ? "hotkeys-mappings-token-invalid" : "hotkeys-mappings-token-action";
+  const actionClass = lineHasError
+    ? "hotkeys-mappings-token-invalid"
+    : getActionClassName(actionName);
+  const sequenceClass = lineHasError
+    ? "hotkeys-mappings-token-invalid"
+    : "hotkeys-mappings-token-sequence";
 
   return {
-    hasError,
     html: [
-      wrapToken("hotkeys-mappings-token-sequence", sequence),
+      wrapToken(sequenceClass, sequence),
       escapeHtml(spacing),
       wrapToken(actionClass, action),
       inlineComment ? wrapToken("hotkeys-mappings-token-comment", inlineComment) : ""
@@ -63,18 +87,31 @@ const renderLine = (line: string): { hasError: boolean; html: string } => {
 };
 
 export const syncHotkeysMappingsHighlight = (): void => {
-  let hasError = false;
+  const parsedMappings = parseHotkeyMappingsValue(hotkeysMappingsTextareaEl.value);
+  const errorsByLine = new Map<number, string[]>();
+
+  for (const error of parsedMappings.errors) {
+    const errors = errorsByLine.get(error.lineNumber) ?? [];
+    errors.push(`[${error.code}] line ${error.lineNumber}: ${error.message}`);
+    errorsByLine.set(error.lineNumber, errors);
+  }
 
   hotkeysMappingsHighlightEl.innerHTML = hotkeysMappingsTextareaEl.value
     .split("\n")
-    .map((line) => {
-      const result = renderLine(line);
-      hasError ||= result.hasError;
-      return result.html;
+    .map((line, index) => {
+      const lineNumber = index + 1;
+      const lineHasError = (errorsByLine.get(lineNumber)?.length ?? 0) > 0;
+      return renderLine(line, lineHasError).html;
     })
     .join("\n");
 
-  setEditorStatus(hotkeysMappingsStatusEl, hasError);
+  setEditorStatus(
+    hotkeysMappingsStatusEl,
+    parsedMappings.errors.map((error) => ({
+      code: error.code,
+      message: `line ${error.lineNumber}: ${error.message}`
+    }))
+  );
 };
 
 export const syncHotkeysMappingsHighlightScroll = (): void => {

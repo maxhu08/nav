@@ -56,7 +56,8 @@ const isOptionsPage = (): boolean => {
 };
 
 const keyState = createKeyState({
-  onReservedHintPrefixesChange: setReservedHintPrefixes
+  onReservedHintPrefixesChange: setReservedHintPrefixes,
+  getMode: () => currentMode
 });
 
 const focusIndicator = createFocusIndicatorController();

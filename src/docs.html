@@ -71,10 +71,10 @@
           </div>
         </section>
 
-        <section id="hotkeys-mappings" class="mb-20 grid grid-flow-row gap-4">
+        <section id="hotkeys-mappings-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p id="hotkeys-mappings-heading" class="text-base text-white">
-              <a href="#hotkeys-mappings-heading">hotkeys.mappings</a>
+            <p id="hotkeys-mappings" class="text-base text-white">
+              <a href="#hotkeys-mappings">hotkeys.mappings</a>
             </p>
             <p class="text-base text-neutral-500">
               Each line maps one key sequence to one action name.
@@ -85,77 +85,86 @@
               Modifier keys are specified as `&lt;c-x&gt;`, `&lt;m-x&gt;`, and `&lt;a-x&gt;` for ctrl+x, meta+x, and alt+x. Combined modifiers are written like `&lt;c-a-x&gt;` or `&lt;c-m-x&gt;`. Use
               `&lt;space&gt;` for the space key.
               <br /><br />
+              Actions run in mode context:
+              <br />
+              - normal mode actions work in regular browsing mode.
+              <br />
+              - find mode actions (`cycle-match-next`, `cycle-match-prev`) only work while find mode is active.
+              <br />
+              - watch mode actions (`toggle-fullscreen`, `toggle-play-pause`) only work while watch mode is active.
+              <br /><br />
+              A key sequence can be reused across different modes (for example `f` for hints in normal mode and fullscreen in watch mode), but duplicate mappings in the same mode are rejected.
+              <br /><br />
               Lines starting with # are ignored.
               <br /><br />
-              If an action name is invalid, it is highlighted in red in the editor.
-            </p>
-            <br />
-            <p class="text-base text-neutral-500">Example:</p>
-            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
-              <p><span class="text-[#569cd6]">j</span> <span class="text-[#dcdcaa]">scroll-down</span></p>
-              <p><span class="text-[#569cd6]">/</span> <span class="text-[#dcdcaa]">enable-find-mode</span></p>
-              <p><span class="text-[#569cd6]">n</span> <span class="text-[#dcdcaa]">cycle-match-next</span></p>
-              <p><span class="text-[#569cd6]">N</span> <span class="text-[#dcdcaa]">cycle-match-prev</span></p>
-              <p><span class="text-[#569cd6]">gg</span> <span class="text-[#dcdcaa]">scroll-to-top</span></p>
-              <p><span class="text-[#569cd6]">&lt;space&gt;</span> <span class="text-[#dcdcaa]">toggle-hints-current-tab</span></p>
-              <p><span class="text-[#569cd6]">&lt;c-y&gt;</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
-              <p><span class="text-[#569cd6]">yl</span> <span class="text-[#dcdcaa]">yank-link-url</span></p>
-              <p><span class="text-[#569cd6]">yi</span> <span class="text-[#dcdcaa]">yank-image</span></p>
-              <p><span class="text-[#569cd6]">yI</span> <span class="text-[#dcdcaa]">yank-image-url</span></p>
-              <p><span class="text-[#569cd6]">yy</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
-            </div>
-            <p class="text-base text-neutral-500">
-              This maps `j` to scroll down, `/` to open find mode, `n` and `N` to cycle through matches, `gg` to jump to the top of the page, `&lt;space&gt;` to toggle hints in the current tab,
-              `&lt;c-y&gt;` to ctrl+y, `yl` to copy a hinted link URL, `yi` to copy a hinted image, `yI` to copy a hinted image URL, and `yy` to copy the current tab URL.
+              Action syntax highlighting:
+              <br />
+              - <span class="text-[#dcdcaa]">normal mode actions</span> are yellow.
+              <br />
+              - <span class="text-[#f97316]">find mode actions</span> are orange.
+              <br />
+              - <span class="text-[#10b981]">watch mode actions</span> are green.
+              <br />
+              - <span class="text-[#f43f5e]">invalid tokens</span> are red.
             </p>
           </div>
         </section>
 
-        <section id="action-names" class="mb-20 grid grid-flow-row gap-4">
+        <section id="actions-names" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p id="action-names-heading" class="text-base text-white">
-              <a href="#action-names-heading">action.names</a>
+            <p id="actions-names" class="text-base text-white">
+              <a href="#actions-names">actions.names</a>
             </p>
-            <p class="text-base text-neutral-500">These are the currently valid action names.</p>
-            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-[#dcdcaa]">
-              <p class="text-neutral-500"># navigating the current page</p>
-              <p>scroll-left</p>
-              <p>scroll-down</p>
-              <p>scroll-up</p>
-              <p>scroll-right</p>
-              <p>scroll-to-top</p>
-              <p>scroll-to-bottom</p>
-              <p>scroll-half-page-down</p>
-              <p>scroll-half-page-up</p>
-              <p>toggle-hints-current-tab</p>
-              <p>toggle-hints-new-tab</p>
-              <p>reload-current-tab</p>
-              <p>reload-current-tab-hard</p>
+            <p class="text-base text-neutral-500">
+              These are the currently valid action names, organized by mode.
+              <br /><br />
+              <span class="text-[#dcdcaa]">normal mode actions</span> are yellow.
               <br />
-              <p class="text-neutral-500"># using find</p>
-              <p>enable-find-mode</p>
-              <p>cycle-match-next</p>
-              <p>cycle-match-prev</p>
+              <span class="text-[#f97316]">find mode actions</span> are orange.
               <br />
-              <p class="text-neutral-500"># clipboard actions</p>
-              <p>yank-link-url</p>
-              <p>yank-image</p>
-              <p>yank-image-url</p>
-              <p>yank-current-tab-url</p>
+              <span class="text-[#10b981]">watch mode actions</span> are green.
+            </p>
+            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base">
+              <p class="text-neutral-500"># actions.names.normal</p>
+              <p class="text-[#dcdcaa]">toggle-video-controls</p>
+              <p class="text-[#dcdcaa]">enable-find-mode</p>
+              <p class="text-[#dcdcaa]">scroll-left</p>
+              <p class="text-[#dcdcaa]">scroll-down</p>
+              <p class="text-[#dcdcaa]">scroll-up</p>
+              <p class="text-[#dcdcaa]">scroll-right</p>
+              <p class="text-[#dcdcaa]">scroll-to-top</p>
+              <p class="text-[#dcdcaa]">scroll-to-bottom</p>
+              <p class="text-[#dcdcaa]">scroll-half-page-down</p>
+              <p class="text-[#dcdcaa]">scroll-half-page-up</p>
+              <p class="text-[#dcdcaa]">toggle-hints-current-tab</p>
+              <p class="text-[#dcdcaa]">toggle-hints-new-tab</p>
+              <p class="text-[#dcdcaa]">reload-current-tab</p>
+              <p class="text-[#dcdcaa]">reload-current-tab-hard</p>
+              <p class="text-[#dcdcaa]">yank-link-url</p>
+              <p class="text-[#dcdcaa]">yank-image</p>
+              <p class="text-[#dcdcaa]">yank-image-url</p>
+              <p class="text-[#dcdcaa]">yank-current-tab-url</p>
+              <p class="text-[#dcdcaa]">history-go-prev</p>
+              <p class="text-[#dcdcaa]">history-go-next</p>
+              <p class="text-[#dcdcaa]">tab-go-prev</p>
+              <p class="text-[#dcdcaa]">tab-go-next</p>
+              <p class="text-[#dcdcaa]">create-new-tab</p>
+              <p class="text-[#dcdcaa]">close-current-tab</p>
+              <p class="text-[#dcdcaa]">duplicate-current-tab</p>
+              <p class="text-[#dcdcaa]">move-current-tab-to-new-window</p>
               <br />
-              <p class="text-neutral-500"># navigating your history</p>
-              <p>history-go-prev</p>
-              <p>history-go-next</p>
+              <p class="text-neutral-500"># actions.names.find</p>
+              <p class="text-[#f97316]">cycle-match-next</p>
+              <p class="text-[#f97316]">cycle-match-prev</p>
               <br />
-              <p class="text-neutral-500"># manipulating tabs</p>
-              <p>tab-go-prev</p>
-              <p>tab-go-next</p>
-              <p>create-new-tab</p>
-              <p>close-current-tab</p>
-              <p>duplicate-current-tab</p>
-              <p>move-current-tab-to-new-window</p>
+              <p class="text-neutral-500"># actions.names.watch</p>
+              <p class="text-[#10b981]">toggle-fullscreen</p>
+              <p class="text-[#10b981]">toggle-play-pause</p>
             </div>
             <div class="grid gap-4">
+              <p id="action-names-normal" class="text-base text-white">
+                <a href="#action-names-normal">action.names.normal</a>
+              </p>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">scroll-left</p>
                 <p class="text-base text-neutral-500">Scrolls left in the current scrollable area.</p>
@@ -209,12 +218,8 @@
                 <p class="text-base text-neutral-500">Opens the in-page find bar and previews the current query's match count.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">cycle-match-next</p>
-                <p class="text-base text-neutral-500">Moves to the next in-page search match.</p>
-              </div>
-              <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">cycle-match-prev</p>
-                <p class="text-base text-neutral-500">Moves to the previous in-page search match.</p>
+                <p class="text-base text-[#dcdcaa]">toggle-video-controls</p>
+                <p class="text-base text-neutral-500">Enters watch mode on the best visible video, or exits watch mode if already active.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">yank-link-url</p>
@@ -263,6 +268,28 @@
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">move-current-tab-to-new-window</p>
                 <p class="text-base text-neutral-500">Moves the active browser tab into a new window.</p>
+              </div>
+              <p id="action-names-find" class="text-base text-white">
+                <a href="#action-names-find">action.names.find</a>
+              </p>
+              <div class="grid gap-1">
+                <p class="text-base text-[#f97316]">cycle-match-next</p>
+                <p class="text-base text-neutral-500">Moves to the next in-page search match while find mode is active.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#f97316]">cycle-match-prev</p>
+                <p class="text-base text-neutral-500">Moves to the previous in-page search match while find mode is active.</p>
+              </div>
+              <p id="action-names-watch" class="text-base text-white">
+                <a href="#action-names-watch">action.names.watch</a>
+              </p>
+              <div class="grid gap-1">
+                <p class="text-base text-[#10b981]">toggle-fullscreen</p>
+                <p class="text-base text-neutral-500">Toggles fullscreen for the active watch-mode video.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#10b981]">toggle-play-pause</p>
+                <p class="text-base text-neutral-500">Toggles play/pause for the active watch-mode video and exits watch mode.</p>
               </div>
             </div>
           </div>

@@ -7,13 +7,10 @@ import {
   setShowCapitalizedLetters
 } from "~/src/core/actions/hints";
 import { type FastConfig, getFastConfig } from "~/src/utils/fast-config";
-import { type ActionName } from "~/src/utils/hotkeys";
+import { type HotkeyMappings } from "~/src/utils/hotkeys";
 
 type FastConfigSyncDeps = {
-  applyHotkeyMappings: (
-    mappings: Partial<Record<string, ActionName>>,
-    prefixes: Partial<Record<string, true>>
-  ) => void;
+  applyHotkeyMappings: (mappings: HotkeyMappings, prefixes: Partial<Record<string, true>>) => void;
   applyUrlRules: (rules: FastConfig["rules"]["urls"]) => void;
   setWatchShowCapitalizedLetters: (value: boolean) => void;
   setWatchHighlightThumbnails: (value: boolean) => void;

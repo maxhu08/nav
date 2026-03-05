@@ -1,5 +1,5 @@
 import type { FastConfig, FastRule } from "~/src/utils/fast-config";
-import type { ActionName } from "~/src/utils/hotkeys";
+import type { ActionName, HotkeyActionMode, HotkeyMappings } from "~/src/utils/hotkeys";
 
 const KEY_SEQUENCE_TIMEOUT_MS = 1000;
 
@@ -9,16 +9,23 @@ export type KeyParseResult = {
 };
 
 type WatchActionName = "toggle-fullscreen" | "toggle-play-pause";
+type KeyStateMode = "normal" | "find" | "watch";
 
 type CreateKeyStateDeps = {
   onReservedHintPrefixesChange: (prefixes: Set<string>) => void;
+  getMode: () => KeyStateMode;
 };
 
-const getReservedHintPrefixes = (mappings: Partial<Record<string, ActionName>>): Set<string> => {
+const getReservedHintPrefixes = (mappings: HotkeyMappings): Set<string> => {
   const reservedPrefixes = new Set<string>();
 
-  for (const [sequence, actionName] of Object.entries(mappings)) {
-    if (actionName !== "toggle-hints-current-tab" && actionName !== "toggle-hints-new-tab") {
+  for (const [sequence, bindings] of Object.entries(mappings)) {
+    const hasHintsBinding = Object.values(bindings ?? {}).some(
+      (actionName) =>
+        actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab"
+    );
+
+    if (!hasHintsBinding) {
       continue;
     }
 
@@ -75,7 +82,7 @@ export const getKeyToken = (event: KeyboardEvent): string | null => {
 };
 
 export const createKeyState = (deps: CreateKeyStateDeps) => {
-  let keyActions: Partial<Record<string, ActionName>> = {};
+  let keyActions: HotkeyMappings = {};
   let keyActionPrefixes: Partial<Record<string, true>> = {};
   let urlRulesMode: FastConfig["rules"]["urls"]["mode"] = "blacklist";
   let urlBlacklistRules: FastRule[] = [];
@@ -142,14 +149,39 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     return isActionAllowedForRule(actionName, getCurrentUrlRule());
   };
 
-  const getAllowedActionForSequence = (sequence: string): ActionName | null => {
-    const actionName = keyActions[sequence] ?? null;
+  const getActiveModes = (): HotkeyActionMode[] => {
+    const mode = deps.getMode();
 
-    if (!actionName || !isActionAllowed(actionName)) {
+    if (mode === "find") {
+      return ["find", "normal"];
+    }
+
+    if (mode === "watch") {
+      return ["watch", "normal"];
+    }
+
+    return ["normal"];
+  };
+
+  const getAllowedActionForSequence = (sequence: string): ActionName | null => {
+    const bindings = keyActions[sequence];
+    if (!bindings) {
       return null;
     }
 
-    return actionName;
+    const activeModes = getActiveModes();
+
+    for (const mode of activeModes) {
+      const actionName = bindings[mode];
+
+      if (!actionName || !isActionAllowed(actionName)) {
+        continue;
+      }
+
+      return actionName;
+    }
+
+    return null;
   };
 
   const hasAllowedActionPrefix = (
@@ -157,25 +189,43 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     predicate?: (actionName: ActionName) => boolean
   ): boolean => {
     const rule = getCurrentUrlRule();
+    const activeModes = getActiveModes();
 
-    return Object.entries(keyActions).some(([candidate, actionName]) => {
-      if (!actionName || candidate.length <= sequence.length || !candidate.startsWith(sequence)) {
+    return Object.entries(keyActions).some(([candidate, bindings]) => {
+      if (candidate.length <= sequence.length || !candidate.startsWith(sequence)) {
         return false;
       }
 
-      if (predicate && !predicate(actionName)) {
-        return false;
+      for (const mode of activeModes) {
+        const actionName = bindings?.[mode];
+
+        if (!actionName) {
+          continue;
+        }
+
+        if (predicate && !predicate(actionName)) {
+          continue;
+        }
+
+        if (isActionAllowedForRule(actionName, rule)) {
+          return true;
+        }
       }
 
-      return isActionAllowedForRule(actionName, rule);
+      return false;
     });
   };
 
   const hasAllowedActionMappings = (): boolean => {
     const rule = getCurrentUrlRule();
 
-    return Object.values(keyActions).some((actionName) => {
-      return actionName ? isActionAllowedForRule(actionName, rule) : false;
+    const activeModes = getActiveModes();
+
+    return Object.values(keyActions).some((bindings) => {
+      return activeModes.some((mode) => {
+        const actionName = bindings?.[mode];
+        return actionName ? isActionAllowedForRule(actionName, rule) : false;
+      });
     });
   };
 
@@ -205,7 +255,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
   return {
     applyHotkeyMappings: (
-      mappings: Partial<Record<string, ActionName>>,
+      mappings: HotkeyMappings,
       prefixes: Partial<Record<string, true>>
     ): void => {
       keyActions = mappings;
@@ -225,8 +275,8 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     isActionAllowed,
     getActionSequence: (actionName: WatchActionName, fallback: string): string => {
       const sequences = Object.entries(keyActions)
-        .filter((entry): entry is [string, ActionName] => !!entry[1])
-        .filter(([, candidateAction]) => candidateAction === actionName)
+        .filter((entry): entry is [string, NonNullable<HotkeyMappings[string]>] => !!entry[1])
+        .filter(([, candidateActions]) => candidateActions.watch === actionName)
         .map(([sequence]) => sequence)
         .sort((left, right) => left.length - right.length);
 
