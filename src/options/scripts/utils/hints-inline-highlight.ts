@@ -76,10 +76,10 @@ type PreferredSearchToken = {
 };
 
 const tokenizePreferredSearchLabels = (value: string): PreferredSearchToken[] =>
-  Array.from(value.matchAll(/ +|[^ ]+/g), (match) => {
+  Array.from(value.matchAll(/\s+|\S+/g), (match) => {
     const token = match[0] ?? "";
     return {
-      type: token.startsWith(" ") ? "space" : "label",
+      type: /^\s+$/.test(token) ? "space" : "label",
       value: token
     };
   });
@@ -97,17 +97,15 @@ const renderPreferredSearchLabelsHighlight = (
   tokens.forEach((token, index) => {
     if (token.type === "space") {
       const isBoundarySpace = index === 0 || index === tokens.length - 1;
-      const isSingleSeparator =
-        token.value === " " &&
-        tokens[index - 1]?.type === "label" &&
-        tokens[index + 1]?.type === "label";
-      const isValid = !isBoundarySpace && isSingleSeparator;
+      const isSeparatorBetweenLabels =
+        tokens[index - 1]?.type === "label" && tokens[index + 1]?.type === "label";
+      const isValid = !isBoundarySpace && isSeparatorBetweenLabels;
 
       if (!isValid) {
         hasError = true;
         errors.push({
           code: "invalid-separator",
-          message: `Expected a single space between labels near "${token.value}".`
+          message: `Expected whitespace between labels near "${token.value}".`
         });
       }
       html += wrapToken(
