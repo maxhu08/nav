@@ -3,6 +3,7 @@ type EnableFindModeDeps = {
   getFindInput: () => HTMLInputElement | null;
   getFindQuery: () => string;
   setFindQuery: (query: string) => void;
+  onEnable?: () => void;
 };
 
 export const createEnableFindModeAction = (deps: EnableFindModeDeps): (() => boolean) => {
@@ -19,6 +20,7 @@ export const createEnableFindModeAction = (deps: EnableFindModeDeps): (() => boo
     bar.setAttribute("data-visible", "true");
     input.focus();
     input.select();
+    deps.onEnable?.();
     return true;
   };
 };

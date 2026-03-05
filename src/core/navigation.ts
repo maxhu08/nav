@@ -30,6 +30,7 @@ import { type ActionName } from "~/src/utils/hotkeys";
 import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 
 type ActionHandler = (count?: number) => boolean;
+type CoreMode = "normal" | "find" | "watch";
 type FindMatch = {
   range: Range;
   element: HTMLElement;
@@ -40,8 +41,8 @@ let keyActionPrefixes: Partial<Record<string, true>> = {};
 let urlRulesMode: FastConfig["rules"]["urls"]["mode"] = "blacklist";
 let urlBlacklistRules: FastRule[] = [];
 let urlWhitelistRules: FastRule[] = [];
+let currentMode: CoreMode = "normal";
 let watchVideoElement: HTMLVideoElement | null = null;
-let watchModeActive = false;
 let watchShowCapitalizedLetters = false;
 let watchHighlightThumbnails = true;
 
@@ -91,6 +92,12 @@ const getFindNextButton = (): HTMLButtonElement | null =>
 
 const getFindClearButton = (): HTMLButtonElement | null =>
   getFindUiRoot()?.getElementById(FIND_CLEAR_BUTTON_ID) as HTMLButtonElement | null;
+
+const isMode = (mode: CoreMode): boolean => currentMode === mode;
+
+const setMode = (mode: CoreMode): void => {
+  currentMode = mode;
+};
 
 const getFindCountLabel = (count: number): string => `${count} Matches`;
 
@@ -267,10 +274,13 @@ const setFindQuery = (query: string): void => {
 
 const hideFindBar = (): void => {
   getFindBar()?.setAttribute("data-visible", "false");
+
+  if (!isFindStatusVisible) {
+    setMode("normal");
+  }
 };
 
-const isFindModeActive = (): boolean =>
-  getFindBar()?.getAttribute("data-visible") === "true" || isFindStatusVisible;
+const isFindModeActive = (): boolean => isMode("find");
 
 const isFindInputFocused = (): boolean => {
   const root = getFindUiRoot();
@@ -307,6 +317,7 @@ const clearFindSession = (): void => {
   updateFindUiCounts();
   syncFindStatusVisibility();
   hideFindBar();
+  setMode("normal");
 };
 
 const exitFindMode = (): void => {
@@ -326,11 +337,13 @@ const commitFindQuery = (): boolean => {
     isFindStatusVisible = false;
     syncFindStatusVisibility();
     clearFindHighlights();
+    setMode("normal");
     return false;
   }
 
   isFindStatusVisible = true;
   syncFindStatusVisibility();
+  setMode("find");
   focusCurrentFindMatch();
   return true;
 };
@@ -533,7 +546,7 @@ const getBestWatchVideo = (): HTMLVideoElement | null => {
 };
 
 const getActiveWatchVideo = (): HTMLVideoElement | null => {
-  if (!watchModeActive) {
+  if (!isMode("watch")) {
     return null;
   }
 
@@ -550,12 +563,12 @@ const getActiveWatchVideo = (): HTMLVideoElement | null => {
 const isWatchModeActive = (): boolean => getActiveWatchVideo() !== null;
 
 const exitWatchMode = (): void => {
-  watchModeActive = false;
+  setMode("normal");
   hideWatchHintsOverlay();
 };
 
 const toggleVideoControls = (): boolean => {
-  if (watchModeActive) {
+  if (isMode("watch")) {
     exitWatchMode();
     return true;
   }
@@ -566,7 +579,7 @@ const toggleVideoControls = (): boolean => {
   }
 
   watchVideoElement = targetVideo;
-  watchModeActive = true;
+  setMode("watch");
   targetVideo.focus({ preventScroll: true });
   syncWatchHintsOverlay();
   return true;
@@ -633,7 +646,10 @@ const enableFindModeAction = createEnableFindModeAction({
   getFindBar,
   getFindInput,
   getFindQuery: () => findQuery,
-  setFindQuery
+  setFindQuery,
+  onEnable: () => {
+    setMode("find");
+  }
 });
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
@@ -1215,111 +1231,111 @@ const fastConfigSyncDeps = {
 
 const handleStorageChange = createStorageChangeHandler(fastConfigSyncDeps);
 
-const handleKeydown = (event: KeyboardEvent): void => {
-  if (areHintsActive()) {
-    const keyToken = getKeyToken(event);
+const consumeKeyboardEvent = (event: KeyboardEvent): void => {
+  event.preventDefault();
+  event.stopImmediatePropagation();
+};
 
-    if (keyToken && (pendingSequence || areHintsPendingSelection())) {
-      const { actionName, consumed } = getToggleHintsActionName(keyToken);
-
-      if (isToggleHintsAction(actionName)) {
-        if (ACTIONS[actionName]()) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          return;
-        }
-      } else if (consumed) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
-    }
-
-    if (handleHintsKeydown(event)) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    }
-
-    return;
-  }
-
-  if (event.key === "Escape" && isWatchModeActive()) {
-    exitWatchMode();
-    clearPendingState();
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    return;
-  }
-
-  if (event.key === "Escape" && isFindModeActive()) {
-    exitFindMode();
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    return;
-  }
-
-  if (isFindModeActive() && (isFindUiElement(event.target) || isFindInputFocused())) {
-    clearPendingState();
-
-    if (event.key !== "Escape") {
-      event.stopImmediatePropagation();
-    }
-
-    return;
-  }
-
-  if (event.key === "Escape" && blurActiveEditableTarget()) {
-    clearPendingState();
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    return;
-  }
-
-  if (isEditableTarget(getDeepActiveElement())) {
-    clearPendingState();
-    return;
+const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
+  if (!areHintsActive()) {
+    return false;
   }
 
   const keyToken = getKeyToken(event);
 
-  if (!keyToken) {
-    if (isModifierKey(event.key)) {
-      return;
+  if (keyToken && (pendingSequence || areHintsPendingSelection())) {
+    const { actionName, consumed } = getToggleHintsActionName(keyToken);
+
+    if (isToggleHintsAction(actionName) && ACTIONS[actionName]()) {
+      consumeKeyboardEvent(event);
+      return true;
     }
 
-    clearPendingState();
-    return;
+    if (consumed) {
+      consumeKeyboardEvent(event);
+      return true;
+    }
+  }
+
+  if (handleHintsKeydown(event)) {
+    consumeKeyboardEvent(event);
+  }
+
+  return true;
+};
+
+const handleEscapeModes = (event: KeyboardEvent): boolean => {
+  if (event.key !== "Escape") {
+    return false;
   }
 
   if (isWatchModeActive()) {
-    const { actionName: watchActionName, consumed: consumedWatchKey } =
-      getWatchActionName(keyToken);
-
-    if (watchActionName === "toggle-fullscreen" && toggleFullscreen()) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      return;
-    }
-
-    if (watchActionName === "toggle-play-pause" && toggleWatchPlayPause()) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      return;
-    }
-
-    if (consumedWatchKey) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      return;
-    }
+    exitWatchMode();
+    clearPendingState();
+    consumeKeyboardEvent(event);
+    return true;
   }
 
+  if (isFindModeActive()) {
+    exitFindMode();
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  if (blurActiveEditableTarget()) {
+    clearPendingState();
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  return false;
+};
+
+const shouldIgnoreKeydownInFindUi = (event: KeyboardEvent): boolean => {
+  if (!isFindModeActive() || (!isFindUiElement(event.target) && !isFindInputFocused())) {
+    return false;
+  }
+
+  clearPendingState();
+
+  if (event.key !== "Escape") {
+    event.stopImmediatePropagation();
+  }
+
+  return true;
+};
+
+const handleWatchModeKeydown = (event: KeyboardEvent, keyToken: string): boolean => {
+  if (!isWatchModeActive()) {
+    return false;
+  }
+
+  const { actionName: watchActionName, consumed } = getWatchActionName(keyToken);
+
+  if (watchActionName === "toggle-fullscreen" && toggleFullscreen()) {
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  if (watchActionName === "toggle-play-pause" && toggleWatchPlayPause()) {
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  if (consumed) {
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  return false;
+};
+
+const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
   const { actionName, consumed } = getActionName(keyToken);
 
   if (!actionName) {
     if (consumed) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
+      consumeKeyboardEvent(event);
     }
 
     return;
@@ -1327,8 +1343,7 @@ const handleKeydown = (event: KeyboardEvent): void => {
 
   if (!isActionAllowed(actionName)) {
     clearPendingCount();
-    event.preventDefault();
-    event.stopImmediatePropagation();
+    consumeKeyboardEvent(event);
     return;
   }
 
@@ -1338,8 +1353,41 @@ const handleKeydown = (event: KeyboardEvent): void => {
     return;
   }
 
-  event.preventDefault();
-  event.stopImmediatePropagation();
+  consumeKeyboardEvent(event);
+};
+
+const handleKeydown = (event: KeyboardEvent): void => {
+  if (handleHintsModeKeydown(event)) {
+    return;
+  }
+
+  if (handleEscapeModes(event)) {
+    return;
+  }
+
+  if (shouldIgnoreKeydownInFindUi(event)) {
+    return;
+  }
+
+  if (isEditableTarget(getDeepActiveElement())) {
+    clearPendingState();
+    return;
+  }
+
+  const keyToken = getKeyToken(event);
+  if (!keyToken) {
+    if (!isModifierKey(event.key)) {
+      clearPendingState();
+    }
+
+    return;
+  }
+
+  if (handleWatchModeKeydown(event, keyToken)) {
+    return;
+  }
+
+  handleActionKeydown(event, keyToken);
 };
 
 const getFocusOverlay = (): HTMLDivElement => {
@@ -1370,11 +1418,7 @@ const isFindUiElement = (target: EventTarget | null): boolean => {
   );
 };
 
-const ensureFindUi = (): void => {
-  if (getFindBar() && getFindStatus()) {
-    return;
-  }
-
+const createFindOverlay = (): { overlay: HTMLDivElement; existed: boolean } => {
   const existingOverlay = getFindOverlay();
   const overlay = existingOverlay ?? document.createElement("div");
   overlay.id = FIND_OVERLAY_ID;
@@ -1393,9 +1437,18 @@ const ensureFindUi = (): void => {
     findRoot: root
   });
 
+  return { overlay, existed: !!existingOverlay };
+};
+
+const createFindBar = (): {
+  bar: HTMLDivElement;
+  input: HTMLInputElement;
+  clearButton: HTMLButtonElement;
+} => {
   const bar = document.createElement("div");
   bar.id = FIND_BAR_ID;
   bar.setAttribute("data-visible", "false");
+
   const icon = document.createElement("span");
   icon.className = "nav-find-icon";
   icon.setAttribute("data-find-icon", "");
@@ -1424,10 +1477,18 @@ const ensureFindUi = (): void => {
 
   actions.append(matchCount, clearButton);
   bar.append(icon, input, actions);
+  return { bar, input, clearButton };
+};
 
+const createFindStatus = (): {
+  status: HTMLDivElement;
+  prevButton: HTMLButtonElement;
+  nextButton: HTMLButtonElement;
+} => {
   const status = document.createElement("div");
   status.id = FIND_STATUS_ID;
   status.setAttribute("data-visible", "false");
+
   const statusText = document.createElement("span");
   statusText.id = FIND_STATUS_TEXT_ID;
   statusText.textContent = "0 / 0";
@@ -1449,17 +1510,20 @@ const ensureFindUi = (): void => {
   nextButton.appendChild(createFindIconSvg(ARROW_DOWN_ICON_NODES));
 
   status.append(statusText, prevButton, nextButton);
-  root.append(bar, status);
+  return { status, prevButton, nextButton };
+};
 
-  if (!existingOverlay) {
-    document.documentElement.append(overlay);
-  }
-
-  input?.addEventListener("input", () => {
+const attachFindUiEventListeners = (
+  input: HTMLInputElement,
+  prevButton: HTMLButtonElement,
+  nextButton: HTMLButtonElement,
+  clearButton: HTMLButtonElement
+): void => {
+  input.addEventListener("input", () => {
     setFindQuery(input.value);
   });
 
-  input?.addEventListener("keydown", (event) => {
+  input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       commitFindQuery();
       event.preventDefault();
@@ -1476,17 +1540,36 @@ const ensureFindUi = (): void => {
     }
   });
 
-  getFindPrevButton()?.addEventListener("click", () => {
+  prevButton.addEventListener("click", () => {
     cycleFindMatch(-1);
   });
 
-  getFindNextButton()?.addEventListener("click", () => {
+  nextButton.addEventListener("click", () => {
     cycleFindMatch(1);
   });
 
-  getFindClearButton()?.addEventListener("click", () => {
+  clearButton.addEventListener("click", () => {
     clearFindInput();
   });
+};
+
+const ensureFindUi = (): void => {
+  if (getFindBar() && getFindStatus()) {
+    return;
+  }
+
+  const { overlay, existed } = createFindOverlay();
+  const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
+  const { bar, input, clearButton } = createFindBar();
+  const { status, prevButton, nextButton } = createFindStatus();
+
+  root.append(bar, status);
+
+  if (!existed) {
+    document.documentElement.append(overlay);
+  }
+
+  attachFindUiEventListeners(input, prevButton, nextButton, clearButton);
 
   updateFindUiCounts();
   syncFindStatusVisibility();
@@ -1617,7 +1700,7 @@ const handleEditableBeforeInput = (event: Event): void => {
 };
 
 const handleWatchMediaStateChange = (): void => {
-  if (!watchModeActive) {
+  if (!isMode("watch")) {
     return;
   }
 
