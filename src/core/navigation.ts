@@ -17,10 +17,11 @@ import {
   scrollToTop,
   scrollUp
 } from "~/src/core/actions/scroll";
+import { createEnableFindModeAction } from "~/src/core/actions/find";
 import { goHistory, createTabCommandAction } from "~/src/core/actions/tabs";
 import { yankCurrentTabUrl, yankImage, yankImageUrl, yankLinkUrl } from "~/src/core/actions/yank";
 import { createStorageChangeHandler, syncFastConfig } from "~/src/core/utils/fast-config-sync";
-import { ensureFocusStyles, syncFocusStyles } from "~/src/core/utils/focus-styles";
+import { injectStyles } from "~/src/core/utils/inject-styles";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { ensureToastWrapper } from "~/src/core/utils/sonner";
 import { getExtensionNamespace } from "~/src/utils/extension-id";
@@ -345,22 +346,6 @@ const cycleFindMatch = (direction: 1 | -1): boolean => {
   return true;
 };
 
-const openFindMode = (): boolean => {
-  const bar = getFindBar();
-  const input = getFindInput();
-
-  if (!bar || !input) {
-    return false;
-  }
-
-  input.value = findQuery;
-  setFindQuery(input.value);
-  bar.setAttribute("data-visible", "true");
-  input.focus();
-  input.select();
-  return true;
-};
-
 const isVideoVisible = (video: HTMLVideoElement): boolean => {
   const bounds = video.getBoundingClientRect();
 
@@ -644,11 +629,18 @@ const isOptionsPage = (): boolean => {
   return window.location.href === optionsUrl;
 };
 
+const enableFindModeAction = createEnableFindModeAction({
+  getFindBar,
+  getFindInput,
+  getFindQuery: () => findQuery,
+  setFindQuery
+});
+
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "toggle-video-controls": toggleVideoControls,
   "toggle-fullscreen": toggleFullscreen,
   "toggle-play-pause": togglePlayPause,
-  "enable-find-mode": openFindMode,
+  "enable-find-mode": enableFindModeAction,
   "cycle-match-next": () => cycleFindMatch(1),
   "cycle-match-prev": () => cycleFindMatch(-1),
   "history-go-prev": (count = 1) => goHistory(-count),
@@ -814,300 +806,23 @@ const getFindOverlay = (): HTMLDivElement | null =>
 
 const getFindUiRoot = (): ShadowRoot | null => getFindOverlay()?.shadowRoot ?? null;
 
-const renderFocusStyles = (): string => `
-  @keyframes nav-focus-pulse {
-    0% {
-      opacity: 1;
-      box-shadow:
-        0 0 0 10px ${colorToRgba(activationIndicatorColor, 0.38)},
-        0 0 0 6px ${colorToRgba(activationIndicatorColor, 0.95)};
-    }
+const getFocusStyleParams = () => ({
+  overlayId: FOCUS_OVERLAY_ID,
+  fadeOutMs: FOCUS_OVERLAY_FADE_OUT_MS,
+  durationMs: FOCUS_OVERLAY_DURATION_MS,
+  activationIndicatorColor,
+  colorToRgba
+});
 
-    18% {
-      opacity: 1;
-      box-shadow:
-        0 0 0 5px ${colorToRgba(activationIndicatorColor, 0.18)},
-        0 0 0 3px ${colorToRgba(activationIndicatorColor, 0.95)};
-    }
-
-    70% {
-      opacity: 1;
-      box-shadow:
-        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.06)},
-        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.92)};
-    }
-
-    100% {
-      opacity: 0;
-      box-shadow:
-        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.02)},
-        0 0 0 2px ${colorToRgba(activationIndicatorColor, 0)};
-    }
-  }
-
-  #${FOCUS_OVERLAY_ID} {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-    z-index: 2147483646;
-    border-radius: 0.375rem;
-    box-sizing: border-box;
-    opacity: 0;
-    visibility: hidden;
-    transform: none !important;
-    transition: none !important;
-    transition-duration: 0ms !important;
-    transition-property: none !important;
-  }
-
-  #${FOCUS_OVERLAY_ID}[data-visible="true"] {
-    visibility: visible;
-    opacity: 1;
-  }
-
-  #${FOCUS_OVERLAY_ID}[data-hiding="true"] {
-    visibility: visible;
-    opacity: 0;
-    transition: opacity ${FOCUS_OVERLAY_FADE_OUT_MS}ms ease-out !important;
-  }
-
-  #${FOCUS_OVERLAY_ID}[data-animate="true"] {
-    animation: nav-focus-pulse ${FOCUS_OVERLAY_DURATION_MS}ms cubic-bezier(0.2, 0.9, 0.2, 1)
-      !important;
-  }
-`;
-
-const renderFindStyles = (): string => `
-  #${FIND_BAR_ID} {
-    all: initial;
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2147483647;
-    display: none;
-    pointer-events: auto;
-    width: min(640px, calc(100vw - 32px));
-    grid-template-columns: max-content auto max-content;
-    align-items: center;
-    gap: 0;
-    padding: 10px 12px;
-    border: 2px solid #eab308;
-    border-radius: 0.5rem;
-    background: #171717;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-    color: #f5f5f5;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 24px;
-    line-height: 32px;
-  }
-
-  #${FIND_BAR_ID}[data-visible="true"] {
-    display: grid;
-  }
-
-  #${FIND_BAR_ID} *,
-  #${FIND_STATUS_ID} * {
-    box-sizing: border-box;
-  }
-
-  .nav-find-icon {
-    all: unset;
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5em;
-    height: 1.5em;
-    color: #a1a1aa;
-    font-size: 24px;
-    line-height: 32px;
-    margin-right: 0.25rem;
-  }
-
-  .nav-find-icon svg {
-    width: 1em;
-    height: 1em;
-    display: block;
-  }
-
-  #${FIND_INPUT_ID} {
-    all: unset;
-    flex: 1 1 auto;
-    display: block;
-    min-width: 0;
-    border: 0;
-    background: transparent;
-    color: #fafafa;
-    font-size: 24px;
-    line-height: 32px;
-    outline: none;
-    box-shadow: none;
-    appearance: none;
-    -webkit-appearance: none;
-    font-family: inherit;
-    padding-right: 0.25rem;
-  }
-
-  #${FIND_INPUT_ID}:focus,
-  #${FIND_INPUT_ID}:focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
-
-  #${FIND_INPUT_ID}::placeholder {
-    color: #a1a1aa;
-  }
-
-  #${FIND_MATCH_COUNT_ID} {
-    all: unset;
-    flex: 0 0 auto;
-    display: inline-block;
-    color: #a1a1aa;
-    font-size: 24px;
-    line-height: 32px;
-    white-space: nowrap;
-    padding-left: 0.25rem;
-  }
-
-  .nav-find-bar-actions {
-    all: unset;
-    display: none;
-    align-items: center;
-    gap: 0.5rem;
-    padding-left: 0.25rem;
-  }
-
-  .nav-find-bar-actions[data-visible="true"] {
-    display: inline-flex;
-  }
-
-  #${FIND_STATUS_ID} {
-    all: initial;
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 2147483647;
-    display: none;
-    pointer-events: auto;
-    grid-auto-flow: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 10px 12px;
-    border: 2px solid #eab308;
-    border-radius: 0.5rem;
-    background: #171717;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-    color: #f5f5f5;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 24px;
-    line-height: 32px;
-  }
-
-  #${FIND_STATUS_ID}[data-visible="true"] {
-    display: grid;
-  }
-
-  #${FIND_STATUS_TEXT_ID} {
-    all: unset;
-    display: inline-block;
-    min-width: 52px;
-    font-size: 24px;
-    line-height: 32px;
-    text-align: center;
-    padding: 0 0.25rem;
-  }
-
-  .nav-find-status-number {
-    color: #fafafa;
-  }
-
-  .nav-find-status-separator {
-    color: #a1a1aa;
-  }
-
-  .nav-find-nav,
-  .nav-find-clear {
-    all: unset;
-    position: relative;
-    display: grid;
-    align-items: center;
-    justify-content: center;
-    width: 1.5em;
-    height: 1.5em;
-    padding: 0;
-    border: 0;
-    border-radius: 0.375rem;
-    background: transparent;
-    color: #a1a1aa;
-    cursor: pointer;
-    transition:
-      background-color 250ms ease,
-      color 250ms ease;
-    font-size: 24px;
-    line-height: 32px;
-    outline: none;
-    box-shadow: none;
-    appearance: none;
-    -webkit-appearance: none;
-  }
-
-  .nav-find-nav::before,
-  .nav-find-clear::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 0.375rem;
-    background: rgba(255, 255, 255, 0.12);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 250ms ease;
-  }
-
-  .nav-find-nav:hover:not(:disabled)::before,
-  .nav-find-nav:focus-visible:not(:disabled)::before,
-  .nav-find-clear:hover:not(:disabled)::before,
-  .nav-find-clear:focus-visible:not(:disabled)::before {
-    opacity: 1;
-  }
-
-  .nav-find-nav:disabled,
-  .nav-find-clear:disabled {
-    cursor: default;
-    opacity: 0.35;
-    color: #737373;
-  }
-
-  .nav-find-nav svg,
-  .nav-find-clear svg {
-    width: 1em;
-    height: 1em;
-    display: block;
-    position: relative;
-    z-index: 1;
-  }
-
-  .nav-find-nav:focus,
-  .nav-find-nav:focus-visible,
-  .nav-find-clear:focus,
-  .nav-find-clear:focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
-
-  ::highlight(${FIND_HIGHLIGHT_NAME}) {
-    background: rgba(234, 179, 8, 0.18);
-    color: inherit;
-  }
-
-  ::highlight(${FIND_CURRENT_HIGHLIGHT_NAME}) {
-    background: rgba(234, 179, 8, 0.82);
-    color: #111111;
-  }
-`;
+const findStyleParams = {
+  findBarId: FIND_BAR_ID,
+  findStatusId: FIND_STATUS_ID,
+  findInputId: FIND_INPUT_ID,
+  findMatchCountId: FIND_MATCH_COUNT_ID,
+  findStatusTextId: FIND_STATUS_TEXT_ID,
+  findHighlightName: FIND_HIGHLIGHT_NAME,
+  findCurrentHighlightName: FIND_CURRENT_HIGHLIGHT_NAME
+};
 
 type SvgNodeDefinition = {
   tag: "circle" | "path";
@@ -1490,7 +1205,10 @@ const fastConfigSyncDeps = {
     activationIndicatorColor = value;
   },
   syncFocusStyles: (): void => {
-    syncFocusStyles(FOCUS_STYLE_ID, renderFocusStyles);
+    injectStyles({
+      focusStyleId: FOCUS_STYLE_ID,
+      focus: getFocusStyleParams()
+    });
   },
   syncWatchHintsOverlay
 };
@@ -1624,24 +1342,6 @@ const handleKeydown = (event: KeyboardEvent): void => {
   event.stopImmediatePropagation();
 };
 
-const ensureFindStyles = (root: ShadowRoot): void => {
-  if (!root) {
-    return;
-  }
-
-  const existingStyle = root.getElementById(FIND_STYLE_ID);
-
-  if (existingStyle instanceof HTMLStyleElement) {
-    existingStyle.textContent = renderFindStyles();
-    return;
-  }
-
-  const style = document.createElement("style");
-  style.id = FIND_STYLE_ID;
-  style.textContent = renderFindStyles();
-  root.append(style);
-};
-
 const getFocusOverlay = (): HTMLDivElement => {
   const existing = document.getElementById(FOCUS_OVERLAY_ID);
 
@@ -1685,7 +1385,13 @@ const ensureFindUi = (): void => {
   overlay.style.zIndex = "2147483647";
 
   const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
-  ensureFindStyles(root);
+  injectStyles({
+    focusStyleId: FOCUS_STYLE_ID,
+    focus: getFocusStyleParams(),
+    findStyleId: FIND_STYLE_ID,
+    find: findStyleParams,
+    findRoot: root
+  });
 
   const bar = document.createElement("div");
   bar.id = FIND_BAR_ID;
@@ -1927,7 +1633,10 @@ export const initCoreNavigation = (): void => {
 
   installScrollTracking();
   if (!isOptionsPage()) {
-    ensureFocusStyles(FOCUS_STYLE_ID, renderFocusStyles);
+    injectStyles({
+      focusStyleId: FOCUS_STYLE_ID,
+      focus: getFocusStyleParams()
+    });
     getFocusOverlay();
     ensureFindUi();
     window.addEventListener(FOCUS_INDICATOR_EVENT, handleFocusIndicator as EventListener, true);
