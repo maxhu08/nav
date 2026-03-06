@@ -43,6 +43,84 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
   let watchShowCapitalizedLetters = false;
 
+  const isInteractiveControl = (element: HTMLElement): boolean => {
+    if (
+      element instanceof HTMLButtonElement ||
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLSelectElement ||
+      element instanceof HTMLTextAreaElement
+    ) {
+      return !element.disabled;
+    }
+
+    const ariaDisabled = element.getAttribute("aria-disabled");
+    return ariaDisabled !== "true";
+  };
+
+  const isLikelyFullscreenControl = (element: HTMLElement): boolean => {
+    const className = typeof element.className === "string" ? element.className : "";
+    const label = [
+      element.getAttribute("aria-label"),
+      element.getAttribute("title"),
+      element.getAttribute("data-title-no-tooltip"),
+      element.getAttribute("data-tooltip-target-id"),
+      element.textContent
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      className.toLowerCase().includes("fullscreen") ||
+      label.includes("fullscreen") ||
+      label.includes("full screen") ||
+      label.includes("exit fullscreen") ||
+      label.includes("exit full screen")
+    );
+  };
+
+  const findSiteFullscreenControl = (video: HTMLVideoElement): HTMLElement | null => {
+    const containerCandidates = [
+      video.closest(".html5-video-player"),
+      video.closest("[class*='player' i]"),
+      video.closest("[id*='player' i]"),
+      video.parentElement
+    ].filter((candidate): candidate is HTMLElement => candidate instanceof HTMLElement);
+
+    const selectors = [
+      ".ytp-fullscreen-button",
+      "[aria-label*='fullscreen' i]",
+      "[title*='fullscreen' i]",
+      "[class*='fullscreen' i]",
+      "[data-testid*='fullscreen' i]"
+    ].join(", ");
+
+    const roots = containerCandidates;
+    for (const root of roots) {
+      const controls = Array.from(root.querySelectorAll(selectors)).filter(
+        (element): element is HTMLElement => element instanceof HTMLElement
+      );
+
+      for (const control of controls) {
+        if (control.closest(`#${WATCH_HINTS_ID}`)) {
+          continue;
+        }
+
+        const bounds = control.getBoundingClientRect();
+        if (bounds.width < 1 || bounds.height < 1) {
+          continue;
+        }
+
+        if (!isInteractiveControl(control) || !isLikelyFullscreenControl(control)) {
+          continue;
+        }
+
+        return control;
+      }
+    }
+
+    return null;
+  };
+
   const createWatchIcon = (path: string): SVGSVGElement => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 24 24");
@@ -325,6 +403,13 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
       if (document.fullscreenElement) {
         void document.exitFullscreen().catch(() => {});
+        exitWatchMode();
+        return true;
+      }
+
+      const siteFullscreenControl = findSiteFullscreenControl(video);
+      if (siteFullscreenControl) {
+        siteFullscreenControl.click();
         exitWatchMode();
         return true;
       }
