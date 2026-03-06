@@ -17,7 +17,7 @@ Example:
 - Config key: `hotkeys.mappings`
 - Container ID: `hotkeys-mappings-container`
 - Textarea ID: `hotkeys-mappings-textarea`
-- Save button ID: `save-config-button`
+- Save button ID: `save-button`
 
 ## Required Wiring When Adding a New Input
 
