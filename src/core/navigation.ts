@@ -176,25 +176,6 @@ const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
     return false;
   }
 
-  const keyToken = getKeyToken(event);
-
-  if (keyToken) {
-    const { actionName, consumed } = keyState.getToggleHintsActionName(keyToken);
-
-    if (
-      (actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab") &&
-      ACTIONS[actionName]()
-    ) {
-      consumeKeyboardEvent(event);
-      return true;
-    }
-
-    if (consumed) {
-      consumeKeyboardEvent(event);
-      return true;
-    }
-  }
-
   if (handleHintsKeydown(event)) {
     consumeKeyboardEvent(event);
   }
