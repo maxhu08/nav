@@ -85,8 +85,8 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
   let keyActions: HotkeyMappings = {};
   let keyActionPrefixes: Partial<Record<string, true>> = {};
   let urlRulesMode: FastConfig["rules"]["urls"]["mode"] = "blacklist";
-  let urlBlacklistRules: FastRule[] = [];
-  let urlWhitelistRules: FastRule[] = [];
+  let urlBlacklistRules: Array<{ rule: FastRule; regex: RegExp }> = [];
+  let urlWhitelistRules: Array<{ rule: FastRule; regex: RegExp }> = [];
   let pendingSequence = "";
   let pendingSequenceTimer: number | null = null;
   let pendingCount = "";
@@ -118,12 +118,26 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     }, KEY_SEQUENCE_TIMEOUT_MS);
   };
 
+  const compileUrlRules = (rules: FastRule[]): Array<{ rule: FastRule; regex: RegExp }> => {
+    const compiledRules: Array<{ rule: FastRule; regex: RegExp }> = [];
+
+    for (const rule of rules) {
+      try {
+        compiledRules.push({ rule, regex: new RegExp(rule.pattern) });
+      } catch {
+        continue;
+      }
+    }
+
+    return compiledRules;
+  };
+
   const getCurrentUrlRule = (): FastRule | null => {
     const currentUrl = window.location.href;
     const activeRules = urlRulesMode === "whitelist" ? urlWhitelistRules : urlBlacklistRules;
 
-    for (const rule of activeRules) {
-      if (new RegExp(rule.pattern).test(currentUrl)) {
+    for (const { rule, regex } of activeRules) {
+      if (regex.test(currentUrl)) {
         return rule;
       }
     }
@@ -265,8 +279,8 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     },
     applyUrlRules: (rules: FastConfig["rules"]["urls"]): void => {
       urlRulesMode = rules.mode;
-      urlBlacklistRules = rules.blacklist;
-      urlWhitelistRules = rules.whitelist;
+      urlBlacklistRules = compileUrlRules(rules.blacklist);
+      urlWhitelistRules = compileUrlRules(rules.whitelist);
       clearPendingState();
     },
     clearPendingCount,

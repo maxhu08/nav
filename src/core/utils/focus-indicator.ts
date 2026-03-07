@@ -17,7 +17,7 @@ type FocusIndicatorController = {
   syncStyles: () => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
-  syncFindUiStyles: (
+  syncFindUIStyles: (
     root: ShadowRoot,
     findStyleId: string,
     findStyleParams: FindStyleRenderParams
@@ -249,7 +249,7 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     setActivationIndicatorColor: (value: string): void => {
       activationIndicatorColor = value;
     },
-    syncFindUiStyles: (
+    syncFindUIStyles: (
       root: ShadowRoot,
       findStyleId: string,
       findStyleParams: FindStyleRenderParams

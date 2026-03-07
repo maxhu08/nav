@@ -14,7 +14,6 @@ type FastConfigSyncDeps = {
   applyHotkeyMappings: (mappings: HotkeyMappings, prefixes: Partial<Record<string, true>>) => void;
   applyUrlRules: (rules: FastConfig["rules"]["urls"]) => void;
   setWatchShowCapitalizedLetters: (value: boolean) => void;
-  setWatchHighlightThumbnails: (value: boolean) => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
   syncFocusStyles: () => void;
@@ -30,7 +29,6 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   setHighlightThumbnails(fastConfig.hints.improveThumbnailMarkers);
-  deps.setWatchHighlightThumbnails(fastConfig.hints.improveThumbnailMarkers);
   setHintCSS(fastConfig.hints.css);
   deps.setShowActivationIndicator(fastConfig.hints.showActivationIndicator);
   deps.setActivationIndicatorColor(fastConfig.hints.showActivationIndicatorColor);

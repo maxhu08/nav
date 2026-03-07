@@ -438,21 +438,17 @@ const isActivatableElement = (element: HTMLElement): boolean => {
   return isCustomActivatableElement(element);
 };
 
-const isHintable = (element: HTMLElement): boolean => {
-  if (
-    element.closest("[data-sonner-toaster]") ||
+const isExcludedHintTarget = (element: HTMLElement): boolean => {
+  return (
+    !!element.closest("[data-sonner-toaster]") ||
     element.hasAttribute("disabled") ||
     element.hasAttribute("inert") ||
     element.getAttribute("aria-disabled") === "true" ||
-    element.closest("[inert],[aria-disabled='true'],fieldset[disabled]")
-  ) {
-    return false;
-  }
+    !!element.closest("[inert],[aria-disabled='true'],fieldset[disabled]")
+  );
+};
 
-  if (!isActivatableElement(element)) {
-    return false;
-  }
-
+const isElementVisibleAndClickable = (element: HTMLElement): boolean => {
   const style = window.getComputedStyle(element);
   if (
     style.display === "none" ||
@@ -464,7 +460,9 @@ const isHintable = (element: HTMLElement): boolean => {
   }
 
   const rect = getMarkerRect(element);
-  if (!rect) return false;
+  if (!rect) {
+    return false;
+  }
 
   return (
     rect.bottom >= 0 &&
@@ -475,37 +473,24 @@ const isHintable = (element: HTMLElement): boolean => {
   );
 };
 
+const isHintable = (element: HTMLElement): boolean => {
+  if (isExcludedHintTarget(element)) {
+    return false;
+  }
+
+  if (!isActivatableElement(element)) {
+    return false;
+  }
+
+  return isElementVisibleAndClickable(element);
+};
+
 const isVisibleHintTarget = (element: HTMLElement): boolean => {
-  if (
-    element.closest("[data-sonner-toaster]") ||
-    element.hasAttribute("disabled") ||
-    element.hasAttribute("inert") ||
-    element.getAttribute("aria-disabled") === "true" ||
-    element.closest("[inert],[aria-disabled='true'],fieldset[disabled]")
-  ) {
+  if (isExcludedHintTarget(element)) {
     return false;
   }
 
-  const style = window.getComputedStyle(element);
-  if (
-    style.display === "none" ||
-    style.visibility === "hidden" ||
-    style.visibility === "collapse" ||
-    Number.parseFloat(style.opacity) === 0
-  ) {
-    return false;
-  }
-
-  const rect = getMarkerRect(element);
-  if (!rect) return false;
-
-  return (
-    rect.bottom >= 0 &&
-    rect.right >= 0 &&
-    rect.top <= window.innerHeight &&
-    rect.left <= window.innerWidth &&
-    hasClickablePoint(element, rect)
-  );
+  return isElementVisibleAndClickable(element);
 };
 
 const getHintableElements = (mode: LinkMode): HTMLElement[] => {

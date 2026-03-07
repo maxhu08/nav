@@ -21,8 +21,8 @@ import {
   getFindPrevButton,
   getFindStatus,
   getFindStatusText,
-  getFindUiRoot,
-  isFindUiElement
+  getFindUIRoot,
+  isFindUIElement
 } from "~/src/core/utils/get-ui";
 
 type CoreMode = "normal" | "find" | "watch";
@@ -36,7 +36,16 @@ type CreateFindModeControllerDeps = {
   getMode: () => CoreMode;
   setMode: (mode: CoreMode) => void;
   onFocusIndicator: (element: HTMLElement) => void;
-  injectFindUiStyles: (root: ShadowRoot) => void;
+  injectFindUIStyles: (root: ShadowRoot) => void;
+};
+
+type FindUIElements = {
+  barActions: HTMLDivElement;
+  matchCount: HTMLSpanElement;
+  statusText: HTMLSpanElement;
+  prevButton: HTMLButtonElement;
+  nextButton: HTMLButtonElement;
+  clearButton: HTMLButtonElement;
 };
 
 type SvgNodeDefinition = {
@@ -136,6 +145,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let findQuery = "";
   let currentFindMatchIndex = -1;
   let isFindStatusVisible = false;
+  let findUIElements: FindUIElements | null = null;
 
   const clearFindHighlights = (): void => {
     const highlights = getCssHighlights();
@@ -163,16 +173,49 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     container.append(current, separator, total);
   };
 
-  const updateFindUiCounts = (): void => {
-    getFindMatchCount()!.textContent = getFindCountLabel(findMatches.length);
-    renderFindStatusLabel(getFindStatusText()!, currentFindMatchIndex, findMatches.length);
+  const resolveFindUIElements = (): FindUIElements | null => {
+    if (findUIElements?.matchCount.isConnected === true) {
+      return findUIElements;
+    }
+
+    const barActions = getFindBarActions();
+    const matchCount = getFindMatchCount();
+    const statusText = getFindStatusText();
+    const prevButton = getFindPrevButton();
+    const nextButton = getFindNextButton();
+    const clearButton = getFindClearButton();
+
+    if (!barActions || !matchCount || !statusText || !prevButton || !nextButton || !clearButton) {
+      return null;
+    }
+
+    findUIElements = {
+      barActions,
+      matchCount,
+      statusText,
+      prevButton,
+      nextButton,
+      clearButton
+    };
+
+    return findUIElements;
+  };
+
+  const updateFindUICounts = (): void => {
+    const ui = resolveFindUIElements();
+    if (!ui) {
+      return;
+    }
+
+    ui.matchCount.textContent = getFindCountLabel(findMatches.length);
+    renderFindStatusLabel(ui.statusText, currentFindMatchIndex, findMatches.length);
 
     const hasMatches = findMatches.length > 0;
     const hasQuery = findQuery.length > 0;
-    getFindBarActions()!.setAttribute("data-visible", hasQuery ? "true" : "false");
-    getFindPrevButton()!.disabled = !hasMatches;
-    getFindNextButton()!.disabled = !hasMatches;
-    getFindClearButton()!.disabled = !hasQuery;
+    ui.barActions.setAttribute("data-visible", hasQuery ? "true" : "false");
+    ui.prevButton.disabled = !hasMatches;
+    ui.nextButton.disabled = !hasMatches;
+    ui.clearButton.disabled = !hasQuery;
   };
 
   const applyFindHighlights = (): void => {
@@ -283,7 +326,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     const currentMatch = findMatches[currentFindMatchIndex];
 
     if (!currentMatch) {
-      updateFindUiCounts();
+      updateFindUICounts();
       applyFindHighlights();
       return;
     }
@@ -296,7 +339,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     deps.onFocusIndicator(currentMatch.element);
 
-    updateFindUiCounts();
+    updateFindUICounts();
     applyFindHighlights();
   };
 
@@ -304,7 +347,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     findQuery = query;
     findMatches = collectFindMatches(query);
     currentFindMatchIndex = findMatches.length > 0 ? 0 : -1;
-    updateFindUiCounts();
+    updateFindUICounts();
     applyFindHighlights();
   };
 
@@ -317,7 +360,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   };
 
   const isFindInputFocused = (): boolean => {
-    const root = getFindUiRoot();
+    const root = getFindUIRoot();
     const input = getFindInput();
 
     if (!root || !input) {
@@ -348,7 +391,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     currentFindMatchIndex = -1;
     isFindStatusVisible = false;
     clearFindHighlights();
-    updateFindUiCounts();
+    updateFindUICounts();
     syncFindStatusVisibility();
     hideFindBar();
     deps.setMode("normal");
@@ -404,14 +447,16 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     overlay.style.zIndex = "2147483647";
 
     const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
-    deps.injectFindUiStyles(root);
+    deps.injectFindUIStyles(root);
 
     return { overlay, existed: !!existingOverlay };
   };
 
   const createFindBar = (): {
     bar: HTMLDivElement;
+    actions: HTMLDivElement;
     input: HTMLInputElement;
+    matchCount: HTMLSpanElement;
     clearButton: HTMLButtonElement;
   } => {
     const bar = document.createElement("div");
@@ -446,11 +491,12 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     actions.append(matchCount, clearButton);
     bar.append(icon, input, actions);
-    return { bar, input, clearButton };
+    return { bar, actions, input, matchCount, clearButton };
   };
 
   const createFindStatus = (): {
     status: HTMLDivElement;
+    statusText: HTMLSpanElement;
     prevButton: HTMLButtonElement;
     nextButton: HTMLButtonElement;
   } => {
@@ -479,10 +525,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     nextButton.appendChild(createFindIconSvg(ARROW_DOWN_ICON_NODES));
 
     status.append(statusText, prevButton, nextButton);
-    return { status, prevButton, nextButton };
+    return { status, statusText, prevButton, nextButton };
   };
 
-  const attachFindUiEventListeners = (
+  const attachFindUIEventListeners = (
     input: HTMLInputElement,
     prevButton: HTMLButtonElement,
     nextButton: HTMLButtonElement,
@@ -522,25 +568,34 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   };
 
   return {
-    ensureFindUi: (): void => {
+    ensureFindUI: (): void => {
       if (getFindBar() && getFindStatus()) {
         return;
       }
 
       const { overlay, existed } = createFindOverlay();
       const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
-      const { bar, input, clearButton } = createFindBar();
-      const { status, prevButton, nextButton } = createFindStatus();
+      const { bar, actions, input, matchCount, clearButton } = createFindBar();
+      const { status, statusText, prevButton, nextButton } = createFindStatus();
 
       root.append(bar, status);
+
+      findUIElements = {
+        barActions: actions,
+        matchCount,
+        statusText,
+        prevButton,
+        nextButton,
+        clearButton
+      };
 
       if (!existed) {
         document.documentElement.append(overlay);
       }
 
-      attachFindUiEventListeners(input, prevButton, nextButton, clearButton);
+      attachFindUIEventListeners(input, prevButton, nextButton, clearButton);
 
-      updateFindUiCounts();
+      updateFindUICounts();
       syncFindStatusVisibility();
     },
     getFindQuery: (): string => findQuery,
@@ -550,8 +605,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     cycleFindMatch,
     isFindModeActive: (): boolean => deps.getMode() === "find",
     isFindInputFocused,
-    shouldIgnoreKeydownInFindUi: (event: KeyboardEvent): boolean => {
-      if (deps.getMode() !== "find" || (!isFindUiElement(event.target) && !isFindInputFocused())) {
+    shouldIgnoreKeydownInFindUI: (event: KeyboardEvent): boolean => {
+      if (deps.getMode() !== "find" || (!isFindUIElement(event.target) && !isFindInputFocused())) {
         return false;
       }
 

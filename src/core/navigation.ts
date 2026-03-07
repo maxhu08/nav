@@ -30,7 +30,7 @@ import {
   findStyleParams,
   getFindBar,
   getFindInput,
-  isFindUiElement
+  isFindUIElement
 } from "~/src/core/utils/get-ui";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { createKeyState, getKeyToken, isModifierKey } from "~/src/core/utils/key-state";
@@ -72,8 +72,8 @@ const findMode = createFindModeController({
       })
     );
   },
-  injectFindUiStyles: (root): void => {
-    focusIndicator.syncFindUiStyles(root, FIND_STYLE_ID, findStyleParams);
+  injectFindUIStyles: (root): void => {
+    focusIndicator.syncFindUIStyles(root, FIND_STYLE_ID, findStyleParams);
   }
 });
 
@@ -95,6 +95,17 @@ const enableFindModeAction = createEnableFindModeAction({
   }
 });
 
+const createToggleHintsAction = (mode: "current-tab" | "new-tab"): ActionHandler => {
+  return () => {
+    if (areHintsPendingSelection()) {
+      exitHints();
+      return true;
+    }
+
+    return activateHints(mode);
+  };
+};
+
 const ACTIONS: Record<ActionName, ActionHandler> = {
   "toggle-video-controls": watchController.toggleVideoControls,
   "toggle-fullscreen": watchController.toggleFullscreen,
@@ -112,22 +123,8 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "create-new-tab": createTabCommandAction("create-new-tab"),
   "reload-current-tab": createTabCommandAction("reload-current-tab"),
   "reload-current-tab-hard": createTabCommandAction("reload-current-tab-hard"),
-  "toggle-hints-current-tab": () => {
-    if (areHintsPendingSelection()) {
-      exitHints();
-      return true;
-    }
-
-    return activateHints("current-tab");
-  },
-  "toggle-hints-new-tab": () => {
-    if (areHintsPendingSelection()) {
-      exitHints();
-      return true;
-    }
-
-    return activateHints("new-tab");
-  },
+  "toggle-hints-current-tab": createToggleHintsAction("current-tab"),
+  "toggle-hints-new-tab": createToggleHintsAction("new-tab"),
   "yank-link-url": yankLinkUrl,
   "yank-image": yankImage,
   "yank-image-url": yankImageUrl,
@@ -142,18 +139,18 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "scroll-to-top": scrollToTop
 };
 
-const isScrollAction = (actionName: ActionName): boolean => {
-  return (
-    actionName === "scroll-down" ||
-    actionName === "scroll-half-page-down" ||
-    actionName === "scroll-half-page-up" ||
-    actionName === "scroll-left" ||
-    actionName === "scroll-right" ||
-    actionName === "scroll-up" ||
-    actionName === "scroll-to-bottom" ||
-    actionName === "scroll-to-top"
-  );
-};
+const SCROLL_ACTIONS = new Set<ActionName>([
+  "scroll-down",
+  "scroll-half-page-down",
+  "scroll-half-page-up",
+  "scroll-left",
+  "scroll-right",
+  "scroll-up",
+  "scroll-to-bottom",
+  "scroll-to-top"
+]);
+
+const isScrollAction = (actionName: ActionName): boolean => SCROLL_ACTIONS.has(actionName);
 
 const consumeKeyboardEvent = (event: KeyboardEvent): void => {
   event.preventDefault();
@@ -275,7 +272,7 @@ const handleKeydown = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (findMode.shouldIgnoreKeydownInFindUi(event)) {
+  if (findMode.shouldIgnoreKeydownInFindUI(event)) {
     keyState.clearPendingState();
     return;
   }
@@ -307,7 +304,6 @@ const fastConfigSyncDeps = {
     keyState.applyUrlRules(rules);
   },
   setWatchShowCapitalizedLetters: watchController.setWatchShowCapitalizedLetters,
-  setWatchHighlightThumbnails: watchController.setWatchHighlightThumbnails,
   setShowActivationIndicator: focusIndicator.setShowActivationIndicator,
   setActivationIndicatorColor: focusIndicator.setActivationIndicatorColor,
   syncFocusStyles: focusIndicator.syncStyles,
@@ -327,7 +323,7 @@ export const initCoreNavigation = (): void => {
   if (!isOptionsPage()) {
     focusIndicator.syncStyles();
     focusIndicator.ensureOverlay();
-    findMode.ensureFindUi();
+    findMode.ensureFindUI();
 
     window.addEventListener(
       FOCUS_INDICATOR_EVENT,
@@ -345,7 +341,7 @@ export const initCoreNavigation = (): void => {
     document.addEventListener("pause", watchController.handleWatchMediaStateChange, true);
     document.addEventListener("ended", watchController.handleWatchMediaStateChange, true);
     document.addEventListener("mousedown", (event) => {
-      if (!isFindUiElement(event.target)) {
+      if (!isFindUIElement(event.target)) {
         findMode.hideFindBar();
       }
     });

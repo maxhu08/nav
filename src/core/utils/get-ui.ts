@@ -33,36 +33,36 @@ export const findStyleParams: FindStyleRenderParams = {
 export const getFindOverlay = (): HTMLDivElement | null =>
   document.getElementById(FIND_OVERLAY_ID) as HTMLDivElement | null;
 
-export const getFindUiRoot = (): ShadowRoot | null => getFindOverlay()?.shadowRoot ?? null;
+export const getFindUIRoot = (): ShadowRoot | null => getFindOverlay()?.shadowRoot ?? null;
 
 export const getFindBar = (): HTMLDivElement | null =>
-  getFindUiRoot()?.getElementById(FIND_BAR_ID) as HTMLDivElement | null;
+  getFindUIRoot()?.getElementById(FIND_BAR_ID) as HTMLDivElement | null;
 
 export const getFindInput = (): HTMLInputElement | null =>
-  getFindUiRoot()?.getElementById(FIND_INPUT_ID) as HTMLInputElement | null;
+  getFindUIRoot()?.getElementById(FIND_INPUT_ID) as HTMLInputElement | null;
 
 export const getFindMatchCount = (): HTMLSpanElement | null =>
-  getFindUiRoot()?.getElementById(FIND_MATCH_COUNT_ID) as HTMLSpanElement | null;
+  getFindUIRoot()?.getElementById(FIND_MATCH_COUNT_ID) as HTMLSpanElement | null;
 
 export const getFindBarActions = (): HTMLDivElement | null =>
-  getFindUiRoot()?.querySelector(".nav-find-bar-actions") as HTMLDivElement | null;
+  getFindUIRoot()?.querySelector(".nav-find-bar-actions") as HTMLDivElement | null;
 
 export const getFindStatus = (): HTMLDivElement | null =>
-  getFindUiRoot()?.getElementById(FIND_STATUS_ID) as HTMLDivElement | null;
+  getFindUIRoot()?.getElementById(FIND_STATUS_ID) as HTMLDivElement | null;
 
 export const getFindStatusText = (): HTMLSpanElement | null =>
-  getFindUiRoot()?.getElementById(FIND_STATUS_TEXT_ID) as HTMLSpanElement | null;
+  getFindUIRoot()?.getElementById(FIND_STATUS_TEXT_ID) as HTMLSpanElement | null;
 
 export const getFindPrevButton = (): HTMLButtonElement | null =>
-  getFindUiRoot()?.getElementById(FIND_PREV_BUTTON_ID) as HTMLButtonElement | null;
+  getFindUIRoot()?.getElementById(FIND_PREV_BUTTON_ID) as HTMLButtonElement | null;
 
 export const getFindNextButton = (): HTMLButtonElement | null =>
-  getFindUiRoot()?.getElementById(FIND_NEXT_BUTTON_ID) as HTMLButtonElement | null;
+  getFindUIRoot()?.getElementById(FIND_NEXT_BUTTON_ID) as HTMLButtonElement | null;
 
 export const getFindClearButton = (): HTMLButtonElement | null =>
-  getFindUiRoot()?.getElementById(FIND_CLEAR_BUTTON_ID) as HTMLButtonElement | null;
+  getFindUIRoot()?.getElementById(FIND_CLEAR_BUTTON_ID) as HTMLButtonElement | null;
 
-export const isFindUiElement = (target: EventTarget | null): boolean => {
+export const isFindUIElement = (target: EventTarget | null): boolean => {
   if (!(target instanceof Node)) {
     return false;
   }

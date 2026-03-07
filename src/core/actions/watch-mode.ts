@@ -326,9 +326,6 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     setWatchShowCapitalizedLetters: (value: boolean): void => {
       watchShowCapitalizedLetters = value;
     },
-    setWatchHighlightThumbnails: (value: boolean): void => {
-      void value;
-    },
     syncWatchHintsOverlay,
     handleWatchMediaStateChange: (): void => {
       if (!deps.isWatchMode()) {
