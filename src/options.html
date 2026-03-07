@@ -34,7 +34,7 @@
       <main class="grid grid-flow-row pt-16">
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
           <div class="grid grid-cols-[max-content_auto] items-center gap-2">
-            <button id="rules-collapse-button" class="text-xl text-neutral-500">
+            <button id="rules-collapse-button" class="text-xl text-neutral-500" aria-label="toggle rules section">
               <i class="ri-collapse-horizontal-line"></i>
             </button>
             <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
@@ -47,8 +47,22 @@
             <p class="text-base text-white">rules.urls.mode</p>
             <p class="text-base text-neutral-500">Controls which URL rules list is enforced at runtime.</p>
             <div class="grid grid-cols-2 gap-2">
-              <button id="rules-urls-mode-blacklist-button" type="button" class="rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700">blacklist</button>
-              <button id="rules-urls-mode-whitelist-button" type="button" class="rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700">whitelist</button>
+              <button
+                id="rules-urls-mode-blacklist-button"
+                type="button"
+                aria-label="rules urls mode blacklist"
+                class="rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700"
+              >
+                blacklist
+              </button>
+              <button
+                id="rules-urls-mode-whitelist-button"
+                type="button"
+                aria-label="rules urls mode whitelist"
+                class="rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700"
+              >
+                whitelist
+              </button>
             </div>
           </div>
           <div id="rules-urls-blacklist-section" class="grid gap-2">
@@ -64,13 +78,14 @@
               <pre id="rules-urls-blacklist-highlight" aria-hidden="true" class="rules-urls-editor-layer"></pre>
               <textarea
                 id="rules-urls-blacklist-textarea"
+                aria-label="rules urls blacklist"
                 autocomplete="off"
                 spellcheck="false"
                 rows="12"
                 class="rules-urls-editor-layer rules-urls-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
               ></textarea>
             </div>
-            <p id="rules-urls-blacklist-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="rules-urls-blacklist-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div id="rules-urls-whitelist-section" class="grid gap-2">
             <p class="text-base text-white">rules.urls.whitelist</p>
@@ -85,18 +100,19 @@
               <pre id="rules-urls-whitelist-highlight" aria-hidden="true" class="rules-urls-editor-layer"></pre>
               <textarea
                 id="rules-urls-whitelist-textarea"
+                aria-label="rules urls whitelist"
                 autocomplete="off"
                 spellcheck="false"
                 rows="12"
                 class="rules-urls-editor-layer rules-urls-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
               ></textarea>
             </div>
-            <p id="rules-urls-whitelist-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="rules-urls-whitelist-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
         </section>
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
           <div class="grid grid-cols-[max-content_auto] items-center gap-2">
-            <button id="hotkeys-collapse-button" class="text-xl text-neutral-500">
+            <button id="hotkeys-collapse-button" class="text-xl text-neutral-500" aria-label="toggle hotkeys section">
               <i class="ri-collapse-horizontal-line"></i>
             </button>
             <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
@@ -118,18 +134,19 @@
               <pre id="hotkeys-mappings-highlight" aria-hidden="true" class="hotkeys-mappings-editor-layer"></pre>
               <textarea
                 id="hotkeys-mappings-textarea"
+                aria-label="hotkeys mappings"
                 autocomplete="off"
                 spellcheck="false"
                 rows="16"
                 class="hotkeys-mappings-editor-layer hotkeys-mappings-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
               ></textarea>
             </div>
-            <p id="hotkeys-mappings-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="hotkeys-mappings-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
         </section>
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
           <div class="grid grid-cols-[max-content_auto] items-center gap-2">
-            <button id="hints-collapse-button" class="text-xl text-neutral-500">
+            <button id="hints-collapse-button" class="text-xl text-neutral-500" aria-label="toggle hints section">
               <i class="ri-collapse-horizontal-line"></i>
             </button>
             <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
@@ -143,7 +160,7 @@
               <p class="text-base text-white">hints.showCapitalizedLetters</p>
               <div class="ml-auto">
                 <label class="relative inline-flex cursor-pointer items-center">
-                  <input id="hints-show-capitalized-letters-checkbox" type="checkbox" value="" class="peer sr-only" />
+                  <input id="hints-show-capitalized-letters-checkbox" type="checkbox" value="" class="peer sr-only" aria-label="hints show capitalized letters" />
                   <div
                     class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
                   ></div>
@@ -157,7 +174,7 @@
               <p class="text-base text-white">hints.improveThumbnailMarkers</p>
               <div class="ml-auto">
                 <label class="relative inline-flex cursor-pointer items-center">
-                  <input id="hints-improve-thumbnail-markers-checkbox" type="checkbox" value="" class="peer sr-only" />
+                  <input id="hints-improve-thumbnail-markers-checkbox" type="checkbox" value="" class="peer sr-only" aria-label="hints improve thumbnail markers" />
                   <div
                     class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
                   ></div>
@@ -171,7 +188,7 @@
               <p class="text-base text-white">hints.showActivationIndicator</p>
               <div class="ml-auto">
                 <label class="relative inline-flex cursor-pointer items-center">
-                  <input id="hints-show-activation-indicator-checkbox" type="checkbox" value="" class="peer sr-only" />
+                  <input id="hints-show-activation-indicator-checkbox" type="checkbox" value="" class="peer sr-only" aria-label="hints show activation indicator" />
                   <div
                     class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
                   ></div>
@@ -186,6 +203,7 @@
               <input
                 id="hints-show-activation-indicator-color-input"
                 type="text"
+                aria-label="hints show activation indicator color"
                 autocomplete="off"
                 autocapitalize="off"
                 spellcheck="false"
@@ -206,6 +224,7 @@
               <input
                 id="hints-charset-input"
                 type="text"
+                aria-label="hints charset"
                 autocomplete="off"
                 autocapitalize="off"
                 spellcheck="false"
@@ -213,7 +232,7 @@
                 placeholder="sadfjklewcmpgh"
               />
             </div>
-            <p id="hints-charset-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="hints-charset-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
             <p class="text-base text-white">hints.minLabelLength</p>
@@ -222,6 +241,7 @@
               <input
                 id="hints-min-label-length-input"
                 type="number"
+                aria-label="hints min label length"
                 min="1"
                 step="1"
                 class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
@@ -240,6 +260,7 @@
               <pre id="hints-avoid-adjacent-pairs-highlight" aria-hidden="true" class="hints-avoid-adjacent-pairs-editor-layer"></pre>
               <textarea
                 id="hints-avoid-adjacent-pairs-textarea"
+                aria-label="hints avoid adjacent pairs"
                 autocomplete="off"
                 autocapitalize="off"
                 spellcheck="false"
@@ -247,7 +268,7 @@
                 class="hints-avoid-adjacent-pairs-editor-layer hints-avoid-adjacent-pairs-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
               ></textarea>
             </div>
-            <p id="hints-avoid-adjacent-pairs-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="hints-avoid-adjacent-pairs-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
             <p class="text-base text-white">hints.preferredSearchLabels</p>
@@ -262,22 +283,35 @@
               <input
                 id="hints-preferred-search-labels-input"
                 type="text"
+                aria-label="hints preferred search labels"
                 autocomplete="off"
                 autocapitalize="off"
                 spellcheck="false"
                 class="hints-inline-editor-layer hints-inline-input w-full bg-transparent px-2 py-1 text-base placeholder-neutral-500 outline-none"
               />
             </div>
-            <p id="hints-preferred-search-labels-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="hints-preferred-search-labels-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
             <p class="text-base text-white">hints.styling</p>
             <p class="text-base text-neutral-500">Use the built-in hint marker look, or switch to editable CSS for full control.</p>
             <div class="grid grid-cols-2 gap-2 text-base">
-              <button id="hints-styling-default-button" type="button" aria-pressed="true" class="rounded-md bg-yellow-500 py-2 outline-none transition hover:bg-yellow-600">
+              <button
+                id="hints-styling-default-button"
+                type="button"
+                aria-label="hints styling default"
+                aria-pressed="true"
+                class="rounded-md bg-yellow-500 py-2 outline-none transition hover:bg-yellow-600"
+              >
                 <span class="text-white">default</span>
               </button>
-              <button id="hints-styling-custom-button" type="button" aria-pressed="false" class="rounded-md bg-neutral-800 py-2 outline-none transition hover:bg-neutral-700">
+              <button
+                id="hints-styling-custom-button"
+                type="button"
+                aria-label="hints styling custom"
+                aria-pressed="false"
+                class="rounded-md bg-neutral-800 py-2 outline-none transition hover:bg-neutral-700"
+              >
                 <span class="text-white">custom</span>
               </button>
             </div>
@@ -290,6 +324,7 @@
                 <textarea
                   id="hints-custom-css-textarea"
                   type="text"
+                  aria-label="hints custom css"
                   autocomplete="off"
                   spellcheck="false"
                   wrap="off"
@@ -306,13 +341,13 @@
               <div id="controls-container-placeholder" class="w-full">
                 <div id="controls-container" class="controls-hidden fixed bottom-4 rounded-md border-2 border-yellow-500 bg-neutral-900 p-4 drop-shadow">
                   <div class="grid w-full grid-flow-row gap-2 lg:grid-cols-3">
-                    <button id="save-button" class="cursor-pointer rounded-md bg-yellow-500 p-2 transition hover:bg-yellow-600">
+                    <button id="save-button" aria-label="save options" class="cursor-pointer rounded-md bg-yellow-500 p-2 transition hover:bg-yellow-600">
                       <span class="text-base text-white">save</span>
                     </button>
-                    <button id="export-button" class="cursor-pointer rounded-md bg-indigo-500 p-2 transition hover:bg-indigo-600">
+                    <button id="export-button" aria-label="save and export options" class="cursor-pointer rounded-md bg-indigo-500 p-2 transition hover:bg-indigo-600">
                       <span class="text-base text-white">save & export</span>
                     </button>
-                    <button id="import-button" class="cursor-pointer rounded-md bg-indigo-500 p-2 transition hover:bg-indigo-600">
+                    <button id="import-button" aria-label="import and save options" class="cursor-pointer rounded-md bg-indigo-500 p-2 transition hover:bg-indigo-600">
                       <span class="text-base text-white">import & save</span>
                     </button>
                   </div>
@@ -326,7 +361,7 @@
                 <span class="text-base text-neutral-500">danger</span>
                 <div class="my-auto h-[1px] rounded-md bg-neutral-500"></div>
               </div>
-              <button id="reset-config-button" class="w-full cursor-pointer rounded-md bg-rose-500 p-2 transition hover:bg-rose-600 lg:w-max">
+              <button id="reset-config-button" aria-label="reset options to default" class="w-full cursor-pointer rounded-md bg-rose-500 p-2 transition hover:bg-rose-600 lg:w-max">
                 <span class="text-base text-white">reset to default</span>
               </button>
             </div>
