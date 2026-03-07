@@ -816,6 +816,7 @@ const createOverlay = (): HTMLDivElement => {
   const overlay = document.createElement("div");
   overlay.id = OVERLAY_ID;
   overlay.setAttribute(MARKER_ATTRIBUTE, "true");
+  overlay.setAttribute("aria-hidden", "true");
 
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
@@ -877,6 +878,7 @@ const createMarker = (label: string): Pick<HintMarker, "marker" | "letters" | "r
   marker.setAttribute(MARKER_ATTRIBUTE, "true");
   marker.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
   marker.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, "default");
+  marker.setAttribute("aria-hidden", "true");
 
   marker.style.position = "fixed";
   marker.style.left = "0px";

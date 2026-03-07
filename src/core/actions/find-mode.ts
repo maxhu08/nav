@@ -461,6 +461,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   } => {
     const bar = document.createElement("div");
     bar.id = FIND_BAR_ID;
+    bar.setAttribute("role", "search");
+    bar.setAttribute("aria-label", "Find in page");
     bar.setAttribute("data-visible", "false");
 
     const icon = document.createElement("span");
@@ -474,12 +476,17 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     input.spellcheck = false;
     input.autocomplete = "off";
     input.placeholder = "find...";
+    input.setAttribute("aria-label", "Find in page query");
+    input.setAttribute("aria-controls", FIND_STATUS_ID);
 
     const actions = document.createElement("div");
     actions.className = "nav-find-bar-actions";
 
     const matchCount = document.createElement("span");
     matchCount.id = FIND_MATCH_COUNT_ID;
+    matchCount.setAttribute("role", "status");
+    matchCount.setAttribute("aria-live", "polite");
+    matchCount.setAttribute("aria-atomic", "true");
     matchCount.textContent = "0 Matches";
 
     const clearButton = document.createElement("button");
@@ -487,6 +494,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     clearButton.className = "nav-find-clear";
     clearButton.type = "button";
     clearButton.setAttribute("aria-label", "Clear find input");
+    clearButton.setAttribute("aria-controls", FIND_INPUT_ID);
     clearButton.appendChild(createFindIconSvg(CLOSE_ICON_NODES));
 
     actions.append(matchCount, clearButton);
@@ -502,10 +510,15 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   } => {
     const status = document.createElement("div");
     status.id = FIND_STATUS_ID;
+    status.setAttribute("role", "group");
+    status.setAttribute("aria-label", "Find matches");
     status.setAttribute("data-visible", "false");
 
     const statusText = document.createElement("span");
     statusText.id = FIND_STATUS_TEXT_ID;
+    statusText.setAttribute("role", "status");
+    statusText.setAttribute("aria-live", "polite");
+    statusText.setAttribute("aria-atomic", "true");
     statusText.textContent = "0 / 0";
 
     const prevButton = document.createElement("button");
