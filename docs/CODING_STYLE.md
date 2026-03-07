@@ -8,6 +8,7 @@ Formatting is handled by Prettier on commit. Follow these project-specific rules
 - Do not use trailing commas.
 - Use `camelCase` for variables, functions, and object keys.
 - Use `PascalCase` for type aliases and interfaces.
+- Keep common acronyms uppercase in identifiers (`UI`, `URL`, `HTML`, `CSS`).
 
 ## Config Key Naming
 

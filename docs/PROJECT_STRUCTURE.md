@@ -19,7 +19,8 @@ Use this map to decide where new code should go.
 - Content script entry: `src/core/index.ts`
 - Action handlers: `src/core/actions/`
 - Core utilities: `src/core/utils/`
-- `src/core/navigation.ts` is the single place where parsed hotkeys and parsed URL rule lists are enforced at runtime.
+- `src/core/navigation.ts` wires runtime modules together and handles event registration.
+- `src/core/utils/key-state.ts` is the runtime source of truth for hotkey sequence parsing and URL rule enforcement.
 - `src/core/index.ts` only boots the shared runtime for normal webpages.
 
 ## Config Layers
@@ -32,6 +33,7 @@ Use this map to decide where new code should go.
 - `fastConfig.hotkeys.mappings` is a parsed key-to-action map.
 - `fastConfig.hotkeys.prefixes` is a derived lookup used for multi-key sequence matching.
 - `src/options/scripts/utils/save-config.ts` writes both `config` and a rebuilt `fastConfig` together.
+- In runtime, URL rule patterns are compiled to `RegExp` once on config apply (`src/core/utils/key-state.ts`) and reused for key matching.
 
 ## Options Page
 
