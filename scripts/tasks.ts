@@ -244,7 +244,6 @@ function runParcel(mode: "build" | "watch") {
       "--dist-dir",
       DIST_DIR,
       "--no-source-maps",
-      "--no-scope-hoist",
       "--no-content-hash"
     );
     runCommand(process.execPath, args);
