@@ -82,6 +82,7 @@ export const defaultConfig: Config = {
   hints: {
     showCapitalizedLetters: false,
     improveThumbnailMarkers: true,
+    minLabelLength: 2,
     showActivationIndicator: true,
     showActivationIndicatorColor: DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
     styling: "default",
@@ -106,6 +107,7 @@ export type Config = {
   hints: {
     showCapitalizedLetters: boolean;
     improveThumbnailMarkers: boolean;
+    minLabelLength: number;
     showActivationIndicator: boolean;
     showActivationIndicatorColor: string;
     styling: "default" | "custom";

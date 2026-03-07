@@ -36,6 +36,7 @@ export type FastConfig = {
   hints: {
     showCapitalizedLetters: boolean;
     improveThumbnailMarkers: boolean;
+    minLabelLength: number;
     showActivationIndicator: boolean;
     showActivationIndicatorColor: string;
     css: string;
@@ -78,6 +79,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     value?.hotkeys?.prefixes !== null &&
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
+    typeof value?.hints?.minLabelLength === "number" &&
     typeof value?.hints?.showActivationIndicator === "boolean" &&
     typeof value?.hints?.showActivationIndicatorColor === "string" &&
     typeof value?.hints?.css === "string" &&
@@ -105,6 +107,10 @@ const normalizeCssColor = (value: string): string | null => {
 
 const parseActivationIndicatorColorValue = (value: string): string => {
   return normalizeCssColor(value.trim()) || DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
+};
+
+const parseMinLabelLengthValue = (value: number): number => {
+  return Number.isInteger(value) && value >= 1 ? value : 2;
 };
 
 const createHotkeyPrefixes = (mappings: HotkeyMappings): Partial<Record<string, true>> => {
@@ -284,6 +290,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,
       improveThumbnailMarkers: config.hints.improveThumbnailMarkers,
+      minLabelLength: parseMinLabelLengthValue(config.hints.minLabelLength),
       showActivationIndicator: config.hints.showActivationIndicator,
       showActivationIndicatorColor: parseActivationIndicatorColorValue(
         config.hints.showActivationIndicatorColor

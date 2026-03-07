@@ -216,6 +216,20 @@
             <p id="hints-charset-status" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
+            <p class="text-base text-white">hints.minLabelLength</p>
+            <p class="text-base text-neutral-500">Sets the minimum number of characters generated hint labels must use.</p>
+            <div id="hints-min-label-length-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input
+                id="hints-min-label-length-input"
+                type="number"
+                min="1"
+                step="1"
+                class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
+                placeholder="2"
+              />
+            </div>
+          </div>
+          <div class="grid gap-2">
             <p class="text-base text-white">hints.avoidAdjacentPairs</p>
             <p class="text-base text-neutral-500">
               Lists consecutive character pairs to avoid inside generated hint labels. It is recommended to put hard-to-press character pairs here.

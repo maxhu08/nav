@@ -20,6 +20,7 @@ let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 let preferredSearchLabels: string[] = [];
+let minHintLabelLength = 2;
 let showCapitalizedLetters = true;
 let highlightThumbnails = false;
 let hintCSS = "";
@@ -620,7 +621,7 @@ const buildHintLabels = (
       return subtreeCapacity;
     };
 
-    let labelLength = 1;
+    let labelLength = minHintLabelLength;
     let capacity = getSubtreeCapacity(null, labelLength, true);
 
     while (capacity < count) {
@@ -1626,6 +1627,14 @@ export const setAvoidedAdjacentHintPairs = (
 
 export const setPreferredSearchLabels = (labels: string[]): void => {
   preferredSearchLabels = labels;
+
+  if (hintState.active) {
+    exitHints();
+  }
+};
+
+export const setMinHintLabelLength = (value: number): void => {
+  minHintLabelLength = Number.isInteger(value) && value >= 1 ? value : 2;
 
   if (hintState.active) {
     exitHints();

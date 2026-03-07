@@ -5,6 +5,7 @@ import {
   hintsCustomCSSSectionEl,
   hintsCustomCSSTextareaEl,
   hintsImproveThumbnailMarkersCheckboxEl,
+  hintsMinLabelLengthInputEl,
   hintsPreferredSearchLabelsInputEl,
   hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorColorSectionEl,
@@ -56,6 +57,7 @@ export const fillHintsInputs = (config: Config): void => {
   hintsShowActivationIndicatorColorInputEl.value = config.hints.showActivationIndicatorColor;
   hintsCustomCSSTextareaEl.value = config.hints.customCSS;
   hintsCharsetInputEl.value = config.hints.charset;
+  hintsMinLabelLengthInputEl.value = String(config.hints.minLabelLength);
   hintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
   hintsPreferredSearchLabelsInputEl.value = config.hints.preferredSearchLabels;
   setHintsStylingButtonState(config.hints.styling);

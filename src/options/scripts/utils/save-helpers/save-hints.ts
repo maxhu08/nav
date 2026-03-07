@@ -4,6 +4,7 @@ import {
   hintsCharsetInputEl,
   hintsCustomCSSTextareaEl,
   hintsImproveThumbnailMarkersCheckboxEl,
+  hintsMinLabelLengthInputEl,
   hintsPreferredSearchLabelsInputEl,
   hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorCheckboxEl,
@@ -14,6 +15,10 @@ import {
 export const saveHintsSettingsToDraft = (draft: Config): void => {
   draft.hints.showCapitalizedLetters = hintsShowCapitalizedLettersCheckboxEl.checked;
   draft.hints.improveThumbnailMarkers = hintsImproveThumbnailMarkersCheckboxEl.checked;
+  draft.hints.minLabelLength = Math.max(
+    1,
+    Number.parseInt(hintsMinLabelLengthInputEl.value, 10) || 2
+  );
   draft.hints.showActivationIndicator = hintsShowActivationIndicatorCheckboxEl.checked;
   draft.hints.showActivationIndicatorColor = hintsShowActivationIndicatorColorInputEl.value;
   draft.hints.styling =

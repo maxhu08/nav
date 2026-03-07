@@ -344,6 +344,16 @@
   display: grid;
 }
 
+#hints-min-label-length-input::-webkit-outer-spin-button,
+#hints-min-label-length-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#hints-min-label-length-input {
+  -moz-appearance: textfield;
+}
+
 #hints-charset-highlight,
 #hints-preferred-search-labels-highlight {
   pointer-events: none;

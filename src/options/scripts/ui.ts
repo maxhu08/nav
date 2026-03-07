@@ -61,6 +61,8 @@ export const hintsCharsetContainerEl = getElement<HTMLDivElement>("hints-charset
 export const hintsCharsetInputEl = getElement<HTMLInputElement>("hints-charset-input");
 export const hintsCharsetHighlightEl = getElement<HTMLPreElement>("hints-charset-highlight");
 export const hintsCharsetStatusEl = getElement<HTMLParagraphElement>("hints-charset-status");
+export const [hintsMinLabelLengthContainerEl, hintsMinLabelLengthInputEl] =
+  getContainerAndInput("hints-min-label-length");
 export const [hintsAvoidAdjacentPairsContainerEl, hintsAvoidAdjacentPairsTextareaEl] =
   getContainerAndTextarea("hints-avoid-adjacent-pairs");
 export const hintsAvoidAdjacentPairsHighlightEl = getElement<HTMLPreElement>(

@@ -6,6 +6,8 @@ import {
   exportButtonEl,
   hintsCharsetContainerEl,
   hintsCharsetInputEl,
+  hintsMinLabelLengthContainerEl,
+  hintsMinLabelLengthInputEl,
   hintsPreferredSearchLabelsContainerEl,
   hintsPreferredSearchLabelsInputEl,
   hintsShowActivationIndicatorColorContainerEl,
@@ -167,6 +169,14 @@ export const listenToInputs = (): void => {
 
   hintsCharsetInputEl.addEventListener("blur", () => {
     hintsCharsetContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  hintsMinLabelLengthInputEl.addEventListener("focus", () => {
+    hintsMinLabelLengthContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  hintsMinLabelLengthInputEl.addEventListener("blur", () => {
+    hintsMinLabelLengthContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   hintsPreferredSearchLabelsInputEl.addEventListener("focus", () => {
