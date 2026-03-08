@@ -285,6 +285,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     },
     clearPendingCount,
     clearPendingState,
+    hasAllowedActionMappings,
     resolveCount,
     isActionAllowed,
     getActionSequence: (actionName: WatchActionName, fallback: string): string => {

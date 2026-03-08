@@ -264,6 +264,23 @@ const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
 };
 
 const handleKeydown = (event: KeyboardEvent): void => {
+  if (!keyState.hasAllowedActionMappings()) {
+    if (areHintsActive()) {
+      exitHints();
+    }
+
+    if (watchController.isWatchModeActive()) {
+      watchController.exitWatchMode();
+    }
+
+    if (findMode.isFindModeActive()) {
+      findMode.exitFindMode();
+    }
+
+    keyState.clearPendingState();
+    return;
+  }
+
   if (handleHintsModeKeydown(event)) {
     return;
   }
