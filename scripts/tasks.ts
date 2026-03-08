@@ -58,6 +58,12 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
         match_about_blank: true
       }
     ],
+    web_accessible_resources: [
+      {
+        resources: ["shared/fonts/*.woff2"],
+        matches: ["<all_urls>"]
+      }
+    ],
     icons: {
       16: "16.png",
       32: "32.png",
@@ -91,6 +97,12 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
         run_at: "document_start",
         all_frames: true,
         match_about_blank: true
+      }
+    ],
+    web_accessible_resources: [
+      {
+        resources: ["shared/fonts/*.woff2"],
+        matches: ["<all_urls>"]
       }
     ],
     icons: {
