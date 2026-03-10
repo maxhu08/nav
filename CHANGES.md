@@ -1,10 +1,7 @@
-# Changes in 1.0.1
+# Changes in 1.0.2
 
 in this release:
 
-- add watch mode
-- add hints.minLabelLength
-- improve options page
-- improve docs
+- add toggle mute, captions, and loop watch mode actions
 - performance improvements
 - bug fixes
