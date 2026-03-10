@@ -1,72 +1,72 @@
 export type ActionName =
+  | "scroll-down"
+  | "scroll-up"
+  | "scroll-left"
+  | "scroll-right"
+  | "scroll-half-page-down"
+  | "scroll-half-page-up"
+  | "scroll-to-top"
+  | "scroll-to-bottom"
+  | "toggle-hints-current-tab"
+  | "toggle-hints-new-tab"
+  | "create-new-tab"
+  | "close-current-tab"
+  | "reload-current-tab"
+  | "reload-current-tab-hard"
+  | "tab-go-prev"
+  | "tab-go-next"
+  | "duplicate-current-tab"
+  | "move-current-tab-to-new-window"
+  | "yank-link-url"
+  | "yank-image"
+  | "yank-image-url"
+  | "yank-current-tab-url"
+  | "history-go-prev"
+  | "history-go-next"
+  | "enable-find-mode"
+  | "cycle-match-next"
+  | "cycle-match-prev"
   | "toggle-video-controls"
   | "toggle-fullscreen"
   | "toggle-play-pause"
   | "toggle-loop"
   | "toggle-mute"
-  | "toggle-captions"
-  | "enable-find-mode"
-  | "cycle-match-next"
-  | "cycle-match-prev"
-  | "history-go-prev"
-  | "history-go-next"
-  | "tab-go-prev"
-  | "tab-go-next"
-  | "duplicate-current-tab"
-  | "move-current-tab-to-new-window"
-  | "close-current-tab"
-  | "create-new-tab"
-  | "reload-current-tab"
-  | "reload-current-tab-hard"
-  | "toggle-hints-current-tab"
-  | "toggle-hints-new-tab"
-  | "yank-link-url"
-  | "yank-image"
-  | "yank-image-url"
-  | "yank-current-tab-url"
-  | "scroll-down"
-  | "scroll-half-page-down"
-  | "scroll-half-page-up"
-  | "scroll-left"
-  | "scroll-right"
-  | "scroll-up"
-  | "scroll-to-bottom"
-  | "scroll-to-top";
+  | "toggle-captions";
 
 export const VALID_ACTION_NAMES = new Set<ActionName>([
+  "scroll-down",
+  "scroll-up",
+  "scroll-left",
+  "scroll-right",
+  "scroll-half-page-down",
+  "scroll-half-page-up",
+  "scroll-to-top",
+  "scroll-to-bottom",
+  "toggle-hints-current-tab",
+  "toggle-hints-new-tab",
+  "create-new-tab",
+  "close-current-tab",
+  "reload-current-tab",
+  "reload-current-tab-hard",
+  "tab-go-prev",
+  "tab-go-next",
+  "duplicate-current-tab",
+  "move-current-tab-to-new-window",
+  "yank-link-url",
+  "yank-image",
+  "yank-image-url",
+  "yank-current-tab-url",
+  "history-go-prev",
+  "history-go-next",
+  "enable-find-mode",
+  "cycle-match-next",
+  "cycle-match-prev",
   "toggle-video-controls",
   "toggle-fullscreen",
   "toggle-play-pause",
   "toggle-loop",
   "toggle-mute",
-  "toggle-captions",
-  "enable-find-mode",
-  "cycle-match-next",
-  "cycle-match-prev",
-  "history-go-prev",
-  "history-go-next",
-  "tab-go-prev",
-  "tab-go-next",
-  "duplicate-current-tab",
-  "move-current-tab-to-new-window",
-  "close-current-tab",
-  "create-new-tab",
-  "reload-current-tab",
-  "reload-current-tab-hard",
-  "toggle-hints-current-tab",
-  "toggle-hints-new-tab",
-  "yank-link-url",
-  "yank-image",
-  "yank-image-url",
-  "yank-current-tab-url",
-  "scroll-down",
-  "scroll-half-page-down",
-  "scroll-half-page-up",
-  "scroll-left",
-  "scroll-right",
-  "scroll-up",
-  "scroll-to-bottom",
-  "scroll-to-top"
+  "toggle-captions"
 ]);
 
 export const isActionName = (value: string): value is ActionName => {
