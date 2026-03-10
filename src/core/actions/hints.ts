@@ -44,6 +44,10 @@ type PlacedMarkerRect = {
   bottom: number;
 };
 
+type RectLike = Pick<DOMRect, "left" | "top" | "right" | "bottom" | "width" | "height">;
+
+type MarkerVariant = "default" | "thumbnail";
+
 type HintState = {
   active: boolean;
   mode: LinkMode;
@@ -78,12 +82,19 @@ const hintState: HintState = {
 const MARKER_VIEWPORT_PADDING = 4;
 const MARKER_COLLISION_GAP = 2;
 const MARKER_ANCHOR_INSET = 2;
+const MARKER_COLLISION_CELL_SIZE = 80;
 const MIN_THUMBNAIL_WIDTH = 96;
 const MIN_THUMBNAIL_HEIGHT = 54;
 const MIN_THUMBNAIL_MEDIA_AREA_RATIO = 0.45;
 const MIN_THUMBNAIL_ASPECT_RATIO = 1.15;
 const MIN_COPY_IMAGE_THUMBNAIL_WIDTH = 180;
 const MIN_COPY_IMAGE_THUMBNAIL_HEIGHT = 120;
+
+const labelPlanCache = new Map<string, { labelLength: number; labels: string[] }>();
+
+const clearLabelPlanCache = (): void => {
+  labelPlanCache.clear();
+};
 
 const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   const rects = Array.from(element.getClientRects()).filter(
@@ -312,19 +323,39 @@ const getHintTargetPreference = (element: HTMLElement): number => {
   return score;
 };
 
-const areEquivalentHintTargets = (leftElement: HTMLElement, rightElement: HTMLElement): boolean => {
+const getApproximateRectKey = (rect: RectLike): string => {
+  const round = (value: number): number => Math.round(value * 2) / 2;
+  return `${round(rect.top)}:${round(rect.left)}:${round(rect.width)}:${round(rect.height)}`;
+};
+
+const getEquivalentTargetBucketKey = (
+  element: HTMLElement,
+  rect: RectLike | null,
+  identity: string | null
+): string => {
+  const role = element.getAttribute("role")?.toLowerCase() ?? "";
+  const rectKey = rect ? getApproximateRectKey(rect) : "no-rect";
+  return `${rectKey}|${identity ?? ""}|${role}|${element.tagName}`;
+};
+
+const areEquivalentHintTargets = (
+  leftElement: HTMLElement,
+  rightElement: HTMLElement,
+  getRect: (element: HTMLElement) => DOMRect | null = getMarkerRect,
+  getIdentity: (element: HTMLElement) => string | null = getHintIdentity
+): boolean => {
   if (!leftElement.contains(rightElement) && !rightElement.contains(leftElement)) {
     return false;
   }
 
-  const leftRect = getMarkerRect(leftElement);
-  const rightRect = getMarkerRect(rightElement);
+  const leftRect = getRect(leftElement);
+  const rightRect = getRect(rightElement);
   if (!leftRect || !rightRect || !areRectsEquivalent(leftRect, rightRect)) {
     return false;
   }
 
-  const leftIdentity = getHintIdentity(leftElement);
-  const rightIdentity = getHintIdentity(rightElement);
+  const leftIdentity = getIdentity(leftElement);
+  const rightIdentity = getIdentity(rightElement);
 
   if (leftIdentity && rightIdentity) {
     return leftIdentity === rightIdentity;
@@ -340,27 +371,48 @@ const areEquivalentHintTargets = (leftElement: HTMLElement, rightElement: HTMLEl
   return leftElement.tagName === rightElement.tagName;
 };
 
-const dedupeHintTargets = (elements: HTMLElement[]): HTMLElement[] => {
-  const deduped: HTMLElement[] = [];
+const dedupeHintTargets = (
+  elements: HTMLElement[],
+  getRect: (element: HTMLElement) => DOMRect | null = getMarkerRect,
+  getIdentity: (element: HTMLElement) => string | null = getHintIdentity,
+  getPreference: (element: HTMLElement) => number = getHintTargetPreference
+): HTMLElement[] => {
+  const bucketMap = new Map<string, HTMLElement[]>();
 
   for (const element of elements) {
-    const duplicateIndex = deduped.findIndex((candidate) =>
-      areEquivalentHintTargets(candidate, element)
-    );
+    const bucketKey = getEquivalentTargetBucketKey(element, getRect(element), getIdentity(element));
+    const bucket = bucketMap.get(bucketKey);
 
-    if (duplicateIndex === -1) {
-      deduped.push(element);
+    if (bucket) {
+      bucket.push(element);
       continue;
     }
 
-    const existing = deduped[duplicateIndex];
-    if (!existing) {
-      deduped.push(element);
-      continue;
-    }
+    bucketMap.set(bucketKey, [element]);
+  }
 
-    if (getHintTargetPreference(element) > getHintTargetPreference(existing)) {
-      deduped[duplicateIndex] = element;
+  const deduped: HTMLElement[] = [];
+
+  for (const bucket of bucketMap.values()) {
+    for (const element of bucket) {
+      const duplicateIndex = deduped.findIndex((candidate) =>
+        areEquivalentHintTargets(candidate, element, getRect, getIdentity)
+      );
+
+      if (duplicateIndex === -1) {
+        deduped.push(element);
+        continue;
+      }
+
+      const existing = deduped[duplicateIndex];
+      if (!existing) {
+        deduped.push(element);
+        continue;
+      }
+
+      if (getPreference(element) > getPreference(existing)) {
+        deduped[duplicateIndex] = element;
+      }
     }
   }
 
@@ -369,7 +421,8 @@ const dedupeHintTargets = (elements: HTMLElement[]): HTMLElement[] => {
 
 const hasEquivalentAncestorTarget = (
   element: HTMLElement,
-  candidates: ReadonlySet<HTMLElement>
+  candidates: ReadonlySet<HTMLElement>,
+  getRect: (element: HTMLElement) => DOMRect | null = getMarkerRect
 ): boolean => {
   if (!(element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement)) {
     return false;
@@ -377,6 +430,11 @@ const hasEquivalentAncestorTarget = (
 
   const resolvedHref = element.href;
   if (!resolvedHref) {
+    return false;
+  }
+
+  const elementRect = getRect(element);
+  if (!elementRect) {
     return false;
   }
 
@@ -389,8 +447,7 @@ const hasEquivalentAncestorTarget = (
       (current.getAttribute("role")?.toLowerCase() === "link" ||
         getElementTabIndex(current) !== null)
     ) {
-      const currentRect = getMarkerRect(current);
-      const elementRect = getMarkerRect(element);
+      const currentRect = getRect(current);
       const currentHref = current.getAttribute("href");
 
       if (
@@ -494,30 +551,79 @@ const isVisibleHintTarget = (element: HTMLElement): boolean => {
   return isElementVisibleAndClickable(element);
 };
 
+const getHintSelectors = (mode: LinkMode): string[] => {
+  if (mode === "copy-link") {
+    return ["a[href]", "area[href]"];
+  }
+
+  if (mode === "copy-image") {
+    return ["img"];
+  }
+
+  return [
+    "a[href]",
+    "area[href]",
+    "button",
+    "input:not([type='hidden'])",
+    "select",
+    "textarea",
+    "object",
+    "embed",
+    "label",
+    "summary",
+    "[onclick]",
+    "[role]",
+    "[tabindex]",
+    "[contenteditable='true']",
+    "[contenteditable='']",
+    "[jsaction]"
+  ];
+};
+
 const getHintableElements = (mode: LinkMode): HTMLElement[] => {
-  const selectors =
-    mode === "copy-link"
-      ? ["a[href]", "area[href]"]
-      : mode === "copy-image"
-        ? ["img"]
-        : [
-            "a[href]",
-            "area[href]",
-            "button",
-            "input:not([type='hidden'])",
-            "select",
-            "textarea",
-            "object",
-            "embed",
-            "label",
-            "summary",
-            "[onclick]",
-            "[role]",
-            "[tabindex]",
-            "[contenteditable='true']",
-            "[contenteditable='']",
-            "[jsaction]"
-          ];
+  const selectors = getHintSelectors(mode);
+  const rectCache = new WeakMap<HTMLElement, DOMRect | null>();
+  const identityCache = new WeakMap<HTMLElement, string | null>();
+  const depthCache = new WeakMap<HTMLElement, number>();
+  const preferenceCache = new WeakMap<HTMLElement, number>();
+  const getRect = (element: HTMLElement): DOMRect | null => {
+    if (rectCache.has(element)) {
+      return rectCache.get(element) ?? null;
+    }
+
+    const rect = getMarkerRect(element);
+    rectCache.set(element, rect);
+    return rect;
+  };
+  const getIdentity = (element: HTMLElement): string | null => {
+    if (identityCache.has(element)) {
+      return identityCache.get(element) ?? null;
+    }
+
+    const identity = getHintIdentity(element);
+    identityCache.set(element, identity);
+    return identity;
+  };
+  const getDepth = (element: HTMLElement): number => {
+    const cached = depthCache.get(element);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const depth = getDomDepth(element);
+    depthCache.set(element, depth);
+    return depth;
+  };
+  const getPreference = (element: HTMLElement): number => {
+    const cached = preferenceCache.get(element);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const preference = getHintTargetPreference(element);
+    preferenceCache.set(element, preference);
+    return preference;
+  };
 
   const seen = new Set<HTMLElement>();
   const elements: HTMLElement[] = [];
@@ -537,21 +643,54 @@ const getHintableElements = (mode: LinkMode): HTMLElement[] => {
 
   const candidateSet = new Set(elements);
   const dedupedElements = elements.filter(
-    (element) => !hasEquivalentAncestorTarget(element, candidateSet)
+    (element) => !hasEquivalentAncestorTarget(element, candidateSet, getRect)
   );
-  const uniqueElements = dedupeHintTargets(dedupedElements);
+  const uniqueElements = dedupeHintTargets(dedupedElements, getRect, getIdentity, getPreference);
 
   uniqueElements.sort((leftElement, rightElement) => {
-    const leftRect = getMarkerRect(leftElement);
-    const rightRect = getMarkerRect(rightElement);
+    const leftRect = getRect(leftElement);
+    const rightRect = getRect(rightElement);
 
     if (!leftRect || !rightRect) return 0;
     if (leftRect.top !== rightRect.top) return leftRect.top - rightRect.top;
     if (leftRect.left !== rightRect.left) return leftRect.left - rightRect.left;
-    return getDomDepth(leftElement) - getDomDepth(rightElement);
+    return getDepth(leftElement) - getDepth(rightElement);
   });
 
   return uniqueElements;
+};
+
+const serializeBlockedPairs = (
+  blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
+): string => {
+  const entries: string[] = [];
+
+  for (const left of Object.keys(blockedPairs).sort()) {
+    const rights = Object.keys(blockedPairs[left] ?? {})
+      .filter((right) => blockedPairs[left]?.[right] === true)
+      .sort();
+
+    if (rights.length > 0) {
+      entries.push(`${left}>${rights.join(",")}`);
+    }
+  }
+
+  return entries.join("|");
+};
+
+const getLabelPlanCacheKey = (
+  count: number,
+  reservedLabel: string | null,
+  blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
+): string => {
+  return [
+    count,
+    reservedLabel ?? "",
+    minHintLabelLength,
+    hintAlphabet,
+    Array.from(reservedHintPrefixes).sort().join(","),
+    serializeBlockedPairs(blockedPairs)
+  ].join("::");
 };
 
 const buildHintLabels = (
@@ -565,6 +704,16 @@ const buildHintLabels = (
   const buildLabels = (
     blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
   ): { labelLength: number; labels: string[] } => {
+    const cacheKey = getLabelPlanCacheKey(count, reservedLabel, blockedPairs);
+    const cachedPlan = labelPlanCache.get(cacheKey);
+
+    if (cachedPlan) {
+      return {
+        labelLength: cachedPlan.labelLength,
+        labels: [...cachedPlan.labels]
+      };
+    }
+
     const alphabet = hintAlphabet.split("");
     const firstCharacters = alphabet.filter((char) => !reservedHintPrefixes.has(char));
     const leadingAlphabet = firstCharacters.length > 0 ? firstCharacters : alphabet;
@@ -615,7 +764,9 @@ const buildHintLabels = (
       const nextCapacity = getSubtreeCapacity(null, nextLength, true);
 
       if (nextCapacity <= capacity) {
-        return { labelLength, labels: [] };
+        const result = { labelLength, labels: [] };
+        labelPlanCache.set(cacheKey, result);
+        return result;
       }
 
       labelLength = nextLength;
@@ -668,10 +819,12 @@ const buildHintLabels = (
       labels.length = count;
     }
 
-    return {
+    const result = {
       labelLength,
       labels: labels.slice(0, count - (reservedLabel ? 1 : 0))
     };
+    labelPlanCache.set(cacheKey, result);
+    return result;
   };
 
   const labels = buildLabels(avoidedAdjacentHintPairs);
@@ -1082,8 +1235,8 @@ const shouldUseThumbnailMarker = (element: HTMLElement, targetRect: DOMRect): bo
 };
 
 const getMarkerPositionCandidates = (
-  element: HTMLElement,
-  targetRect: DOMRect,
+  anchorRect: RectLike,
+  shouldHighlightThumbnail: boolean,
   markerWidth: number,
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
@@ -1098,10 +1251,6 @@ const getMarkerPositionCandidates = (
     candidates.push(clamped);
   };
 
-  const shouldHighlightThumbnail = shouldUseThumbnailMarker(element, targetRect);
-  const anchorRect = shouldHighlightThumbnail
-    ? (getPreferredThumbnailRect(element, targetRect) ?? targetRect)
-    : targetRect;
   const left = anchorRect.left + MARKER_ANCHOR_INSET;
   const top = anchorRect.top + MARKER_ANCHOR_INSET;
   const right = Math.max(anchorRect.left, anchorRect.right - markerWidth - MARKER_ANCHOR_INSET);
@@ -1129,8 +1278,80 @@ const getMarkerPositionCandidates = (
   return candidates;
 };
 
+const getMarkerPlacementPlan = (
+  element: HTMLElement,
+  targetRect: DOMRect,
+  markerWidth: number,
+  markerHeight: number
+): { variant: MarkerVariant; candidates: Array<Pick<PlacedMarkerRect, "left" | "top">> } => {
+  const shouldHighlightThumbnail = shouldUseThumbnailMarker(element, targetRect);
+  const anchorRect = shouldHighlightThumbnail
+    ? (getPreferredThumbnailRect(element, targetRect) ?? targetRect)
+    : targetRect;
+
+  return {
+    variant: shouldHighlightThumbnail ? "thumbnail" : "default",
+    candidates: getMarkerPositionCandidates(
+      anchorRect,
+      shouldHighlightThumbnail,
+      markerWidth,
+      markerHeight
+    )
+  };
+};
+
+const getCollisionBucketKeys = (rect: PlacedMarkerRect): string[] => {
+  const minX = Math.floor((rect.left - MARKER_COLLISION_GAP) / MARKER_COLLISION_CELL_SIZE);
+  const maxX = Math.floor((rect.right + MARKER_COLLISION_GAP) / MARKER_COLLISION_CELL_SIZE);
+  const minY = Math.floor((rect.top - MARKER_COLLISION_GAP) / MARKER_COLLISION_CELL_SIZE);
+  const maxY = Math.floor((rect.bottom + MARKER_COLLISION_GAP) / MARKER_COLLISION_CELL_SIZE);
+  const keys: string[] = [];
+
+  for (let y = minY; y <= maxY; y += 1) {
+    for (let x = minX; x <= maxX; x += 1) {
+      keys.push(`${x}:${y}`);
+    }
+  }
+
+  return keys;
+};
+
+const hasCollision = (
+  collisionGrid: Map<string, PlacedMarkerRect[]>,
+  nextRect: PlacedMarkerRect
+): boolean => {
+  for (const bucketKey of getCollisionBucketKeys(nextRect)) {
+    const bucket = collisionGrid.get(bucketKey);
+    if (!bucket) continue;
+
+    for (const placedRect of bucket) {
+      if (doPlacedMarkerRectsOverlap(placedRect, nextRect)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+const addToCollisionGrid = (
+  collisionGrid: Map<string, PlacedMarkerRect[]>,
+  rect: PlacedMarkerRect
+): void => {
+  for (const bucketKey of getCollisionBucketKeys(rect)) {
+    const bucket = collisionGrid.get(bucketKey);
+
+    if (bucket) {
+      bucket.push(rect);
+      continue;
+    }
+
+    collisionGrid.set(bucketKey, [rect]);
+  }
+};
+
 const updateMarkerPositions = (): void => {
-  const placedRects: PlacedMarkerRect[] = [];
+  const collisionGrid = new Map<string, PlacedMarkerRect[]>();
 
   for (const hint of hintState.markers) {
     const targetRect = getMarkerRect(hint.element);
@@ -1141,20 +1362,24 @@ const updateMarkerPositions = (): void => {
     }
 
     hint.marker.style.display = "";
-    hint.marker.setAttribute(
-      MARKER_VARIANT_STYLE_ATTRIBUTE,
-      shouldUseThumbnailMarker(hint.element, targetRect) ? "thumbnail" : "default"
-    );
-
     const markerRect = hint.marker.getBoundingClientRect();
     const markerWidth = Math.max(1, Math.round(markerRect.width));
     const markerHeight = Math.max(1, Math.round(markerRect.height));
-    const candidates = getMarkerPositionCandidates(
+    const placementPlan = getMarkerPlacementPlan(
       hint.element,
       targetRect,
       markerWidth,
       markerHeight
     );
+    hint.marker.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, placementPlan.variant);
+    const nextMarkerRect = hint.marker.getBoundingClientRect();
+    const adjustedWidth = Math.max(1, Math.round(nextMarkerRect.width));
+    const adjustedHeight = Math.max(1, Math.round(nextMarkerRect.height));
+    const candidates =
+      adjustedWidth === markerWidth && adjustedHeight === markerHeight
+        ? placementPlan.candidates
+        : getMarkerPlacementPlan(hint.element, targetRect, adjustedWidth, adjustedHeight)
+            .candidates;
 
     let chosenRect: PlacedMarkerRect | null = null;
 
@@ -1162,11 +1387,11 @@ const updateMarkerPositions = (): void => {
       const nextRect = createPlacedMarkerRect(
         candidate.left,
         candidate.top,
-        markerWidth,
-        markerHeight
+        adjustedWidth,
+        adjustedHeight
       );
 
-      if (placedRects.every((placedRect) => !doPlacedMarkerRectsOverlap(placedRect, nextRect))) {
+      if (!hasCollision(collisionGrid, nextRect)) {
         chosenRect = nextRect;
         break;
       }
@@ -1175,21 +1400,21 @@ const updateMarkerPositions = (): void => {
     const fallbackPosition = clampMarkerPosition(
       targetRect.left,
       targetRect.top,
-      markerWidth,
-      markerHeight
+      adjustedWidth,
+      adjustedHeight
     );
     const nextRect =
       chosenRect ??
       createPlacedMarkerRect(
         fallbackPosition.left,
         fallbackPosition.top,
-        markerWidth,
-        markerHeight
+        adjustedWidth,
+        adjustedHeight
       );
 
     hint.marker.style.left = `${Math.round(nextRect.left)}px`;
     hint.marker.style.top = `${Math.round(nextRect.top)}px`;
-    placedRects.push(nextRect);
+    addToCollisionGrid(collisionGrid, nextRect);
   }
 };
 
@@ -1590,6 +1815,7 @@ export const areHintsPendingSelection = (): boolean =>
 
 export const setHintCharset = (charset: string): void => {
   hintAlphabet = charset;
+  clearLabelPlanCache();
 
   if (hintState.active) {
     exitHints();
@@ -1598,6 +1824,7 @@ export const setHintCharset = (charset: string): void => {
 
 export const setReservedHintPrefixes = (prefixes: Iterable<string>): void => {
   reservedHintPrefixes = new Set(prefixes);
+  clearLabelPlanCache();
 
   if (hintState.active) {
     exitHints();
@@ -1608,6 +1835,7 @@ export const setAvoidedAdjacentHintPairs = (
   pairs: Partial<Record<string, Partial<Record<string, true>>>>
 ): void => {
   avoidedAdjacentHintPairs = pairs;
+  clearLabelPlanCache();
 
   if (hintState.active) {
     exitHints();
@@ -1624,6 +1852,7 @@ export const setPreferredSearchLabels = (labels: string[]): void => {
 
 export const setMinHintLabelLength = (value: number): void => {
   minHintLabelLength = Number.isInteger(value) && value >= 1 ? value : 2;
+  clearLabelPlanCache();
 
   if (hintState.active) {
     exitHints();
