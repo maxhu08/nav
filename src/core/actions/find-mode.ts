@@ -1,5 +1,12 @@
 import { isEditableTarget, getDeepActiveElement } from "~/src/core/utils/isEditableTarget";
 import {
+  FIND_ARROW_DOWN_ICON_NODES,
+  FIND_ARROW_UP_ICON_NODES,
+  FIND_CLOSE_ICON_NODES,
+  FIND_SEARCH_ICON_NODES,
+  type SvgNodeDefinition
+} from "~/src/lib/inline-icons";
+import {
   FIND_BAR_ID,
   FIND_CLEAR_BUTTON_ID,
   FIND_CURRENT_HIGHLIGHT_NAME,
@@ -48,11 +55,6 @@ type FindUIElements = {
   clearButton: HTMLButtonElement;
 };
 
-type SvgNodeDefinition = {
-  tag: "circle" | "path";
-  attributes: Record<string, string>;
-};
-
 const getCssHighlights = (): {
   set: (name: string, highlight: unknown) => void;
   delete: (name: string) => void;
@@ -89,56 +91,6 @@ const createFindIconSvg = (nodes: SvgNodeDefinition[]): SVGSVGElement => {
 
   return svg;
 };
-
-const SEARCH_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "circle",
-    attributes: {
-      cx: "11",
-      cy: "11",
-      r: "7"
-    }
-  },
-  {
-    tag: "path",
-    attributes: {
-      d: "M20 20l-3.5-3.5"
-    }
-  }
-];
-
-const ARROW_UP_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "path",
-    attributes: {
-      d: "M6 15l6-6 6 6"
-    }
-  }
-];
-
-const ARROW_DOWN_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "path",
-    attributes: {
-      d: "M6 9l6 6 6-6"
-    }
-  }
-];
-
-const CLOSE_ICON_NODES: SvgNodeDefinition[] = [
-  {
-    tag: "path",
-    attributes: {
-      d: "M18 6L6 18"
-    }
-  },
-  {
-    tag: "path",
-    attributes: {
-      d: "M6 6l12 12"
-    }
-  }
-];
 
 export const createFindModeController = (deps: CreateFindModeControllerDeps) => {
   let findMatches: FindMatch[] = [];
@@ -468,7 +420,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     const icon = document.createElement("span");
     icon.className = "nav-find-icon";
     icon.setAttribute("data-find-icon", "");
-    icon.appendChild(createFindIconSvg(SEARCH_ICON_NODES));
+    icon.appendChild(createFindIconSvg(FIND_SEARCH_ICON_NODES));
 
     const input = document.createElement("input");
     input.id = FIND_INPUT_ID;
@@ -495,7 +447,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     clearButton.type = "button";
     clearButton.setAttribute("aria-label", "Clear find input");
     clearButton.setAttribute("aria-controls", FIND_INPUT_ID);
-    clearButton.appendChild(createFindIconSvg(CLOSE_ICON_NODES));
+    clearButton.appendChild(createFindIconSvg(FIND_CLOSE_ICON_NODES));
 
     actions.append(matchCount, clearButton);
     bar.append(icon, input, actions);
@@ -527,7 +479,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     prevButton.setAttribute("data-find-nav", "");
     prevButton.type = "button";
     prevButton.setAttribute("aria-label", "Previous match");
-    prevButton.appendChild(createFindIconSvg(ARROW_UP_ICON_NODES));
+    prevButton.appendChild(createFindIconSvg(FIND_ARROW_UP_ICON_NODES));
 
     const nextButton = document.createElement("button");
     nextButton.id = FIND_NEXT_BUTTON_ID;
@@ -535,7 +487,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     nextButton.setAttribute("data-find-nav", "");
     nextButton.type = "button";
     nextButton.setAttribute("aria-label", "Next match");
-    nextButton.appendChild(createFindIconSvg(ARROW_DOWN_ICON_NODES));
+    nextButton.appendChild(createFindIconSvg(FIND_ARROW_DOWN_ICON_NODES));
 
     status.append(statusText, prevButton, nextButton);
     return { status, statusText, prevButton, nextButton };
