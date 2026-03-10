@@ -110,6 +110,9 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "toggle-video-controls": watchController.toggleVideoControls,
   "toggle-fullscreen": watchController.toggleFullscreen,
   "toggle-play-pause": watchController.togglePlayPause,
+  "toggle-loop": watchController.toggleLoop,
+  "toggle-mute": watchController.toggleMute,
+  "toggle-captions": watchController.toggleCaptions,
   "enable-find-mode": enableFindModeAction,
   "cycle-match-next": () => findMode.cycleFindMatch(1),
   "cycle-match-prev": () => findMode.cycleFindMatch(-1),
@@ -212,11 +215,9 @@ const handleWatchModeKeydown = (event: KeyboardEvent, keyToken: string): boolean
     return false;
   }
 
-  const { fullscreenSequence, pauseSequence } = watchController.getWatchActionSequences();
   const { actionName, consumed } = keyState.getWatchActionName(
     keyToken,
-    fullscreenSequence,
-    pauseSequence
+    watchController.getWatchActionSequences()
   );
 
   if (actionName === "toggle-fullscreen" && watchController.toggleFullscreen()) {
@@ -225,6 +226,21 @@ const handleWatchModeKeydown = (event: KeyboardEvent, keyToken: string): boolean
   }
 
   if (actionName === "toggle-play-pause" && watchController.toggleWatchPlayPause()) {
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  if (actionName === "toggle-loop" && watchController.toggleWatchLoop()) {
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  if (actionName === "toggle-mute" && watchController.toggleWatchMute()) {
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
+  if (actionName === "toggle-captions" && watchController.toggleWatchCaptions()) {
     consumeKeyboardEvent(event);
     return true;
   }

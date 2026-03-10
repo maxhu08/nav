@@ -8,7 +8,12 @@ export type KeyParseResult = {
   consumed: boolean;
 };
 
-type WatchActionName = "toggle-fullscreen" | "toggle-play-pause";
+type WatchActionName =
+  | "toggle-fullscreen"
+  | "toggle-play-pause"
+  | "toggle-loop"
+  | "toggle-mute"
+  | "toggle-captions";
 type KeyStateMode = "normal" | "find" | "watch";
 
 type CreateKeyStateDeps = {
@@ -353,22 +358,24 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     },
     getWatchActionName: (
       keyToken: string,
-      fullscreenSequence: string,
-      pauseSequence: string
+      sequences: Record<WatchActionName, string>
     ): KeyParseResult => {
       const nextSequence = `${pendingSequence}${keyToken}`;
 
-      if (nextSequence === fullscreenSequence) {
+      const directMatch = (Object.entries(sequences) as [WatchActionName, string][]).find(
+        ([, sequence]) => nextSequence === sequence
+      );
+
+      if (directMatch) {
         clearPendingSequence();
-        return { actionName: "toggle-fullscreen", consumed: true };
+        return { actionName: directMatch[0], consumed: true };
       }
 
-      if (nextSequence === pauseSequence) {
-        clearPendingSequence();
-        return { actionName: "toggle-play-pause", consumed: true };
-      }
+      const hasLongerMatch = Object.values(sequences).some((sequence) =>
+        sequence.startsWith(nextSequence)
+      );
 
-      if (fullscreenSequence.startsWith(nextSequence) || pauseSequence.startsWith(nextSequence)) {
+      if (hasLongerMatch) {
         startPendingSequence(nextSequence);
         return { actionName: null, consumed: true };
       }

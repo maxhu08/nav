@@ -2,6 +2,9 @@ export type ActionName =
   | "toggle-video-controls"
   | "toggle-fullscreen"
   | "toggle-play-pause"
+  | "toggle-loop"
+  | "toggle-mute"
+  | "toggle-captions"
   | "enable-find-mode"
   | "cycle-match-next"
   | "cycle-match-prev"
@@ -34,6 +37,9 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "toggle-video-controls",
   "toggle-fullscreen",
   "toggle-play-pause",
+  "toggle-loop",
+  "toggle-mute",
+  "toggle-captions",
   "enable-find-mode",
   "cycle-match-next",
   "cycle-match-prev",
@@ -72,7 +78,13 @@ export type HotkeyActionMode = "normal" | "find" | "watch";
 export type HotkeyMappings = Partial<Record<string, Partial<Record<HotkeyActionMode, ActionName>>>>;
 
 const FIND_MODE_ACTION_NAMES = new Set<ActionName>(["cycle-match-next", "cycle-match-prev"]);
-const WATCH_MODE_ACTION_NAMES = new Set<ActionName>(["toggle-fullscreen", "toggle-play-pause"]);
+const WATCH_MODE_ACTION_NAMES = new Set<ActionName>([
+  "toggle-fullscreen",
+  "toggle-play-pause",
+  "toggle-loop",
+  "toggle-mute",
+  "toggle-captions"
+]);
 
 export const getActionMode = (actionName: ActionName): HotkeyActionMode => {
   if (FIND_MODE_ACTION_NAMES.has(actionName)) {
@@ -257,6 +269,9 @@ N cycle-match-prev # requires find mode
 w toggle-video-controls
 f toggle-fullscreen # requires watch mode
 e toggle-play-pause # requires watch mode
+l toggle-loop # requires watch mode
+m toggle-mute # requires watch mode
+c toggle-captions # requires watch mode
 `.trim();
 
 export const DEFAULT_HINT_CHARSET = "sadfjklewcmupgh";
