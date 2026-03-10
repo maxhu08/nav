@@ -95,6 +95,7 @@ const createWatchIcon = (path: string, sizePx: number): SVGSVGElement => {
   svg.setAttribute("fill", "currentColor");
   svg.setAttribute("aria-hidden", "true");
   svg.style.flex = "0 0 auto";
+  svg.style.color = "#000000";
   svg.style.opacity = "0.95";
 
   const node = document.createElementNS("http://www.w3.org/2000/svg", "path");
