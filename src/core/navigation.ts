@@ -17,6 +17,7 @@ import {
   scrollToTop,
   scrollUp
 } from "~/src/core/actions/scroll";
+import { followNextPage, followPreviousPage } from "~/src/core/actions/navigation";
 import { createEnableFindModeAction } from "~/src/core/actions/find";
 import { createFindModeController } from "~/src/core/actions/find-mode";
 import { createWatchController } from "~/src/core/actions/watch-mode";
@@ -118,6 +119,8 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "cycle-match-prev": () => findMode.cycleFindMatch(-1),
   "history-go-prev": (count = 1) => goHistory(-count),
   "history-go-next": (count = 1) => goHistory(count),
+  "follow-prev": followPreviousPage,
+  "follow-next": followNextPage,
   "tab-go-prev": createTabCommandAction("tab-go-prev"),
   "tab-go-next": createTabCommandAction("tab-go-next"),
   "duplicate-current-tab": createTabCommandAction("duplicate-current-tab"),

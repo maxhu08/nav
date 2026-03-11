@@ -23,6 +23,8 @@ export type ActionName =
   | "yank-current-tab-url"
   | "history-go-prev"
   | "history-go-next"
+  | "follow-prev"
+  | "follow-next"
   | "enable-find-mode"
   | "cycle-match-next"
   | "cycle-match-prev"
@@ -58,6 +60,8 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "yank-current-tab-url",
   "history-go-prev",
   "history-go-next",
+  "follow-prev",
+  "follow-next",
   "enable-find-mode",
   "cycle-match-next",
   "cycle-match-prev",
@@ -256,9 +260,11 @@ yi yank-image
 yI yank-image-url
 yy yank-current-tab-url
 
-# history
+# misc
 H history-go-prev
 L history-go-next
+[ follow-prev
+] follow-next
 
 # find
 / enable-find-mode
