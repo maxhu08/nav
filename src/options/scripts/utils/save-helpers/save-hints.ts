@@ -5,7 +5,7 @@ import {
   hintsCustomCSSTextareaEl,
   hintsImproveThumbnailMarkersCheckboxEl,
   hintsMinLabelLengthInputEl,
-  hintsPreferredSearchLabelsInputEl,
+  hintsReservedLabelsTextareaEl,
   hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorCheckboxEl,
   hintsShowCapitalizedLettersCheckboxEl,
@@ -26,5 +26,5 @@ export const saveHintsSettingsToDraft = (draft: Config): void => {
   draft.hints.customCSS = hintsCustomCSSTextareaEl.value;
   draft.hints.charset = hintsCharsetInputEl.value;
   draft.hints.avoidAdjacentPairs = hintsAvoidAdjacentPairsTextareaEl.value;
-  draft.hints.preferredSearchLabels = hintsPreferredSearchLabelsInputEl.value;
+  draft.hints.reservedLabels = hintsReservedLabelsTextareaEl.value;
 };

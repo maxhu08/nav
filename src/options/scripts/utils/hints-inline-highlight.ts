@@ -2,9 +2,9 @@ import {
   hintsCharsetHighlightEl,
   hintsCharsetInputEl,
   hintsCharsetStatusEl,
-  hintsPreferredSearchLabelsHighlightEl,
-  hintsPreferredSearchLabelsInputEl,
-  hintsPreferredSearchLabelsStatusEl
+  hintsReservedLabelsHighlightEl,
+  hintsReservedLabelsStatusEl,
+  hintsReservedLabelsTextareaEl
 } from "~/src/options/scripts/ui";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 
@@ -70,96 +70,117 @@ const renderCharsetHighlight = (
   return { hasError, html, errors };
 };
 
-type PreferredSearchToken = {
-  type: "label" | "space";
-  value: string;
-};
+const RESERVED_HINT_ELEMENTS = new Set(["search", "home"]);
 
-const tokenizePreferredSearchLabels = (value: string): PreferredSearchToken[] =>
-  Array.from(value.matchAll(/\s+|\S+/g), (match) => {
-    const token = match[0] ?? "";
-    return {
-      type: /^\s+$/.test(token) ? "space" : "label",
-      value: token
-    };
-  });
-
-const renderPreferredSearchLabelsHighlight = (
+const renderReservedLabelsHighlight = (
   value: string
 ): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
-  const tokens = tokenizePreferredSearchLabels(value);
-  const seenLabels = new Set<string>();
   const errors: EditorStatusError[] = [];
-  let previousLabelLength: number | null = null;
+  const seenDirectives = new Set<string>();
   let hasError = false;
-  let html = "";
 
-  tokens.forEach((token, index) => {
-    if (token.type === "space") {
-      const isBoundarySpace = index === 0 || index === tokens.length - 1;
-      const isSeparatorBetweenLabels =
-        tokens[index - 1]?.type === "label" && tokens[index + 1]?.type === "label";
-      const isValid = !isBoundarySpace && isSeparatorBetweenLabels;
+  const html = value
+    .split("\n")
+    .map((line, index) => {
+      const lineNumber = index + 1;
+      const trimmedLine = line.trim();
 
-      if (!isValid) {
+      if (!trimmedLine) {
+        return "";
+      }
+
+      if (trimmedLine.startsWith("#")) {
+        return wrapToken("hints-reserved-labels-token-comment", line);
+      }
+
+      if (line !== trimmedLine) {
         hasError = true;
         errors.push({
-          code: "invalid-separator",
-          message: `Expected whitespace between labels near "${token.value}".`
+          code: "invalid-spacing",
+          message: `line ${lineNumber}: Remove leading or trailing spaces.`
+        });
+        return wrapToken("hints-reserved-labels-token-invalid", line);
+      }
+
+      const match = line.match(/^@([a-z]+) ([a-z]+(?: [a-z]+)*)$/i);
+      if (!match) {
+        hasError = true;
+        errors.push({
+          code: "invalid-format",
+          message: `line ${lineNumber}: Expected format "@element label1 label2 label3" with single spaces.`
+        });
+        return wrapToken("hints-reserved-labels-token-invalid", line);
+      }
+
+      const directive = (match[1] ?? "").toLowerCase();
+      const labels = (match[2] ?? "").split(" ");
+
+      if (!RESERVED_HINT_ELEMENTS.has(directive)) {
+        hasError = true;
+        errors.push({
+          code: "invalid-directive",
+          message: `line ${lineNumber}: Unknown directive "@${directive}". Use @search or @home.`
         });
       }
-      html += wrapToken(
-        isValid ? "hints-inline-token-separator" : "hints-inline-token-invalid",
-        token.value
-      );
-      return;
-    }
 
-    const isValidLabel = /^[a-z]+$/i.test(token.value);
-    const hasExpectedLength =
-      previousLabelLength === null || token.value.length === previousLabelLength + 1;
-    const isDuplicate = isValidLabel && seenLabels.has(token.value.toLowerCase());
-    const isValid = isValidLabel && hasExpectedLength && !isDuplicate;
-
-    if (isValidLabel) {
-      previousLabelLength = token.value.length;
-      seenLabels.add(token.value.toLowerCase());
-    }
-
-    if (!isValid) {
-      hasError = true;
-
-      if (!isValidLabel) {
+      if (seenDirectives.has(directive)) {
+        hasError = true;
         errors.push({
-          code: "invalid-label",
-          message: `Label "${token.value}" must contain only letters a-z.`
-        });
-      } else if (!hasExpectedLength) {
-        errors.push({
-          code: "invalid-label-length",
-          message: `Label "${token.value}" must be exactly one character longer than the previous label.`
-        });
-      } else if (isDuplicate) {
-        errors.push({
-          code: "duplicate-label",
-          message: `Label "${token.value}" is duplicated.`
+          code: "duplicate-directive",
+          message: `line ${lineNumber}: Duplicate "@${directive}" directive.`
         });
       }
-    }
+      seenDirectives.add(directive);
 
-    html += wrapToken(
-      isValid ? "hints-inline-token-valid" : "hints-inline-token-invalid",
-      token.value
-    );
-  });
+      const seenLabels = new Set<string>();
+      let previousLabelLength: number | null = null;
+      const labelTokens = labels.map((label) => {
+        const normalizedLabel = label.toLowerCase();
+        const isValidLabel = /^[a-z]+$/i.test(label);
+        const hasExpectedLength =
+          previousLabelLength === null || label.length === previousLabelLength + 1;
+        const isDuplicate = seenLabels.has(normalizedLabel);
+        const isValid = isValidLabel && hasExpectedLength && !isDuplicate;
 
-  if (tokens.filter((token) => token.type === "label").length === 0) {
-    hasError = true;
-    errors.push({
-      code: "missing-labels",
-      message: "hints.preferredSearchLabels requires at least one label."
-    });
-  }
+        if (isValidLabel) {
+          seenLabels.add(normalizedLabel);
+          previousLabelLength = label.length;
+        }
+
+        if (!isValid) {
+          hasError = true;
+
+          if (!isValidLabel) {
+            errors.push({
+              code: "invalid-label",
+              message: `line ${lineNumber}: Label "${label}" must contain only letters a-z.`
+            });
+          } else if (!hasExpectedLength) {
+            errors.push({
+              code: "invalid-label-length",
+              message: `line ${lineNumber}: Label "${label}" must be exactly one character longer than the previous label.`
+            });
+          } else if (isDuplicate) {
+            errors.push({
+              code: "duplicate-label",
+              message: `line ${lineNumber}: Label "${label}" is duplicated.`
+            });
+          }
+        }
+
+        return wrapToken(
+          isValid ? "hints-reserved-labels-token-valid" : "hints-reserved-labels-token-invalid",
+          label
+        );
+      });
+
+      return [
+        wrapToken("hints-reserved-labels-token-directive", `@${directive}`),
+        wrapToken("hints-reserved-labels-token-separator", " "),
+        labelTokens.join(wrapToken("hints-reserved-labels-token-separator", " "))
+      ].join("");
+    })
+    .join("\n");
 
   return { hasError, html, errors };
 };
@@ -174,15 +195,13 @@ export const syncHintsCharsetHighlightScroll = (): void => {
   hintsCharsetHighlightEl.scrollLeft = hintsCharsetInputEl.scrollLeft;
 };
 
-export const syncHintsPreferredSearchLabelsHighlight = (): void => {
-  const { html, errors } = renderPreferredSearchLabelsHighlight(
-    hintsPreferredSearchLabelsInputEl.value
-  );
-
-  hintsPreferredSearchLabelsHighlightEl.innerHTML = html;
-  setEditorStatus(hintsPreferredSearchLabelsStatusEl, errors);
+export const syncHintsReservedLabelsHighlight = (): void => {
+  const { html, errors } = renderReservedLabelsHighlight(hintsReservedLabelsTextareaEl.value);
+  hintsReservedLabelsHighlightEl.innerHTML = html;
+  setEditorStatus(hintsReservedLabelsStatusEl, errors);
 };
 
-export const syncHintsPreferredSearchLabelsHighlightScroll = (): void => {
-  hintsPreferredSearchLabelsHighlightEl.scrollLeft = hintsPreferredSearchLabelsInputEl.scrollLeft;
+export const syncHintsReservedLabelsHighlightScroll = (): void => {
+  hintsReservedLabelsHighlightEl.scrollTop = hintsReservedLabelsTextareaEl.scrollTop;
+  hintsReservedLabelsHighlightEl.scrollLeft = hintsReservedLabelsTextareaEl.scrollLeft;
 };

@@ -276,7 +276,8 @@ c toggle-captions # requires watch mode
 
 export const DEFAULT_HINT_CHARSET = "sadfjklewcmupgh";
 
-export const DEFAULT_HINT_PREFERRED_SEARCH_LABELS = "kj kjf kjfd";
+export const DEFAULT_HINT_RESERVED_LABELS = `@search kj kjf kjfd
+@home sd sdf sdfj`;
 
 export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = `# double letters
 aa cc dd ee ff gg hh jj kk ll mm pp ss ww

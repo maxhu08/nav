@@ -270,26 +270,31 @@
             <p id="hints-avoid-adjacent-pairs-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
-            <p class="text-base text-white">hints.preferredSearchLabels</p>
+            <p class="text-base text-white">hints.reservedLabels</p>
             <p class="text-base text-neutral-500">
-              Controls which hint labels are preferred for the page's primary search bar or composer. Later labels are used when the page needs longer hint labels.
+              Reserves preferred hint labels for special elements.
               <br /><br />
-              Use lowercase or uppercase letter labels separated by exactly one space. Each next label must be 1 character longer than the previous one, so extra spaces, non-letters, or wrong lengths
-              are treated as errors.
+              See
+              <a href="docs.html#hints-reserved-labels" target="_blank" rel="noopener noreferrer" class="text-blue-500 transition hover:text-blue-600">docs#hints-reserved-labels</a>
+              for syntax and examples, and
+              <a href="docs.html#directive-names" target="_blank" rel="noopener noreferrer" class="text-blue-500 transition hover:text-blue-600">docs#directive-names</a>
+              for valid directive names.
+              <br /><br />
+              Each directive must be on its own line, with exactly one space after `@element` and between labels.
             </p>
-            <div id="hints-preferred-search-labels-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
-              <pre id="hints-preferred-search-labels-highlight" aria-hidden="true" class="hints-inline-editor-layer"></pre>
-              <input
-                id="hints-preferred-search-labels-input"
-                type="text"
-                aria-label="hints preferred search labels"
+            <div id="hints-reserved-labels-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <pre id="hints-reserved-labels-highlight" aria-hidden="true" class="hints-reserved-labels-editor-layer"></pre>
+              <textarea
+                id="hints-reserved-labels-textarea"
+                aria-label="hints reserved labels"
                 autocomplete="off"
                 autocapitalize="off"
                 spellcheck="false"
-                class="hints-inline-editor-layer hints-inline-input w-full bg-transparent px-2 py-1 text-base placeholder-neutral-500 outline-none"
-              />
+                rows="3"
+                class="hints-reserved-labels-editor-layer hints-reserved-labels-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
+              ></textarea>
             </div>
-            <p id="hints-preferred-search-labels-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <p id="hints-reserved-labels-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
             <p class="text-base text-white">hints.styling</p>

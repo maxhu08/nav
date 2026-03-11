@@ -827,7 +827,6 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       showWatchActivationIndicator(video);
       const siteCaptionsControl = findSiteToggleControl(video, "captions");
       const hadTracks = getToggleableTextTracks(video).length > 0;
-      const wasCaptionsOn = getCaptionsState(video, siteCaptionsControl);
       if (siteCaptionsControl) {
         siteCaptionsControl.click();
         return true;

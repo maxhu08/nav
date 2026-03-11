@@ -1,7 +1,7 @@
 import {
   hintsCharsetStatusEl,
   hintsAvoidAdjacentPairsStatusEl,
-  hintsPreferredSearchLabelsStatusEl,
+  hintsReservedLabelsStatusEl,
   hotkeysMappingsStatusEl,
   rulesUrlsBlacklistStatusEl,
   rulesUrlsWhitelistStatusEl
@@ -26,7 +26,7 @@ const SAVE_ERROR_FIELDS = [
   { path: "rules.urls.whitelist", statusEl: rulesUrlsWhitelistStatusEl },
   { path: "hotkeys.mappings", statusEl: hotkeysMappingsStatusEl },
   { path: "hints.charset", statusEl: hintsCharsetStatusEl },
-  { path: "hints.preferredSearchLabels", statusEl: hintsPreferredSearchLabelsStatusEl },
+  { path: "hints.reservedLabels", statusEl: hintsReservedLabelsStatusEl },
   { path: "hints.avoidAdjacentPairs", statusEl: hintsAvoidAdjacentPairsStatusEl }
 ] as const;
 

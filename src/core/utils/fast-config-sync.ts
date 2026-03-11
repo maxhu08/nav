@@ -3,8 +3,8 @@ import {
   setHighlightThumbnails,
   setHintCSS,
   setHintCharset,
+  setReservedHintLabels,
   setMinHintLabelLength,
-  setPreferredSearchLabels,
   setShowCapitalizedLetters
 } from "~/src/core/actions/hints";
 import { type FastConfig, getFastConfig } from "~/src/utils/fast-config";
@@ -24,7 +24,7 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.applyUrlRules(fastConfig.rules.urls);
   setHintCharset(fastConfig.hints.charset);
   setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
-  setPreferredSearchLabels(fastConfig.hints.preferredSearchLabels);
+  setReservedHintLabels(fastConfig.hints.reservedLabels);
   setMinHintLabelLength(fastConfig.hints.minLabelLength);
   setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);

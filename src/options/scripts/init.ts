@@ -5,6 +5,8 @@ import { listenToKeys } from "~/src/options/scripts/keybinds";
 import {
   hintsAvoidAdjacentPairsContainerEl,
   hintsAvoidAdjacentPairsTextareaEl,
+  hintsReservedLabelsContainerEl,
+  hintsReservedLabelsTextareaEl,
   hotkeysMappingsContainerEl,
   hotkeysMappingsTextareaEl,
   rulesUrlsBlacklistContainerEl,
@@ -66,6 +68,7 @@ void getConfig().then((config) => {
     hintsAvoidAdjacentPairsContainerEl,
     hintsAvoidAdjacentPairsTextareaEl
   );
+  lockTextareaContainerHeight(hintsReservedLabelsContainerEl, hintsReservedLabelsTextareaEl);
 });
 
 listenToInputs();

@@ -71,17 +71,13 @@ export const hintsAvoidAdjacentPairsHighlightEl = getElement<HTMLPreElement>(
 export const hintsAvoidAdjacentPairsStatusEl = getElement<HTMLParagraphElement>(
   "hints-avoid-adjacent-pairs-status"
 );
-export const hintsPreferredSearchLabelsContainerEl = getElement<HTMLDivElement>(
-  "hints-preferred-search-labels-container"
+export const [hintsReservedLabelsContainerEl, hintsReservedLabelsTextareaEl] =
+  getContainerAndTextarea("hints-reserved-labels");
+export const hintsReservedLabelsHighlightEl = getElement<HTMLPreElement>(
+  "hints-reserved-labels-highlight"
 );
-export const hintsPreferredSearchLabelsInputEl = getElement<HTMLInputElement>(
-  "hints-preferred-search-labels-input"
-);
-export const hintsPreferredSearchLabelsHighlightEl = getElement<HTMLPreElement>(
-  "hints-preferred-search-labels-highlight"
-);
-export const hintsPreferredSearchLabelsStatusEl = getElement<HTMLParagraphElement>(
-  "hints-preferred-search-labels-status"
+export const hintsReservedLabelsStatusEl = getElement<HTMLParagraphElement>(
+  "hints-reserved-labels-status"
 );
 export const hintsStylingDefaultButtonEl = getElement<HTMLButtonElement>(
   "hints-styling-default-button"

@@ -19,7 +19,13 @@ const IS_MAC = navigator.userAgent.includes("Mac");
 let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
-let preferredSearchLabels: string[] = [];
+let reservedHintLabels: {
+  search: string[];
+  home: string[];
+} = {
+  search: [],
+  home: []
+};
 let minHintLabelLength = 2;
 let showCapitalizedLetters = true;
 let highlightThumbnails = false;
@@ -679,12 +685,12 @@ const serializeBlockedPairs = (
 
 const getLabelPlanCacheKey = (
   count: number,
-  reservedLabel: string | null,
+  reservedLabels: string[],
   blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
 ): string => {
   return [
     count,
-    reservedLabel ?? "",
+    reservedLabels.join(","),
     minHintLabelLength,
     hintAlphabet,
     Array.from(reservedHintPrefixes).sort().join(","),
@@ -694,7 +700,7 @@ const getLabelPlanCacheKey = (
 
 const buildHintLabels = (
   count: number,
-  reservedLabel: string | null = null
+  reservedLabels: string[] = []
 ): { labelLength: number; labels: string[] } => {
   if (count <= 0) {
     return { labelLength: 0, labels: [] };
@@ -703,7 +709,7 @@ const buildHintLabels = (
   const buildLabels = (
     blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
   ): { labelLength: number; labels: string[] } => {
-    const cacheKey = getLabelPlanCacheKey(count, reservedLabel, blockedPairs);
+    const cacheKey = getLabelPlanCacheKey(count, reservedLabels, blockedPairs);
     const cachedPlan = labelPlanCache.get(cacheKey);
 
     if (cachedPlan) {
@@ -797,7 +803,10 @@ const buildHintLabels = (
 
         if (bucketCount <= 0) continue;
 
-        if (remainingLength === 1 && doesLabelConflictWithReservedLabel(nextLabel, reservedLabel)) {
+        if (
+          remainingLength === 1 &&
+          doesLabelConflictWithReservedLabels(nextLabel, reservedLabels)
+        ) {
           continue;
         }
 
@@ -820,14 +829,14 @@ const buildHintLabels = (
 
     const result = {
       labelLength,
-      labels: labels.slice(0, count - (reservedLabel ? 1 : 0))
+      labels: labels.slice(0, count - reservedLabels.length)
     };
     labelPlanCache.set(cacheKey, result);
     return result;
   };
 
   const labels = buildLabels(avoidedAdjacentHintPairs);
-  if (labels.labels.length === count - (reservedLabel ? 1 : 0)) {
+  if (labels.labels.length === count - reservedLabels.length) {
     return labels;
   }
 
@@ -843,6 +852,14 @@ const SEARCH_ATTRIBUTE_PATTERNS = [
   /chat/i,
   /message/i,
   /composer/i
+];
+
+const HOME_ATTRIBUTE_PATTERNS = [
+  /\bhome\b/i,
+  /\bhomepage\b/i,
+  /\bmain\b/i,
+  /\bstart\b/i,
+  /\bdashboard\b/i
 ];
 
 const getSearchCandidateScore = (element: HTMLElement): number => {
@@ -922,7 +939,68 @@ const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null 
   return bestIndex;
 };
 
-const isPreferredSearchLabelValid = (label: string, labelLength: number): boolean => {
+const getHomeCandidateScore = (element: HTMLElement): number => {
+  const rect = getMarkerRect(element);
+  if (!rect) return Number.NEGATIVE_INFINITY;
+
+  let score = 0;
+  const attributeText = [
+    element.getAttribute("name"),
+    element.getAttribute("id"),
+    element.getAttribute("aria-label"),
+    element.getAttribute("data-testid"),
+    element.getAttribute("role"),
+    element.getAttribute("title")
+  ]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ");
+
+  for (const pattern of HOME_ATTRIBUTE_PATTERNS) {
+    if (pattern.test(attributeText)) {
+      score += 180;
+      break;
+    }
+  }
+
+  if (
+    element instanceof HTMLAnchorElement &&
+    (element.getAttribute("href") === "/" || element.href === `${window.location.origin}/`)
+  ) {
+    score += 220;
+  }
+
+  const relValue = element.getAttribute("rel")?.toLowerCase() ?? "";
+  if (relValue.split(/\s+/).includes("home")) {
+    score += 180;
+  }
+
+  if (element.getAttribute("aria-current")?.toLowerCase() === "page") {
+    score += 40;
+  }
+
+  score += Math.min(220, rect.width) / 8;
+  score += Math.min(120, rect.height) / 12;
+
+  return score;
+};
+
+const getPreferredHomeElementIndex = (elements: HTMLElement[]): number | null => {
+  let bestIndex: number | null = null;
+  let bestScore = 180;
+
+  elements.forEach((element, index) => {
+    const score = getHomeCandidateScore(element);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+};
+
+const isPreferredLabelValid = (label: string, labelLength: number): boolean => {
   if (label.length < labelLength) return false;
 
   const alphabet = new Set(hintAlphabet.split(""));
@@ -946,20 +1024,23 @@ const isPreferredSearchLabelValid = (label: string, labelLength: number): boolea
   return true;
 };
 
-const doesLabelConflictWithReservedLabel = (
-  label: string,
-  reservedLabel: string | null
-): boolean => {
-  if (!reservedLabel) return false;
-
-  return label.startsWith(reservedLabel) || reservedLabel.startsWith(label);
-};
+const doesLabelConflictWithReservedLabels = (label: string, reservedLabels: string[]): boolean =>
+  reservedLabels.some(
+    (reservedLabel) => label.startsWith(reservedLabel) || reservedLabel.startsWith(label)
+  );
 
 const getPreferredSearchLabel = (labelLength: number): string | null => {
-  const label = preferredSearchLabels.find(
+  const label = reservedHintLabels.search.find(
     (preferredSearchLabel) => preferredSearchLabel.length >= labelLength
   );
-  return label && isPreferredSearchLabelValid(label, labelLength) ? label : null;
+  return label && isPreferredLabelValid(label, labelLength) ? label : null;
+};
+
+const getPreferredHomeLabel = (labelLength: number): string | null => {
+  const label = reservedHintLabels.home.find(
+    (preferredHomeLabel) => preferredHomeLabel.length >= labelLength
+  );
+  return label && isPreferredLabelValid(label, labelLength) ? label : null;
 };
 
 const createOverlay = (): HTMLDivElement => {
@@ -1756,12 +1837,40 @@ export const activateHints = (
   if (elements.length === 0) return false;
 
   const preferredSearchElementIndex = getPreferredSearchElementIndex(elements);
+  const preferredHomeElementIndex = getPreferredHomeElementIndex(elements);
   const initialLabelPlan = buildHintLabels(elements.length);
-  const reservedPreferredLabel =
-    preferredSearchElementIndex === null
-      ? null
-      : getPreferredSearchLabel(initialLabelPlan.labelLength);
-  const { labels } = buildHintLabels(elements.length, reservedPreferredLabel);
+  const preferredLabelsByIndex = new Map<number, string>();
+
+  if (preferredSearchElementIndex !== null) {
+    const preferredSearchLabel = getPreferredSearchLabel(initialLabelPlan.labelLength);
+    if (preferredSearchLabel) {
+      preferredLabelsByIndex.set(preferredSearchElementIndex, preferredSearchLabel);
+    }
+  }
+
+  if (preferredHomeElementIndex !== null) {
+    const preferredHomeLabel = getPreferredHomeLabel(initialLabelPlan.labelLength);
+    if (preferredHomeLabel) {
+      const existingLabel = preferredLabelsByIndex.get(preferredHomeElementIndex);
+      if (!existingLabel) {
+        preferredLabelsByIndex.set(preferredHomeElementIndex, preferredHomeLabel);
+      }
+    }
+  }
+
+  const reservedLabelsByIndex = new Map<number, string>();
+  const reservedLabels: string[] = [];
+
+  for (const [index, label] of preferredLabelsByIndex.entries()) {
+    if (doesLabelConflictWithReservedLabels(label, reservedLabels)) {
+      continue;
+    }
+
+    reservedLabelsByIndex.set(index, label);
+    reservedLabels.push(label);
+  }
+
+  const { labels } = buildHintLabels(elements.length, reservedLabels);
   const overlay = createOverlay();
   const markers: HintMarker[] = [];
   let labelIndex = 0;
@@ -1770,10 +1879,7 @@ export const activateHints = (
     const rect = getMarkerRect(element);
     if (!rect) return;
 
-    const label =
-      reservedPreferredLabel && index === preferredSearchElementIndex
-        ? reservedPreferredLabel
-        : labels[labelIndex++];
+    const label = reservedLabelsByIndex.get(index) ?? labels[labelIndex++];
 
     if (!label) return;
     const { marker, letters, renderedTyped } = createMarker(label);
@@ -1840,8 +1946,11 @@ export const setAvoidedAdjacentHintPairs = (
   }
 };
 
-export const setPreferredSearchLabels = (labels: string[]): void => {
-  preferredSearchLabels = labels;
+export const setReservedHintLabels = (labels: { search: string[]; home: string[] }): void => {
+  reservedHintLabels = {
+    search: [...labels.search],
+    home: [...labels.home]
+  };
 
   if (hintState.active) {
     exitHints();

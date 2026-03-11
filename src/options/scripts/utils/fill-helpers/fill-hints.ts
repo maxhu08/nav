@@ -6,7 +6,7 @@ import {
   hintsCustomCSSTextareaEl,
   hintsImproveThumbnailMarkersCheckboxEl,
   hintsMinLabelLengthInputEl,
-  hintsPreferredSearchLabelsInputEl,
+  hintsReservedLabelsTextareaEl,
   hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorColorSectionEl,
   hintsShowActivationIndicatorCheckboxEl,
@@ -18,7 +18,7 @@ import { syncHintsAvoidAdjacentPairsHighlight } from "~/src/options/scripts/util
 import { refreshHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
 import {
   syncHintsCharsetHighlight,
-  syncHintsPreferredSearchLabelsHighlight
+  syncHintsReservedLabelsHighlight
 } from "~/src/options/scripts/utils/hints-inline-highlight";
 import { syncColorInputControl } from "~/src/options/scripts/utils/color-inputs";
 
@@ -59,12 +59,12 @@ export const fillHintsInputs = (config: Config): void => {
   hintsCharsetInputEl.value = config.hints.charset;
   hintsMinLabelLengthInputEl.value = String(config.hints.minLabelLength);
   hintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
-  hintsPreferredSearchLabelsInputEl.value = config.hints.preferredSearchLabels;
+  hintsReservedLabelsTextareaEl.value = config.hints.reservedLabels;
   setHintsStylingButtonState(config.hints.styling);
   syncHintsActivationIndicatorColorControls(config.hints.showActivationIndicator);
   syncColorInputControl(hintsShowActivationIndicatorColorInputEl);
   refreshHintsCustomCSSHighlight();
   syncHintsCharsetHighlight();
   syncHintsAvoidAdjacentPairsHighlight();
-  syncHintsPreferredSearchLabelsHighlight();
+  syncHintsReservedLabelsHighlight();
 };

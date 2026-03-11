@@ -8,8 +8,8 @@ import {
   hintsCharsetInputEl,
   hintsMinLabelLengthContainerEl,
   hintsMinLabelLengthInputEl,
-  hintsPreferredSearchLabelsContainerEl,
-  hintsPreferredSearchLabelsInputEl,
+  hintsReservedLabelsContainerEl,
+  hintsReservedLabelsTextareaEl,
   hintsShowActivationIndicatorColorContainerEl,
   hintsShowActivationIndicatorColorInputEl,
   hintsShowActivationIndicatorCheckboxEl,
@@ -44,8 +44,8 @@ import {
 import {
   syncHintsCharsetHighlight,
   syncHintsCharsetHighlightScroll,
-  syncHintsPreferredSearchLabelsHighlight,
-  syncHintsPreferredSearchLabelsHighlightScroll
+  syncHintsReservedLabelsHighlight,
+  syncHintsReservedLabelsHighlightScroll
 } from "~/src/options/scripts/utils/hints-inline-highlight";
 import {
   syncHintsActivationIndicatorColorControls,
@@ -179,21 +179,21 @@ export const listenToInputs = (): void => {
     hintsMinLabelLengthContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
-  hintsPreferredSearchLabelsInputEl.addEventListener("focus", () => {
-    hintsPreferredSearchLabelsContainerEl.classList.replace("border-transparent", "border-sky-500");
+  hintsReservedLabelsTextareaEl.addEventListener("focus", () => {
+    hintsReservedLabelsContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
-  hintsPreferredSearchLabelsInputEl.addEventListener("input", () => {
-    syncHintsPreferredSearchLabelsHighlight();
-    syncHintsPreferredSearchLabelsHighlightScroll();
+  hintsReservedLabelsTextareaEl.addEventListener("input", () => {
+    syncHintsReservedLabelsHighlight();
+    syncHintsReservedLabelsHighlightScroll();
   });
 
-  hintsPreferredSearchLabelsInputEl.addEventListener("scroll", () => {
-    syncHintsPreferredSearchLabelsHighlightScroll();
+  hintsReservedLabelsTextareaEl.addEventListener("scroll", () => {
+    syncHintsReservedLabelsHighlightScroll();
   });
 
-  hintsPreferredSearchLabelsInputEl.addEventListener("blur", () => {
-    hintsPreferredSearchLabelsContainerEl.classList.replace("border-sky-500", "border-transparent");
+  hintsReservedLabelsTextareaEl.addEventListener("blur", () => {
+    hintsReservedLabelsContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   hintsAvoidAdjacentPairsTextareaEl.addEventListener("focus", () => {

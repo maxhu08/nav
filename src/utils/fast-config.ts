@@ -7,7 +7,7 @@ import {
 import {
   type ActionName,
   DEFAULT_HINT_CHARSET,
-  DEFAULT_HINT_PREFERRED_SEARCH_LABELS,
+  DEFAULT_HINT_RESERVED_LABELS,
   DEFAULT_HOTKEY_MAPPINGS,
   type HotkeyActionMode,
   type HotkeyMappings,
@@ -42,11 +42,15 @@ export type FastConfig = {
     css: string;
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
-    preferredSearchLabels: string[];
+    reservedLabels: {
+      search: string[];
+      home: string[];
+    };
   };
 };
 
 const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch"];
+const RESERVED_HINT_ELEMENTS = new Set(["search", "home"] as const);
 
 const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => {
   if (typeof value !== "object" || value === null) {
@@ -72,6 +76,17 @@ const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => 
   return true;
 };
 
+const isReservedLabelsShapeValid = (
+  value: unknown
+): value is FastConfig["hints"]["reservedLabels"] => {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Array.isArray((value as Record<string, unknown>).search) &&
+    Array.isArray((value as Record<string, unknown>).home)
+  );
+};
+
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
   return (
     isHotkeyMappingsShapeValid(value?.hotkeys?.mappings) &&
@@ -86,7 +101,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
     value?.hints?.avoidAdjacentPairs !== null &&
-    Array.isArray(value?.hints?.preferredSearchLabels)
+    isReservedLabelsShapeValid(value?.hints?.reservedLabels)
   );
 };
 
@@ -179,30 +194,78 @@ const parseAvoidAdjacentPairsValue = (
   return normalizedPairs;
 };
 
-const parsePreferredSearchLabelsValue = (value: string): string[] => {
-  const normalizedLabels: string[] = [];
-  const seenLabels = new Set<string>();
-  let previousLabelLength: number | null = null;
+const parsePreferredLabelsValue = (value: string): string[] => {
+  const parseLabels = (rawValue: string): string[] => {
+    const normalizedLabels: string[] = [];
+    const seenLabels = new Set<string>();
+    let previousLabelLength: number | null = null;
 
-  for (const segment of value
-    .toLowerCase()
-    .split(/\s+/)
-    .map((part) => part.trim())) {
-    const hasExpectedLength =
-      previousLabelLength === null || segment.length === previousLabelLength + 1;
+    for (const segment of rawValue
+      .toLowerCase()
+      .split(/\s+/)
+      .map((part) => part.trim())) {
+      const hasExpectedLength =
+        previousLabelLength === null || segment.length === previousLabelLength + 1;
 
-    if (!/^[a-z]+$/.test(segment) || seenLabels.has(segment) || !hasExpectedLength) {
+      if (!/^[a-z]+$/.test(segment) || seenLabels.has(segment) || !hasExpectedLength) {
+        continue;
+      }
+
+      seenLabels.add(segment);
+      normalizedLabels.push(segment);
+      previousLabelLength = segment.length;
+    }
+
+    return normalizedLabels;
+  };
+
+  return parseLabels(value);
+};
+
+const parseReservedLabelsDirectives = (
+  value: string
+): Partial<FastConfig["hints"]["reservedLabels"]> => {
+  const result: Partial<FastConfig["hints"]["reservedLabels"]> = {};
+
+  for (const line of value.split("\n")) {
+    const trimmedLine = line.trim();
+    if (!trimmedLine || trimmedLine.startsWith("#")) {
       continue;
     }
 
-    seenLabels.add(segment);
-    normalizedLabels.push(segment);
-    previousLabelLength = segment.length;
+    if (line !== trimmedLine) {
+      continue;
+    }
+
+    const match = line.match(/^@([a-z]+) ([a-z]+(?: [a-z]+)*)$/i);
+    if (!match) {
+      continue;
+    }
+
+    const element = match[1]?.toLowerCase() as keyof FastConfig["hints"]["reservedLabels"];
+    const labelsText = match[2] ?? "";
+    if (!RESERVED_HINT_ELEMENTS.has(element)) {
+      continue;
+    }
+
+    const parsedLabels = parsePreferredLabelsValue(labelsText);
+    if (parsedLabels.length === 0) {
+      continue;
+    }
+
+    result[element] = parsedLabels;
   }
 
-  return normalizedLabels.length > 0
-    ? normalizedLabels
-    : parsePreferredSearchLabelsValue(DEFAULT_HINT_PREFERRED_SEARCH_LABELS);
+  return result;
+};
+
+const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedLabels"] => {
+  const result = parseReservedLabelsDirectives(value);
+  const fallbackResult = parseReservedLabelsDirectives(DEFAULT_HINT_RESERVED_LABELS);
+  return {
+    search: result.search ?? fallbackResult.search ?? [],
+    home: result.home ?? fallbackResult.home ?? []
+  };
 };
 
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
@@ -298,7 +361,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
       css: resolveHintCSS(config),
       charset: parseHintCharsetValue(config.hints.charset),
       avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),
-      preferredSearchLabels: parsePreferredSearchLabelsValue(config.hints.preferredSearchLabels)
+      reservedLabels: parseReservedLabelsValue(config.hints.reservedLabels)
     }
   };
 };
