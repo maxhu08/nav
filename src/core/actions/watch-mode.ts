@@ -9,6 +9,7 @@ import {
 } from "~/src/lib/inline-icons";
 import { getDeepActiveElement } from "~/src/core/utils/isEditableTarget";
 import { FOCUS_INDICATOR_EVENT, WATCH_HINTS_ID } from "~/src/core/utils/get-ui";
+import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 
 type WatchControllerDeps = {
   isWatchMode: () => boolean;
@@ -29,6 +30,7 @@ type WatchActionTileOptions = {
   sequence: string;
   compact?: boolean;
 };
+type SiteToggleControlKind = "fullscreen" | "mute" | "captions" | "loop";
 
 const MARKER_STYLE_ATTRIBUTE = "data-nav-hint-marker";
 const MARKER_VARIANT_STYLE_ATTRIBUTE = "data-nav-hint-marker-variant";
@@ -120,15 +122,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
   const isLikelyFullscreenControl = (element: HTMLElement): boolean => {
     const className = typeof element.className === "string" ? element.className : "";
-    const label = [
-      element.getAttribute("aria-label"),
-      element.getAttribute("title"),
-      element.getAttribute("data-title-no-tooltip"),
-      element.getAttribute("data-tooltip-target-id"),
-      element.textContent
-    ]
-      .join(" ")
-      .toLowerCase();
+    const label = getControlLabelText(element);
 
     return (
       className.toLowerCase().includes("fullscreen") ||
@@ -139,7 +133,90 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     );
   };
 
-  const findSiteFullscreenControl = (video: HTMLVideoElement): HTMLElement | null => {
+  const getControlLabelText = (element: HTMLElement): string => {
+    return [
+      element.getAttribute("aria-label"),
+      element.getAttribute("title"),
+      element.getAttribute("data-title-no-tooltip"),
+      element.getAttribute("data-tooltip-target-id"),
+      element.textContent
+    ]
+      .join(" ")
+      .toLowerCase();
+  };
+
+  const isLikelyMuteControl = (element: HTMLElement): boolean => {
+    const className = typeof element.className === "string" ? element.className : "";
+    const label = getControlLabelText(element);
+    return (
+      className.toLowerCase().includes("mute") ||
+      className.toLowerCase().includes("volume") ||
+      label.includes("mute") ||
+      label.includes("unmute") ||
+      label.includes("volume")
+    );
+  };
+
+  const isLikelyCaptionsControl = (element: HTMLElement): boolean => {
+    const className = typeof element.className === "string" ? element.className : "";
+    const label = getControlLabelText(element);
+    return (
+      className.toLowerCase().includes("caption") ||
+      className.toLowerCase().includes("subtitle") ||
+      label.includes("caption") ||
+      label.includes("subtitles") ||
+      label.includes("subtitle") ||
+      label.includes("cc")
+    );
+  };
+
+  const isLikelyLoopControl = (element: HTMLElement): boolean => {
+    const className = typeof element.className === "string" ? element.className : "";
+    const label = getControlLabelText(element);
+    return (
+      className.toLowerCase().includes("loop") ||
+      className.toLowerCase().includes("repeat") ||
+      label.includes("loop") ||
+      label.includes("repeat")
+    );
+  };
+
+  const findYouTubeToggleControl = (
+    video: HTMLVideoElement,
+    kind: SiteToggleControlKind
+  ): HTMLElement | null => {
+    const playerRoot = video.closest(".html5-video-player");
+    if (!(playerRoot instanceof HTMLElement)) {
+      return null;
+    }
+
+    const selectorByKind: Partial<Record<SiteToggleControlKind, string>> = {
+      fullscreen: ".ytp-fullscreen-button",
+      mute: ".ytp-mute-button",
+      captions: ".ytp-subtitles-button"
+    };
+    const selector = selectorByKind[kind];
+    if (!selector) {
+      return null;
+    }
+
+    const control = playerRoot.querySelector(selector);
+    if (!(control instanceof HTMLElement) || !isInteractiveControl(control)) {
+      return null;
+    }
+
+    return control;
+  };
+
+  const findSiteToggleControl = (
+    video: HTMLVideoElement,
+    kind: SiteToggleControlKind
+  ): HTMLElement | null => {
+    const youtubeControl = findYouTubeToggleControl(video, kind);
+    if (youtubeControl) {
+      return youtubeControl;
+    }
+
     const containerCandidates = [
       video.closest(".html5-video-player"),
       video.closest("[class*='player' i]"),
@@ -147,13 +224,47 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       video.parentElement
     ].filter((candidate): candidate is HTMLElement => candidate instanceof HTMLElement);
 
-    const selectors = [
-      ".ytp-fullscreen-button",
-      "[aria-label*='fullscreen' i]",
-      "[title*='fullscreen' i]",
-      "[class*='fullscreen' i]",
-      "[data-testid*='fullscreen' i]"
-    ].join(", ");
+    const controlSelectorsByKind: Record<SiteToggleControlKind, string> = {
+      fullscreen: [
+        ".ytp-fullscreen-button",
+        "[aria-label*='fullscreen' i]",
+        "[title*='fullscreen' i]",
+        "[class*='fullscreen' i]",
+        "[data-testid*='fullscreen' i]"
+      ].join(", "),
+      mute: [
+        ".ytp-mute-button",
+        "[aria-label*='mute' i]",
+        "[aria-label*='unmute' i]",
+        "[title*='mute' i]",
+        "[class*='mute' i]",
+        "[class*='volume' i]",
+        "[data-testid*='mute' i]",
+        "[data-testid*='volume' i]"
+      ].join(", "),
+      captions: [
+        ".ytp-subtitles-button",
+        "[aria-label*='caption' i]",
+        "[aria-label*='subtitle' i]",
+        "[title*='caption' i]",
+        "[title*='subtitle' i]",
+        "[class*='caption' i]",
+        "[class*='subtitle' i]",
+        "[data-testid*='caption' i]",
+        "[data-testid*='subtitle' i]"
+      ].join(", "),
+      loop: [
+        "[aria-label*='loop' i]",
+        "[aria-label*='repeat' i]",
+        "[title*='loop' i]",
+        "[title*='repeat' i]",
+        "[class*='loop' i]",
+        "[class*='repeat' i]",
+        "[data-testid*='loop' i]",
+        "[data-testid*='repeat' i]"
+      ].join(", ")
+    };
+    const selectors = controlSelectorsByKind[kind];
 
     for (const root of containerCandidates) {
       const controls = Array.from(root.querySelectorAll(selectors)).filter(
@@ -170,7 +281,15 @@ export const createWatchController = (deps: WatchControllerDeps) => {
           continue;
         }
 
-        if (!isInteractiveControl(control) || !isLikelyFullscreenControl(control)) {
+        const isLikelyControl =
+          kind === "fullscreen"
+            ? isLikelyFullscreenControl(control)
+            : kind === "mute"
+              ? isLikelyMuteControl(control)
+              : kind === "captions"
+                ? isLikelyCaptionsControl(control)
+                : isLikelyLoopControl(control);
+        if (!isInteractiveControl(control) || !isLikelyControl) {
           continue;
         }
 
@@ -363,6 +482,47 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     return true;
   };
 
+  const showWatchToggleToast = (message: string): void => {
+    ensureToastWrapper();
+    const toast = getToastApi();
+    toast?.info(message);
+  };
+
+  const getControlPressedState = (control: HTMLElement): boolean | null => {
+    const ariaPressed = control.getAttribute("aria-pressed");
+    if (ariaPressed === "true") {
+      return true;
+    }
+    if (ariaPressed === "false") {
+      return false;
+    }
+
+    const ariaChecked = control.getAttribute("aria-checked");
+    if (ariaChecked === "true") {
+      return true;
+    }
+    if (ariaChecked === "false") {
+      return false;
+    }
+
+    return null;
+  };
+
+  const getCaptionsState = (video: HTMLVideoElement, control: HTMLElement | null): boolean => {
+    if (control) {
+      if (control.classList.contains("ytp-subtitles-button")) {
+        return control.classList.contains("ytp-subtitles-button-enabled");
+      }
+
+      const pressedState = getControlPressedState(control);
+      if (pressedState !== null) {
+        return pressedState;
+      }
+    }
+
+    return getToggleableTextTracks(video).some((track) => track.mode === "showing");
+  };
+
   const renderWatchHintsOverlay = (video: HTMLVideoElement): void => {
     const overlay = getWatchHintsOverlay();
     overlay.replaceChildren();
@@ -505,7 +665,19 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
-      video.loop = !video.loop;
+      const wasLooping = video.loop;
+      const siteLoopControl = findSiteToggleControl(video, "loop");
+      if (siteLoopControl) {
+        siteLoopControl.click();
+      } else {
+        video.loop = !video.loop;
+      }
+      const isLooping = siteLoopControl
+        ? video.loop === wasLooping
+          ? !wasLooping
+          : video.loop
+        : video.loop;
+      showWatchToggleToast(isLooping ? "Loop on" : "Loop off");
       exitWatchMode();
       return true;
     },
@@ -516,7 +688,19 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
-      video.muted = !video.muted;
+      const wasMuted = video.muted;
+      const siteMuteControl = findSiteToggleControl(video, "mute");
+      if (siteMuteControl) {
+        siteMuteControl.click();
+      } else {
+        video.muted = !video.muted;
+      }
+      const isMuted = siteMuteControl
+        ? video.muted === wasMuted
+          ? !wasMuted
+          : video.muted
+        : video.muted;
+      showWatchToggleToast(isMuted ? "Video muted" : "Video unmuted");
       exitWatchMode();
       return true;
     },
@@ -527,11 +711,27 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
-
-      if (!toggleWatchVideoTextTracks(video)) {
-        return false;
+      const siteCaptionsControl = findSiteToggleControl(video, "captions");
+      const hadTracks = getToggleableTextTracks(video).length > 0;
+      const wasCaptionsOn = getCaptionsState(video, siteCaptionsControl);
+      if (siteCaptionsControl) {
+        siteCaptionsControl.click();
+      } else if (!toggleWatchVideoTextTracks(video)) {
+        showWatchToggleToast("Captions unavailable");
+        exitWatchMode();
+        return true;
       }
 
+      let captionsOn = getCaptionsState(video, siteCaptionsControl);
+      if (captionsOn === wasCaptionsOn) {
+        if (!siteCaptionsControl && hadTracks && toggleWatchVideoTextTracks(video)) {
+          captionsOn = getToggleableTextTracks(video).some((track) => track.mode === "showing");
+        } else {
+          captionsOn = !wasCaptionsOn;
+        }
+      }
+
+      showWatchToggleToast(captionsOn ? "Captions on" : "Captions off");
       exitWatchMode();
       return true;
     },
@@ -565,7 +765,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
         return true;
       }
 
-      const siteFullscreenControl = findSiteFullscreenControl(video);
+      const siteFullscreenControl = findSiteToggleControl(video, "fullscreen");
       if (siteFullscreenControl) {
         siteFullscreenControl.click();
         exitWatchMode();
@@ -587,7 +787,16 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
-      video.loop = !video.loop;
+      const wasLooping = video.loop;
+      const siteLoopControl = findSiteToggleControl(video, "loop");
+      if (siteLoopControl) {
+        siteLoopControl.click();
+      } else {
+        video.loop = !video.loop;
+      }
+      if (!siteLoopControl && video.loop === wasLooping) {
+        video.loop = !video.loop;
+      }
       return true;
     },
     toggleMute: (): boolean => {
@@ -597,7 +806,16 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
-      video.muted = !video.muted;
+      const wasMuted = video.muted;
+      const siteMuteControl = findSiteToggleControl(video, "mute");
+      if (siteMuteControl) {
+        siteMuteControl.click();
+      } else {
+        video.muted = !video.muted;
+      }
+      if (!siteMuteControl && video.muted === wasMuted) {
+        video.muted = !video.muted;
+      }
       return true;
     },
     toggleCaptions: (): boolean => {
@@ -607,6 +825,18 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
+      const siteCaptionsControl = findSiteToggleControl(video, "captions");
+      const hadTracks = getToggleableTextTracks(video).length > 0;
+      const wasCaptionsOn = getCaptionsState(video, siteCaptionsControl);
+      if (siteCaptionsControl) {
+        siteCaptionsControl.click();
+        return true;
+      }
+
+      if (!hadTracks) {
+        return false;
+      }
+
       return toggleWatchVideoTextTracks(video);
     }
   };
