@@ -284,8 +284,7 @@ export const DEFAULT_HINT_CHARSET = "sadfjklewcmupgh";
 
 export const DEFAULT_HINT_RESERVED_LABELS = `@search kj kjf kjfd
 @home sd sdf sdfj
-@sidebar we wer wert
-@profile er ert ertu`;
+@sidebar we wer wert`;
 
 export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = `# double letters
 aa cc dd ee ff gg hh jj kk ll mm pp ss ww

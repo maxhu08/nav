@@ -46,13 +46,12 @@ export type FastConfig = {
       search: string[];
       home: string[];
       sidebar: string[];
-      profile: string[];
     };
   };
 };
 
 const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch"];
-const RESERVED_HINT_ELEMENTS = new Set(["search", "home", "sidebar", "profile"] as const);
+const RESERVED_HINT_ELEMENTS = new Set(["search", "home", "sidebar"] as const);
 
 const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => {
   if (typeof value !== "object" || value === null) {
@@ -86,8 +85,7 @@ const isReservedLabelsShapeValid = (
     value !== null &&
     Array.isArray((value as Record<string, unknown>).search) &&
     Array.isArray((value as Record<string, unknown>).home) &&
-    Array.isArray((value as Record<string, unknown>).sidebar) &&
-    Array.isArray((value as Record<string, unknown>).profile)
+    Array.isArray((value as Record<string, unknown>).sidebar)
   );
 };
 
@@ -269,8 +267,7 @@ const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedL
   return {
     search: result.search ?? fallbackResult.search ?? [],
     home: result.home ?? fallbackResult.home ?? [],
-    sidebar: result.sidebar ?? fallbackResult.sidebar ?? [],
-    profile: result.profile ?? fallbackResult.profile ?? []
+    sidebar: result.sidebar ?? fallbackResult.sidebar ?? []
   };
 };
 

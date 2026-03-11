@@ -23,12 +23,10 @@ let reservedHintLabels: {
   search: string[];
   home: string[];
   sidebar: string[];
-  profile: string[];
 } = {
   search: [],
   home: [],
-  sidebar: [],
-  profile: []
+  sidebar: []
 };
 let minHintLabelLength = 2;
 let showCapitalizedLetters = true;
@@ -928,32 +926,6 @@ const SIDEBAR_ATTRIBUTE_PATTERNS = [
 const SIDEBAR_CONTAINER_PATTERNS = [/\bsidebar\b/i, /\bside-nav\b/i, /\bsidenav\b/i, /\bdrawer\b/i];
 const YOUTUBE_SIDEBAR_TOGGLE_PATTERNS = [/\bguide\b/i, /\bguide-button\b/i, /\bmenu\b/i];
 
-const PROFILE_ATTRIBUTE_PATTERNS = [
-  /\bprofile\b/i,
-  /\baccount\b/i,
-  /\bavatar\b/i,
-  /\buser\b/i,
-  /\bmy account\b/i,
-  /\bmy profile\b/i,
-  /\bme\b/i
-];
-const PROFILE_ICON_PATTERNS = [/\bavatar\b/i, /\bprofile\b/i, /\buser\b/i, /\baccount\b/i];
-const AUTH_ACTION_PATTERNS = [/\bsign[\s-]?in\b/i, /\blog[\s-]?in\b/i, /\bregister\b/i];
-const YOUTUBE_PROFILE_PATTERNS = [
-  /\bavatar-btn\b/i,
-  /\baccount-menu\b/i,
-  /\btopbar-menu-button-avatar\b/i
-];
-const PROFILE_PATH_PATTERNS = [
-  /^\/profile(?:\/|$)/i,
-  /^\/account(?:\/|$)/i,
-  /^\/me(?:\/|$)/i,
-  /^\/u\/[^/]+/i,
-  /^\/user(?:\/|$)/i,
-  /^\/users\/me(?:\/|$)/i,
-  /^\/settings\/profile(?:\/|$)/i
-];
-
 const isYouTubeHostname = (): boolean => /(^|\.)youtube\.com$/i.test(window.location.hostname);
 
 const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
@@ -1271,10 +1243,6 @@ const getSidebarCandidateScore = (element: HTMLElement): number => {
     score += 40;
   }
 
-  if (textMatchesAnyPattern(attributeText, PROFILE_ATTRIBUTE_PATTERNS)) {
-    score -= 140;
-  }
-
   if (!hasStrongSignal && score < 220) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -1313,159 +1281,6 @@ const getPreferredSidebarElementIndex = (elements: HTMLElement[]): number | null
   return bestIndex;
 };
 
-const hasProfileDescendantSignal = (element: HTMLElement): boolean => {
-  const profileDescendant = element.querySelector<HTMLElement>(
-    "img, svg, [role='img'], [data-avatar], [data-profile], [class*='avatar'], [class*='profile'], [id*='avatar'], [id*='profile']"
-  );
-
-  if (!(profileDescendant instanceof HTMLElement)) {
-    return false;
-  }
-
-  const text = getJoinedAttributeText(profileDescendant, [
-    "id",
-    "class",
-    "aria-label",
-    "title",
-    "data-testid"
-  ]);
-
-  return textMatchesAnyPattern(text, PROFILE_ICON_PATTERNS) || profileDescendant.tagName === "IMG";
-};
-
-const getProfileCandidateScore = (element: HTMLElement): number => {
-  if (!isActivatableElement(element) || isSelectableElement(element)) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
-  const rect = getMarkerRect(element);
-  if (!rect) return Number.NEGATIVE_INFINITY;
-
-  let score = 0;
-  let hasProfileSignal = false;
-  let hasAuthFallbackSignal = false;
-  const isYouTube = isYouTubeHostname();
-  const textContent = getElementTextContent(element);
-  const attributeText = getJoinedAttributeText(
-    element,
-    ["name", "id", "aria-label", "data-testid", "role", "title", "class"],
-    [textContent]
-  );
-
-  if (textMatchesAnyPattern(attributeText, PROFILE_ATTRIBUTE_PATTERNS)) {
-    score += 260;
-    hasProfileSignal = true;
-  }
-
-  if (textMatchesAnyPattern(attributeText, AUTH_ACTION_PATTERNS)) {
-    score += 170;
-    hasAuthFallbackSignal = true;
-  }
-
-  if (hasProfileDescendantSignal(element)) {
-    score += 120;
-    hasProfileSignal = true;
-  }
-
-  const href = element.getAttribute("href");
-  if (href) {
-    const normalizedPath = getNormalizedSameOriginPath(href);
-    if (normalizedPath && PROFILE_PATH_PATTERNS.some((pattern) => pattern.test(normalizedPath))) {
-      score += 220;
-      hasProfileSignal = true;
-    }
-  }
-
-  if (isYouTube && textMatchesAnyPattern(attributeText, YOUTUBE_PROFILE_PATTERNS)) {
-    score += 280;
-    hasProfileSignal = true;
-  }
-
-  const ariaHaspopup = element.getAttribute("aria-haspopup")?.toLowerCase();
-  if (ariaHaspopup === "menu" || ariaHaspopup === "listbox" || ariaHaspopup === "true") {
-    score += 40;
-  }
-
-  if (element.hasAttribute("aria-expanded")) {
-    score += 25;
-  }
-
-  if (element.closest("header, [role='banner'], nav, [role='navigation']")) {
-    score += 70;
-  }
-
-  if (textMatchesAnyPattern(attributeText, SIDEBAR_ATTRIBUTE_PATTERNS)) {
-    score -= 120;
-  }
-
-  if (rect.left > window.innerWidth * 0.55) {
-    score += 80;
-  }
-
-  if (rect.top < window.innerHeight * 0.35) {
-    score += 40;
-  }
-
-  const canUseFallback = !hasProfileSignal && hasAuthFallbackSignal;
-  if (!hasProfileSignal && !canUseFallback) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
-  if (canUseFallback) {
-    score += 80;
-  }
-
-  score += Math.min(100, rect.width) / 10;
-  score += Math.min(100, rect.height) / 10;
-
-  if (rect.width <= 96 && rect.height <= 96) {
-    score += 25;
-  }
-
-  return score;
-};
-
-const getPreferredProfileElementIndex = (elements: HTMLElement[]): number | null => {
-  let bestProfileIndex: number | null = null;
-  let bestProfileScore = 220;
-  let bestFallbackIndex: number | null = null;
-  let bestFallbackScore = 260;
-
-  elements.forEach((element, index) => {
-    const score = getProfileCandidateScore(element);
-
-    if (score <= 0) {
-      return;
-    }
-
-    const textContent = getElementTextContent(element);
-    const attributeText = getJoinedAttributeText(
-      element,
-      ["name", "id", "aria-label", "data-testid", "role", "title", "class"],
-      [textContent]
-    );
-    const isFallbackCandidate =
-      textMatchesAnyPattern(attributeText, AUTH_ACTION_PATTERNS) &&
-      !textMatchesAnyPattern(attributeText, PROFILE_ATTRIBUTE_PATTERNS) &&
-      !textMatchesAnyPattern(attributeText, YOUTUBE_PROFILE_PATTERNS);
-
-    if (isFallbackCandidate) {
-      if (score > bestFallbackScore) {
-        bestFallbackScore = score;
-        bestFallbackIndex = index;
-      }
-      return;
-    }
-
-    if (score > bestProfileScore) {
-      bestProfileScore = score;
-      bestProfileIndex = index;
-    }
-  });
-
-  return bestProfileIndex ?? bestFallbackIndex;
-};
-
 const isPreferredLabelValid = (label: string): boolean => {
   return label.length > 0 && RESERVED_LABEL_PATTERN.test(label);
 };
@@ -1495,10 +1310,6 @@ const getPreferredHomeLabel = (): string | null => {
 
 const getPreferredSidebarLabel = (): string | null => {
   return getPreferredReservedLabel(reservedHintLabels.sidebar);
-};
-
-const getPreferredProfileLabel = (): string | null => {
-  return getPreferredReservedLabel(reservedHintLabels.profile);
 };
 
 const createOverlay = (): HTMLDivElement => {
@@ -2297,7 +2108,6 @@ export const activateHints = (
   const preferredSearchElementIndex = getPreferredSearchElementIndex(elements);
   const preferredHomeElementIndex = getPreferredHomeElementIndex(elements);
   const preferredSidebarElementIndex = getPreferredSidebarElementIndex(elements);
-  const preferredProfileElementIndex = getPreferredProfileElementIndex(elements);
   const preferredLabelsByIndex = new Map<number, string>();
 
   if (preferredSearchElementIndex !== null) {
@@ -2323,16 +2133,6 @@ export const activateHints = (
       const existingLabel = preferredLabelsByIndex.get(preferredSidebarElementIndex);
       if (!existingLabel) {
         preferredLabelsByIndex.set(preferredSidebarElementIndex, preferredSidebarLabel);
-      }
-    }
-  }
-
-  if (preferredProfileElementIndex !== null) {
-    const preferredProfileLabel = getPreferredProfileLabel();
-    if (preferredProfileLabel) {
-      const existingLabel = preferredLabelsByIndex.get(preferredProfileElementIndex);
-      if (!existingLabel) {
-        preferredLabelsByIndex.set(preferredProfileElementIndex, preferredProfileLabel);
       }
     }
   }
@@ -2429,13 +2229,11 @@ export const setReservedHintLabels = (labels: {
   search: string[];
   home: string[];
   sidebar: string[];
-  profile: string[];
 }): void => {
   reservedHintLabels = {
     search: [...labels.search],
     home: [...labels.home],
-    sidebar: [...labels.sidebar],
-    profile: [...labels.profile]
+    sidebar: [...labels.sidebar]
   };
 
   if (hintState.active) {

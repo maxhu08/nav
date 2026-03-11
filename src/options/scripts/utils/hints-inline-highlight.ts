@@ -70,7 +70,7 @@ const renderCharsetHighlight = (
   return { hasError, html, errors };
 };
 
-const RESERVED_HINT_ELEMENTS = new Set(["search", "home", "sidebar", "profile"]);
+const RESERVED_HINT_ELEMENTS = new Set(["search", "home", "sidebar"]);
 
 const renderReservedLabelsHighlight = (
   value: string
@@ -119,7 +119,7 @@ const renderReservedLabelsHighlight = (
         hasError = true;
         errors.push({
           code: "invalid-directive",
-          message: `line ${lineNumber}: Unknown directive "@${directive}". Use @search, @home, @sidebar, or @profile.`
+          message: `line ${lineNumber}: Unknown directive "@${directive}". Use @search, @home, or @sidebar.`
         });
       }
 
