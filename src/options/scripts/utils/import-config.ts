@@ -2,8 +2,8 @@ import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
 import { showInputDialog } from "~/src/options/scripts/utils/input-dialog";
 import { saveConfigAndFastConfig } from "~/src/options/scripts/utils/save-config";
 import { getToastApi } from "~/src/options/scripts/utils/sonner";
-import { deepMerge } from "~/src/utils/deep-merge";
 import { defaultConfig } from "~/src/utils/config";
+import { migrateOldConfig } from "~/src/utils/migrate-config";
 
 const SAVE_PREFIX = "NAV_SAVE_FORMAT_";
 const VERSIONED_SAVE_REGEX = /^NAV_SAVE_FORMAT_v[^_]+_(.+)$/;
@@ -42,7 +42,7 @@ export const importConfigAndSave = async (): Promise<void> => {
     return;
   }
 
-  const mergedConfig = deepMerge(structuredClone(defaultConfig), importedConfig);
+  const mergedConfig = migrateOldConfig(importedConfig, defaultConfig);
   fillInputs(mergedConfig);
   await saveConfigAndFastConfig();
 };

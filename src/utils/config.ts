@@ -1,10 +1,10 @@
-import { deepMerge } from "~/src/utils/deep-merge";
 import {
   DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
   DEFAULT_HINT_CHARSET,
   DEFAULT_HINT_RESERVED_LABELS,
   DEFAULT_HOTKEY_MAPPINGS
 } from "~/src/utils/hotkeys";
+import { migrateOldConfig } from "~/src/utils/migrate-config";
 
 export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 :root {
@@ -63,7 +63,7 @@ export const getConfig = (): Promise<Config> => {
         return;
       }
 
-      resolve(deepMerge(structuredClone(defaultConfig), data.config));
+      resolve(migrateOldConfig(data.config, defaultConfig));
     });
   });
 };
