@@ -32,7 +32,7 @@ Use this map to decide where new code should go.
 - `fastConfig.rules.urls` stores the active mode plus parsed blacklist and whitelist rule arrays.
 - `fastConfig.hotkeys.mappings` is a parsed key-to-action map.
 - `fastConfig.hotkeys.prefixes` is a derived lookup used for multi-key sequence matching.
-- `fastConfig.hints.reservedLabels` stores parsed directive label arrays for special hint targets (for example `search` and `home`).
+- `fastConfig.hints.reservedLabels` stores parsed directive label arrays for special hint targets (for example `search`, `home`, `sidebar`, and `profile`).
 - `src/options/scripts/utils/save-config.ts` writes both `config` and a rebuilt `fastConfig` together.
 - In runtime, URL rule patterns are compiled to `RegExp` once on config apply (`src/core/utils/key-state.ts`) and reused for key matching.
 
