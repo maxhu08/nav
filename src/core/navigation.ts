@@ -176,6 +176,23 @@ const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
     return false;
   }
 
+  const keyToken = getKeyToken(event);
+
+  if (keyToken) {
+    const { actionName, consumed } = keyState.getToggleHintsActionName(keyToken);
+
+    if (actionName) {
+      exitHints();
+      consumeKeyboardEvent(event);
+      return true;
+    }
+
+    if (consumed) {
+      consumeKeyboardEvent(event);
+      return true;
+    }
+  }
+
   if (handleHintsKeydown(event)) {
     consumeKeyboardEvent(event);
   }
