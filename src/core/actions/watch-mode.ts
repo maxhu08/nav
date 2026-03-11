@@ -279,7 +279,8 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     overlay.style.zIndex = "2147483646";
     overlay.style.color = "#f5f5f5";
     overlay.style.textTransform = "lowercase";
-    overlay.style.fontFamily = '"JetBrains Mono", monospace';
+    overlay.style.fontFamily =
+      '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
     overlay.style.fontSize = "12px";
     overlay.style.fontWeight = "700";
     overlay.style.textShadow = "0 2px 8px rgba(0,0,0,0.5)";

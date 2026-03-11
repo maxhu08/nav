@@ -23,7 +23,7 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
   border-radius: 3px;
   background: var(--nav-hint-marker-bg);
   color: var(--nav-hint-marker-color);
-  font-family: "JetBrains Mono", monospace;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
