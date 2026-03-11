@@ -421,26 +421,25 @@ const dedupeHintTargets = (
   const deduped: HTMLElement[] = [];
 
   for (const bucket of bucketMap.values()) {
+    const representatives: HTMLElement[] = [];
+
     for (const element of bucket) {
-      const duplicateIndex = deduped.findIndex((candidate) =>
+      const duplicateIndex = representatives.findIndex((candidate) =>
         areEquivalentHintTargets(candidate, element, getRect, getIdentity)
       );
 
       if (duplicateIndex === -1) {
-        deduped.push(element);
+        representatives.push(element);
         continue;
       }
 
-      const existing = deduped[duplicateIndex];
-      if (!existing) {
-        deduped.push(element);
-        continue;
-      }
-
-      if (getPreference(element) > getPreference(existing)) {
-        deduped[duplicateIndex] = element;
+      const existing = representatives[duplicateIndex];
+      if (existing && getPreference(element) > getPreference(existing)) {
+        representatives[duplicateIndex] = element;
       }
     }
+
+    deduped.push(...representatives);
   }
 
   return deduped;
@@ -578,41 +577,52 @@ const isVisibleHintTarget = (element: HTMLElement): boolean => {
   return isElementVisibleAndClickable(element);
 };
 
-const getHintSelectors = (mode: LinkMode): string[] => {
+const HINT_SELECTORS_COPY_LINK = "a[href],area[href]";
+const HINT_SELECTORS_COPY_IMAGE = "img";
+const HINT_SELECTORS_DEFAULT = [
+  "a[href]",
+  "area[href]",
+  "button",
+  "input:not([type='hidden'])",
+  "select",
+  "textarea",
+  "object",
+  "embed",
+  "label",
+  "summary",
+  "[onclick]",
+  "[role]",
+  "[tabindex]",
+  "[contenteditable='true']",
+  "[contenteditable='']",
+  "[jsaction]"
+].join(",");
+
+const getHintSelector = (mode: LinkMode): string => {
   if (mode === "copy-link") {
-    return ["a[href]", "area[href]"];
+    return HINT_SELECTORS_COPY_LINK;
   }
 
   if (mode === "copy-image") {
-    return ["img"];
+    return HINT_SELECTORS_COPY_IMAGE;
   }
 
-  return [
-    "a[href]",
-    "area[href]",
-    "button",
-    "input:not([type='hidden'])",
-    "select",
-    "textarea",
-    "object",
-    "embed",
-    "label",
-    "summary",
-    "[onclick]",
-    "[role]",
-    "[tabindex]",
-    "[contenteditable='true']",
-    "[contenteditable='']",
-    "[jsaction]"
-  ];
+  return HINT_SELECTORS_DEFAULT;
 };
 
-const getHintableElements = (mode: LinkMode): HTMLElement[] => {
-  const selectors = getHintSelectors(mode);
+type HintCollectionContext = {
+  getRect: (element: HTMLElement) => DOMRect | null;
+  getIdentity: (element: HTMLElement) => string | null;
+  getDepth: (element: HTMLElement) => number;
+  getPreference: (element: HTMLElement) => number;
+};
+
+const createHintCollectionContext = (): HintCollectionContext => {
   const rectCache = new WeakMap<HTMLElement, DOMRect | null>();
   const identityCache = new WeakMap<HTMLElement, string | null>();
   const depthCache = new WeakMap<HTMLElement, number>();
   const preferenceCache = new WeakMap<HTMLElement, number>();
+
   const getRect = (element: HTMLElement): DOMRect | null => {
     if (rectCache.has(element)) {
       return rectCache.get(element) ?? null;
@@ -622,6 +632,7 @@ const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     rectCache.set(element, rect);
     return rect;
   };
+
   const getIdentity = (element: HTMLElement): string | null => {
     if (identityCache.has(element)) {
       return identityCache.get(element) ?? null;
@@ -631,20 +642,22 @@ const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     identityCache.set(element, identity);
     return identity;
   };
+
   const getDepth = (element: HTMLElement): number => {
-    const cached = depthCache.get(element);
-    if (cached !== undefined) {
-      return cached;
+    const cachedDepth = depthCache.get(element);
+    if (cachedDepth !== undefined) {
+      return cachedDepth;
     }
 
     const depth = getDomDepth(element);
     depthCache.set(element, depth);
     return depth;
   };
+
   const getPreference = (element: HTMLElement): number => {
-    const cached = preferenceCache.get(element);
-    if (cached !== undefined) {
-      return cached;
+    const cachedPreference = preferenceCache.get(element);
+    if (cachedPreference !== undefined) {
+      return cachedPreference;
     }
 
     const preference = getHintTargetPreference(element);
@@ -652,27 +665,47 @@ const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     return preference;
   };
 
-  const seen = new Set<HTMLElement>();
+  return {
+    getRect,
+    getIdentity,
+    getDepth,
+    getPreference
+  };
+};
+
+const isEligibleHintTarget = (element: HTMLElement, mode: LinkMode): boolean => {
+  if (mode === "copy-image") {
+    return (
+      element instanceof HTMLImageElement &&
+      !!(element.currentSrc || element.src) &&
+      isVisibleHintTarget(element)
+    );
+  }
+
+  return isHintable(element);
+};
+
+const getHintableElements = (mode: LinkMode): HTMLElement[] => {
+  const selector = getHintSelector(mode);
+  const { getRect, getIdentity, getDepth, getPreference } = createHintCollectionContext();
   const elements: HTMLElement[] = [];
 
-  for (const element of Array.from(document.querySelectorAll<HTMLElement>(selectors.join(",")))) {
-    const isEligible =
-      mode === "copy-image"
-        ? element instanceof HTMLImageElement &&
-          !!(element.currentSrc || element.src) &&
-          isVisibleHintTarget(element)
-        : isHintable(element);
-
-    if (seen.has(element) || !isEligible) continue;
-    seen.add(element);
-    elements.push(element);
+  for (const element of Array.from(document.querySelectorAll<HTMLElement>(selector))) {
+    if (isEligibleHintTarget(element, mode)) {
+      elements.push(element);
+    }
   }
 
   const candidateSet = new Set(elements);
-  const dedupedElements = elements.filter(
+  const withoutEquivalentAncestors = elements.filter(
     (element) => !hasEquivalentAncestorTarget(element, candidateSet, getRect)
   );
-  const uniqueElements = dedupeHintTargets(dedupedElements, getRect, getIdentity, getPreference);
+  const uniqueElements = dedupeHintTargets(
+    withoutEquivalentAncestors,
+    getRect,
+    getIdentity,
+    getPreference
+  );
 
   uniqueElements.sort((leftElement, rightElement) => {
     const leftRect = getRect(leftElement);
@@ -720,6 +753,8 @@ const getLabelPlanCacheKey = (
   ].join("::");
 };
 
+type BlockedPairs = Partial<Record<string, Partial<Record<string, true>>>>;
+
 const buildHintLabels = (
   count: number,
   reservedLabels: string[] = []
@@ -728,8 +763,8 @@ const buildHintLabels = (
     return { labelLength: 0, labels: [] };
   }
 
-  const buildLabels = (
-    blockedPairs: Partial<Record<string, Partial<Record<string, true>>>>
+  const buildLabelsForBlockedPairs = (
+    blockedPairs: BlockedPairs
   ): { labelLength: number; labels: string[] } => {
     const cacheKey = getLabelPlanCacheKey(count, reservedLabels, blockedPairs);
     const cachedPlan = labelPlanCache.get(cacheKey);
@@ -744,10 +779,10 @@ const buildHintLabels = (
     const alphabet = hintAlphabet.split("");
     const firstCharacters = alphabet.filter((char) => !reservedHintPrefixes.has(char));
     const leadingAlphabet = firstCharacters.length > 0 ? firstCharacters : alphabet;
-    const labels: string[] = [];
     const subtreeCapacityCache = new Map<string, number>();
+    const labels: string[] = [];
 
-    const getAllowedCharacters = (
+    const getAllowedChars = (
       previousChar: string | null,
       isLeadingCharacter: boolean
     ): string[] => {
@@ -775,7 +810,7 @@ const buildHintLabels = (
 
       let subtreeCapacity = 0;
 
-      for (const char of getAllowedCharacters(previousChar, isLeadingCharacter)) {
+      for (const char of getAllowedChars(previousChar, isLeadingCharacter)) {
         subtreeCapacity += getSubtreeCapacity(char, remainingLength - 1, false);
       }
 
@@ -783,24 +818,7 @@ const buildHintLabels = (
       return subtreeCapacity;
     };
 
-    let labelLength = minHintLabelLength;
-    let capacity = getSubtreeCapacity(null, labelLength, true);
-
-    while (capacity < count) {
-      const nextLength = labelLength + 1;
-      const nextCapacity = getSubtreeCapacity(null, nextLength, true);
-
-      if (nextCapacity <= capacity) {
-        const result = { labelLength, labels: [] };
-        labelPlanCache.set(cacheKey, result);
-        return result;
-      }
-
-      labelLength = nextLength;
-      capacity = nextCapacity;
-    }
-
-    const appendLabels = (
+    const distributeLabels = (
       prefix: string,
       previousChar: string | null,
       remainingCount: number,
@@ -809,11 +827,11 @@ const buildHintLabels = (
     ): void => {
       if (remainingCount <= 0) return;
 
-      const sourceAlphabet = getAllowedCharacters(previousChar, isLeadingCharacter);
+      const sourceAlphabet = getAllowedChars(previousChar, isLeadingCharacter);
       let assignedCount = 0;
 
       for (let index = 0; index < sourceAlphabet.length; index += 1) {
-        const char = sourceAlphabet[index];
+        const char = sourceAlphabet[index]!;
         const nextLabel = `${prefix}${char}`;
         const remainingBuckets = sourceAlphabet.length - index;
         const nextRemainingCount = remainingCount - assignedCount;
@@ -835,7 +853,7 @@ const buildHintLabels = (
         if (remainingLength === 1) {
           labels.push(nextLabel);
         } else {
-          appendLabels(nextLabel, char, bucketCount, remainingLength - 1, false);
+          distributeLabels(nextLabel, char, bucketCount, remainingLength - 1, false);
         }
 
         assignedCount += bucketCount;
@@ -843,7 +861,23 @@ const buildHintLabels = (
       }
     };
 
-    appendLabels("", null, count, labelLength, true);
+    let labelLength = minHintLabelLength;
+    let capacity = getSubtreeCapacity(null, labelLength, true);
+    while (capacity < count) {
+      const nextLength = labelLength + 1;
+      const nextCapacity = getSubtreeCapacity(null, nextLength, true);
+
+      if (nextCapacity <= capacity) {
+        const result = { labelLength, labels: [] };
+        labelPlanCache.set(cacheKey, result);
+        return result;
+      }
+
+      labelLength = nextLength;
+      capacity = nextCapacity;
+    }
+
+    distributeLabels("", null, count, labelLength, true);
 
     if (labels.length > count) {
       labels.length = count;
@@ -857,12 +891,12 @@ const buildHintLabels = (
     return result;
   };
 
-  const labels = buildLabels(avoidedAdjacentHintPairs);
+  const labels = buildLabelsForBlockedPairs(avoidedAdjacentHintPairs);
   if (labels.labels.length === count - reservedLabels.length) {
     return labels;
   }
 
-  return buildLabels({});
+  return buildLabelsForBlockedPairs({});
 };
 
 const SEARCH_ATTRIBUTE_PATTERNS = [
@@ -879,6 +913,36 @@ const SEARCH_ATTRIBUTE_PATTERNS = [
 const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
 
 const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
+const HOME_PATHS = new Set(["/", "/home", "/homepage", "/dashboard"]);
+const RESERVED_LABEL_PATTERN = /^[a-z]+$/;
+
+const getElementTextContent = (element: HTMLElement): string =>
+  element.textContent?.replace(/\s+/g, " ").trim() ?? "";
+
+const getJoinedAttributeText = (
+  element: HTMLElement,
+  attributeNames: string[],
+  extras: string[] = []
+): string =>
+  [...attributeNames.map((name) => element.getAttribute(name)), ...extras]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ");
+
+const textMatchesAnyPattern = (text: string, patterns: readonly RegExp[]): boolean =>
+  patterns.some((pattern) => pattern.test(text));
+
+const getNormalizedSameOriginPath = (href: string): string | null => {
+  try {
+    const resolvedUrl = new URL(href, window.location.href);
+    if (resolvedUrl.origin !== window.location.origin) {
+      return null;
+    }
+
+    return resolvedUrl.pathname.replace(/\/+$/, "") || "/";
+  } catch {
+    return null;
+  }
+};
 
 const getSearchCandidateScore = (element: HTMLElement): number => {
   if (!isSelectableElement(element)) {
@@ -889,23 +953,18 @@ const getSearchCandidateScore = (element: HTMLElement): number => {
   if (!rect) return Number.NEGATIVE_INFINITY;
 
   let score = 100;
-  const attributeText = [
-    element.getAttribute("type"),
-    element.getAttribute("name"),
-    element.getAttribute("id"),
-    element.getAttribute("placeholder"),
-    element.getAttribute("aria-label"),
-    element.getAttribute("data-testid"),
-    element.getAttribute("role")
-  ]
-    .filter((value): value is string => typeof value === "string" && value.length > 0)
-    .join(" ");
+  const attributeText = getJoinedAttributeText(element, [
+    "type",
+    "name",
+    "id",
+    "placeholder",
+    "aria-label",
+    "data-testid",
+    "role"
+  ]);
 
-  for (const pattern of SEARCH_ATTRIBUTE_PATTERNS) {
-    if (pattern.test(attributeText)) {
-      score += 120;
-      break;
-    }
+  if (textMatchesAnyPattern(attributeText, SEARCH_ATTRIBUTE_PATTERNS)) {
+    score += 120;
   }
 
   if (element === getDeepActiveElement()) {
@@ -975,55 +1034,36 @@ const getHomeCandidateScore = (element: HTMLElement): number => {
 
   let score = 0;
   let hasStrongSignal = false;
-  const textContent = element.textContent?.replace(/\s+/g, " ").trim();
-  const logoText = [
-    element.getAttribute("id"),
-    element.getAttribute("class"),
-    element.getAttribute("data-testid"),
-    element.getAttribute("aria-label"),
-    element.getAttribute("title")
-  ]
-    .filter((value): value is string => typeof value === "string" && value.length > 0)
-    .join(" ");
-  const hasLogoSignal = HOME_LOGO_PATTERNS.some((pattern) => pattern.test(logoText));
-  const attributeText = [
-    element.getAttribute("name"),
-    element.getAttribute("id"),
-    element.getAttribute("aria-label"),
-    element.getAttribute("data-testid"),
-    element.getAttribute("role"),
-    element.getAttribute("title"),
-    element.getAttribute("class"),
-    textContent
-  ]
-    .filter((value): value is string => typeof value === "string" && value.length > 0)
-    .join(" ");
+  const textContent = getElementTextContent(element);
+  const logoText = getJoinedAttributeText(element, [
+    "id",
+    "class",
+    "data-testid",
+    "aria-label",
+    "title"
+  ]);
+  const hasLogoSignal = textMatchesAnyPattern(logoText, HOME_LOGO_PATTERNS);
+  const attributeText = getJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "role", "title", "class"],
+    [textContent]
+  );
 
-  for (const pattern of HOME_ATTRIBUTE_PATTERNS) {
-    if (pattern.test(attributeText)) {
-      score += 220;
-      hasStrongSignal = true;
-      break;
-    }
+  if (textMatchesAnyPattern(attributeText, HOME_ATTRIBUTE_PATTERNS)) {
+    score += 220;
+    hasStrongSignal = true;
   }
 
   const href = element.getAttribute("href");
   if (href) {
-    try {
-      const resolvedUrl = new URL(href, window.location.href);
-      const isSameOrigin = resolvedUrl.origin === window.location.origin;
-      const normalizedPath = resolvedUrl.pathname.replace(/\/+$/, "") || "/";
+    const normalizedPath = getNormalizedSameOriginPath(href);
+    if (normalizedPath && HOME_PATHS.has(normalizedPath)) {
+      score += 220;
+      hasStrongSignal = true;
 
-      if (isSameOrigin && ["/", "/home", "/homepage", "/dashboard"].includes(normalizedPath)) {
-        score += 220;
-        hasStrongSignal = true;
-
-        if (normalizedPath === "/" && hasLogoSignal) {
-          score += 260;
-        }
+      if (normalizedPath === "/" && hasLogoSignal) {
+        score += 260;
       }
-    } catch (e) {
-      console.error(e);
     }
   }
 
@@ -1068,11 +1108,7 @@ const getPreferredHomeElementIndex = (elements: HTMLElement[]): number | null =>
 };
 
 const isPreferredLabelValid = (label: string): boolean => {
-  if (label.length === 0) {
-    return false;
-  }
-
-  return /^[a-z]+$/.test(label);
+  return label.length > 0 && RESERVED_LABEL_PATTERN.test(label);
 };
 
 const doesLabelConflictWithReservedLabels = (label: string, reservedLabels: string[]): boolean =>
