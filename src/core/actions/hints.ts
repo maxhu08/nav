@@ -138,10 +138,32 @@ const getTopElementAtPoint = (
   return topElement;
 };
 
+const isComposedDescendant = (ancestor: Element, node: Element): boolean => {
+  let current: Node | null = node;
+
+  while (current) {
+    if (current === ancestor) {
+      return true;
+    }
+
+    if (current instanceof ShadowRoot) {
+      current = current.host;
+      continue;
+    }
+
+    current = current.parentNode;
+  }
+
+  return false;
+};
+
 const intersectsAtPoint = (element: HTMLElement, x: number, y: number): boolean => {
   const topElement = getTopElementAtPoint(x, y);
 
-  return !!topElement && (element.contains(topElement) || topElement.contains(element));
+  return (
+    !!topElement &&
+    (isComposedDescendant(element, topElement) || isComposedDescendant(topElement, element))
+  );
 };
 
 const hasClickablePoint = (element: HTMLElement, rect: DOMRect): boolean => {
@@ -854,13 +876,9 @@ const SEARCH_ATTRIBUTE_PATTERNS = [
   /composer/i
 ];
 
-const HOME_ATTRIBUTE_PATTERNS = [
-  /\bhome\b/i,
-  /\bhomepage\b/i,
-  /\bmain\b/i,
-  /\bstart\b/i,
-  /\bdashboard\b/i
-];
+const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
+
+const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
 
 const getSearchCandidateScore = (element: HTMLElement): number => {
   if (!isSelectableElement(element)) {
@@ -940,41 +958,90 @@ const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null 
 };
 
 const getHomeCandidateScore = (element: HTMLElement): number => {
+  if (
+    !(
+      element instanceof HTMLAnchorElement ||
+      element instanceof HTMLAreaElement ||
+      element instanceof HTMLButtonElement ||
+      hasInteractiveRole(element) ||
+      element.hasAttribute("onclick")
+    )
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
   const rect = getMarkerRect(element);
   if (!rect) return Number.NEGATIVE_INFINITY;
 
   let score = 0;
+  let hasStrongSignal = false;
+  const textContent = element.textContent?.replace(/\s+/g, " ").trim();
+  const logoText = [
+    element.getAttribute("id"),
+    element.getAttribute("class"),
+    element.getAttribute("data-testid"),
+    element.getAttribute("aria-label"),
+    element.getAttribute("title")
+  ]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ");
+  const hasLogoSignal = HOME_LOGO_PATTERNS.some((pattern) => pattern.test(logoText));
   const attributeText = [
     element.getAttribute("name"),
     element.getAttribute("id"),
     element.getAttribute("aria-label"),
     element.getAttribute("data-testid"),
     element.getAttribute("role"),
-    element.getAttribute("title")
+    element.getAttribute("title"),
+    element.getAttribute("class"),
+    textContent
   ]
     .filter((value): value is string => typeof value === "string" && value.length > 0)
     .join(" ");
 
   for (const pattern of HOME_ATTRIBUTE_PATTERNS) {
     if (pattern.test(attributeText)) {
-      score += 180;
+      score += 220;
+      hasStrongSignal = true;
       break;
     }
   }
 
-  if (
-    element instanceof HTMLAnchorElement &&
-    (element.getAttribute("href") === "/" || element.href === `${window.location.origin}/`)
-  ) {
-    score += 220;
+  const href = element.getAttribute("href");
+  if (href) {
+    try {
+      const resolvedUrl = new URL(href, window.location.href);
+      const isSameOrigin = resolvedUrl.origin === window.location.origin;
+      const normalizedPath = resolvedUrl.pathname.replace(/\/+$/, "") || "/";
+
+      if (isSameOrigin && ["/", "/home", "/homepage", "/dashboard"].includes(normalizedPath)) {
+        score += 220;
+        hasStrongSignal = true;
+
+        if (normalizedPath === "/" && hasLogoSignal) {
+          score += 260;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const relValue = element.getAttribute("rel")?.toLowerCase() ?? "";
   if (relValue.split(/\s+/).includes("home")) {
     score += 180;
+    hasStrongSignal = true;
+  }
+
+  if (!hasStrongSignal) {
+    return Number.NEGATIVE_INFINITY;
   }
 
   if (element.getAttribute("aria-current")?.toLowerCase() === "page") {
+    score += 40;
+  }
+
+  if (element.closest("nav, header, [role='navigation']")) {
     score += 40;
   }
 
@@ -1000,28 +1067,12 @@ const getPreferredHomeElementIndex = (elements: HTMLElement[]): number | null =>
   return bestIndex;
 };
 
-const isPreferredLabelValid = (label: string, labelLength: number): boolean => {
-  if (label.length < labelLength) return false;
-
-  const alphabet = new Set(hintAlphabet.split(""));
-  if (label.length === 0 || reservedHintPrefixes.has(label[0] ?? "")) {
+const isPreferredLabelValid = (label: string): boolean => {
+  if (label.length === 0) {
     return false;
   }
 
-  for (let index = 0; index < label.length; index += 1) {
-    if (!alphabet.has(label[index]!)) {
-      return false;
-    }
-
-    if (
-      index > 0 &&
-      avoidedAdjacentHintPairs[label[index - 1] ?? ""]?.[label[index] ?? ""] === true
-    ) {
-      return false;
-    }
-  }
-
-  return true;
+  return /^[a-z]+$/.test(label);
 };
 
 const doesLabelConflictWithReservedLabels = (label: string, reservedLabels: string[]): boolean =>
@@ -1029,18 +1080,22 @@ const doesLabelConflictWithReservedLabels = (label: string, reservedLabels: stri
     (reservedLabel) => label.startsWith(reservedLabel) || reservedLabel.startsWith(label)
   );
 
-const getPreferredSearchLabel = (labelLength: number): string | null => {
-  const label = reservedHintLabels.search.find(
-    (preferredSearchLabel) => preferredSearchLabel.length >= labelLength
-  );
-  return label && isPreferredLabelValid(label, labelLength) ? label : null;
+const getPreferredReservedLabel = (labels: string[]): string | null => {
+  for (const candidateLabel of labels) {
+    if (isPreferredLabelValid(candidateLabel)) {
+      return candidateLabel;
+    }
+  }
+
+  return null;
 };
 
-const getPreferredHomeLabel = (labelLength: number): string | null => {
-  const label = reservedHintLabels.home.find(
-    (preferredHomeLabel) => preferredHomeLabel.length >= labelLength
-  );
-  return label && isPreferredLabelValid(label, labelLength) ? label : null;
+const getPreferredSearchLabel = (): string | null => {
+  return getPreferredReservedLabel(reservedHintLabels.search);
+};
+
+const getPreferredHomeLabel = (): string | null => {
+  return getPreferredReservedLabel(reservedHintLabels.home);
 };
 
 const createOverlay = (): HTMLDivElement => {
@@ -1838,18 +1893,17 @@ export const activateHints = (
 
   const preferredSearchElementIndex = getPreferredSearchElementIndex(elements);
   const preferredHomeElementIndex = getPreferredHomeElementIndex(elements);
-  const initialLabelPlan = buildHintLabels(elements.length);
   const preferredLabelsByIndex = new Map<number, string>();
 
   if (preferredSearchElementIndex !== null) {
-    const preferredSearchLabel = getPreferredSearchLabel(initialLabelPlan.labelLength);
+    const preferredSearchLabel = getPreferredSearchLabel();
     if (preferredSearchLabel) {
       preferredLabelsByIndex.set(preferredSearchElementIndex, preferredSearchLabel);
     }
   }
 
   if (preferredHomeElementIndex !== null) {
-    const preferredHomeLabel = getPreferredHomeLabel(initialLabelPlan.labelLength);
+    const preferredHomeLabel = getPreferredHomeLabel();
     if (preferredHomeLabel) {
       const existingLabel = preferredLabelsByIndex.get(preferredHomeElementIndex);
       if (!existingLabel) {
