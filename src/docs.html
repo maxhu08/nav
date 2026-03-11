@@ -61,11 +61,11 @@
                 ><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">?</span><span class="text-[#d06969]">github</span><span class="text-[#d6b97c]">\.</span
                 ><span class="text-[#d06969]">com/</span><span class="text-[#d6b97c]">.*$</span>
               </p>
-              <p><span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">toggle-hints-current-tab</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
+              <p><span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">hint-mode-current-tab</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
             </div>
             <p class="text-base text-neutral-500">
-              In `rules.urls.blacklist`, this blocks every action on GitHub pages except `toggle-hints-current-tab` and `yank-current-tab-url`. In `rules.urls.whitelist`, the same rule would allow
-              only those actions on GitHub pages.
+              In `rules.urls.blacklist`, this blocks every action on GitHub pages except `hint-mode-current-tab` and `yank-current-tab-url`. In `rules.urls.whitelist`, the same rule would allow only
+              those actions on GitHub pages.
             </p>
           </div>
         </section>
@@ -175,8 +175,8 @@
             </p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base">
               <p class="text-neutral-500"># actions.names.normal</p>
-              <p class="text-[#dcdcaa]">toggle-video-controls</p>
-              <p class="text-[#dcdcaa]">enable-find-mode</p>
+              <p class="text-[#dcdcaa]">watch-mode</p>
+              <p class="text-[#dcdcaa]">find-mode</p>
               <p class="text-[#dcdcaa]">scroll-left</p>
               <p class="text-[#dcdcaa]">scroll-down</p>
               <p class="text-[#dcdcaa]">scroll-up</p>
@@ -185,8 +185,8 @@
               <p class="text-[#dcdcaa]">scroll-to-bottom</p>
               <p class="text-[#dcdcaa]">scroll-half-page-down</p>
               <p class="text-[#dcdcaa]">scroll-half-page-up</p>
-              <p class="text-[#dcdcaa]">toggle-hints-current-tab</p>
-              <p class="text-[#dcdcaa]">toggle-hints-new-tab</p>
+              <p class="text-[#dcdcaa]">hint-mode-current-tab</p>
+              <p class="text-[#dcdcaa]">hint-mode-new-tab</p>
               <p class="text-[#dcdcaa]">reload-current-tab</p>
               <p class="text-[#dcdcaa]">reload-current-tab-hard</p>
               <p class="text-[#dcdcaa]">yank-link-url</p>
@@ -250,11 +250,11 @@
                 <p class="text-base text-neutral-500">Scrolls up by about half a page.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">toggle-hints-current-tab</p>
+                <p class="text-base text-[#dcdcaa]">hint-mode-current-tab</p>
                 <p class="text-base text-neutral-500">Shows link hints and opens the selected target in the current tab.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">toggle-hints-new-tab</p>
+                <p class="text-base text-[#dcdcaa]">hint-mode-new-tab</p>
                 <p class="text-base text-neutral-500">Shows link hints and opens the selected link in a new tab.</p>
               </div>
               <div class="grid gap-1">
@@ -266,11 +266,11 @@
                 <p class="text-base text-neutral-500">Hard reloads the current page and bypasses cache.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">enable-find-mode</p>
+                <p class="text-base text-[#dcdcaa]">find-mode</p>
                 <p class="text-base text-neutral-500">Opens the in-page find bar and previews the current query's match count.</p>
               </div>
               <div class="grid gap-1">
-                <p class="text-base text-[#dcdcaa]">toggle-video-controls</p>
+                <p class="text-base text-[#dcdcaa]">watch-mode</p>
                 <p class="text-base text-neutral-500">Enters watch mode on the best visible video, or exits watch mode if already active.</p>
               </div>
               <div class="grid gap-1">

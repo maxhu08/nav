@@ -108,13 +108,13 @@ const createToggleHintsAction = (mode: "current-tab" | "new-tab"): ActionHandler
 };
 
 const ACTIONS: Record<ActionName, ActionHandler> = {
-  "toggle-video-controls": watchController.toggleVideoControls,
+  "watch-mode": watchController.toggleVideoControls,
   "toggle-fullscreen": watchController.toggleFullscreen,
   "toggle-play-pause": watchController.togglePlayPause,
   "toggle-loop": watchController.toggleLoop,
   "toggle-mute": watchController.toggleMute,
   "toggle-captions": watchController.toggleCaptions,
-  "enable-find-mode": enableFindModeAction,
+  "find-mode": enableFindModeAction,
   "cycle-match-next": () => findMode.cycleFindMatch(1),
   "cycle-match-prev": () => findMode.cycleFindMatch(-1),
   "history-go-prev": (count = 1) => goHistory(-count),
@@ -129,8 +129,8 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "create-new-tab": createTabCommandAction("create-new-tab"),
   "reload-current-tab": createTabCommandAction("reload-current-tab"),
   "reload-current-tab-hard": createTabCommandAction("reload-current-tab-hard"),
-  "toggle-hints-current-tab": createToggleHintsAction("current-tab"),
-  "toggle-hints-new-tab": createToggleHintsAction("new-tab"),
+  "hint-mode-current-tab": createToggleHintsAction("current-tab"),
+  "hint-mode-new-tab": createToggleHintsAction("new-tab"),
   "yank-link-url": yankLinkUrl,
   "yank-image": yankImage,
   "yank-image-url": yankImageUrl,

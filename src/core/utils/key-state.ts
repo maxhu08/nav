@@ -26,8 +26,7 @@ const getReservedHintPrefixes = (mappings: HotkeyMappings): Set<string> => {
 
   for (const [sequence, bindings] of Object.entries(mappings)) {
     const hasHintsBinding = Object.values(bindings ?? {}).some(
-      (actionName) =>
-        actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab"
+      (actionName) => actionName === "hint-mode-current-tab" || actionName === "hint-mode-new-tab"
     );
 
     if (!hasHintsBinding) {
@@ -269,8 +268,8 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
   const isToggleHintsAction = (
     actionName: ActionName | null
-  ): actionName is "toggle-hints-current-tab" | "toggle-hints-new-tab" =>
-    actionName === "toggle-hints-current-tab" || actionName === "toggle-hints-new-tab";
+  ): actionName is "hint-mode-current-tab" | "hint-mode-new-tab" =>
+    actionName === "hint-mode-current-tab" || actionName === "hint-mode-new-tab";
 
   return {
     applyHotkeyMappings: (

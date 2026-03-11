@@ -41,8 +41,8 @@ gg scroll-to-top
 G scroll-to-bottom
 
 # hints
-f toggle-hints-current-tab
-F toggle-hints-new-tab
+f hint-mode-current-tab
+F hint-mode-new-tab
 
 # tab actions
 t create-new-tab
@@ -60,17 +60,19 @@ yi yank-image
 yI yank-image-url
 yy yank-current-tab-url
 
-# history
+# misc
 H history-go-prev
 L history-go-next
+[ follow-prev
+] follow-next
 
 # find
-/ enable-find-mode
+/ find-mode
 n cycle-match-next # requires find mode
 N cycle-match-prev # requires find mode
 
 # watch
-w toggle-video-controls
+w watch-mode
 f toggle-fullscreen # requires watch mode
 e toggle-play-pause # requires watch mode
 l toggle-loop # requires watch mode

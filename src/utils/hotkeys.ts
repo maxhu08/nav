@@ -7,8 +7,8 @@ export type ActionName =
   | "scroll-half-page-up"
   | "scroll-to-top"
   | "scroll-to-bottom"
-  | "toggle-hints-current-tab"
-  | "toggle-hints-new-tab"
+  | "hint-mode-current-tab"
+  | "hint-mode-new-tab"
   | "create-new-tab"
   | "close-current-tab"
   | "reload-current-tab"
@@ -25,10 +25,10 @@ export type ActionName =
   | "history-go-next"
   | "follow-prev"
   | "follow-next"
-  | "enable-find-mode"
+  | "find-mode"
   | "cycle-match-next"
   | "cycle-match-prev"
-  | "toggle-video-controls"
+  | "watch-mode"
   | "toggle-fullscreen"
   | "toggle-play-pause"
   | "toggle-loop"
@@ -44,8 +44,8 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "scroll-half-page-up",
   "scroll-to-top",
   "scroll-to-bottom",
-  "toggle-hints-current-tab",
-  "toggle-hints-new-tab",
+  "hint-mode-current-tab",
+  "hint-mode-new-tab",
   "create-new-tab",
   "close-current-tab",
   "reload-current-tab",
@@ -62,10 +62,10 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "history-go-next",
   "follow-prev",
   "follow-next",
-  "enable-find-mode",
+  "find-mode",
   "cycle-match-next",
   "cycle-match-prev",
-  "toggle-video-controls",
+  "watch-mode",
   "toggle-fullscreen",
   "toggle-play-pause",
   "toggle-loop",
@@ -241,8 +241,8 @@ gg scroll-to-top
 G scroll-to-bottom
 
 # hints
-f toggle-hints-current-tab
-F toggle-hints-new-tab
+f hint-mode-current-tab
+F hint-mode-new-tab
 
 # tab actions
 t create-new-tab
@@ -267,12 +267,12 @@ L history-go-next
 ] follow-next
 
 # find
-/ enable-find-mode
+/ find-mode
 n cycle-match-next # requires find mode
 N cycle-match-prev # requires find mode
 
 # watch
-w toggle-video-controls
+w watch-mode
 f toggle-fullscreen # requires watch mode
 e toggle-play-pause # requires watch mode
 l toggle-loop # requires watch mode
