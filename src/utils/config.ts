@@ -70,6 +70,7 @@ export const getConfig = (): Promise<Config> => {
 
 export const defaultConfig: Config = {
   rules: {
+    forceNormalMode: true,
     urls: {
       mode: "blacklist",
       blacklist: "",
@@ -95,6 +96,7 @@ export const defaultConfig: Config = {
 
 export type Config = {
   rules: {
+    forceNormalMode: boolean;
     urls: {
       mode: "blacklist" | "whitelist";
       blacklist: string;

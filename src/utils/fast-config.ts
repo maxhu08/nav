@@ -23,6 +23,7 @@ export type FastRule = {
 
 export type FastConfig = {
   rules: {
+    forceNormalMode: boolean;
     urls: {
       mode: "blacklist" | "whitelist";
       blacklist: FastRule[];
@@ -91,6 +92,7 @@ const isReservedLabelsShapeValid = (
 
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
   return (
+    typeof value?.rules?.forceNormalMode === "boolean" &&
     isHotkeyMappingsShapeValid(value?.hotkeys?.mappings) &&
     typeof value?.hotkeys?.prefixes === "object" &&
     value?.hotkeys?.prefixes !== null &&
@@ -343,6 +345,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
 
   return {
     rules: {
+      forceNormalMode: config.rules.forceNormalMode,
       urls: {
         mode: config.rules.urls.mode,
         blacklist: parseRulesUrlsValue(config.rules.urls.blacklist),

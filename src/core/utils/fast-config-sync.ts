@@ -13,6 +13,7 @@ import { type HotkeyMappings } from "~/src/utils/hotkeys";
 type FastConfigSyncDeps = {
   applyHotkeyMappings: (mappings: HotkeyMappings, prefixes: Partial<Record<string, true>>) => void;
   applyUrlRules: (rules: FastConfig["rules"]["urls"]) => void;
+  setForceNormalMode: (value: boolean) => void;
   setWatchShowCapitalizedLetters: (value: boolean) => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
@@ -21,6 +22,7 @@ type FastConfigSyncDeps = {
 };
 
 const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void => {
+  deps.setForceNormalMode(fastConfig.rules.forceNormalMode);
   deps.applyUrlRules(fastConfig.rules.urls);
   setHintCharset(fastConfig.hints.charset);
   setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
