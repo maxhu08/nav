@@ -15,6 +15,7 @@ const MARKER_VARIANT_STYLE_ATTRIBUTE = "data-nav-hint-marker-variant";
 const LETTER_STYLE_ATTRIBUTE = "data-nav-hint-marker-letter";
 const STYLE_ID = `${HINT_NAMESPACE_PREFIX}link-hints-style`;
 const FOCUS_INDICATOR_EVENT = `${HINT_NAMESPACE_PREFIX}focus-indicator`;
+export const HINT_SELECTABLE_ACTIVATED_EVENT = `${HINT_NAMESPACE_PREFIX}hint-selectable-activated`;
 const IS_MAC = navigator.userAgent.includes("Mac");
 let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
@@ -1964,6 +1965,7 @@ const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit):
 
 const openHintInCurrentTab = (element: HTMLElement): void => {
   if (isSelectableElement(element)) {
+    window.dispatchEvent(new CustomEvent(HINT_SELECTABLE_ACTIVATED_EVENT));
     window.focus();
     simulateSelect(element);
     return;
@@ -1994,14 +1996,6 @@ const openHintInCurrentTab = (element: HTMLElement): void => {
 };
 
 const openHintInNewTab = (element: HTMLElement): void => {
-  if (
-    (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) &&
-    element.href
-  ) {
-    const openedWindow = window.open(element.href, "_blank", "noopener,noreferrer");
-    if (openedWindow) return;
-  }
-
   dispatchModifiedClick(element, {
     ctrlKey: !IS_MAC,
     metaKey: IS_MAC

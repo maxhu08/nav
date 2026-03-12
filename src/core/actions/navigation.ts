@@ -1,3 +1,5 @@
+import { FOCUS_INDICATOR_EVENT } from "~/src/core/utils/get-ui";
+
 const PREVIOUS_PATTERNS = ["prev", "previous", "back", "older", "<", "‹", "←", "«", "≪", "<<"];
 const NEXT_PATTERNS = ["next", "more", "newer", ">", "›", "→", "»", "≫", ">>"];
 
@@ -18,11 +20,16 @@ const hasWordBoundary = (pattern: string): boolean => {
 
 const isVisible = (element: Element): boolean => {
   const style = window.getComputedStyle(element);
-  return style.display !== "none" && style.visibility !== "hidden";
+  if (style.display === "none" || style.visibility === "hidden") {
+    return false;
+  }
+
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
 };
 
 const getCandidateTexts = (element: Element): string[] => {
-  const textContent = [
+  const directTextContent = [
     element instanceof HTMLElement ? element.innerText : null,
     element.textContent,
     element instanceof HTMLInputElement ? element.value : null,
@@ -30,7 +37,23 @@ const getCandidateTexts = (element: Element): string[] => {
     element.getAttribute("aria-label")
   ];
 
-  return textContent
+  const nestedInteractiveTextContent =
+    element instanceof HTMLElement
+      ? Array.from(
+          element.querySelectorAll<HTMLElement>(
+            "button, a, [role='button'], [role='link'], [aria-label], [title]"
+          )
+        )
+          .slice(0, 8)
+          .flatMap((nestedElement) => [
+            nestedElement.innerText,
+            nestedElement.textContent,
+            nestedElement.getAttribute("title"),
+            nestedElement.getAttribute("aria-label")
+          ])
+      : [];
+
+  return [...directTextContent, ...nestedInteractiveTextContent]
     .map((value) => value?.trim().toLowerCase() ?? "")
     .filter((value) => value.length > 0);
 };
@@ -68,7 +91,7 @@ const findElementWithRel = (relValue: "prev" | "next"): Element | null => {
 const findMatchingLink = (patterns: readonly string[]): Element | null => {
   const candidates: Candidate[] = [];
   const elements = document.querySelectorAll(
-    "a, area, *[onclick], *[role='link'], *[class*='button']"
+    "a, area, button, input[type='button'], input[type='submit'], input[type='image'], *[onclick], *[role='link'], *[role='button'], *[aria-label], *[title], *[class*='button'], yt-button-shape"
   );
 
   for (let index = elements.length - 1; index >= 0; index -= 1) {
@@ -132,20 +155,49 @@ const findMatchingLink = (patterns: readonly string[]): Element | null => {
   return null;
 };
 
+const resolveActionableElement = (element: Element): Element => {
+  if (!(element instanceof HTMLElement)) {
+    return element;
+  }
+
+  const actionableSelector =
+    "a, area, button, input[type='button'], input[type='submit'], input[type='image'], [role='button'], [role='link'], [onclick]";
+
+  const closestActionable = element.closest(actionableSelector);
+  if (closestActionable) {
+    return closestActionable;
+  }
+
+  const nestedActionable = element.querySelector(actionableSelector);
+  return nestedActionable ?? element;
+};
+
+const dispatchFocusIndicator = (element: HTMLElement): void => {
+  window.dispatchEvent(
+    new CustomEvent(FOCUS_INDICATOR_EVENT, {
+      detail: { element }
+    })
+  );
+};
+
 const followElement = (element: Element): boolean => {
-  if (element instanceof HTMLLinkElement && element.href) {
-    window.location.assign(element.href);
+  const actionableElement = resolveActionableElement(element);
+
+  if (actionableElement instanceof HTMLLinkElement && actionableElement.href) {
+    dispatchFocusIndicator(actionableElement);
+    window.location.assign(actionableElement.href);
     return true;
   }
 
-  if (element instanceof HTMLElement) {
-    element.scrollIntoView({ block: "nearest", inline: "nearest" });
-    element.click();
+  if (actionableElement instanceof HTMLElement) {
+    dispatchFocusIndicator(actionableElement);
+    actionableElement.scrollIntoView({ block: "nearest", inline: "nearest" });
+    actionableElement.click();
     return true;
   }
 
-  if ("click" in element && typeof element.click === "function") {
-    element.click();
+  if ("click" in actionableElement && typeof actionableElement.click === "function") {
+    actionableElement.click();
     return true;
   }
 

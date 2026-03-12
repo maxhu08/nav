@@ -17,10 +17,28 @@ const hasReservedLabelsOption = (value: unknown): boolean => {
   return "reservedLabels" in hints;
 };
 
+const hasForceNormalModeOption = (value: unknown): boolean => {
+  if (!isObjectRecord(value)) {
+    return false;
+  }
+
+  const rules = value.rules;
+  if (!isObjectRecord(rules)) {
+    return false;
+  }
+
+  return "forceNormalMode" in rules;
+};
+
 export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Config => {
   // if config before v1.0.3
   if (!hasReservedLabelsOption(config)) {
     return structuredClone(fallbackConfig);
+  }
+
+  // if config before v1.0.4
+  if (!hasForceNormalModeOption(config)) {
+    return deepMerge(structuredClone(fallbackConfig), config);
   }
 
   return deepMerge(structuredClone(fallbackConfig), config);

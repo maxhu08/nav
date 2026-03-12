@@ -16,6 +16,9 @@ export const rulesUrlsModeBlacklistButtonEl = getElement<HTMLButtonElement>(
 export const rulesUrlsModeWhitelistButtonEl = getElement<HTMLButtonElement>(
   "rules-urls-mode-whitelist-button"
 );
+export const rulesForceNormalModeCheckboxEl = getElement<HTMLInputElement>(
+  "rules-force-normal-mode-checkbox"
+);
 export const rulesUrlsBlacklistSectionEl = getElement<HTMLDivElement>(
   "rules-urls-blacklist-section"
 );

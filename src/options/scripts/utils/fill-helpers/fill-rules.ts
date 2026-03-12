@@ -1,5 +1,6 @@
 import { type Config } from "~/src/utils/config";
 import {
+  rulesForceNormalModeCheckboxEl,
   rulesUrlsBlacklistSectionEl,
   rulesUrlsBlacklistTextareaEl,
   rulesUrlsModeBlacklistButtonEl,
@@ -33,6 +34,7 @@ export const syncRulesUrlsModeControls = (mode: Config["rules"]["urls"]["mode"])
 
 export const fillRulesInputs = (config: Config): void => {
   syncRulesUrlsModeControls(config.rules.urls.mode);
+  rulesForceNormalModeCheckboxEl.checked = config.rules.forceNormalMode;
   rulesUrlsBlacklistTextareaEl.value = config.rules.urls.blacklist;
   rulesUrlsWhitelistTextareaEl.value = config.rules.urls.whitelist;
   syncRulesUrlsHighlight();
