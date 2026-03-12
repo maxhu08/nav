@@ -1994,14 +1994,6 @@ const openHintInCurrentTab = (element: HTMLElement): void => {
 };
 
 const openHintInNewTab = (element: HTMLElement): void => {
-  if (
-    (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) &&
-    element.href
-  ) {
-    const openedWindow = window.open(element.href, "_blank", "noopener,noreferrer");
-    if (openedWindow) return;
-  }
-
   dispatchModifiedClick(element, {
     ctrlKey: !IS_MAC,
     metaKey: IS_MAC
