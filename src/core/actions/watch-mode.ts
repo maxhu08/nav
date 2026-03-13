@@ -63,7 +63,36 @@ const isVideoVisible = (video: HTMLVideoElement): boolean => {
   }
 
   const styles = window.getComputedStyle(video);
-  return styles.display !== "none" && styles.visibility !== "hidden";
+  return styles.display !== "none" && styles.visibility !== "hidden" && styles.opacity !== "0";
+};
+
+const getVideoElementsFromRoot = (root: ParentNode): HTMLVideoElement[] => {
+  const videos = new Set<HTMLVideoElement>();
+  const visitedRoots = new Set<ParentNode>();
+
+  const visitRoot = (currentRoot: ParentNode): void => {
+    if (visitedRoots.has(currentRoot)) {
+      return;
+    }
+    visitedRoots.add(currentRoot);
+
+    for (const node of Array.from(currentRoot.querySelectorAll("video"))) {
+      if (node instanceof HTMLVideoElement) {
+        videos.add(node);
+      }
+    }
+
+    for (const node of Array.from(currentRoot.querySelectorAll("*"))) {
+      if (!(node instanceof HTMLElement) || !node.shadowRoot) {
+        continue;
+      }
+      visitRoot(node.shadowRoot);
+    }
+  };
+
+  visitRoot(root);
+
+  return Array.from(videos);
 };
 
 const applyTileBaseStyles = (tile: HTMLElement): void => {
@@ -106,18 +135,117 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
   let watchShowCapitalizedLetters = false;
 
+  const CONTROL_TEXT_ATTRIBUTES = [
+    "aria-label",
+    "title",
+    "name",
+    "id",
+    "class",
+    "data-testid",
+    "data-test-id",
+    "data-icon",
+    "data-title-no-tooltip",
+    "data-tooltip-target-id"
+  ] as const;
+
   const isInteractiveControl = (element: HTMLElement): boolean => {
+    if (element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true") {
+      return false;
+    }
+
     if (
       element instanceof HTMLButtonElement ||
-      element instanceof HTMLInputElement ||
       element instanceof HTMLSelectElement ||
       element instanceof HTMLTextAreaElement
     ) {
       return !element.disabled;
     }
 
-    const ariaDisabled = element.getAttribute("aria-disabled");
-    return ariaDisabled !== "true";
+    if (element.tagName.toLowerCase() === "summary") {
+      return true;
+    }
+
+    if (element instanceof HTMLInputElement) {
+      return !element.disabled && element.type.toLowerCase() !== "hidden";
+    }
+
+    if (element instanceof HTMLAnchorElement) {
+      return !!element.href;
+    }
+
+    const role = element.getAttribute("role")?.toLowerCase();
+    if (
+      role &&
+      ["button", "switch", "checkbox", "radio", "menuitem", "menuitemcheckbox"].includes(role)
+    ) {
+      return true;
+    }
+
+    if (element.hasAttribute("onclick") || element.hasAttribute("jsaction")) {
+      return true;
+    }
+
+    const tabIndexValue = element.getAttribute("tabindex");
+    if (tabIndexValue !== null) {
+      const parsedTabIndex = Number.parseInt(tabIndexValue, 10);
+      if (!Number.isNaN(parsedTabIndex) && parsedTabIndex >= 0) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const getInteractiveControlTarget = (
+    element: HTMLElement,
+    root: HTMLElement
+  ): HTMLElement | null => {
+    let current: HTMLElement | null = element;
+    while (current && current !== root) {
+      if (isInteractiveControl(current)) {
+        return current;
+      }
+      current = current.parentElement;
+    }
+
+    if (current === root && isInteractiveControl(current)) {
+      return current;
+    }
+
+    return null;
+  };
+
+  const isElementVisible = (element: HTMLElement): boolean => {
+    const bounds = element.getBoundingClientRect();
+    if (bounds.width < 1 || bounds.height < 1) {
+      return false;
+    }
+
+    const styles = window.getComputedStyle(element);
+    if (styles.display === "none" || styles.visibility === "hidden" || styles.opacity === "0") {
+      return false;
+    }
+
+    if (
+      bounds.bottom < 0 ||
+      bounds.right < 0 ||
+      bounds.top > window.innerHeight ||
+      bounds.left > window.innerWidth
+    ) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const getControlText = (element: HTMLElement): string => {
+    return [
+      ...CONTROL_TEXT_ATTRIBUTES.map((attributeName) => element.getAttribute(attributeName)),
+      element.textContent
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
   };
 
   const isLikelyFullscreenControl = (element: HTMLElement): boolean => {
@@ -134,15 +262,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   };
 
   const getControlLabelText = (element: HTMLElement): string => {
-    return [
-      element.getAttribute("aria-label"),
-      element.getAttribute("title"),
-      element.getAttribute("data-title-no-tooltip"),
-      element.getAttribute("data-tooltip-target-id"),
-      element.textContent
-    ]
-      .join(" ")
-      .toLowerCase();
+    return getControlText(element);
   };
 
   const isLikelyMuteControl = (element: HTMLElement): boolean => {
@@ -217,12 +337,29 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return youtubeControl;
     }
 
-    const containerCandidates = [
-      video.closest(".html5-video-player"),
-      video.closest("[class*='player' i]"),
-      video.closest("[id*='player' i]"),
-      video.parentElement
-    ].filter((candidate): candidate is HTMLElement => candidate instanceof HTMLElement);
+    const containerCandidates: HTMLElement[] = [];
+    const seenRoots = new Set<HTMLElement>();
+
+    const addContainerCandidate = (candidate: HTMLElement | null): void => {
+      if (!candidate || seenRoots.has(candidate)) {
+        return;
+      }
+      seenRoots.add(candidate);
+      containerCandidates.push(candidate);
+    };
+
+    addContainerCandidate(video.closest(".html5-video-player"));
+    addContainerCandidate(video.closest("[class*='player' i]"));
+    addContainerCandidate(video.closest("[id*='player' i]"));
+    addContainerCandidate(video.parentElement);
+
+    let ancestor: HTMLElement | null = video.parentElement;
+    for (let depth = 0; depth < 6 && ancestor; depth += 1) {
+      addContainerCandidate(ancestor);
+      ancestor = ancestor.parentElement;
+    }
+
+    addContainerCandidate(document.body);
 
     const controlSelectorsByKind: Record<SiteToggleControlKind, string> = {
       fullscreen: [
@@ -236,9 +373,16 @@ export const createWatchController = (deps: WatchControllerDeps) => {
         ".ytp-mute-button",
         "[aria-label*='mute' i]",
         "[aria-label*='unmute' i]",
+        "[title*='unmute' i]",
         "[title*='mute' i]",
+        "[aria-label*='volume' i]",
+        "[title*='volume' i]",
+        "[name*='volume' i]",
+        "[name*='mute' i]",
         "[class*='mute' i]",
         "[class*='volume' i]",
+        "[id*='mute' i]",
+        "[id*='volume' i]",
         "[data-testid*='mute' i]",
         "[data-testid*='volume' i]"
       ].join(", "),
@@ -265,6 +409,24 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       ].join(", ")
     };
     const selectors = controlSelectorsByKind[kind];
+    const videoBounds = video.getBoundingClientRect();
+    const candidateScores = new Map<HTMLElement, number>();
+
+    const getDistanceScore = (control: HTMLElement): number => {
+      const bounds = control.getBoundingClientRect();
+      const centerX = bounds.left + bounds.width / 2;
+      const centerY = bounds.top + bounds.height / 2;
+      const leftCornerDistance = Math.hypot(
+        centerX - videoBounds.left,
+        centerY - videoBounds.bottom
+      );
+      const rightCornerDistance = Math.hypot(
+        centerX - videoBounds.right,
+        centerY - videoBounds.bottom
+      );
+      const minDistance = Math.min(leftCornerDistance, rightCornerDistance);
+      return Math.max(0, 8 - minDistance / 90);
+    };
 
     for (const root of containerCandidates) {
       const controls = Array.from(root.querySelectorAll(selectors)).filter(
@@ -272,32 +434,81 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       );
 
       for (const control of controls) {
-        if (control.closest(`#${WATCH_HINTS_ID}`)) {
+        const candidate = getInteractiveControlTarget(control, root);
+        if (!candidate || candidate.closest(`#${WATCH_HINTS_ID}`)) {
           continue;
         }
 
-        const bounds = control.getBoundingClientRect();
-        if (bounds.width < 1 || bounds.height < 1) {
+        if (!isElementVisible(candidate)) {
+          continue;
+        }
+
+        if (
+          kind === "mute" &&
+          (candidate.getAttribute("role")?.toLowerCase() === "slider" ||
+            (candidate instanceof HTMLInputElement && candidate.type.toLowerCase() === "range"))
+        ) {
           continue;
         }
 
         const isLikelyControl =
           kind === "fullscreen"
-            ? isLikelyFullscreenControl(control)
+            ? isLikelyFullscreenControl(candidate)
             : kind === "mute"
-              ? isLikelyMuteControl(control)
+              ? isLikelyMuteControl(candidate)
               : kind === "captions"
-                ? isLikelyCaptionsControl(control)
-                : isLikelyLoopControl(control);
-        if (!isInteractiveControl(control) || !isLikelyControl) {
+                ? isLikelyCaptionsControl(candidate)
+                : isLikelyLoopControl(candidate);
+        if (!isLikelyControl) {
           continue;
         }
 
-        return control;
+        const controlText = getControlText(candidate);
+        let score = getDistanceScore(candidate);
+
+        if (kind === "mute") {
+          if (/\b(mute|unmute|volume|sound|speaker|audio)\b/.test(controlText)) {
+            score += 18;
+          }
+          if (/\b(slider|seek|scrub|timeline|progress|bar|knob)\b/.test(controlText)) {
+            score -= 20;
+          }
+        }
+
+        if (kind === "fullscreen" && /\b(fullscreen|full screen)\b/.test(controlText)) {
+          score += 16;
+        }
+        if (
+          kind === "captions" &&
+          /\b(cc|caption|captions|subtitle|subtitles)\b/.test(controlText)
+        ) {
+          score += 16;
+        }
+        if (kind === "loop" && /\b(loop|repeat)\b/.test(controlText)) {
+          score += 16;
+        }
+
+        if (candidate.hasAttribute("aria-pressed") || candidate.hasAttribute("aria-checked")) {
+          score += 3;
+        }
+
+        const currentBestScore = candidateScores.get(candidate) ?? Number.NEGATIVE_INFINITY;
+        if (score > currentBestScore) {
+          candidateScores.set(candidate, score);
+        }
       }
     }
 
-    return null;
+    let bestControl: HTMLElement | null = null;
+    let bestScore = Number.NEGATIVE_INFINITY;
+    for (const [control, score] of candidateScores.entries()) {
+      if (score > bestScore) {
+        bestScore = score;
+        bestControl = control;
+      }
+    }
+
+    return bestControl;
   };
 
   const createWatchLabel = (sequence: string): HTMLSpanElement => {
@@ -427,7 +638,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return activeElement;
     }
 
-    const visibleVideos = Array.from(document.querySelectorAll("video")).filter(
+    const visibleVideos = getVideoElementsFromRoot(document).filter(
       (video): video is HTMLVideoElement =>
         video instanceof HTMLVideoElement && isVideoVisible(video)
     );
@@ -436,8 +647,24 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return null;
     }
 
-    const playingVideo = visibleVideos.find((video) => !video.paused && !video.ended);
-    return playingVideo ?? visibleVideos[0] ?? null;
+    const viewportCenterX = window.innerWidth / 2;
+    const viewportCenterY = window.innerHeight / 2;
+    const getVideoScore = (video: HTMLVideoElement): number => {
+      const bounds = video.getBoundingClientRect();
+      const areaScore = bounds.width * bounds.height;
+      const centerX = bounds.left + bounds.width / 2;
+      const centerY = bounds.top + bounds.height / 2;
+      const centerDistance = Math.hypot(centerX - viewportCenterX, centerY - viewportCenterY);
+      const centerScore = Math.max(0, 20000 - centerDistance * 60);
+      const playingScore = !video.paused && !video.ended ? 1_000_000_000 : 0;
+      return playingScore + areaScore + centerScore;
+    };
+
+    const rankedVideos = [...visibleVideos].sort((left, right) => {
+      return getVideoScore(right) - getVideoScore(left);
+    });
+
+    return rankedVideos[0] ?? null;
   };
 
   const exitWatchMode = (): void => {
@@ -523,6 +750,69 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     return getToggleableTextTracks(video).some((track) => track.mode === "showing");
   };
 
+  const getVideoMutedState = (video: HTMLVideoElement): boolean => {
+    return video.muted || video.volume <= 0;
+  };
+
+  const getMuteStateFromControl = (
+    video: HTMLVideoElement,
+    control: HTMLElement | null
+  ): boolean => {
+    if (!control) {
+      return getVideoMutedState(video);
+    }
+
+    if (control.classList.contains("ytp-mute-button")) {
+      return control.classList.contains("ytp-mute-button-active");
+    }
+
+    const pressedState = getControlPressedState(control);
+    if (pressedState !== null) {
+      return pressedState;
+    }
+
+    const text = getControlText(control);
+    if (/\bunmute\b/.test(text)) {
+      return true;
+    }
+    if (/\bmute\b/.test(text)) {
+      return false;
+    }
+
+    return getVideoMutedState(video);
+  };
+
+  const triggerMuteControlWithKeyboard = (control: HTMLElement): void => {
+    control.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    control.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", bubbles: true }));
+  };
+
+  const toggleMuteWithFallback = (video: HTMLVideoElement): boolean => {
+    const siteMuteControl = findSiteToggleControl(video, "mute");
+    const wasMuted = getMuteStateFromControl(video, siteMuteControl);
+
+    if (siteMuteControl) {
+      siteMuteControl.click();
+      let muteStateAfterTrigger = getMuteStateFromControl(video, siteMuteControl);
+      if (muteStateAfterTrigger !== wasMuted) {
+        return muteStateAfterTrigger;
+      }
+
+      triggerMuteControlWithKeyboard(siteMuteControl);
+      muteStateAfterTrigger = getMuteStateFromControl(video, siteMuteControl);
+      if (muteStateAfterTrigger !== wasMuted) {
+        return muteStateAfterTrigger;
+      }
+    }
+
+    video.muted = !wasMuted;
+    if (video.muted === wasMuted) {
+      video.muted = !video.muted;
+    }
+
+    return getVideoMutedState(video);
+  };
+
   const renderWatchHintsOverlay = (video: HTMLVideoElement): void => {
     const overlay = getWatchHintsOverlay();
     overlay.replaceChildren();
@@ -535,7 +825,9 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
     const playPauseIconPath =
       video.paused || video.ended ? WATCH_PLAY_ICON_PATH : WATCH_PAUSE_ICON_PATH;
-    const muteIconPath = video.muted ? WATCH_VOLUME_MUTE_ICON_PATH : WATCH_VOLUME_UP_ICON_PATH;
+    const muteIconPath = getVideoMutedState(video)
+      ? WATCH_VOLUME_MUTE_ICON_PATH
+      : WATCH_VOLUME_UP_ICON_PATH;
 
     const grid = createWatchActionGrid();
 
@@ -688,18 +980,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
-      const wasMuted = video.muted;
-      const siteMuteControl = findSiteToggleControl(video, "mute");
-      if (siteMuteControl) {
-        siteMuteControl.click();
-      } else {
-        video.muted = !video.muted;
-      }
-      const isMuted = siteMuteControl
-        ? video.muted === wasMuted
-          ? !wasMuted
-          : video.muted
-        : video.muted;
+      const isMuted = toggleMuteWithFallback(video);
       showWatchToggleToast(isMuted ? "Video muted" : "Video unmuted");
       exitWatchMode();
       return true;
@@ -806,16 +1087,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       showWatchActivationIndicator(video);
-      const wasMuted = video.muted;
-      const siteMuteControl = findSiteToggleControl(video, "mute");
-      if (siteMuteControl) {
-        siteMuteControl.click();
-      } else {
-        video.muted = !video.muted;
-      }
-      if (!siteMuteControl && video.muted === wasMuted) {
-        video.muted = !video.muted;
-      }
+      toggleMuteWithFallback(video);
       return true;
     },
     toggleCaptions: (): boolean => {

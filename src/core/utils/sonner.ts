@@ -71,6 +71,8 @@ const TOASTER_WRAPPER_ID = `${NAV_NAMESPACE_PREFIX}toaster-wrapper`;
 const TOASTER_LIST_ID = `${NAV_NAMESPACE_PREFIX}toaster-list`;
 const TOAST_CLASS = `${NAV_NAMESPACE_PREFIX}toast`;
 const STYLE_ID = `${NAV_NAMESPACE_PREFIX}toaster-style`;
+const TOAST_PROXY_EVENT = `${NAV_NAMESPACE_PREFIX}toast-proxy`;
+const TOAST_PROXY_LISTENER_FLAG = `${NAV_NAMESPACE_PREFIX}toast-proxy-listener`;
 
 const __actionHandlers = new Map();
 
@@ -85,18 +87,42 @@ function getWrapper() {
 }
 
 export function ensureToastWrapper() {
-  if (getWrapper()) {
+  const root = document.documentElement ?? document.body;
+  if (!root) {
     return;
   }
 
   ensureToastStyle();
 
-  const wrapper = document.createElement("div");
-  wrapper.id = TOASTER_WRAPPER_ID;
-  wrapper.setAttribute("data-rich-colors", "true");
-  wrapper.setAttribute("data-expand", "false");
-  wrapper.setAttribute("data-position", "bottom-right");
-  document.body.appendChild(wrapper);
+  const wrapper = getWrapper() ?? document.createElement("div");
+  if (!wrapper.id) {
+    wrapper.id = TOASTER_WRAPPER_ID;
+  }
+
+  if (!wrapper.getAttribute("data-rich-colors")) {
+    wrapper.setAttribute("data-rich-colors", "true");
+  }
+  if (!wrapper.getAttribute("data-expand")) {
+    wrapper.setAttribute("data-expand", "false");
+  }
+  if (!wrapper.getAttribute("data-position")) {
+    wrapper.setAttribute("data-position", "bottom-right");
+  }
+
+  wrapper.style.setProperty("position", "fixed", "important");
+  wrapper.style.setProperty("inset", "0", "important");
+  wrapper.style.setProperty("width", "100vw", "important");
+  wrapper.style.setProperty("height", "100vh", "important");
+  wrapper.style.setProperty("pointer-events", "none", "important");
+  wrapper.style.setProperty("z-index", "2147483647", "important");
+  wrapper.style.setProperty("margin", "0", "important");
+  wrapper.style.setProperty("padding", "0", "important");
+  wrapper.style.setProperty("transform", "none", "important");
+  wrapper.style.setProperty("isolation", "isolate", "important");
+
+  if (wrapper.parentElement !== root) {
+    root.appendChild(wrapper);
+  }
 }
 
 function getToasterList() {
@@ -123,7 +149,50 @@ function isAllowedType(type) {
   return type === "success" || type === "info" || type === "warning" || type === "error";
 }
 
+function shouldProxyToastToTop(action) {
+  if (action) {
+    return false;
+  }
+
+  try {
+    return window.top !== window;
+  } catch {
+    return false;
+  }
+}
+
+function tryProxyToastToTop(content, { description = "", type } = {}) {
+  try {
+    if (!window.top || window.top === window) {
+      return false;
+    }
+
+    const toastType = isAllowedType(type) ? type : "info";
+
+    window.top.postMessage(
+      {
+        source: NAV_NAMESPACE_PREFIX,
+        type: TOAST_PROXY_EVENT,
+        payload: {
+          content,
+          description,
+          toastType
+        }
+      },
+      "*"
+    );
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function basicToast(content, { description = "", type, action } = {}) {
+  if (shouldProxyToastToTop(action) && tryProxyToastToTop(content, { description, type })) {
+    return null;
+  }
+
   const wrapper = getWrapper();
 
   if (!wrapper) throw new Error("No wrapper element found, please follow documentation");
@@ -657,13 +726,54 @@ const toast = {
   warning: (message, options = {}) => basicToast(message, { ...options, type: "warning" }),
   error: (message, options = {}) => basicToast(message, { ...options, type: "error" })
 };
+
+function isValidToastProxyMessage(data) {
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+  if (data.source !== NAV_NAMESPACE_PREFIX || data.type !== TOAST_PROXY_EVENT) {
+    return false;
+  }
+  if (!data.payload || typeof data.payload !== "object") {
+    return false;
+  }
+  if (typeof data.payload.content !== "string") {
+    return false;
+  }
+
+  return true;
+}
+
+function registerToastProxyListener() {
+  try {
+    if (window.top !== window) {
+      return;
+    }
+  } catch {
+    return;
+  }
+
+  if (window[TOAST_PROXY_LISTENER_FLAG]) {
+    return;
+  }
+  window[TOAST_PROXY_LISTENER_FLAG] = true;
+
+  window.addEventListener("message", (event) => {
+    if (!isValidToastProxyMessage(event.data)) {
+      return;
+    }
+
+    const payload = event.data.payload;
+    ensureToastWrapper();
+    basicToast(payload.content, {
+      description: typeof payload.description === "string" ? payload.description : "",
+      type: payload.toastType
+    });
+  });
+}
+
 window[WINDOW_TOAST_KEY] = toast;
 if (document) {
-  ensureToastStyle();
-}
-if (document && !getWrapper()) {
-  const wrapper = document.createElement("div");
-  wrapper.id = TOASTER_WRAPPER_ID;
-  wrapper.setAttribute("data-position", DEFAULT_POSITION);
-  document.documentElement.appendChild(wrapper);
+  registerToastProxyListener();
+  ensureToastWrapper();
 }

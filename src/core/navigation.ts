@@ -37,12 +37,32 @@ import {
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
 import { createKeyState, getKeyToken, isModifierKey } from "~/src/core/utils/key-state";
 import { ensureToastWrapper } from "~/src/core/utils/sonner";
+import { getExtensionNamespace } from "~/src/utils/extension-id";
 import { type FastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 
 type ActionHandler = (count?: number) => boolean;
 type CoreMode = "normal" | "find" | "watch";
 const HINT_EXIT_KEY_GRACE_MS = 180;
+const FRAME_ACTION_EVENT = `nav-${getExtensionNamespace()}-frame-action`;
+const FRAME_ACTION_SOURCE = `nav-${getExtensionNamespace()}-frame-bridge`;
+const MAX_FRAME_ACTION_HOPS = 6;
+
+const FRAME_PROXY_ACTIONS = new Set<ActionName>([
+  "watch-mode",
+  "toggle-fullscreen",
+  "toggle-play-pause",
+  "toggle-loop",
+  "toggle-mute",
+  "toggle-captions"
+]);
+
+type FrameActionMessage = {
+  source: string;
+  type: string;
+  actionName: ActionName;
+  hops: number;
+};
 
 let currentMode: CoreMode = "normal";
 let isInitialized = false;
@@ -51,6 +71,88 @@ let isStartupFocusGuardActive = false;
 let isForceNormalModeGuardAttached = false;
 let hintExitGraceUntil = 0;
 let shouldBypassNextTypingKeyAfterHintSelect = false;
+
+const isTopFrame = (): boolean => {
+  try {
+    return window.top === window;
+  } catch {
+    return false;
+  }
+};
+
+const isFrameActionMessage = (value: unknown): value is FrameActionMessage => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const data = value as Partial<FrameActionMessage>;
+  return (
+    data.source === FRAME_ACTION_SOURCE &&
+    data.type === FRAME_ACTION_EVENT &&
+    typeof data.actionName === "string" &&
+    FRAME_PROXY_ACTIONS.has(data.actionName as ActionName) &&
+    typeof data.hops === "number"
+  );
+};
+
+const postFrameActionToWindow = (target: Window, actionName: ActionName, hops: number): boolean => {
+  try {
+    target.postMessage(
+      {
+        source: FRAME_ACTION_SOURCE,
+        type: FRAME_ACTION_EVENT,
+        actionName,
+        hops
+      } satisfies FrameActionMessage,
+      "*"
+    );
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const broadcastFrameActionToChildren = (
+  actionName: ActionName,
+  hops: number,
+  skipWindow: Window | null = null
+): boolean => {
+  if (hops >= MAX_FRAME_ACTION_HOPS) {
+    return false;
+  }
+
+  let sent = false;
+  for (let index = 0; index < window.frames.length; index += 1) {
+    const childWindow = window.frames[index];
+    if (!childWindow || childWindow === skipWindow) {
+      continue;
+    }
+
+    if (postFrameActionToWindow(childWindow, actionName, hops + 1)) {
+      sent = true;
+    }
+  }
+
+  return sent;
+};
+
+const proxyActionToFrames = (actionName: ActionName): boolean => {
+  if (!FRAME_PROXY_ACTIONS.has(actionName)) {
+    return false;
+  }
+
+  let sent = broadcastFrameActionToChildren(actionName, 0);
+
+  if (!isTopFrame()) {
+    try {
+      if (window.top && postFrameActionToWindow(window.top, actionName, 0)) {
+        sent = true;
+      }
+    } catch {}
+  }
+
+  return sent;
+};
 
 const isMode = (mode: CoreMode): boolean => currentMode === mode;
 
@@ -394,11 +496,35 @@ const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
 
   const didHandle = ACTIONS[actionName](keyState.resolveCount());
 
+  if (!didHandle && proxyActionToFrames(actionName)) {
+    consumeKeyboardEvent(event);
+    return;
+  }
+
   if (!didHandle && !isScrollAction(actionName)) {
     return;
   }
 
   consumeKeyboardEvent(event);
+};
+
+const handleFrameActionMessage = (event: MessageEvent): void => {
+  if (!isFrameActionMessage(event.data)) {
+    return;
+  }
+
+  const { actionName, hops } = event.data;
+  const didHandle = ACTIONS[actionName]();
+  if (didHandle) {
+    return;
+  }
+
+  if (hops >= MAX_FRAME_ACTION_HOPS) {
+    return;
+  }
+
+  const sender = event.source instanceof Window ? event.source : null;
+  broadcastFrameActionToChildren(actionName, hops, sender);
 };
 
 const handleKeydown = (event: KeyboardEvent): void => {
@@ -527,5 +653,6 @@ export const initCoreNavigation = (): void => {
   ensureToastWrapper();
   syncFastConfig(fastConfigSyncDeps);
   chrome.storage.onChanged.addListener(handleStorageChange);
+  window.addEventListener("message", handleFrameActionMessage);
   window.addEventListener("keydown", handleKeydown, true);
 };
