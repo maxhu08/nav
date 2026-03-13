@@ -67,7 +67,7 @@ type HintState = {
   overlay: HTMLDivElement | null;
   onActivate: ((element: HTMLElement) => void) | null;
   frameHandle: number | null;
-  revealedVideoHoverElements: Array<{
+  revealedHoverElements: Array<{
     element: HTMLElement;
     inlineStyle: string | null;
   }>;
@@ -84,7 +84,7 @@ const hintState: HintState = {
   overlay: null,
   onActivate: null,
   frameHandle: null,
-  revealedVideoHoverElements: []
+  revealedHoverElements: []
 };
 
 const MARKER_VIEWPORT_PADDING = 4;
@@ -601,6 +601,19 @@ const HINT_SELECTORS_DEFAULT = [
   "[jsaction]"
 ].join(",");
 
+const HOVER_HINT_CONTAINER_SELECTOR = ["[data-playbutton='hover']", "[data-actions='hover']"].join(
+  ","
+);
+const HOVER_HINT_INTERACTIVE_SELECTOR = [
+  "a",
+  "button",
+  "[role]",
+  "[tabindex]",
+  "[onclick]",
+  "[jsaction]"
+].join(",");
+const HOVER_HINT_PLAY_CONTROL_PATTERNS = [/\bplay\b/i, /\bpause\b/i, /\bresume\b/i, /\bpreview\b/i];
+
 const getHintSelector = (mode: LinkMode): string => {
   if (mode === "copy-link") {
     return HINT_SELECTORS_COPY_LINK;
@@ -947,6 +960,72 @@ const getJoinedAttributeText = (
 
 const textMatchesAnyPattern = (text: string, patterns: readonly RegExp[]): boolean =>
   patterns.some((pattern) => pattern.test(text));
+
+const hasHoverPlayControlSignal = (element: HTMLElement): boolean => {
+  const attributeText = getJoinedAttributeText(element, [
+    "aria-label",
+    "title",
+    "data-testid",
+    "data-test-id",
+    "class",
+    "name"
+  ]);
+
+  return textMatchesAnyPattern(attributeText, HOVER_HINT_PLAY_CONTROL_PATTERNS);
+};
+
+const revealElementForHintCollection = (element: HTMLElement, seen: Set<HTMLElement>): void => {
+  if (seen.has(element)) {
+    return;
+  }
+
+  seen.add(element);
+  hintState.revealedHoverElements.push({
+    element,
+    inlineStyle: element.getAttribute("style")
+  });
+
+  const computedStyle = window.getComputedStyle(element);
+  if (computedStyle.display === "none") {
+    element.style.setProperty("display", "revert", "important");
+  }
+
+  element.style.setProperty("opacity", "1", "important");
+  element.style.setProperty("visibility", "visible", "important");
+  element.style.setProperty("pointer-events", "auto", "important");
+};
+
+const revealHoverHintControls = (mode: LinkMode): void => {
+  if (mode === "copy-link" || mode === "copy-image") {
+    return;
+  }
+
+  const seen = new Set<HTMLElement>();
+
+  for (const container of Array.from(
+    document.querySelectorAll<HTMLElement>(HOVER_HINT_CONTAINER_SELECTOR)
+  )) {
+    for (const candidate of Array.from(
+      container.querySelectorAll<HTMLElement>(HOVER_HINT_INTERACTIVE_SELECTOR)
+    )) {
+      if (!isActivatableElement(candidate) || !hasHoverPlayControlSignal(candidate)) {
+        continue;
+      }
+
+      let current: HTMLElement | null = candidate;
+
+      while (current && container.contains(current)) {
+        revealElementForHintCollection(current, seen);
+
+        if (current === container) {
+          break;
+        }
+
+        current = current.parentElement;
+      }
+    }
+  }
+};
 
 const getNormalizedSameOriginPath = (href: string): string | null => {
   try {
@@ -1796,14 +1875,7 @@ const revealVideoHintControls = (markers: HintMarker[]): void => {
 
     while (current) {
       if (!seen.has(current)) {
-        seen.add(current);
-        hintState.revealedVideoHoverElements.push({
-          element: current,
-          inlineStyle: current.getAttribute("style")
-        });
-
-        current.style.setProperty("opacity", "1", "important");
-        current.style.setProperty("visibility", "visible", "important");
+        revealElementForHintCollection(current, seen);
       }
 
       if (current === videoContainer) {
@@ -1815,8 +1887,8 @@ const revealVideoHintControls = (markers: HintMarker[]): void => {
   }
 };
 
-const restoreRevealedVideoHintControls = (): void => {
-  for (const { element, inlineStyle } of hintState.revealedVideoHoverElements) {
+const restoreRevealedHintControls = (): void => {
+  for (const { element, inlineStyle } of hintState.revealedHoverElements) {
     if (inlineStyle === null) {
       element.removeAttribute("style");
       continue;
@@ -1825,7 +1897,7 @@ const restoreRevealedVideoHintControls = (): void => {
     element.setAttribute("style", inlineStyle);
   }
 
-  hintState.revealedVideoHoverElements = [];
+  hintState.revealedHoverElements = [];
 };
 
 const schedulePositionUpdate = (): void => {
@@ -2011,7 +2083,7 @@ export const exitHints = (): void => {
   window.removeEventListener("resize", onViewportChange, true);
   window.removeEventListener("blur", exitHints, true);
 
-  restoreRevealedVideoHintControls();
+  restoreRevealedHintControls();
   hintState.overlay?.remove();
 
   hintState.active = false;
@@ -2095,9 +2167,13 @@ export const activateHints = (
 ): boolean => {
   exitHints();
   applyHintStyles();
+  revealHoverHintControls(mode);
 
   const elements = getHintableElements(mode);
-  if (elements.length === 0) return false;
+  if (elements.length === 0) {
+    restoreRevealedHintControls();
+    return false;
+  }
 
   const preferredSearchElementIndex = getPreferredSearchElementIndex(elements);
   const preferredHomeElementIndex = getPreferredHomeElementIndex(elements);
@@ -2161,7 +2237,10 @@ export const activateHints = (
     markers.push({ element, marker, label, letters, visible: true, renderedTyped });
   });
 
-  if (markers.length === 0) return false;
+  if (markers.length === 0) {
+    restoreRevealedHintControls();
+    return false;
+  }
 
   document.documentElement.appendChild(overlay);
 
