@@ -19,7 +19,7 @@ Use this page as the fast entry point for contributors.
 - Package the source tree: `bun run package:source`
 - Validate changes before committing: `bun run check`
 - Format code before committing: `bun run format`
-- Formatter is also enforced by pre-commit hooks.
+- Formatter is also enforced by the pre-commit hook with `oxfmt`.
 - Commit messages are also checked by `commitlint` in the `commit-msg` hook. See [Committing](./COMMITTING.md).
 
 ## Scope Notes

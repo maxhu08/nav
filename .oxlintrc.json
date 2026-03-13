@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "typescript/ban-ts-comment": "off"
+  },
+  "ignorePatterns": ["dist/**", "output/**"]
+}

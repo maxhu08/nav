@@ -23,7 +23,7 @@
 
 ## Pre-Commit Hook
 
-- Husky formats staged files before commit with Prettier.
+- Husky formats staged files before commit with `oxfmt`.
 - Husky also validates the commit message before the commit is created.
 
 ## Before Opening a PR

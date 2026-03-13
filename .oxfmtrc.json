@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": false,
+  "semi": true,
+  "tabWidth": 2,
+  "printWidth": 100,
+  "trailingComma": "none",
+  "arrowParens": "always",
+  "sortTailwindcss": {},
+  "sortPackageJson": false,
+  "overrides": [
+    {
+      "files": ["*.html"],
+      "options": {
+        "printWidth": 200
+      }
+    }
+  ],
+  "ignorePatterns": ["src/options/scripts/ui.ts", "src/popup/ui.ts"]
+}
