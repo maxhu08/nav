@@ -7,6 +7,10 @@ import {
   hintsReservedLabelsTextareaEl
 } from "~/src/options/scripts/ui";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
+import {
+  isReservedHintDirective,
+  RESERVED_HINT_DIRECTIVE_LINE_PATTERN
+} from "~/src/utils/hint-reserved-label-directives";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -70,18 +74,6 @@ const renderCharsetHighlight = (
   return { hasError, html, errors };
 };
 
-const RESERVED_HINT_ELEMENTS = new Set([
-  "search",
-  "home",
-  "sidebar",
-  "next",
-  "prev",
-  "cancel",
-  "submit",
-  "like",
-  "dislike"
-]);
-
 const renderReservedLabelsHighlight = (
   value: string
 ): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
@@ -112,7 +104,7 @@ const renderReservedLabelsHighlight = (
         return wrapToken("hints-reserved-labels-token-invalid", line);
       }
 
-      const match = line.match(/^@([a-z]+) ([a-z]+(?: [a-z]+)*)$/i);
+      const match = line.match(RESERVED_HINT_DIRECTIVE_LINE_PATTERN);
       if (!match) {
         hasError = true;
         errors.push({
@@ -125,7 +117,7 @@ const renderReservedLabelsHighlight = (
       const directive = (match[1] ?? "").toLowerCase();
       const labels = (match[2] ?? "").split(" ");
 
-      if (!RESERVED_HINT_ELEMENTS.has(directive)) {
+      if (!isReservedHintDirective(directive)) {
         hasError = true;
         errors.push({
           code: "invalid-directive",

@@ -14,6 +14,7 @@ import {
   isActionName,
   parseHotkeyMappingsValue
 } from "~/src/utils/hotkeys";
+import { parseReservedHintDirectives } from "~/src/utils/hint-reserved-label-directives";
 
 export type FastRule = {
   pattern: string;
@@ -58,18 +59,6 @@ export type FastConfig = {
 };
 
 const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch"];
-const RESERVED_HINT_ELEMENTS = new Set([
-  "search",
-  "home",
-  "sidebar",
-  "next",
-  "prev",
-  "cancel",
-  "submit",
-  "like",
-  "dislike"
-] as const);
-
 const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -220,74 +209,9 @@ const parseAvoidAdjacentPairsValue = (
   return normalizedPairs;
 };
 
-const parsePreferredLabelsValue = (value: string): string[] => {
-  const parseLabels = (rawValue: string): string[] => {
-    const normalizedLabels: string[] = [];
-    const seenLabels = new Set<string>();
-    let previousLabelLength: number | null = null;
-
-    for (const segment of rawValue
-      .toLowerCase()
-      .split(/\s+/)
-      .map((part) => part.trim())) {
-      const hasExpectedLength =
-        previousLabelLength === null || segment.length === previousLabelLength + 1;
-
-      if (!/^[a-z]+$/.test(segment) || seenLabels.has(segment) || !hasExpectedLength) {
-        continue;
-      }
-
-      seenLabels.add(segment);
-      normalizedLabels.push(segment);
-      previousLabelLength = segment.length;
-    }
-
-    return normalizedLabels;
-  };
-
-  return parseLabels(value);
-};
-
-const parseReservedLabelsDirectives = (
-  value: string
-): Partial<FastConfig["hints"]["reservedLabels"]> => {
-  const result: Partial<FastConfig["hints"]["reservedLabels"]> = {};
-
-  for (const line of value.split("\n")) {
-    const trimmedLine = line.trim();
-    if (!trimmedLine || trimmedLine.startsWith("#")) {
-      continue;
-    }
-
-    if (line !== trimmedLine) {
-      continue;
-    }
-
-    const match = line.match(/^@([a-z]+) ([a-z]+(?: [a-z]+)*)$/i);
-    if (!match) {
-      continue;
-    }
-
-    const element = match[1]?.toLowerCase() as keyof FastConfig["hints"]["reservedLabels"];
-    const labelsText = match[2] ?? "";
-    if (!RESERVED_HINT_ELEMENTS.has(element)) {
-      continue;
-    }
-
-    const parsedLabels = parsePreferredLabelsValue(labelsText);
-    if (parsedLabels.length === 0) {
-      continue;
-    }
-
-    result[element] = parsedLabels;
-  }
-
-  return result;
-};
-
 const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedLabels"] => {
-  const result = parseReservedLabelsDirectives(value);
-  const fallbackResult = parseReservedLabelsDirectives(DEFAULT_HINT_RESERVED_LABELS);
+  const result = parseReservedHintDirectives(value);
+  const fallbackResult = parseReservedHintDirectives(DEFAULT_HINT_RESERVED_LABELS);
   return {
     search: result.search ?? fallbackResult.search ?? [],
     home: result.home ?? fallbackResult.home ?? [],
