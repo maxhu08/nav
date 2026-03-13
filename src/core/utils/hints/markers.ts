@@ -1,4 +1,4 @@
-import { EXTERNAL_LINK_ICON_PATH } from "~/src/lib/inline-icons";
+import { EXTERNAL_LINK_ICON_PATH, FILE_COPY_ICON_PATH } from "~/src/lib/inline-icons";
 import type { LinkMode } from "~/src/core/actions/hint-recognition";
 import type { HintMarker, MarkerDomAttributes } from "~/src/core/utils/hints/types";
 
@@ -32,6 +32,22 @@ export const invalidateMarkerSize = (hint: HintMarker): void => {
   hint.markerWidth = 0;
   hint.markerHeight = 0;
   hint.sizeDirty = true;
+};
+
+const appendMarkerIcon = (marker: HTMLSpanElement, path: string): void => {
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("width", "1em");
+  icon.setAttribute("height", "1em");
+  icon.setAttribute("fill", "currentColor");
+  icon.setAttribute("aria-hidden", "true");
+  icon.style.flex = "0 0 auto";
+  icon.style.marginLeft = "0.25em";
+
+  const iconPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  iconPath.setAttribute("d", path);
+  icon.append(iconPath);
+  marker.append(icon);
 };
 
 export const createHintMarker = (
@@ -69,19 +85,11 @@ export const createHintMarker = (
   }
 
   if (mode === "new-tab") {
-    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    icon.setAttribute("viewBox", "0 0 24 24");
-    icon.setAttribute("width", "1em");
-    icon.setAttribute("height", "1em");
-    icon.setAttribute("fill", "currentColor");
-    icon.setAttribute("aria-hidden", "true");
-    icon.style.flex = "0 0 auto";
-    icon.style.marginLeft = "0.25em";
+    appendMarkerIcon(marker, EXTERNAL_LINK_ICON_PATH);
+  }
 
-    const iconPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    iconPath.setAttribute("d", EXTERNAL_LINK_ICON_PATH);
-    icon.append(iconPath);
-    marker.append(icon);
+  if (mode === "copy-image") {
+    appendMarkerIcon(marker, FILE_COPY_ICON_PATH);
   }
 
   return {
