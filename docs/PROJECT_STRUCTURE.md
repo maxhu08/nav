@@ -23,6 +23,21 @@ Use this map to decide where new code should go.
 - `src/core/utils/key-state.ts` is the runtime source of truth for hotkey sequence parsing and URL rule enforcement.
 - `src/core/index.ts` only boots the shared runtime for normal webpages.
 
+## Hints Pipeline
+
+- Runtime coordinator and public hint API: `src/core/actions/hints.ts`
+- Pipeline stage modules: `src/core/utils/hints/`
+- The hints flow is organized into explicit stages:
+  1. Collect targets: `pipeline.ts` (`collectHintTargets`)
+  2. Assign semantics for special targets (`search`, `home`, `sidebar`): `semantics.ts`
+  3. Generate and assign labels (charset, minimum length, reserved prefixes, blocked adjacent pairs, fallback): `labels.ts` + `pipeline.ts`
+  4. Build marker models and marker DOM nodes: `markers.ts`
+  5. Layout markers (thumbnail heuristics, collision avoidance, viewport clamping): `layout.ts`
+  6. Render overlay and marker CSS: `renderer.ts`
+  7. Apply typed-input filtering and exact-match detection: `input.ts`
+  8. Activate selected targets and cleanup session state: `src/core/actions/hints.ts`
+- Shared hints types live in `src/core/utils/hints/types.ts`.
+
 ## Config Layers
 
 - `src/utils/config.ts`: defines the persisted `config` object stored in `chrome.storage.local`.
