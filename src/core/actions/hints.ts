@@ -1706,26 +1706,28 @@ const getMarkerPositionCandidates = (
   return candidates;
 };
 
-const getMarkerPlacementPlan = (
+const getMarkerVariant = (element: HTMLElement, targetRect: DOMRect): MarkerVariant => {
+  return shouldUseThumbnailMarker(element, targetRect) ? "thumbnail" : "default";
+};
+
+const getMarkerPlacementCandidates = (
   element: HTMLElement,
   targetRect: DOMRect,
+  markerVariant: MarkerVariant,
   markerWidth: number,
   markerHeight: number
-): { variant: MarkerVariant; candidates: Array<Pick<PlacedMarkerRect, "left" | "top">> } => {
-  const shouldHighlightThumbnail = shouldUseThumbnailMarker(element, targetRect);
+): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
+  const shouldHighlightThumbnail = markerVariant === "thumbnail";
   const anchorRect = shouldHighlightThumbnail
     ? (getPreferredThumbnailRect(element, targetRect) ?? targetRect)
     : targetRect;
 
-  return {
-    variant: shouldHighlightThumbnail ? "thumbnail" : "default",
-    candidates: getMarkerPositionCandidates(
-      anchorRect,
-      shouldHighlightThumbnail,
-      markerWidth,
-      markerHeight
-    )
-  };
+  return getMarkerPositionCandidates(
+    anchorRect,
+    shouldHighlightThumbnail,
+    markerWidth,
+    markerHeight
+  );
 };
 
 const getCollisionBucketKeys = (rect: PlacedMarkerRect): string[] => {
@@ -1785,29 +1787,31 @@ const updateMarkerPositions = (): void => {
     const targetRect = getMarkerRect(hint.element);
 
     if (!targetRect) {
-      hint.marker.style.display = "none";
+      if (hint.marker.style.display !== "none") {
+        hint.marker.style.display = "none";
+      }
       continue;
     }
 
-    hint.marker.style.display = "";
+    if (hint.marker.style.display === "none") {
+      hint.marker.style.display = "";
+    }
+
+    const markerVariant = getMarkerVariant(hint.element, targetRect);
+    if (hint.marker.getAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE) !== markerVariant) {
+      hint.marker.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, markerVariant);
+    }
+
     const markerRect = hint.marker.getBoundingClientRect();
     const markerWidth = Math.max(1, Math.round(markerRect.width));
     const markerHeight = Math.max(1, Math.round(markerRect.height));
-    const placementPlan = getMarkerPlacementPlan(
+    const candidates = getMarkerPlacementCandidates(
       hint.element,
       targetRect,
+      markerVariant,
       markerWidth,
       markerHeight
     );
-    hint.marker.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, placementPlan.variant);
-    const nextMarkerRect = hint.marker.getBoundingClientRect();
-    const adjustedWidth = Math.max(1, Math.round(nextMarkerRect.width));
-    const adjustedHeight = Math.max(1, Math.round(nextMarkerRect.height));
-    const candidates =
-      adjustedWidth === markerWidth && adjustedHeight === markerHeight
-        ? placementPlan.candidates
-        : getMarkerPlacementPlan(hint.element, targetRect, adjustedWidth, adjustedHeight)
-            .candidates;
 
     let chosenRect: PlacedMarkerRect | null = null;
 
@@ -1815,8 +1819,8 @@ const updateMarkerPositions = (): void => {
       const nextRect = createPlacedMarkerRect(
         candidate.left,
         candidate.top,
-        adjustedWidth,
-        adjustedHeight
+        markerWidth,
+        markerHeight
       );
 
       if (!hasCollision(collisionGrid, nextRect)) {
@@ -1828,16 +1832,16 @@ const updateMarkerPositions = (): void => {
     const fallbackPosition = clampMarkerPosition(
       targetRect.left,
       targetRect.top,
-      adjustedWidth,
-      adjustedHeight
+      markerWidth,
+      markerHeight
     );
     const nextRect =
       chosenRect ??
       createPlacedMarkerRect(
         fallbackPosition.left,
         fallbackPosition.top,
-        adjustedWidth,
-        adjustedHeight
+        markerWidth,
+        markerHeight
       );
 
     hint.marker.style.left = `${Math.round(nextRect.left)}px`;

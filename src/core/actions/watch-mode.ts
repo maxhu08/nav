@@ -76,17 +76,19 @@ const getVideoElementsFromRoot = (root: ParentNode): HTMLVideoElement[] => {
     }
     visitedRoots.add(currentRoot);
 
-    for (const node of Array.from(currentRoot.querySelectorAll("video"))) {
+    const walker = document.createTreeWalker(currentRoot, NodeFilter.SHOW_ELEMENT);
+    let node: Node | null = walker.nextNode();
+
+    while (node) {
       if (node instanceof HTMLVideoElement) {
         videos.add(node);
       }
-    }
 
-    for (const node of Array.from(currentRoot.querySelectorAll("*"))) {
-      if (!(node instanceof HTMLElement) || !node.shadowRoot) {
-        continue;
+      if (node instanceof HTMLElement && node.shadowRoot) {
+        visitRoot(node.shadowRoot);
       }
-      visitRoot(node.shadowRoot);
+
+      node = walker.nextNode();
     }
   };
 
@@ -134,6 +136,7 @@ const createWatchIcon = (path: string, sizePx: number): SVGSVGElement => {
 export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
   let watchShowCapitalizedLetters = false;
+  let watchOverlayRenderKey = "";
 
   const CONTROL_TEXT_ATTRIBUTES = [
     "aria-label",
@@ -870,7 +873,26 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
   const showWatchHintsOverlay = (video: HTMLVideoElement): void => {
     const overlay = getWatchHintsOverlay();
-    renderWatchHintsOverlay(video);
+    const fullscreenSequence = deps.getActionSequence("toggle-fullscreen", "f");
+    const pauseSequence = deps.getActionSequence("toggle-play-pause", "e");
+    const loopSequence = deps.getActionSequence("toggle-loop", "l");
+    const muteSequence = deps.getActionSequence("toggle-mute", "m");
+    const captionsSequence = deps.getActionSequence("toggle-captions", "c");
+    const overlayRenderKey = [
+      fullscreenSequence,
+      pauseSequence,
+      loopSequence,
+      muteSequence,
+      captionsSequence,
+      watchShowCapitalizedLetters ? "caps" : "lower",
+      video.paused || video.ended ? "paused" : "playing",
+      getVideoMutedState(video) ? "muted" : "unmuted"
+    ].join("|");
+
+    if (overlayRenderKey !== watchOverlayRenderKey) {
+      renderWatchHintsOverlay(video);
+      watchOverlayRenderKey = overlayRenderKey;
+    }
 
     const bounds = video.getBoundingClientRect();
     overlay.style.left = `${Math.round(bounds.left + bounds.width / 2)}px`;
@@ -895,6 +917,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   return {
     setWatchShowCapitalizedLetters: (value: boolean): void => {
       watchShowCapitalizedLetters = value;
+      watchOverlayRenderKey = "";
     },
     syncWatchHintsOverlay,
     handleWatchMediaStateChange: (): void => {

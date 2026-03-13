@@ -100,7 +100,12 @@ const shouldScroll = (element: Element, direction: ScrollAxis): boolean => {
   }
 
   const computedStyle = window.getComputedStyle(element);
-  if (computedStyle.getPropertyValue(`overflow-${direction}`) === "hidden") {
+  const overflowValue = computedStyle.getPropertyValue(`overflow-${direction}`).trim();
+  if (overflowValue === "hidden") {
+    return false;
+  }
+
+  if (element !== getScrollingElement() && !["auto", "scroll", "overlay"].includes(overflowValue)) {
     return false;
   }
 
@@ -115,29 +120,49 @@ const shouldScroll = (element: Element, direction: ScrollAxis): boolean => {
   return true;
 };
 
-const doesScroll = (
-  element: Element,
-  direction: ScrollAxis,
-  amount: number | "max" | "viewSize",
-  factor: number
-): boolean => {
+const getScrollableRange = (element: Element, direction: ScrollAxis): number => {
+  if (!(element instanceof HTMLElement)) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    getDimension(element, direction, "max") - getDimension(element, direction, "viewSize")
+  );
+};
+
+const canScrollInDirection = (element: Element, direction: ScrollAxis, factor: number): boolean => {
   if (!(element instanceof HTMLElement)) {
     return false;
   }
 
-  let delta = factor * getDimension(element, direction, amount);
-  delta = getSign(delta || -1);
+  const range = getScrollableRange(element, direction);
+  if (range <= 0) {
+    return false;
+  }
 
-  return performScroll(element, direction, delta) && performScroll(element, direction, -delta);
+  const axisName = scrollProperties[direction].axisName;
+  const position = element[axisName];
+  const epsilon = 1;
+
+  if (factor < 0) {
+    return position > epsilon;
+  }
+
+  if (factor > 0) {
+    return position + epsilon < range;
+  }
+
+  return true;
 };
 
 const isScrollableElement = (
   element: Element,
   direction: ScrollAxis = "y",
-  amount: number | "max" | "viewSize" = 1,
+  _amount: number | "max" | "viewSize" = 1,
   factor = 1
 ): boolean => {
-  return doesScroll(element, direction, amount, factor) && shouldScroll(element, direction);
+  return shouldScroll(element, direction) && canScrollInDirection(element, direction, factor);
 };
 
 const findScrollableElement = (
@@ -177,7 +202,8 @@ const firstScrollableElement = (element: Element | null = null): HTMLElement | n
     const scrollingElement = getScrollingElement();
     if (
       scrollingElement &&
-      (doesScroll(scrollingElement, "y", 1, 1) || doesScroll(scrollingElement, "y", -1, 1))
+      (canScrollInDirection(scrollingElement, "y", 1) ||
+        canScrollInDirection(scrollingElement, "y", -1))
     ) {
       return scrollingElement;
     }
@@ -189,7 +215,7 @@ const firstScrollableElement = (element: Element | null = null): HTMLElement | n
     return null;
   }
 
-  if (doesScroll(element, "y", 1, 1) || doesScroll(element, "y", -1, 1)) {
+  if (canScrollInDirection(element, "y", 1) || canScrollInDirection(element, "y", -1)) {
     return element;
   }
 

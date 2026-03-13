@@ -65,17 +65,40 @@ const activateAdjacentTab = (
       return;
     }
 
-    const sortedTabs = [...tabs].sort((firstTab, secondTab) => firstTab.index - secondTab.index);
-    const currentTabPosition = sortedTabs.findIndex((tab) => tab.index === tabIndex);
+    let nextCandidate: chrome.tabs.Tab | null = null;
+    let wrapCandidate: chrome.tabs.Tab | null = null;
 
-    if (currentTabPosition === -1) {
-      sendTabCommandResponse(sendResponse, false);
-      return;
+    for (const tab of tabs) {
+      if (typeof tab.index !== "number") {
+        continue;
+      }
+
+      if (direction === 1) {
+        if (
+          tab.index > tabIndex &&
+          (!nextCandidate || tab.index < (nextCandidate.index ?? Number.POSITIVE_INFINITY))
+        ) {
+          nextCandidate = tab;
+        }
+
+        if (!wrapCandidate || tab.index < (wrapCandidate.index ?? Number.POSITIVE_INFINITY)) {
+          wrapCandidate = tab;
+        }
+      } else {
+        if (
+          tab.index < tabIndex &&
+          (!nextCandidate || tab.index > (nextCandidate.index ?? Number.NEGATIVE_INFINITY))
+        ) {
+          nextCandidate = tab;
+        }
+
+        if (!wrapCandidate || tab.index > (wrapCandidate.index ?? Number.NEGATIVE_INFINITY)) {
+          wrapCandidate = tab;
+        }
+      }
     }
 
-    const nextTabPosition =
-      (currentTabPosition + direction + sortedTabs.length) % sortedTabs.length;
-    const nextTabId = sortedTabs[nextTabPosition]?.id;
+    const nextTabId = (nextCandidate ?? wrapCandidate)?.id;
 
     if (typeof nextTabId !== "number") {
       sendTabCommandResponse(sendResponse, false);
