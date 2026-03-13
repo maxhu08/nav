@@ -3,7 +3,10 @@ import {
   revealElementForHintCollection
 } from "~/src/core/utils/hints/hint-recognition";
 import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/hint-recognition";
-import { invalidateMarkerSize } from "~/src/core/utils/hints/markers";
+import {
+  invalidateMarkerSize,
+  setThumbnailMarkerIconVisibility
+} from "~/src/core/utils/hints/markers";
 import type { HintMarker } from "~/src/core/utils/hints/types";
 
 const MARKER_VIEWPORT_PADDING = 4;
@@ -362,8 +365,15 @@ export const updateMarkerPositions = (
       highlightThumbnails
     );
 
+    const didChangeThumbnailIconVisibility = setThumbnailMarkerIconVisibility(
+      hint,
+      markerVariant === "thumbnail"
+    );
+
     if (hint.marker.getAttribute(markerVariantStyleAttribute) !== markerVariant) {
       hint.marker.setAttribute(markerVariantStyleAttribute, markerVariant);
+      invalidateMarkerSize(hint);
+    } else if (didChangeThumbnailIconVisibility) {
       invalidateMarkerSize(hint);
     }
 

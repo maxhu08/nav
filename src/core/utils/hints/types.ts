@@ -18,6 +18,7 @@ export type ReservedHintDirective = keyof ReservedHintLabels;
 export type HintMarker = {
   element: HTMLElement;
   marker: HTMLSpanElement;
+  thumbnailIcon: SVGSVGElement | null;
   label: string;
   directive: ReservedHintDirective | null;
   letters: HTMLSpanElement[];

@@ -9,7 +9,8 @@ import {
   HINT_PREV_ICON_PATH,
   HINT_SEARCH_ICON_PATH,
   HINT_SIDEBAR_ICON_PATH,
-  HINT_SUBMIT_ICON_PATH
+  HINT_SUBMIT_ICON_PATH,
+  WATCH_PLAY_ICON_PATH
 } from "~/src/lib/inline-icons";
 import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import type {
@@ -50,7 +51,11 @@ export const invalidateMarkerSize = (hint: HintMarker): void => {
   hint.sizeDirty = true;
 };
 
-const appendMarkerIcon = (marker: HTMLSpanElement, path: string): void => {
+const appendMarkerIcon = (
+  marker: HTMLSpanElement,
+  path: string,
+  options: { hidden?: boolean } = {}
+): SVGSVGElement => {
   const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   icon.setAttribute("viewBox", "0 0 24 24");
   icon.setAttribute("width", "1em");
@@ -59,11 +64,33 @@ const appendMarkerIcon = (marker: HTMLSpanElement, path: string): void => {
   icon.setAttribute("aria-hidden", "true");
   icon.style.flex = "0 0 auto";
   icon.style.marginLeft = "0.25em";
+  if (options.hidden) {
+    icon.style.display = "none";
+  }
 
   const iconPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
   iconPath.setAttribute("d", path);
   icon.append(iconPath);
   marker.append(icon);
+  return icon;
+};
+
+export const setThumbnailMarkerIconVisibility = (
+  hint: Pick<HintMarker, "thumbnailIcon">,
+  isVisible: boolean
+): boolean => {
+  const icon = hint.thumbnailIcon;
+  if (!icon) {
+    return false;
+  }
+
+  const nextDisplay = isVisible ? "" : "none";
+  if (icon.style.display === nextDisplay) {
+    return false;
+  }
+
+  icon.style.display = nextDisplay;
+  return true;
 };
 
 export const createHintMarker = (
@@ -74,7 +101,13 @@ export const createHintMarker = (
   attrs: MarkerDomAttributes
 ): Pick<
   HintMarker,
-  "marker" | "letters" | "renderedTyped" | "markerWidth" | "markerHeight" | "sizeDirty"
+  | "marker"
+  | "thumbnailIcon"
+  | "letters"
+  | "renderedTyped"
+  | "markerWidth"
+  | "markerHeight"
+  | "sizeDirty"
 > => {
   const marker = document.createElement("span");
   marker.setAttribute(attrs.markerAttribute, "true");
@@ -129,8 +162,13 @@ export const createHintMarker = (
     appendMarkerIcon(marker, FILE_COPY_ICON_PATH);
   }
 
+  const thumbnailIcon = appendMarkerIcon(marker, WATCH_PLAY_ICON_PATH, {
+    hidden: true
+  });
+
   return {
     marker,
+    thumbnailIcon,
     letters,
     renderedTyped: "",
     markerWidth: 0,
