@@ -137,7 +137,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
   let watchShowCapitalizedLetters = false;
   let watchOverlayRenderKey = "";
-  const youtubeCaptionsStateByVideo = new WeakMap<HTMLVideoElement, boolean>();
+  const captionsStateByVideo = new WeakMap<HTMLVideoElement, boolean>();
 
   const CONTROL_TEXT_ATTRIBUTES = [
     "aria-label",
@@ -305,42 +305,10 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     );
   };
 
-  const findYouTubeToggleControl = (
-    video: HTMLVideoElement,
-    kind: SiteToggleControlKind
-  ): HTMLElement | null => {
-    const playerRoot = video.closest(".html5-video-player");
-    if (!(playerRoot instanceof HTMLElement)) {
-      return null;
-    }
-
-    const selectorByKind: Partial<Record<SiteToggleControlKind, string>> = {
-      fullscreen: ".ytp-fullscreen-button",
-      mute: ".ytp-mute-button",
-      captions: ".ytp-subtitles-button"
-    };
-    const selector = selectorByKind[kind];
-    if (!selector) {
-      return null;
-    }
-
-    const control = playerRoot.querySelector(selector);
-    if (!(control instanceof HTMLElement) || !isInteractiveControl(control)) {
-      return null;
-    }
-
-    return control;
-  };
-
   const findSiteToggleControl = (
     video: HTMLVideoElement,
     kind: SiteToggleControlKind
   ): HTMLElement | null => {
-    const youtubeControl = findYouTubeToggleControl(video, kind);
-    if (youtubeControl) {
-      return youtubeControl;
-    }
-
     const containerCandidates: HTMLElement[] = [];
     const seenRoots = new Set<HTMLElement>();
 
@@ -367,14 +335,12 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
     const controlSelectorsByKind: Record<SiteToggleControlKind, string> = {
       fullscreen: [
-        ".ytp-fullscreen-button",
         "[aria-label*='fullscreen' i]",
         "[title*='fullscreen' i]",
         "[class*='fullscreen' i]",
         "[data-testid*='fullscreen' i]"
       ].join(", "),
       mute: [
-        ".ytp-mute-button",
         "[aria-label*='mute' i]",
         "[aria-label*='unmute' i]",
         "[title*='unmute' i]",
@@ -391,7 +357,6 @@ export const createWatchController = (deps: WatchControllerDeps) => {
         "[data-testid*='volume' i]"
       ].join(", "),
       captions: [
-        ".ytp-subtitles-button",
         "[aria-label*='caption' i]",
         "[aria-label*='subtitle' i]",
         "[title*='caption' i]",
@@ -753,49 +718,89 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     return null;
   };
 
-  const getCaptionsState = (video: HTMLVideoElement, control: HTMLElement | null): boolean => {
-    if (control) {
-      if (control.classList.contains("ytp-subtitles-button")) {
-        return control.classList.contains("ytp-subtitles-button-enabled");
-      }
-
-      const pressedState = getControlPressedState(control);
-      if (pressedState !== null) {
-        return pressedState;
-      }
+  const hasEnabledClassState = (
+    control: HTMLElement,
+    activePatterns: readonly RegExp[]
+  ): boolean | null => {
+    const classes = Array.from(control.classList);
+    if (classes.length === 0) {
+      return null;
     }
 
-    return getToggleableTextTracks(video).some((track) => track.mode === "showing");
+    const classText = classes.join(" ").toLowerCase();
+    if (/\b(disabled|inactive|off)\b/.test(classText)) {
+      return false;
+    }
+
+    if (activePatterns.some((pattern) => pattern.test(classText))) {
+      return true;
+    }
+
+    return null;
   };
 
-  const isYouTubeHost = (): boolean => {
-    return /(^|\.)youtube\.com$|(^|\.)youtu\.be$/i.test(window.location.hostname);
+  const getCaptionsStateFromLabel = (control: HTMLElement): boolean | null => {
+    const text = getControlText(control);
+    if (/\b(turn off|disable|hide)\s+(captions?|subtitles?|cc)\b/.test(text)) {
+      return true;
+    }
+    if (/\b(turn on|enable|show)\s+(captions?|subtitles?|cc)\b/.test(text)) {
+      return false;
+    }
+    return null;
   };
 
-  const isYouTubeCaptionsControl = (control: HTMLElement | null): boolean => {
-    return !!control?.classList.contains("ytp-subtitles-button");
+  const getCaptionsStateFromControl = (control: HTMLElement | null): boolean | null => {
+    if (!control) {
+      return null;
+    }
+
+    const pressedState = getControlPressedState(control);
+    if (pressedState !== null) {
+      return pressedState;
+    }
+
+    const fromLabel = getCaptionsStateFromLabel(control);
+    if (fromLabel !== null) {
+      return fromLabel;
+    }
+
+    return hasEnabledClassState(control, [/\benabled\b/, /\bactive\b/, /\bon\b/, /\bselected\b/]);
   };
 
-  const shouldUseInternalYouTubeCaptionsState = (control: HTMLElement | null): boolean => {
-    return isYouTubeHost() && isYouTubeCaptionsControl(control);
+  const getCaptionsState = (
+    video: HTMLVideoElement,
+    control: HTMLElement | null
+  ): boolean | null => {
+    const controlState = getCaptionsStateFromControl(control);
+    if (controlState !== null) {
+      return controlState;
+    }
+
+    const tracks = getToggleableTextTracks(video);
+    if (tracks.length > 0) {
+      return tracks.some((track) => track.mode === "showing");
+    }
+
+    return null;
   };
 
-  const getInternalYouTubeCaptionsState = (
+  const getResolvedCaptionsState = (
     video: HTMLVideoElement,
     control: HTMLElement | null
   ): boolean => {
-    const cachedState = youtubeCaptionsStateByVideo.get(video);
-    if (typeof cachedState === "boolean") {
-      return cachedState;
+    const detectedState = getCaptionsState(video, control);
+    if (detectedState !== null) {
+      captionsStateByVideo.set(video, detectedState);
+      return detectedState;
     }
 
-    const detectedState = getCaptionsState(video, control);
-    youtubeCaptionsStateByVideo.set(video, detectedState);
-    return detectedState;
+    const cachedState = captionsStateByVideo.get(video);
+    return typeof cachedState === "boolean" ? cachedState : false;
   };
 
-  const setInternalYouTubeCaptionsState = (video: HTMLVideoElement, value: boolean): void => {
-    youtubeCaptionsStateByVideo.set(video, value);
+  const setInternalCaptionsState = (video: HTMLVideoElement, value: boolean): void => {
+    captionsStateByVideo.set(video, value);
   };
 
   const getVideoMutedState = (video: HTMLVideoElement): boolean => {
@@ -810,13 +815,19 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return getVideoMutedState(video);
     }
 
-    if (control.classList.contains("ytp-mute-button")) {
-      return control.classList.contains("ytp-mute-button-active");
-    }
-
     const pressedState = getControlPressedState(control);
     if (pressedState !== null) {
       return pressedState;
+    }
+
+    const classState = hasEnabledClassState(control, [
+      /\bmuted\b/,
+      /\bactive\b/,
+      /\benabled\b/,
+      /\bon\b/
+    ]);
+    if (classState !== null) {
+      return classState;
     }
 
     const text = getControlText(control);
@@ -1062,10 +1073,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       showWatchActivationIndicator(video);
       const siteCaptionsControl = findSiteToggleControl(video, "captions");
       const hadTracks = getToggleableTextTracks(video).length > 0;
-      const shouldUseInternalState = shouldUseInternalYouTubeCaptionsState(siteCaptionsControl);
-      const wasCaptionsOn = shouldUseInternalState
-        ? getInternalYouTubeCaptionsState(video, siteCaptionsControl)
-        : getCaptionsState(video, siteCaptionsControl);
+      const wasCaptionsOn = getResolvedCaptionsState(video, siteCaptionsControl);
       if (siteCaptionsControl) {
         siteCaptionsControl.click();
       } else if (!toggleWatchVideoTextTracks(video)) {
@@ -1074,20 +1082,18 @@ export const createWatchController = (deps: WatchControllerDeps) => {
         return true;
       }
 
-      let captionsOn = shouldUseInternalState
-        ? !wasCaptionsOn
-        : getCaptionsState(video, siteCaptionsControl);
-      if (!shouldUseInternalState && captionsOn === wasCaptionsOn) {
+      let captionsOn = getCaptionsState(video, siteCaptionsControl);
+      if (captionsOn === null || captionsOn === wasCaptionsOn) {
         if (!siteCaptionsControl && hadTracks && toggleWatchVideoTextTracks(video)) {
           captionsOn = getToggleableTextTracks(video).some((track) => track.mode === "showing");
         } else if (!siteCaptionsControl) {
           captionsOn = !wasCaptionsOn;
+        } else {
+          captionsOn = !wasCaptionsOn;
         }
       }
 
-      if (shouldUseInternalState) {
-        setInternalYouTubeCaptionsState(video, captionsOn);
-      }
+      setInternalCaptionsState(video, captionsOn);
 
       showWatchToggleToast(captionsOn ? "Captions on" : "Captions off");
       exitWatchMode();
@@ -1176,12 +1182,9 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       showWatchActivationIndicator(video);
       const siteCaptionsControl = findSiteToggleControl(video, "captions");
       const hadTracks = getToggleableTextTracks(video).length > 0;
-      const shouldUseInternalState = shouldUseInternalYouTubeCaptionsState(siteCaptionsControl);
       if (siteCaptionsControl) {
-        if (shouldUseInternalState) {
-          const currentState = getInternalYouTubeCaptionsState(video, siteCaptionsControl);
-          setInternalYouTubeCaptionsState(video, !currentState);
-        }
+        const currentState = getResolvedCaptionsState(video, siteCaptionsControl);
+        setInternalCaptionsState(video, !currentState);
         siteCaptionsControl.click();
         return true;
       }

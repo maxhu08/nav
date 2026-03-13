@@ -91,7 +91,7 @@ const findElementWithRel = (relValue: "prev" | "next"): Element | null => {
 const findMatchingLink = (patterns: readonly string[]): Element | null => {
   const candidates: Candidate[] = [];
   const elements = document.querySelectorAll(
-    "a, area, button, input[type='button'], input[type='submit'], input[type='image'], *[onclick], *[role='link'], *[role='button'], *[aria-label], *[title], *[class*='button'], yt-button-shape"
+    "a, area, button, input[type='button'], input[type='submit'], input[type='image'], *[onclick], *[role='link'], *[role='button'], *[aria-label], *[title], *[class*='button']"
   );
 
   for (let index = elements.length - 1; index >= 0; index -= 1) {

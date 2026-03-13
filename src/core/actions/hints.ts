@@ -485,9 +485,7 @@ const THUMBNAIL_SELECTOR = [
   "[data-thumbnail]",
   "[id*='thumbnail']",
   "[class*='thumbnail']",
-  "[data-testid*='thumbnail']",
-  "yt-thumbnail-view-model",
-  "ytd-thumbnail"
+  "[data-testid*='thumbnail']"
 ].join(", ");
 
 const hasExplicitThumbnailSignal = (element: HTMLElement): boolean =>

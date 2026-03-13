@@ -675,9 +675,15 @@ const SIDEBAR_ATTRIBUTE_PATTERNS = [
   /\bdrawer\b/i
 ];
 const SIDEBAR_CONTAINER_PATTERNS = [/\bsidebar\b/i, /\bside-nav\b/i, /\bsidenav\b/i, /\bdrawer\b/i];
-const YOUTUBE_SIDEBAR_TOGGLE_PATTERNS = [/\bguide\b/i, /\bguide-button\b/i, /\bmenu\b/i];
-
-const isYouTubeHostname = (): boolean => /(^|\.)youtube\.com$/i.test(window.location.hostname);
+const SIDEBAR_TOGGLE_PATTERNS = [
+  /\bguide\b/i,
+  /\bguide-button\b/i,
+  /\bmenu\b/i,
+  /\bmenu-button\b/i,
+  /\bnav-toggle\b/i,
+  /\bsidebar-toggle\b/i,
+  /\bdrawer-toggle\b/i
+];
 
 const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
 const HOME_PATHS = new Set(["/", "/home", "/homepage", "/dashboard"]);
@@ -1027,7 +1033,6 @@ const getSidebarCandidateScore = (element: HTMLElement): number => {
     [textContent]
   );
   const controlsSignalScore = getSidebarControlsSignalScore(element);
-  const isYouTube = isYouTubeHostname();
 
   score += controlsSignalScore;
   if (controlsSignalScore > 0) {
@@ -1051,20 +1056,22 @@ const getSidebarCandidateScore = (element: HTMLElement): number => {
     hasStrongSignal = true;
   }
 
-  if (isYouTube) {
-    if (element.id === "guide-button" || !!element.closest("#guide-button")) {
-      score += 700;
-      hasStrongSignal = true;
-    }
+  if (element.id === "guide-button" || !!element.closest("#guide-button")) {
+    score += 700;
+    hasStrongSignal = true;
+  }
 
-    if (textMatchesAnyPattern(attributeText, YOUTUBE_SIDEBAR_TOGGLE_PATTERNS)) {
-      score += 260;
-      hasStrongSignal = true;
-    }
+  if (textMatchesAnyPattern(attributeText, SIDEBAR_TOGGLE_PATTERNS)) {
+    score += 260;
+    hasStrongSignal = true;
+  }
 
-    if (element.closest("ytd-masthead, #masthead")) {
-      score += 120;
-    }
+  if (
+    element.closest(
+      "header, [role='banner'], [role='navigation'], [id*='masthead' i], [class*='masthead' i], [id*='topbar' i], [class*='topbar' i]"
+    )
+  ) {
+    score += 120;
   }
 
   if (element.hasAttribute("aria-expanded")) {
