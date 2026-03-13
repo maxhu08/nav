@@ -29,6 +29,7 @@ type PlacedMarkerRect = {
 
 type RectLike = Pick<DOMRect, "left" | "top" | "right" | "bottom" | "width" | "height">;
 type MarkerVariant = "default" | "thumbnail";
+type CollisionGrid = Map<number, Map<number, PlacedMarkerRect[]>>;
 
 const doPlacedMarkerRectsOverlap = (left: PlacedMarkerRect, right: PlacedMarkerRect): boolean =>
   left.left < right.right + MARKER_COLLISION_GAP &&
@@ -284,7 +285,7 @@ const getMarkerPlacementCandidates = (
 
 const forEachCollisionBucket = (
   rect: PlacedMarkerRect,
-  callback: (bucketKey: string) => void
+  callback: (x: number, y: number) => void
 ): void => {
   const minX = Math.floor((rect.left - MARKER_COLLISION_GAP) / MARKER_COLLISION_CELL_SIZE);
   const maxX = Math.floor((rect.right + MARKER_COLLISION_GAP) / MARKER_COLLISION_CELL_SIZE);
@@ -293,20 +294,19 @@ const forEachCollisionBucket = (
 
   for (let y = minY; y <= maxY; y += 1) {
     for (let x = minX; x <= maxX; x += 1) {
-      callback(`${x}:${y}`);
+      callback(x, y);
     }
   }
 };
 
-const hasCollision = (
-  collisionGrid: Map<string, PlacedMarkerRect[]>,
-  nextRect: PlacedMarkerRect
-): boolean => {
+const hasCollision = (collisionGrid: CollisionGrid, nextRect: PlacedMarkerRect): boolean => {
   let collides = false;
 
-  forEachCollisionBucket(nextRect, (bucketKey) => {
+  forEachCollisionBucket(nextRect, (x, y) => {
     if (collides) return;
-    const bucket = collisionGrid.get(bucketKey);
+    const row = collisionGrid.get(y);
+    if (!row) return;
+    const bucket = row.get(x);
     if (!bucket) return;
 
     for (const placedRect of bucket) {
@@ -320,19 +320,22 @@ const hasCollision = (
   return collides;
 };
 
-const addToCollisionGrid = (
-  collisionGrid: Map<string, PlacedMarkerRect[]>,
-  rect: PlacedMarkerRect
-): void => {
-  forEachCollisionBucket(rect, (bucketKey) => {
-    const bucket = collisionGrid.get(bucketKey);
+const addToCollisionGrid = (collisionGrid: CollisionGrid, rect: PlacedMarkerRect): void => {
+  forEachCollisionBucket(rect, (x, y) => {
+    const row = collisionGrid.get(y);
+    const bucket = row?.get(x);
 
     if (bucket) {
       bucket.push(rect);
       return;
     }
 
-    collisionGrid.set(bucketKey, [rect]);
+    if (row) {
+      row.set(x, [rect]);
+      return;
+    }
+
+    collisionGrid.set(y, new Map([[x, [rect]]]));
   });
 };
 
@@ -342,7 +345,7 @@ export const updateMarkerPositions = (
   highlightThumbnails: boolean,
   markerVariantStyleAttribute: string
 ): void => {
-  const collisionGrid = new Map<string, PlacedMarkerRect[]>();
+  const collisionGrid: CollisionGrid = new Map();
 
   for (const hint of markers) {
     const targetRect = getMarkerRect(hint.element);

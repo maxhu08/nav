@@ -837,12 +837,12 @@ const getNormalizedSameOriginPath = (href: string): string | null => {
   }
 };
 
-const getSearchCandidateScore = (element: HTMLElement): number => {
+const getSearchCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
   if (!isSelectableElement(element)) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  const rect = getMarkerRect(element);
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
   if (!rect) return Number.NEGATIVE_INFINITY;
 
   let score = 100;
@@ -909,7 +909,7 @@ export const getPreferredSearchElementIndex = (elements: HTMLElement[]): number 
   return bestIndex;
 };
 
-const getHomeCandidateScore = (element: HTMLElement): number => {
+const getHomeCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
   if (
     !(
       element instanceof HTMLAnchorElement ||
@@ -922,7 +922,7 @@ const getHomeCandidateScore = (element: HTMLElement): number => {
     return Number.NEGATIVE_INFINITY;
   }
 
-  const rect = getMarkerRect(element);
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
   if (!rect) return Number.NEGATIVE_INFINITY;
 
   let score = 0;
@@ -1049,12 +1049,12 @@ const getSidebarControlsSignalScore = (element: HTMLElement): number => {
   return score;
 };
 
-const getSidebarCandidateScore = (element: HTMLElement): number => {
+const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
   if (!isActivatableElement(element) || isSelectableElement(element)) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  const rect = getMarkerRect(element);
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
   if (!rect) return Number.NEGATIVE_INFINITY;
 
   let score = 40;
@@ -1166,13 +1166,14 @@ const getActionDirectiveCandidateScore = (
     allowFormSignals?: boolean;
     relValues?: string[];
     boostDialogContext?: boolean;
-  } = {}
+  } = {},
+  rectOverride?: DOMRect | null
 ): number => {
   if (!isActivatableElement(element) || isSelectableElement(element)) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  const rect = getMarkerRect(element);
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
   if (!rect) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -1309,3 +1310,140 @@ export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | 
 
 export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, DISLIKE_ATTRIBUTE_PATTERNS, 220);
+
+type HintDirective =
+  | "search"
+  | "home"
+  | "sidebar"
+  | "next"
+  | "prev"
+  | "cancel"
+  | "submit"
+  | "like"
+  | "dislike";
+
+type ElementFeatureVector = {
+  rect: DOMRect | null;
+  isSelectable: boolean;
+};
+
+const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
+  search: 180,
+  home: 180,
+  sidebar: 220,
+  next: 200,
+  prev: 200,
+  cancel: 220,
+  submit: 220,
+  like: 220,
+  dislike: 220
+});
+
+export const getPreferredDirectiveIndexes = (
+  elements: HTMLElement[]
+): Partial<Record<HintDirective, number>> => {
+  const featureCache = new WeakMap<HTMLElement, ElementFeatureVector>();
+  const bestIndexes: Partial<Record<HintDirective, number>> = {};
+  const bestScores = getDefaultDirectiveThresholds();
+  let selectableCount = 0;
+  let onlySelectableIndex: number | null = null;
+
+  const getFeatures = (element: HTMLElement): ElementFeatureVector => {
+    const cached = featureCache.get(element);
+    if (cached) {
+      return cached;
+    }
+
+    const features: ElementFeatureVector = {
+      rect: getMarkerRect(element),
+      isSelectable: isSelectableElement(element)
+    };
+
+    featureCache.set(element, features);
+    return features;
+  };
+
+  const updateBest = (directive: HintDirective, score: number, index: number): void => {
+    if (score > bestScores[directive]) {
+      bestScores[directive] = score;
+      bestIndexes[directive] = index;
+    }
+  };
+
+  elements.forEach((element, index) => {
+    const features = getFeatures(element);
+
+    if (features.isSelectable) {
+      selectableCount += 1;
+      onlySelectableIndex = index;
+    }
+
+    updateBest("search", getSearchCandidateScore(element, features.rect), index);
+    updateBest("home", getHomeCandidateScore(element, features.rect), index);
+    updateBest("sidebar", getSidebarCandidateScore(element, features.rect), index);
+    updateBest(
+      "next",
+      getActionDirectiveCandidateScore(
+        element,
+        NEXT_ATTRIBUTE_PATTERNS,
+        {
+          relValues: ["next"]
+        },
+        features.rect
+      ),
+      index
+    );
+    updateBest(
+      "prev",
+      getActionDirectiveCandidateScore(
+        element,
+        PREV_ATTRIBUTE_PATTERNS,
+        {
+          relValues: ["prev"]
+        },
+        features.rect
+      ),
+      index
+    );
+    updateBest(
+      "cancel",
+      getActionDirectiveCandidateScore(
+        element,
+        CANCEL_ATTRIBUTE_PATTERNS,
+        {
+          boostDialogContext: true
+        },
+        features.rect
+      ),
+      index
+    );
+    updateBest(
+      "submit",
+      getActionDirectiveCandidateScore(
+        element,
+        SUBMIT_ATTRIBUTE_PATTERNS,
+        {
+          allowFormSignals: true
+        },
+        features.rect
+      ),
+      index
+    );
+    updateBest(
+      "like",
+      getActionDirectiveCandidateScore(element, LIKE_ATTRIBUTE_PATTERNS, {}, features.rect),
+      index
+    );
+    updateBest(
+      "dislike",
+      getActionDirectiveCandidateScore(element, DISLIKE_ATTRIBUTE_PATTERNS, {}, features.rect),
+      index
+    );
+  });
+
+  if (selectableCount === 1 && onlySelectableIndex !== null) {
+    bestIndexes.search = onlySelectableIndex;
+  }
+
+  return bestIndexes;
+};

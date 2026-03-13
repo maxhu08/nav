@@ -1,34 +1,22 @@
 import { setMarkerTypedState } from "~/src/core/utils/hints/markers";
-import type { HintMarker, MarkerDomAttributes } from "~/src/core/utils/hints/types";
+import type { HintLabelIndex, HintMarker, MarkerDomAttributes } from "~/src/core/utils/hints/types";
 
 export type HintFilterResult = {
   visibleMarkers: HintMarker[];
-  previousTyped: string;
 };
 
 export const applyHintFilter = (
   typed: string,
-  previousTyped: string,
-  markers: HintMarker[],
   visibleMarkers: HintMarker[],
+  labelIndex: HintLabelIndex,
   attrs: MarkerDomAttributes
 ): HintFilterResult => {
-  const isNarrowing = typed.startsWith(previousTyped);
-  const candidateMarkers = isNarrowing ? visibleMarkers : markers;
-  const nextVisibleMarkers: HintMarker[] = [];
   const showAll = typed.length === 0;
+  const nextVisibleMarkers = labelIndex.getByPrefix(showAll ? "" : typed);
+  const nextVisibleSet = new Set(nextVisibleMarkers);
 
-  for (const hint of candidateMarkers) {
-    const shouldBeVisible = showAll || hint.label.startsWith(typed);
-
-    if (shouldBeVisible) {
-      nextVisibleMarkers.push(hint);
-      if (!hint.visible) {
-        hint.marker.style.display = "";
-        hint.visible = true;
-      }
-
-      setMarkerTypedState(hint, typed, attrs);
+  for (const hint of visibleMarkers) {
+    if (nextVisibleSet.has(hint)) {
       continue;
     }
 
@@ -42,8 +30,16 @@ export const applyHintFilter = (
     }
   }
 
+  for (const hint of nextVisibleMarkers) {
+    if (!hint.visible) {
+      hint.marker.style.display = "";
+      hint.visible = true;
+    }
+
+    setMarkerTypedState(hint, typed, attrs);
+  }
+
   return {
-    visibleMarkers: showAll ? markers : nextVisibleMarkers,
-    previousTyped: typed
+    visibleMarkers: nextVisibleMarkers
   };
 };

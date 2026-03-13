@@ -11,6 +11,7 @@ import {
 } from "~/src/core/utils/hints/hint-recognition";
 import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import { applyHintFilter } from "~/src/core/utils/hints/input";
+import { buildHintLabelIndex } from "~/src/core/utils/hints/label-index";
 import { clearHintLabelPlanCache } from "~/src/core/utils/hints/labels";
 import {
   createHintMarker,
@@ -86,10 +87,9 @@ const hintState: HintState = {
   active: false,
   mode: "current-tab",
   typed: "",
-  previousTyped: "",
   markers: [],
   visibleMarkers: [],
-  markerByLabel: new Map(),
+  labelIndex: null,
   overlay: null,
   onActivate: null,
   frameHandle: null,
@@ -321,10 +321,9 @@ export const exitHints = (): void => {
   hintState.active = false;
   hintState.mode = "current-tab";
   hintState.typed = "";
-  hintState.previousTyped = "";
   hintState.markers = [];
   hintState.visibleMarkers = [];
-  hintState.markerByLabel.clear();
+  hintState.labelIndex = null;
   hintState.overlay = null;
   hintState.onActivate = null;
 };
@@ -349,18 +348,20 @@ const activateHint = (hint: HintState["markers"][number]): void => {
 };
 
 const applyFilter = (): void => {
+  if (!hintState.labelIndex) {
+    return;
+  }
+
   const result = applyHintFilter(
     hintState.typed,
-    hintState.previousTyped,
-    hintState.markers,
     hintState.visibleMarkers,
+    hintState.labelIndex,
     markerDomAttributes
   );
 
   hintState.visibleMarkers = result.visibleMarkers;
-  hintState.previousTyped = result.previousTyped;
 
-  const exactMatch = hintState.markerByLabel.get(hintState.typed);
+  const exactMatch = hintState.labelIndex.getExact(hintState.typed);
   if (exactMatch) {
     activateHint(exactMatch);
   }
@@ -427,10 +428,9 @@ export const activateHints = (
   hintState.active = true;
   hintState.mode = mode;
   hintState.typed = "";
-  hintState.previousTyped = "";
   hintState.markers = markers;
   hintState.visibleMarkers = markers;
-  hintState.markerByLabel = new Map(markers.map((marker) => [marker.label, marker]));
+  hintState.labelIndex = buildHintLabelIndex(markers);
   hintState.overlay = overlay;
   hintState.onActivate = options.onActivate ?? null;
 
@@ -581,7 +581,7 @@ export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
 
   if (event.key === "Enter") {
     const matches = hintState.visibleMarkers;
-    const exactMatch = hintState.markerByLabel.get(hintState.typed);
+    const exactMatch = hintState.labelIndex?.getExact(hintState.typed);
 
     if (exactMatch) {
       activateHint(exactMatch);
@@ -599,9 +599,7 @@ export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
   const key = event.key.toLowerCase();
   if (!hintAlphabet.includes(key)) {
     const nextTyped = hintState.typed + key;
-    const canMatchReservedLabel = hintState.markers.some((marker) =>
-      marker.label.startsWith(nextTyped)
-    );
+    const canMatchReservedLabel = hintState.labelIndex?.hasPrefix(nextTyped) === true;
 
     if (!canMatchReservedLabel) {
       return true;

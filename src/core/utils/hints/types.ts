@@ -29,14 +29,19 @@ export type HintMarker = {
   sizeDirty: boolean;
 };
 
+export type HintLabelIndex = {
+  getByPrefix: (prefix: string) => HintMarker[];
+  hasPrefix: (prefix: string) => boolean;
+  getExact: (label: string) => HintMarker | undefined;
+};
+
 export type HintState = {
   active: boolean;
   mode: LinkMode;
   typed: string;
-  previousTyped: string;
   markers: HintMarker[];
   visibleMarkers: HintMarker[];
-  markerByLabel: Map<string, HintMarker>;
+  labelIndex: HintLabelIndex | null;
   overlay: HTMLDivElement | null;
   onActivate: ((element: HTMLElement) => void) | null;
   frameHandle: number | null;
