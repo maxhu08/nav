@@ -681,14 +681,12 @@ const ATTACH_ATTRIBUTE_PATTERNS = [
   /\bupload\b/i,
   /\bfiles?\b/i,
   /\battachments?\b/i,
-  /\bimage\b/i,
-  /\bphoto\b/i,
-  /\bmedia\b/i,
   /\bdocument\b/i,
   /\bbrowse\b/i,
   /\bchoose\b/i,
   /\bcomposer\b/i
 ];
+const ATTACH_FILE_TYPE_PATTERNS = [/\bimage\b/i, /\bphoto\b/i, /\bmedia\b/i];
 
 const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
 const SIDEBAR_ATTRIBUTE_PATTERNS = [
@@ -918,6 +916,13 @@ const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
   if (textMatchesAnyPattern(attributeText, ATTACH_ATTRIBUTE_PATTERNS)) {
     score += 260;
     hasStrongSignal = true;
+  }
+
+  // Treat file-type words as supporting evidence only. Generic thumbnail/image
+  // controls often mention "image" or "media" without actually being upload
+  // affordances, so they should not trigger @attach by themselves.
+  if (textMatchesAnyPattern(attributeText, ATTACH_FILE_TYPE_PATTERNS)) {
+    score += 60;
   }
 
   if (element instanceof HTMLInputElement && element.type.toLowerCase() === "file") {

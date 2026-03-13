@@ -157,10 +157,6 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_DISLIKE_ICON_PATH);
   }
 
-  if (mode === "new-tab") {
-    appendMarkerIcon(marker, EXTERNAL_LINK_ICON_PATH);
-  }
-
   if (mode === "copy-image") {
     appendMarkerIcon(marker, FILE_COPY_ICON_PATH);
   }
@@ -168,6 +164,12 @@ export const createHintMarker = (
   const thumbnailIcon = appendMarkerIcon(marker, WATCH_PLAY_ICON_PATH, {
     hidden: true
   });
+
+  // Keep the new-tab affordance pinned to the far right, even when
+  // thumbnail markers reveal their play icon later.
+  if (mode === "new-tab") {
+    appendMarkerIcon(marker, EXTERNAL_LINK_ICON_PATH);
+  }
 
   return {
     marker,
