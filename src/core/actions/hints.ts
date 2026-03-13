@@ -16,6 +16,7 @@ import {
   revealHoverHintControls
 } from "~/src/core/actions/hint-recognition";
 import type { LinkMode, RevealedHintElement } from "~/src/core/actions/hint-recognition";
+import { EXTERNAL_LINK_ICON_PATH } from "~/src/lib/inline-icons";
 
 const HINT_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
 const OVERLAY_ID = `${HINT_NAMESPACE_PREFIX}link-hints-overlay`;
@@ -390,7 +391,8 @@ const setMarkerTypedState = (hint: HintMarker, typed: string): void => {
 };
 
 const createMarker = (
-  label: string
+  label: string,
+  mode: LinkMode
 ): Pick<
   HintMarker,
   "marker" | "letters" | "renderedTyped" | "markerWidth" | "markerHeight" | "sizeDirty"
@@ -404,6 +406,9 @@ const createMarker = (
   marker.style.position = "fixed";
   marker.style.left = "0px";
   marker.style.top = "0px";
+  marker.style.display = "inline-flex";
+  marker.style.alignItems = "center";
+  marker.style.gap = "0.25em";
 
   const displayLabel = showCapitalizedLetters ? label.toUpperCase() : label.toLowerCase();
   const letters: HTMLSpanElement[] = [];
@@ -415,6 +420,21 @@ const createMarker = (
     letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
     marker.appendChild(letter);
     letters.push(letter);
+  }
+
+  if (mode === "new-tab") {
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("width", "1em");
+    icon.setAttribute("height", "1em");
+    icon.setAttribute("fill", "currentColor");
+    icon.setAttribute("aria-hidden", "true");
+    icon.style.flex = "0 0 auto";
+
+    const iconPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    iconPath.setAttribute("d", EXTERNAL_LINK_ICON_PATH);
+    icon.append(iconPath);
+    marker.append(icon);
   }
 
   return {
@@ -1181,8 +1201,10 @@ export const activateHints = (
     const label = reservedLabelsByIndex.get(index) ?? labels[labelIndex++];
 
     if (!label) return;
-    const { marker, letters, renderedTyped, markerWidth, markerHeight, sizeDirty } =
-      createMarker(label);
+    const { marker, letters, renderedTyped, markerWidth, markerHeight, sizeDirty } = createMarker(
+      label,
+      mode
+    );
 
     overlay.appendChild(marker);
     markers.push({

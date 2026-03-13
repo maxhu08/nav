@@ -531,7 +531,7 @@ const HOVER_HINT_INTERACTIVE_SELECTOR = [
 const HOVER_HINT_PLAY_CONTROL_PATTERNS = [/\bplay\b/i, /\bpause\b/i, /\bresume\b/i, /\bpreview\b/i];
 
 const getHintSelector = (mode: LinkMode): string => {
-  if (mode === "copy-link") {
+  if (mode === "copy-link" || mode === "new-tab") {
     return HINT_SELECTORS_COPY_LINK;
   }
 
