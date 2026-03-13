@@ -80,8 +80,37 @@ export const createTabCommandAction = (command: TabCommand): (() => boolean) => 
   return () => runTabCommand(command);
 };
 
+const canNavigateHistory = (offset: number): boolean => {
+  const navigationApi = (
+    window as Window & {
+      navigation?: {
+        canGoBack?: boolean;
+        canGoForward?: boolean;
+      };
+    }
+  ).navigation;
+
+  if (offset < 0) {
+    if (typeof navigationApi?.canGoBack === "boolean") {
+      return navigationApi.canGoBack;
+    }
+
+    return window.history.length > 1;
+  }
+
+  if (offset > 0) {
+    if (typeof navigationApi?.canGoForward === "boolean") {
+      return navigationApi.canGoForward;
+    }
+
+    return false;
+  }
+
+  return false;
+};
+
 export const goHistory = (offset: number): boolean => {
-  if (offset === 0 || window.history.length < 1) {
+  if (!canNavigateHistory(offset)) {
     return false;
   }
 

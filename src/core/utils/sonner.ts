@@ -2,6 +2,10 @@
 // based off https://github.com/JeanxPereira/sonner-js/blob/main/sonner-js/sonner.js
 
 import { getExtensionNamespace } from "~/src/utils/extension-id";
+import {
+  sendToastProxyMessage,
+  subscribeToToastProxyMessages
+} from "~/src/core/utils/runtime-bridge";
 
 function getAsset(type) {
   const ICONS = {
@@ -71,7 +75,6 @@ const TOASTER_WRAPPER_ID = `${NAV_NAMESPACE_PREFIX}toaster-wrapper`;
 const TOASTER_LIST_ID = `${NAV_NAMESPACE_PREFIX}toaster-list`;
 const TOAST_CLASS = `${NAV_NAMESPACE_PREFIX}toast`;
 const STYLE_ID = `${NAV_NAMESPACE_PREFIX}toaster-style`;
-const TOAST_PROXY_EVENT = `${NAV_NAMESPACE_PREFIX}toast-proxy`;
 const TOAST_PROXY_LISTENER_FLAG = `${NAV_NAMESPACE_PREFIX}toast-proxy-listener`;
 
 const __actionHandlers = new Map();
@@ -162,30 +165,12 @@ function shouldProxyToastToTop(action) {
 }
 
 function tryProxyToastToTop(content, { description = "", type } = {}) {
-  try {
-    if (!window.top || window.top === window) {
-      return false;
-    }
-
-    const toastType = isAllowedType(type) ? type : "info";
-
-    window.top.postMessage(
-      {
-        source: NAV_NAMESPACE_PREFIX,
-        type: TOAST_PROXY_EVENT,
-        payload: {
-          content,
-          description,
-          toastType
-        }
-      },
-      "*"
-    );
-
-    return true;
-  } catch {
-    return false;
-  }
+  const toastType = isAllowedType(type) ? type : "info";
+  return sendToastProxyMessage({
+    content,
+    description,
+    toastType
+  });
 }
 
 function basicToast(content, { description = "", type, action } = {}) {
@@ -727,23 +712,6 @@ const toast = {
   error: (message, options = {}) => basicToast(message, { ...options, type: "error" })
 };
 
-function isValidToastProxyMessage(data) {
-  if (!data || typeof data !== "object") {
-    return false;
-  }
-  if (data.source !== NAV_NAMESPACE_PREFIX || data.type !== TOAST_PROXY_EVENT) {
-    return false;
-  }
-  if (!data.payload || typeof data.payload !== "object") {
-    return false;
-  }
-  if (typeof data.payload.content !== "string") {
-    return false;
-  }
-
-  return true;
-}
-
 function registerToastProxyListener() {
   try {
     if (window.top !== window) {
@@ -758,12 +726,7 @@ function registerToastProxyListener() {
   }
   window[TOAST_PROXY_LISTENER_FLAG] = true;
 
-  window.addEventListener("message", (event) => {
-    if (!isValidToastProxyMessage(event.data)) {
-      return;
-    }
-
-    const payload = event.data.payload;
+  subscribeToToastProxyMessages((payload) => {
     ensureToastWrapper();
     basicToast(payload.content, {
       description: typeof payload.description === "string" ? payload.description : "",

@@ -31,6 +31,94 @@ type FetchImageResponse = {
   mimeType?: string;
 };
 
+type BridgeMessage =
+  | {
+      type: "frame-action";
+      actionName: string;
+    }
+  | {
+      type: "toast-proxy";
+      content: string;
+      description?: string;
+      toastType?: "success" | "info" | "warning" | "error";
+    };
+
+const RUNTIME_BRIDGE_PORT_NAME = "nav-runtime-bridge";
+const portsByTabId = new Map<number, Set<chrome.runtime.Port>>();
+
+const removeBridgePort = (tabId: number, port: chrome.runtime.Port): void => {
+  const ports = portsByTabId.get(tabId);
+  if (!ports) {
+    return;
+  }
+
+  ports.delete(port);
+  if (ports.size === 0) {
+    portsByTabId.delete(tabId);
+  }
+};
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== RUNTIME_BRIDGE_PORT_NAME) {
+    return;
+  }
+
+  const tabId = port.sender?.tab?.id;
+  if (typeof tabId !== "number") {
+    return;
+  }
+
+  const ports = portsByTabId.get(tabId) ?? new Set<chrome.runtime.Port>();
+  ports.add(port);
+  portsByTabId.set(tabId, ports);
+
+  port.onDisconnect.addListener(() => {
+    removeBridgePort(tabId, port);
+  });
+
+  port.onMessage.addListener((message: unknown) => {
+    if (!message || typeof message !== "object") {
+      return;
+    }
+
+    const typedMessage = message as Partial<BridgeMessage>;
+    const currentPorts = portsByTabId.get(tabId);
+    if (!currentPorts) {
+      return;
+    }
+
+    if (typedMessage.type === "frame-action" && typeof typedMessage.actionName === "string") {
+      for (const targetPort of currentPorts) {
+        if (targetPort === port) {
+          continue;
+        }
+
+        targetPort.postMessage({
+          type: "frame-action",
+          actionName: typedMessage.actionName
+        } satisfies BridgeMessage);
+      }
+
+      return;
+    }
+
+    if (typedMessage.type === "toast-proxy" && typeof typedMessage.content === "string") {
+      for (const targetPort of currentPorts) {
+        if (targetPort.sender?.frameId !== 0 || targetPort === port) {
+          continue;
+        }
+
+        targetPort.postMessage({
+          type: "toast-proxy",
+          content: typedMessage.content,
+          description: typedMessage.description,
+          toastType: typedMessage.toastType
+        } satisfies BridgeMessage);
+      }
+    }
+  });
+});
+
 const sendTabCommandResponse = (
   sendResponse: (response: TabCommandResponse) => void,
   ok: boolean

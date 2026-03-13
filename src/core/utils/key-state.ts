@@ -151,7 +151,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
   const isActionAllowedForRule = (actionName: ActionName, rule: FastRule | null): boolean => {
     if (!rule) {
-      return true;
+      return urlRulesMode !== "whitelist";
     }
 
     const isListedAction = rule.actions[actionName] === true;
