@@ -27,6 +27,7 @@ If a config value needs parsing or precomputation for runtime use, put the persi
 - Keep type fields one per line and end each with `;`.
 - Keep narrow helper functions close to the feature that uses them.
 - Prefer small feature-specific helpers over large shared abstractions.
+- Use `kebab-case` for TypeScript filenames (for example: `is-editable-target.ts`).
 
 Example:
 
