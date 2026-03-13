@@ -444,6 +444,11 @@ const handleWatchModeKeydown = (event: KeyboardEvent, keyToken: string): boolean
     watchController.getWatchActionSequences()
   );
 
+  if (event.repeat && (actionName || consumed)) {
+    consumeKeyboardEvent(event);
+    return true;
+  }
+
   if (actionName === "toggle-fullscreen" && watchController.toggleFullscreen()) {
     consumeKeyboardEvent(event);
     return true;

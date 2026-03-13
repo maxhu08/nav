@@ -137,6 +137,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
   let watchShowCapitalizedLetters = false;
   let watchOverlayRenderKey = "";
+  const youtubeCaptionsStateByVideo = new WeakMap<HTMLVideoElement, boolean>();
 
   const CONTROL_TEXT_ATTRIBUTES = [
     "aria-label",
@@ -697,6 +698,10 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     return Array.from(video.textTracks).filter((track) => track.kind !== "metadata");
   };
 
+  let lastWatchToastMessage = "";
+  let lastWatchToastAt = 0;
+  const WATCH_TOGGLE_TOAST_DEDUPE_WINDOW_MS = 450;
+
   const toggleWatchVideoTextTracks = (video: HTMLVideoElement): boolean => {
     const tracks = getToggleableTextTracks(video);
     if (tracks.length === 0) {
@@ -713,6 +718,16 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   };
 
   const showWatchToggleToast = (message: string): void => {
+    const now = performance.now();
+    if (
+      message === lastWatchToastMessage &&
+      now - lastWatchToastAt <= WATCH_TOGGLE_TOAST_DEDUPE_WINDOW_MS
+    ) {
+      return;
+    }
+
+    lastWatchToastMessage = message;
+    lastWatchToastAt = now;
     ensureToastWrapper();
     const toast = getToastApi();
     toast?.info(message);
@@ -751,6 +766,36 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     }
 
     return getToggleableTextTracks(video).some((track) => track.mode === "showing");
+  };
+
+  const isYouTubeHost = (): boolean => {
+    return /(^|\.)youtube\.com$|(^|\.)youtu\.be$/i.test(window.location.hostname);
+  };
+
+  const isYouTubeCaptionsControl = (control: HTMLElement | null): boolean => {
+    return !!control?.classList.contains("ytp-subtitles-button");
+  };
+
+  const shouldUseInternalYouTubeCaptionsState = (control: HTMLElement | null): boolean => {
+    return isYouTubeHost() && isYouTubeCaptionsControl(control);
+  };
+
+  const getInternalYouTubeCaptionsState = (
+    video: HTMLVideoElement,
+    control: HTMLElement | null
+  ): boolean => {
+    const cachedState = youtubeCaptionsStateByVideo.get(video);
+    if (typeof cachedState === "boolean") {
+      return cachedState;
+    }
+
+    const detectedState = getCaptionsState(video, control);
+    youtubeCaptionsStateByVideo.set(video, detectedState);
+    return detectedState;
+  };
+
+  const setInternalYouTubeCaptionsState = (video: HTMLVideoElement, value: boolean): void => {
+    youtubeCaptionsStateByVideo.set(video, value);
   };
 
   const getVideoMutedState = (video: HTMLVideoElement): boolean => {
@@ -1017,7 +1062,10 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       showWatchActivationIndicator(video);
       const siteCaptionsControl = findSiteToggleControl(video, "captions");
       const hadTracks = getToggleableTextTracks(video).length > 0;
-      const wasCaptionsOn = getCaptionsState(video, siteCaptionsControl);
+      const shouldUseInternalState = shouldUseInternalYouTubeCaptionsState(siteCaptionsControl);
+      const wasCaptionsOn = shouldUseInternalState
+        ? getInternalYouTubeCaptionsState(video, siteCaptionsControl)
+        : getCaptionsState(video, siteCaptionsControl);
       if (siteCaptionsControl) {
         siteCaptionsControl.click();
       } else if (!toggleWatchVideoTextTracks(video)) {
@@ -1026,13 +1074,19 @@ export const createWatchController = (deps: WatchControllerDeps) => {
         return true;
       }
 
-      let captionsOn = getCaptionsState(video, siteCaptionsControl);
-      if (captionsOn === wasCaptionsOn) {
+      let captionsOn = shouldUseInternalState
+        ? !wasCaptionsOn
+        : getCaptionsState(video, siteCaptionsControl);
+      if (!shouldUseInternalState && captionsOn === wasCaptionsOn) {
         if (!siteCaptionsControl && hadTracks && toggleWatchVideoTextTracks(video)) {
           captionsOn = getToggleableTextTracks(video).some((track) => track.mode === "showing");
-        } else {
+        } else if (!siteCaptionsControl) {
           captionsOn = !wasCaptionsOn;
         }
+      }
+
+      if (shouldUseInternalState) {
+        setInternalYouTubeCaptionsState(video, captionsOn);
       }
 
       showWatchToggleToast(captionsOn ? "Captions on" : "Captions off");
@@ -1122,7 +1176,12 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       showWatchActivationIndicator(video);
       const siteCaptionsControl = findSiteToggleControl(video, "captions");
       const hadTracks = getToggleableTextTracks(video).length > 0;
+      const shouldUseInternalState = shouldUseInternalYouTubeCaptionsState(siteCaptionsControl);
       if (siteCaptionsControl) {
+        if (shouldUseInternalState) {
+          const currentState = getInternalYouTubeCaptionsState(video, siteCaptionsControl);
+          setInternalYouTubeCaptionsState(video, !currentState);
+        }
         siteCaptionsControl.click();
         return true;
       }
