@@ -65,6 +65,22 @@ const buildLabelsForBlockedPairs = (
   const alphabet = settings.hintAlphabet.split("");
   const firstCharacters = alphabet.filter((char) => !settings.reservedHintPrefixes.has(char));
   const leadingAlphabet = firstCharacters.length > 0 ? firstCharacters : alphabet;
+  const allowedByPreviousChar = new Map<string, string[]>();
+
+  for (const previousChar of alphabet) {
+    const blockedTransitions = blockedPairs[previousChar];
+
+    if (!blockedTransitions) {
+      allowedByPreviousChar.set(previousChar, alphabet);
+      continue;
+    }
+
+    allowedByPreviousChar.set(
+      previousChar,
+      alphabet.filter((char) => blockedTransitions[char] !== true)
+    );
+  }
+
   const subtreeCapacityCache = new Map<string, number>();
   const labels: string[] = [];
 
@@ -73,9 +89,11 @@ const buildLabelsForBlockedPairs = (
       return leadingAlphabet;
     }
 
-    return alphabet.filter(
-      (char) => previousChar === null || blockedPairs[previousChar]?.[char] !== true
-    );
+    if (previousChar === null) {
+      return alphabet;
+    }
+
+    return allowedByPreviousChar.get(previousChar) ?? alphabet;
   };
 
   const getSubtreeCapacity = (

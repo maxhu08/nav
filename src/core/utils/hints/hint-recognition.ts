@@ -410,19 +410,33 @@ const hasEquivalentAncestorTarget = (
 const isCustomActivatableElement = (element: HTMLElement): boolean => {
   const tabIndex = getElementTabIndex(element);
   const isFocusable = tabIndex !== null && tabIndex >= 0;
-  const style = window.getComputedStyle(element);
   const hasInteractiveState = hasInteractiveAriaState(element) || hasInteractiveDataState(element);
-  const looksInteractive = style.cursor === "pointer" || hasInteractiveState;
 
   if (hasInteractiveRole(element)) {
-    return isFocusable || isEditableHintTarget(element) || looksInteractive;
+    if (isFocusable || isEditableHintTarget(element) || hasInteractiveState) {
+      return true;
+    }
+
+    return window.getComputedStyle(element).cursor === "pointer";
   }
 
   if (hasDirectActionAttribute(element)) {
-    return isFocusable || looksInteractive;
+    if (isFocusable || hasInteractiveState) {
+      return true;
+    }
+
+    return window.getComputedStyle(element).cursor === "pointer";
   }
 
-  return isFocusable && looksInteractive;
+  if (!isFocusable) {
+    return false;
+  }
+
+  if (hasInteractiveState) {
+    return true;
+  }
+
+  return window.getComputedStyle(element).cursor === "pointer";
 };
 
 const isActivatableElement = (element: HTMLElement): boolean => {

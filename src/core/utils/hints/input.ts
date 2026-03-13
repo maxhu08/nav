@@ -4,7 +4,6 @@ import type { HintMarker, MarkerDomAttributes } from "~/src/core/utils/hints/typ
 export type HintFilterResult = {
   visibleMarkers: HintMarker[];
   previousTyped: string;
-  exactMatch: HintMarker | null;
 };
 
 export const applyHintFilter = (
@@ -16,14 +15,14 @@ export const applyHintFilter = (
 ): HintFilterResult => {
   const isNarrowing = typed.startsWith(previousTyped);
   const candidateMarkers = isNarrowing ? visibleMarkers : markers;
-  const nextVisibleMarkers =
-    typed.length === 0 ? markers : candidateMarkers.filter((hint) => hint.label.startsWith(typed));
-  const nextVisibleSet = new Set(nextVisibleMarkers);
+  const nextVisibleMarkers: HintMarker[] = [];
+  const showAll = typed.length === 0;
 
   for (const hint of candidateMarkers) {
-    const shouldBeVisible = typed.length === 0 || nextVisibleSet.has(hint);
+    const shouldBeVisible = showAll || hint.label.startsWith(typed);
 
     if (shouldBeVisible) {
+      nextVisibleMarkers.push(hint);
       if (!hint.visible) {
         hint.marker.style.display = "";
         hint.visible = true;
@@ -44,8 +43,7 @@ export const applyHintFilter = (
   }
 
   return {
-    visibleMarkers: nextVisibleMarkers,
-    previousTyped: typed,
-    exactMatch: nextVisibleMarkers.find((marker) => marker.label === typed) ?? null
+    visibleMarkers: showAll ? markers : nextVisibleMarkers,
+    previousTyped: typed
   };
 };

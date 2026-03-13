@@ -34,8 +34,8 @@ Use this map to decide where new code should go.
   4. Build marker models and marker DOM nodes: `markers.ts`
   5. Layout markers (thumbnail heuristics, collision avoidance, viewport clamping): `layout.ts`
   6. Render overlay and marker CSS: `renderer.ts`
-  7. Apply typed-input filtering and exact-match detection: `input.ts`
-  8. Activate selected targets and cleanup session state: `src/core/actions/hints.ts`
+  7. Apply typed-input filtering and marker visibility updates: `input.ts`
+  8. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hints.ts`
 - Shared hints types live in `src/core/utils/hints/types.ts`.
 
 ## Config Layers

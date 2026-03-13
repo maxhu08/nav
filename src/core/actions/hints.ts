@@ -6,7 +6,6 @@ import {
   isSelectableElement
 } from "~/src/core/utils/is-editable-target";
 import {
-  getMarkerRect,
   restoreRevealedHintControls,
   revealHoverHintControls
 } from "~/src/core/utils/hints/hint-recognition";
@@ -44,6 +43,17 @@ const STYLE_ID = `${HINT_NAMESPACE_PREFIX}link-hints-style`;
 const FOCUS_INDICATOR_EVENT = `${HINT_NAMESPACE_PREFIX}focus-indicator`;
 export const HINT_SELECTABLE_ACTIVATED_EVENT = `${HINT_NAMESPACE_PREFIX}hint-selectable-activated`;
 const IS_MAC = navigator.userAgent.includes("Mac");
+const BLURRING_INPUT_TYPES = new Set([
+  "button",
+  "checkbox",
+  "color",
+  "file",
+  "image",
+  "radio",
+  "range",
+  "reset",
+  "submit"
+]);
 
 let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
@@ -114,18 +124,7 @@ const clearFrameHandle = (): void => {
 
 const shouldBlurAfterActivation = (element: HTMLElement): boolean =>
   element instanceof HTMLButtonElement ||
-  (element instanceof HTMLInputElement &&
-    new Set([
-      "button",
-      "checkbox",
-      "color",
-      "file",
-      "image",
-      "radio",
-      "range",
-      "reset",
-      "submit"
-    ]).has(element.type)) ||
+  (element instanceof HTMLInputElement && BLURRING_INPUT_TYPES.has(element.type)) ||
   element.getAttribute("role") === "button";
 
 const dispatchFocusIndicator = (element: HTMLElement): void => {
@@ -359,11 +358,6 @@ export const activateHints = (
   const markers: HintState["markers"] = [];
 
   for (const target of labeledTargets) {
-    const rect = getMarkerRect(target.element);
-    if (!rect) {
-      continue;
-    }
-
     const markerModel = createHintMarker(
       target.label,
       mode,
