@@ -54,7 +54,7 @@ export const createHintMarker = (
   marker.style.top = "0px";
   marker.style.display = "inline-flex";
   marker.style.alignItems = "center";
-  marker.style.gap = "0.25em";
+  marker.style.gap = "0";
 
   const displayLabel = showCapitalizedLetters ? label.toUpperCase() : label.toLowerCase();
   const letters: HTMLSpanElement[] = [];
@@ -76,6 +76,7 @@ export const createHintMarker = (
     icon.setAttribute("fill", "currentColor");
     icon.setAttribute("aria-hidden", "true");
     icon.style.flex = "0 0 auto";
+    icon.style.marginLeft = "0.25em";
 
     const iconPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
     iconPath.setAttribute("d", EXTERNAL_LINK_ICON_PATH);
