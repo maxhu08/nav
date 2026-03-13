@@ -16,7 +16,7 @@ const MARKER_COLLISION_CELL_SIZE = 80;
 const MIN_THUMBNAIL_WIDTH = 96;
 const MIN_THUMBNAIL_HEIGHT = 54;
 const MIN_THUMBNAIL_MEDIA_AREA_RATIO = 0.45;
-const MIN_THUMBNAIL_ASPECT_RATIO = 1.15;
+const MIN_THUMBNAIL_RECTANGULAR_RATIO = 1.15;
 const MIN_COPY_IMAGE_THUMBNAIL_WIDTH = 180;
 const MIN_COPY_IMAGE_THUMBNAIL_HEIGHT = 120;
 
@@ -67,6 +67,17 @@ const createPlacedMarkerRect = (
 
 const getRectArea = (rect: Pick<DOMRect, "width" | "height">): number =>
   Math.max(0, rect.width) * Math.max(0, rect.height);
+
+const getRectangularRatio = (rect: Pick<DOMRect, "width" | "height">): number => {
+  const shortestSide = Math.min(rect.width, rect.height);
+  const longestSide = Math.max(rect.width, rect.height);
+
+  if (shortestSide <= 0) {
+    return 0;
+  }
+
+  return longestSide / shortestSide;
+};
 
 const hasThumbnailKeyword = (value: string | null | undefined): boolean =>
   !!value && /(thumbnail|thumb|poster|preview|cover)/i.test(value);
@@ -186,7 +197,7 @@ const isThumbnailLikeTarget = (
     return false;
   }
 
-  return preferredThumbnailRect.width / preferredThumbnailRect.height >= MIN_THUMBNAIL_ASPECT_RATIO;
+  return getRectangularRatio(preferredThumbnailRect) >= MIN_THUMBNAIL_RECTANGULAR_RATIO;
 };
 
 type MarkerPlacementInfo = {
