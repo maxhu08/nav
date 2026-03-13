@@ -12,6 +12,20 @@
 
 nav is a browser extension that brings vim style keyboard navigation to the web. It lets you move through pages, jump between tabs, open links with hints, search within the current page, and copy useful URLs or images without reaching for the mouse. It also emphasizes configurability through editable hotkeys, URL-based action rules, and customizable hint generation and styling.
 
+## download
+
+Chromium-based browsers (Chrome, Brave, Opera)
+
+[<img src="./assets/download/download-chrome.svg" height="53" alt="Chromium Download">](https://chromewebstore.google.com/detail/nav/dlcpodncoklccfalllombmocfaonlhhg)
+
+Firefox-based browsers (Firefox, Floorp, Zen)
+
+[<img src="./assets/download/download-firefox.svg" height="53" alt="Firefox Download">](https://addons.mozilla.org/en-US/firefox/addon/nav-extension)
+
+Microsoft Edge
+
+Coming soon
+
 ## features
 
 - ⚡️ Fast & Lightweight
@@ -81,6 +95,10 @@ c toggle-captions # requires watch mode
 ```
 
 These bindings are fully configurable in the options page.
+
+## star-history
+
+[![Star History Chart](https://api.star-history.com/svg?repos=maxhu08/nav&type=Date)](https://star-history.com/#maxhu08/nav&Date)
 
 ## contributing
 
