@@ -67,9 +67,9 @@ export const isFindUIElement = (target: EventTarget | null): boolean => {
     return false;
   }
 
-  return (
-    getFindOverlay()?.contains(target) === true ||
-    getFindBar()?.contains(target) === true ||
-    getFindStatus()?.contains(target) === true
+  return !!(
+    getFindOverlay()?.contains(target) ||
+    getFindBar()?.contains(target) ||
+    getFindStatus()?.contains(target)
   );
 };

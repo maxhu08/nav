@@ -235,18 +235,12 @@ const getMarkerPlacementInfo = (
 
   const thumbnailElements = collectUniqueThumbnailElements(element);
   const preferredThumbnailRect = getPreferredThumbnailRect(targetRect, thumbnailElements);
+  const useThumbnail =
+    mode === "copy-image" && element instanceof HTMLImageElement
+      ? targetRect.width >= MIN_COPY_IMAGE_THUMBNAIL_WIDTH &&
+        targetRect.height >= MIN_COPY_IMAGE_THUMBNAIL_HEIGHT
+      : isThumbnailLikeTarget(targetRect, thumbnailElements, preferredThumbnailRect);
 
-  if (mode === "copy-image" && element instanceof HTMLImageElement) {
-    const useThumbnail =
-      targetRect.width >= MIN_COPY_IMAGE_THUMBNAIL_WIDTH &&
-      targetRect.height >= MIN_COPY_IMAGE_THUMBNAIL_HEIGHT;
-    return {
-      variant: useThumbnail ? "thumbnail" : "default",
-      anchorRect: useThumbnail ? (preferredThumbnailRect ?? targetRect) : targetRect
-    };
-  }
-
-  const useThumbnail = isThumbnailLikeTarget(targetRect, thumbnailElements, preferredThumbnailRect);
   return {
     variant: useThumbnail ? "thumbnail" : "default",
     anchorRect: useThumbnail ? (preferredThumbnailRect ?? targetRect) : targetRect
