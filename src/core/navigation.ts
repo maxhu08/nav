@@ -551,6 +551,10 @@ const handleKeydown = (event: KeyboardEvent): void => {
   }
 
   if (isKeydownFromEditableTarget(event)) {
+    if (handleEscapeModes(event)) {
+      return;
+    }
+
     shouldBypassNextTypingKeyAfterHintSelect = false;
 
     if (areHintsActive()) {
