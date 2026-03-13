@@ -137,22 +137,50 @@ const dispatchFocusIndicator = (element: HTMLElement): void => {
   );
 };
 
-const simulateSelect = (element: HTMLElement): void => {
+const isElementDeepActive = (element: HTMLElement): boolean => getDeepActiveElement() === element;
+
+const focusElement = (element: HTMLElement): void => {
+  try {
+    element.focus({ preventScroll: true });
+  } catch {
+    element.focus();
+  }
+};
+
+const simulateSelect = (element: HTMLElement): boolean => {
   const activeElement = getDeepActiveElement();
   if (activeElement === element && isEditableElement(activeElement)) {
     dispatchFocusIndicator(element);
-    return;
+    return true;
   }
 
-  element.focus();
+  focusElement(element);
+
+  if (!isElementDeepActive(element)) {
+    element.click();
+    focusElement(element);
+  }
+
+  const didFocusImmediately = isElementDeepActive(element);
+
+  if (!didFocusImmediately) {
+    window.requestAnimationFrame(() => {
+      if (isElementDeepActive(element)) {
+        return;
+      }
+
+      focusElement(element);
+    });
+  }
+
   dispatchFocusIndicator(element);
 
   if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
-    return;
+    return didFocusImmediately;
   }
 
   if (element instanceof HTMLTextAreaElement && element.value.includes("\n")) {
-    return;
+    return didFocusImmediately;
   }
 
   try {
@@ -162,6 +190,8 @@ const simulateSelect = (element: HTMLElement): void => {
   } catch {
     // Ignore elements without stable selection APIs.
   }
+
+  return didFocusImmediately;
 };
 
 const simulateMouseInteraction = (
@@ -227,9 +257,15 @@ const dispatchModifiedClick = (element: HTMLElement, modifiers: MouseEventInit):
 
 const openHintInCurrentTab = (element: HTMLElement): void => {
   if (isSelectableElement(element)) {
-    window.dispatchEvent(new CustomEvent(HINT_SELECTABLE_ACTIVATED_EVENT));
     window.focus();
-    simulateSelect(element);
+    const didFocusImmediately = simulateSelect(element);
+    window.dispatchEvent(
+      new CustomEvent(HINT_SELECTABLE_ACTIVATED_EVENT, {
+        detail: {
+          didFocusImmediately
+        }
+      })
+    );
     return;
   }
 

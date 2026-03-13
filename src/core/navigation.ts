@@ -160,6 +160,23 @@ const setMode = (mode: CoreMode): void => {
   currentMode = mode;
 };
 
+const getHintSelectableActivationDetail = (
+  event: Event
+): { didFocusImmediately: boolean } | null => {
+  if (!(event instanceof CustomEvent) || !event.detail || typeof event.detail !== "object") {
+    return null;
+  }
+
+  const detail = event.detail as Partial<{ didFocusImmediately: unknown }>;
+  if (typeof detail.didFocusImmediately !== "boolean") {
+    return null;
+  }
+
+  return {
+    didFocusImmediately: detail.didFocusImmediately
+  };
+};
+
 const isOptionsPage = (): boolean => {
   const optionsUrl = chrome.runtime.getURL("options.html");
   return window.location.href === optionsUrl;
@@ -397,7 +414,7 @@ const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
   }
 
   if (handleHintsKeydown(event)) {
-    if (!areHintsActive()) {
+    if (!areHintsActive() && event.key === "Escape") {
       hintExitGraceUntil = performance.now() + HINT_EXIT_KEY_GRACE_MS;
     }
 
@@ -533,6 +550,13 @@ const handleFrameActionMessage = (event: MessageEvent): void => {
 };
 
 const handleKeydown = (event: KeyboardEvent): void => {
+  if (event.isTrusted && isForceNormalModeEnabled) {
+    // Disable startup editable blur guard before handling actions.
+    // Window capture keydown handlers run before document capture handlers,
+    // so this prevents first-key races with hint-driven input focusing.
+    isStartupFocusGuardActive = false;
+  }
+
   if (!keyState.hasAllowedActionMappings()) {
     if (areHintsActive()) {
       exitHints();
@@ -654,8 +678,14 @@ export const initCoreNavigation = (): void => {
         findMode.hideFindBar();
       }
     });
-    window.addEventListener(HINT_SELECTABLE_ACTIVATED_EVENT, () => {
-      shouldBypassNextTypingKeyAfterHintSelect = true;
+    window.addEventListener(HINT_SELECTABLE_ACTIVATED_EVENT, (event) => {
+      const detail = getHintSelectableActivationDetail(event);
+      shouldBypassNextTypingKeyAfterHintSelect = !detail?.didFocusImmediately;
+    });
+    document.addEventListener("focusin", (event) => {
+      if (isEditableTarget(event.target)) {
+        shouldBypassNextTypingKeyAfterHintSelect = false;
+      }
     });
   }
 
