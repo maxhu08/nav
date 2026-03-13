@@ -360,6 +360,71 @@ const dedupeHintTargets = (
   return deduped;
 };
 
+const getAssociatedFileInput = (element: HTMLElement): HTMLInputElement | null => {
+  if (element instanceof HTMLInputElement && element.type.toLowerCase() === "file") {
+    return element;
+  }
+
+  if (
+    element instanceof HTMLLabelElement &&
+    element.control instanceof HTMLInputElement &&
+    element.control.type.toLowerCase() === "file"
+  ) {
+    return element.control;
+  }
+
+  const ancestorLabel = element.closest("label");
+  if (
+    ancestorLabel instanceof HTMLLabelElement &&
+    ancestorLabel.control instanceof HTMLInputElement &&
+    ancestorLabel.control.type.toLowerCase() === "file"
+  ) {
+    return ancestorLabel.control;
+  }
+
+  return null;
+};
+
+const dedupeEquivalentAttachTargets = (
+  elements: HTMLElement[],
+  getRect: (element: HTMLElement) => DOMRect | null,
+  getPreference: (element: HTMLElement) => number
+): HTMLElement[] => {
+  const attachRepresentatives = new Map<HTMLInputElement, HTMLElement>();
+
+  for (const element of elements) {
+    const control = getAssociatedFileInput(element);
+    if (!control) {
+      continue;
+    }
+
+    const existing = attachRepresentatives.get(control);
+    if (!existing) {
+      attachRepresentatives.set(control, element);
+      continue;
+    }
+
+    const elementScore = getAttachCandidateScore(element, getRect(element));
+    const existingScore = getAttachCandidateScore(existing, getRect(existing));
+
+    if (
+      elementScore > existingScore ||
+      (elementScore === existingScore && getPreference(element) > getPreference(existing))
+    ) {
+      attachRepresentatives.set(control, element);
+    }
+  }
+
+  return elements.filter((element) => {
+    const control = getAssociatedFileInput(element);
+    if (!control) {
+      return true;
+    }
+
+    return attachRepresentatives.get(control) === element;
+  });
+};
+
 const hasEquivalentAncestorTarget = (
   element: HTMLElement,
   candidates: ReadonlySet<HTMLElement>,
@@ -646,10 +711,9 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
   const withoutEquivalentAncestors = elements.filter(
     (element) => !hasEquivalentAncestorTarget(element, candidateSet, getRect)
   );
-  const uniqueElements = dedupeHintTargets(
-    withoutEquivalentAncestors,
+  const uniqueElements = dedupeEquivalentAttachTargets(
+    dedupeHintTargets(withoutEquivalentAncestors, getRect, getIdentity, getPreference),
     getRect,
-    getIdentity,
     getPreference
   );
 

@@ -7,12 +7,14 @@ import {
   invalidateMarkerSize,
   setThumbnailMarkerIconVisibility
 } from "~/src/core/utils/hints/markers";
-import type { HintMarker } from "~/src/core/utils/hints/types";
+import type { HintMarker, ReservedHintDirective } from "~/src/core/utils/hints/types";
 
 const MARKER_VIEWPORT_PADDING = 4;
 const MARKER_COLLISION_GAP = 2;
 const MARKER_ANCHOR_INSET = 2;
 const MARKER_COLLISION_CELL_SIZE = 80;
+const MARKER_SEARCH_STEP = 24;
+const MARKER_SEARCH_RINGS = 6;
 const MIN_THUMBNAIL_WIDTH = 96;
 const MIN_THUMBNAIL_HEIGHT = 54;
 const MIN_THUMBNAIL_MEDIA_AREA_RATIO = 0.45;
@@ -30,6 +32,22 @@ type PlacedMarkerRect = {
 type RectLike = Pick<DOMRect, "left" | "top" | "right" | "bottom" | "width" | "height">;
 type MarkerVariant = "default" | "thumbnail";
 type CollisionGrid = Map<number, Map<number, PlacedMarkerRect[]>>;
+
+const DIRECTIVE_LAYOUT_PRIORITIES: Partial<Record<ReservedHintDirective, number>> = {
+  attach: 100,
+  input: 90,
+  submit: 80,
+  cancel: 70,
+  next: 60,
+  prev: 60,
+  home: 50,
+  sidebar: 40,
+  like: 30,
+  dislike: 30
+};
+
+const getMarkerLayoutPriority = (hint: Pick<HintMarker, "directive">): number =>
+  hint.directive ? (DIRECTIVE_LAYOUT_PRIORITIES[hint.directive] ?? 10) : 0;
 
 const doPlacedMarkerRectsOverlap = (left: PlacedMarkerRect, right: PlacedMarkerRect): boolean =>
   left.left < right.right + MARKER_COLLISION_GAP &&
@@ -277,6 +295,29 @@ const getMarkerPositionCandidates = (
     pushCandidate(centerLeft, centerTop);
   }
 
+  for (let ring = 1; ring <= MARKER_SEARCH_RINGS; ring += 1) {
+    const offset = ring * MARKER_SEARCH_STEP;
+    const aboveTop = anchorRect.top - markerHeight - offset;
+    const belowTop = anchorRect.bottom + offset;
+    const leftOutside = anchorRect.left - markerWidth - offset;
+    const rightOutside = anchorRect.right + offset;
+
+    pushCandidate(centerLeft, aboveTop);
+    pushCandidate(centerLeft, belowTop);
+    pushCandidate(leftOutside, centerTop);
+    pushCandidate(rightOutside, centerTop);
+
+    pushCandidate(leftOutside, aboveTop);
+    pushCandidate(rightOutside, aboveTop);
+    pushCandidate(leftOutside, belowTop);
+    pushCandidate(rightOutside, belowTop);
+
+    pushCandidate(left - offset, top);
+    pushCandidate(right + offset, top);
+    pushCandidate(left, top - offset);
+    pushCandidate(left, bottom + offset);
+  }
+
   return candidates;
 };
 
@@ -357,8 +398,11 @@ export const updateMarkerPositions = (
   markerVariantStyleAttribute: string
 ): void => {
   const collisionGrid: CollisionGrid = new Map();
+  const markersByPlacementPriority = [...markers].sort(
+    (left, right) => getMarkerLayoutPriority(right) - getMarkerLayoutPriority(left)
+  );
 
-  for (const hint of markers) {
+  for (const hint of markersByPlacementPriority) {
     const targetRect = getMarkerRect(hint.element);
 
     if (!targetRect) {
@@ -400,6 +444,7 @@ export const updateMarkerPositions = (
 
     const markerWidth = hint.markerWidth;
     const markerHeight = hint.markerHeight;
+    hint.marker.style.zIndex = `${1000 + getMarkerLayoutPriority(hint)}`;
     const candidates = getMarkerPlacementCandidates(
       anchorRect,
       markerVariant,
@@ -423,24 +468,14 @@ export const updateMarkerPositions = (
       }
     }
 
-    const fallbackPosition = clampMarkerPosition(
-      targetRect.left,
-      targetRect.top,
-      markerWidth,
-      markerHeight
-    );
-    const nextRect =
-      chosenRect ??
-      createPlacedMarkerRect(
-        fallbackPosition.left,
-        fallbackPosition.top,
-        markerWidth,
-        markerHeight
-      );
+    if (!chosenRect) {
+      hint.marker.style.display = "none";
+      continue;
+    }
 
-    hint.marker.style.left = `${Math.round(nextRect.left)}px`;
-    hint.marker.style.top = `${Math.round(nextRect.top)}px`;
-    addToCollisionGrid(collisionGrid, nextRect);
+    hint.marker.style.left = `${Math.round(chosenRect.left)}px`;
+    hint.marker.style.top = `${Math.round(chosenRect.top)}px`;
+    addToCollisionGrid(collisionGrid, chosenRect);
   }
 };
 
