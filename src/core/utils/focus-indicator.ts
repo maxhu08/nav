@@ -1,5 +1,5 @@
 import { injectStyles } from "~/src/core/utils/inject-styles";
-import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
+import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
 import { FOCUS_OVERLAY_ID, FOCUS_STYLE_ID } from "~/src/core/utils/get-ui";
 import type { FindStyleRenderParams } from "~/src/core/styles/render-find-styles";

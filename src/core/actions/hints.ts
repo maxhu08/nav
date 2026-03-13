@@ -4,13 +4,13 @@ import {
   getDeepActiveElement,
   isEditableElement,
   isSelectableElement
-} from "~/src/core/utils/isEditableTarget";
+} from "~/src/core/utils/is-editable-target";
 import {
   getMarkerRect,
   restoreRevealedHintControls,
   revealHoverHintControls
-} from "~/src/core/actions/hint-recognition";
-import type { LinkMode } from "~/src/core/actions/hint-recognition";
+} from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import { applyHintFilter } from "~/src/core/utils/hints/input";
 import { clearHintLabelPlanCache } from "~/src/core/utils/hints/labels";
 import {

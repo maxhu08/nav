@@ -1,5 +1,5 @@
-import { getHintableElements } from "~/src/core/actions/hint-recognition";
-import type { LinkMode } from "~/src/core/actions/hint-recognition";
+import { getHintableElements } from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import { buildHintLabels } from "~/src/core/utils/hints/labels";
 import { assignHintSemantics } from "~/src/core/utils/hints/semantics";
 import type { HintLabelPlanSettings, ReservedHintLabels } from "~/src/core/utils/hints/types";

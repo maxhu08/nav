@@ -2,7 +2,7 @@ import {
   getPreferredHomeElementIndex,
   getPreferredSearchElementIndex,
   getPreferredSidebarElementIndex
-} from "~/src/core/actions/hint-recognition";
+} from "~/src/core/utils/hints/hint-recognition";
 import { doesLabelConflictWithReservedLabels } from "~/src/core/utils/hints/labels";
 import type { ReservedHintLabels } from "~/src/core/utils/hints/types";
 

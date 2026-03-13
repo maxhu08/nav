@@ -1,5 +1,5 @@
 import { EXTERNAL_LINK_ICON_PATH, FILE_COPY_ICON_PATH } from "~/src/lib/inline-icons";
-import type { LinkMode } from "~/src/core/actions/hint-recognition";
+import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import type { HintMarker, MarkerDomAttributes } from "~/src/core/utils/hints/types";
 
 export const setMarkerTypedState = (

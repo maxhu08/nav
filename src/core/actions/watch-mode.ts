@@ -7,7 +7,7 @@ import {
   WATCH_VOLUME_MUTE_ICON_PATH,
   WATCH_VOLUME_UP_ICON_PATH
 } from "~/src/lib/inline-icons";
-import { getDeepActiveElement } from "~/src/core/utils/isEditableTarget";
+import { getDeepActiveElement } from "~/src/core/utils/is-editable-target";
 import { FOCUS_INDICATOR_EVENT, WATCH_HINTS_ID } from "~/src/core/utils/get-ui";
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 

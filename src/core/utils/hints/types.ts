@@ -1,4 +1,4 @@
-import type { LinkMode, RevealedHintElement } from "~/src/core/actions/hint-recognition";
+import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/hint-recognition";
 
 export type AdjacentHintPairs = Partial<Record<string, Partial<Record<string, true>>>>;
 

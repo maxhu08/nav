@@ -34,7 +34,7 @@ import {
   getFindInput,
   isFindUIElement
 } from "~/src/core/utils/get-ui";
-import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/isEditableTarget";
+import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import { createKeyState, getKeyToken, isModifierKey } from "~/src/core/utils/key-state";
 import { ensureToastWrapper } from "~/src/core/utils/sonner";
 import { getExtensionNamespace } from "~/src/utils/extension-id";

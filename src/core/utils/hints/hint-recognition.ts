@@ -1,4 +1,4 @@
-import { getDeepActiveElement, isSelectableElement } from "~/src/core/utils/isEditableTarget";
+import { getDeepActiveElement, isSelectableElement } from "~/src/core/utils/is-editable-target";
 
 export type LinkMode = "current-tab" | "new-tab" | "copy-link" | "copy-image";
 

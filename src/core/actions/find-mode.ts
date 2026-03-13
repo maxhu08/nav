@@ -1,4 +1,4 @@
-import { isEditableTarget, getDeepActiveElement } from "~/src/core/utils/isEditableTarget";
+import { isEditableTarget, getDeepActiveElement } from "~/src/core/utils/is-editable-target";
 import {
   FIND_ARROW_DOWN_ICON_NODES,
   FIND_ARROW_UP_ICON_NODES,

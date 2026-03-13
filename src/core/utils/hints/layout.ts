@@ -1,5 +1,8 @@
-import { getMarkerRect, revealElementForHintCollection } from "~/src/core/actions/hint-recognition";
-import type { LinkMode, RevealedHintElement } from "~/src/core/actions/hint-recognition";
+import {
+  getMarkerRect,
+  revealElementForHintCollection
+} from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/hint-recognition";
 import { invalidateMarkerSize } from "~/src/core/utils/hints/markers";
 import type { HintMarker } from "~/src/core/utils/hints/types";
 
