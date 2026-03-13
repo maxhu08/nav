@@ -2,11 +2,16 @@ import { getHintableElements } from "~/src/core/utils/hints/hint-recognition";
 import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import { buildHintLabels } from "~/src/core/utils/hints/labels";
 import { assignHintSemantics } from "~/src/core/utils/hints/semantics";
-import type { HintLabelPlanSettings, ReservedHintLabels } from "~/src/core/utils/hints/types";
+import type {
+  HintLabelPlanSettings,
+  ReservedHintDirective,
+  ReservedHintLabels
+} from "~/src/core/utils/hints/types";
 
 export type HintPipelineTarget = {
   element: HTMLElement;
   label: string;
+  directive: ReservedHintDirective | null;
 };
 
 export const collectHintTargets = (mode: LinkMode): HTMLElement[] => {
@@ -18,7 +23,7 @@ export const assignHintLabels = (
   reservedHintLabels: ReservedHintLabels,
   labelSettings: HintLabelPlanSettings
 ): HintPipelineTarget[] => {
-  const { reservedLabelsByIndex, reservedLabels } = assignHintSemantics(
+  const { reservedLabelsByIndex, reservedDirectivesByIndex, reservedLabels } = assignHintSemantics(
     elements,
     reservedHintLabels
   );
@@ -36,7 +41,8 @@ export const assignHintLabels = (
 
     targets.push({
       element,
-      label
+      label,
+      directive: reservedDirectivesByIndex.get(index) ?? null
     });
   });
 

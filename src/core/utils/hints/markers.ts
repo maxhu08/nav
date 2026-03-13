@@ -1,6 +1,16 @@
-import { EXTERNAL_LINK_ICON_PATH, FILE_COPY_ICON_PATH } from "~/src/lib/inline-icons";
+import {
+  EXTERNAL_LINK_ICON_PATH,
+  FILE_COPY_ICON_PATH,
+  HINT_HOME_ICON_PATH,
+  HINT_SEARCH_ICON_PATH,
+  HINT_SIDEBAR_ICON_PATH
+} from "~/src/lib/inline-icons";
 import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
-import type { HintMarker, MarkerDomAttributes } from "~/src/core/utils/hints/types";
+import type {
+  HintMarker,
+  MarkerDomAttributes,
+  ReservedHintDirective
+} from "~/src/core/utils/hints/types";
 
 export const setMarkerTypedState = (
   hint: HintMarker,
@@ -52,6 +62,7 @@ const appendMarkerIcon = (marker: HTMLSpanElement, path: string): void => {
 
 export const createHintMarker = (
   label: string,
+  directive: ReservedHintDirective | null,
   mode: LinkMode,
   showCapitalizedLetters: boolean,
   attrs: MarkerDomAttributes
@@ -82,6 +93,14 @@ export const createHintMarker = (
     letter.setAttribute(attrs.letterStyleAttribute, "pending");
     marker.appendChild(letter);
     letters.push(letter);
+  }
+
+  if (directive === "search") {
+    appendMarkerIcon(marker, HINT_SEARCH_ICON_PATH);
+  } else if (directive === "home") {
+    appendMarkerIcon(marker, HINT_HOME_ICON_PATH);
+  } else if (directive === "sidebar") {
+    appendMarkerIcon(marker, HINT_SIDEBAR_ICON_PATH);
   }
 
   if (mode === "new-tab") {

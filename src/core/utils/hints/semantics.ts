@@ -4,7 +4,7 @@ import {
   getPreferredSidebarElementIndex
 } from "~/src/core/utils/hints/hint-recognition";
 import { doesLabelConflictWithReservedLabels } from "~/src/core/utils/hints/labels";
-import type { ReservedHintLabels } from "~/src/core/utils/hints/types";
+import type { ReservedHintDirective, ReservedHintLabels } from "~/src/core/utils/hints/types";
 
 const RESERVED_LABEL_PATTERN = /^[a-z]+$/;
 
@@ -27,17 +27,20 @@ export const assignHintSemantics = (
   reservedHintLabels: ReservedHintLabels
 ): {
   reservedLabelsByIndex: Map<number, string>;
+  reservedDirectivesByIndex: Map<number, ReservedHintDirective>;
   reservedLabels: string[];
 } => {
   const preferredSearchElementIndex = getPreferredSearchElementIndex(elements);
   const preferredHomeElementIndex = getPreferredHomeElementIndex(elements);
   const preferredSidebarElementIndex = getPreferredSidebarElementIndex(elements);
   const preferredLabelsByIndex = new Map<number, string>();
+  const preferredDirectivesByIndex = new Map<number, ReservedHintDirective>();
 
   if (preferredSearchElementIndex !== null) {
     const preferredSearchLabel = getPreferredReservedLabel(reservedHintLabels.search);
     if (preferredSearchLabel) {
       preferredLabelsByIndex.set(preferredSearchElementIndex, preferredSearchLabel);
+      preferredDirectivesByIndex.set(preferredSearchElementIndex, "search");
     }
   }
 
@@ -47,6 +50,7 @@ export const assignHintSemantics = (
       const existingLabel = preferredLabelsByIndex.get(preferredHomeElementIndex);
       if (!existingLabel) {
         preferredLabelsByIndex.set(preferredHomeElementIndex, preferredHomeLabel);
+        preferredDirectivesByIndex.set(preferredHomeElementIndex, "home");
       }
     }
   }
@@ -57,11 +61,13 @@ export const assignHintSemantics = (
       const existingLabel = preferredLabelsByIndex.get(preferredSidebarElementIndex);
       if (!existingLabel) {
         preferredLabelsByIndex.set(preferredSidebarElementIndex, preferredSidebarLabel);
+        preferredDirectivesByIndex.set(preferredSidebarElementIndex, "sidebar");
       }
     }
   }
 
   const reservedLabelsByIndex = new Map<number, string>();
+  const reservedDirectivesByIndex = new Map<number, ReservedHintDirective>();
   const reservedLabels: string[] = [];
 
   for (const [index, label] of preferredLabelsByIndex.entries()) {
@@ -70,11 +76,16 @@ export const assignHintSemantics = (
     }
 
     reservedLabelsByIndex.set(index, label);
+    const directive = preferredDirectivesByIndex.get(index);
+    if (directive) {
+      reservedDirectivesByIndex.set(index, directive);
+    }
     reservedLabels.push(label);
   }
 
   return {
     reservedLabelsByIndex,
+    reservedDirectivesByIndex,
     reservedLabels
   };
 };

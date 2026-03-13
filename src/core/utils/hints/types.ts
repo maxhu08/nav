@@ -7,11 +7,13 @@ export type ReservedHintLabels = {
   home: string[];
   sidebar: string[];
 };
+export type ReservedHintDirective = keyof ReservedHintLabels;
 
 export type HintMarker = {
   element: HTMLElement;
   marker: HTMLSpanElement;
   label: string;
+  directive: ReservedHintDirective | null;
   letters: HTMLSpanElement[];
   visible: boolean;
   renderedTyped: string;

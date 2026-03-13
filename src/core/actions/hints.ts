@@ -396,6 +396,7 @@ export const activateHints = (
   for (const target of labeledTargets) {
     const markerModel = createHintMarker(
       target.label,
+      target.directive,
       mode,
       showCapitalizedLetters,
       markerDomAttributes
@@ -404,6 +405,7 @@ export const activateHints = (
     markers.push({
       element: target.element,
       label: target.label,
+      directive: target.directive,
       visible: true,
       ...markerModel
     });
