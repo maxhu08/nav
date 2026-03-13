@@ -698,6 +698,27 @@ const SIDEBAR_TOGGLE_PATTERNS = [
   /\bsidebar-toggle\b/i,
   /\bdrawer-toggle\b/i
 ];
+const NEXT_ATTRIBUTE_PATTERNS = [/\bnext\b/i, /\bmore\b/i, /\bnewer\b/i, /\bcontinue\b/i];
+const PREV_ATTRIBUTE_PATTERNS = [/\bprev\b/i, /\bprevious\b/i, /\bback\b/i, /\bolder\b/i];
+const CANCEL_ATTRIBUTE_PATTERNS = [
+  /\bcancel\b/i,
+  /\bclose\b/i,
+  /\bdismiss\b/i,
+  /\bexit\b/i,
+  /\bno\b/i
+];
+const SUBMIT_ATTRIBUTE_PATTERNS = [
+  /\bsubmit\b/i,
+  /\bok\b/i,
+  /\bsave\b/i,
+  /\bsend\b/i,
+  /\bpost\b/i,
+  /\bapply\b/i,
+  /\bconfirm\b/i,
+  /\bdone\b/i
+];
+const LIKE_ATTRIBUTE_PATTERNS = [/\blike\b/i, /\bupvote\b/i, /\bthumb[-_ ]?up\b/i];
+const DISLIKE_ATTRIBUTE_PATTERNS = [/\bdislike\b/i, /\bdownvote\b/i, /\bthumb[-_ ]?down\b/i];
 
 const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
 const HOME_PATHS = new Set(["/", "/home", "/homepage", "/dashboard"]);
@@ -1137,3 +1158,154 @@ export const getPreferredSidebarElementIndex = (elements: HTMLElement[]): number
 
   return bestIndex;
 };
+
+const getActionDirectiveCandidateScore = (
+  element: HTMLElement,
+  patterns: readonly RegExp[],
+  options: {
+    allowFormSignals?: boolean;
+    relValues?: string[];
+    boostDialogContext?: boolean;
+  } = {}
+): number => {
+  if (!isActivatableElement(element) || isSelectableElement(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const rect = getMarkerRect(element);
+  if (!rect) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = 20;
+  let hasStrongSignal = false;
+  const tagName = element.tagName.toLowerCase();
+  const role = element.getAttribute("role")?.toLowerCase();
+  const textContent = getElementTextContent(element);
+  const attributeText = getJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "data-test-id", "role", "title", "class", "type"],
+    [textContent]
+  );
+
+  if (textMatchesAnyPattern(attributeText, patterns)) {
+    score += 240;
+    hasStrongSignal = true;
+  }
+
+  if (
+    options.relValues &&
+    (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement)
+  ) {
+    const relValue = element.getAttribute("rel")?.toLowerCase() ?? "";
+    const relParts = relValue.split(/\s+/);
+
+    if (options.relValues.some((value) => relParts.includes(value))) {
+      score += 260;
+      hasStrongSignal = true;
+    }
+  }
+
+  if (element instanceof HTMLButtonElement || role === "button") {
+    score += 50;
+  }
+
+  if (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) {
+    score += 40;
+  }
+
+  if (tagName === "summary") {
+    score += 20;
+  }
+
+  if (options.allowFormSignals) {
+    if (element instanceof HTMLInputElement && element.type.toLowerCase() === "submit") {
+      score += 320;
+      hasStrongSignal = true;
+    }
+
+    if (element.closest("form")) {
+      score += 70;
+    }
+  }
+
+  if (options.boostDialogContext) {
+    if (element.closest("dialog, [role='dialog'], [aria-modal='true']")) {
+      score += 90;
+    }
+
+    if (
+      element.closest("[id*='modal' i], [class*='modal' i], [id*='popup' i], [class*='popup' i]")
+    ) {
+      score += 70;
+    }
+  }
+
+  if (
+    element.closest(
+      "[aria-label*='pagination' i], [class*='pagination' i], nav, [role='navigation']"
+    )
+  ) {
+    score += 60;
+  }
+
+  if (!hasStrongSignal) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  score += Math.min(120, rect.height) / 10;
+  score += Math.min(220, rect.width) / 12;
+
+  return score;
+};
+
+const getPreferredActionDirectiveElementIndex = (
+  elements: HTMLElement[],
+  patterns: readonly RegExp[],
+  threshold: number,
+  options: {
+    allowFormSignals?: boolean;
+    relValues?: string[];
+    boostDialogContext?: boolean;
+  } = {}
+): number | null => {
+  let bestIndex: number | null = null;
+  let bestScore = threshold;
+
+  elements.forEach((element, index) => {
+    const score = getActionDirectiveCandidateScore(element, patterns, options);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+};
+
+export const getPreferredNextElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, NEXT_ATTRIBUTE_PATTERNS, 200, {
+    relValues: ["next"]
+  });
+
+export const getPreferredPrevElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, PREV_ATTRIBUTE_PATTERNS, 200, {
+    relValues: ["prev"]
+  });
+
+export const getPreferredCancelElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, CANCEL_ATTRIBUTE_PATTERNS, 220, {
+    boostDialogContext: true
+  });
+
+export const getPreferredSubmitElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, SUBMIT_ATTRIBUTE_PATTERNS, 220, {
+    allowFormSignals: true
+  });
+
+export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, LIKE_ATTRIBUTE_PATTERNS, 220);
+
+export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, DISLIKE_ATTRIBUTE_PATTERNS, 220);

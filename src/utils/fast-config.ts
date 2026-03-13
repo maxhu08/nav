@@ -47,12 +47,28 @@ export type FastConfig = {
       search: string[];
       home: string[];
       sidebar: string[];
+      next: string[];
+      prev: string[];
+      cancel: string[];
+      submit: string[];
+      like: string[];
+      dislike: string[];
     };
   };
 };
 
 const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch"];
-const RESERVED_HINT_ELEMENTS = new Set(["search", "home", "sidebar"] as const);
+const RESERVED_HINT_ELEMENTS = new Set([
+  "search",
+  "home",
+  "sidebar",
+  "next",
+  "prev",
+  "cancel",
+  "submit",
+  "like",
+  "dislike"
+] as const);
 
 const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => {
   if (typeof value !== "object" || value === null) {
@@ -86,7 +102,13 @@ const isReservedLabelsShapeValid = (
     value !== null &&
     Array.isArray((value as Record<string, unknown>).search) &&
     Array.isArray((value as Record<string, unknown>).home) &&
-    Array.isArray((value as Record<string, unknown>).sidebar)
+    Array.isArray((value as Record<string, unknown>).sidebar) &&
+    Array.isArray((value as Record<string, unknown>).next) &&
+    Array.isArray((value as Record<string, unknown>).prev) &&
+    Array.isArray((value as Record<string, unknown>).cancel) &&
+    Array.isArray((value as Record<string, unknown>).submit) &&
+    Array.isArray((value as Record<string, unknown>).like) &&
+    Array.isArray((value as Record<string, unknown>).dislike)
   );
 };
 
@@ -269,7 +291,13 @@ const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedL
   return {
     search: result.search ?? fallbackResult.search ?? [],
     home: result.home ?? fallbackResult.home ?? [],
-    sidebar: result.sidebar ?? fallbackResult.sidebar ?? []
+    sidebar: result.sidebar ?? fallbackResult.sidebar ?? [],
+    next: result.next ?? fallbackResult.next ?? [],
+    prev: result.prev ?? fallbackResult.prev ?? [],
+    cancel: result.cancel ?? fallbackResult.cancel ?? [],
+    submit: result.submit ?? fallbackResult.submit ?? [],
+    like: result.like ?? fallbackResult.like ?? [],
+    dislike: result.dislike ?? fallbackResult.dislike ?? []
   };
 };
 

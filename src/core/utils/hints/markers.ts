@@ -1,9 +1,15 @@
 import {
   EXTERNAL_LINK_ICON_PATH,
   FILE_COPY_ICON_PATH,
+  HINT_CANCEL_ICON_PATH,
+  HINT_DISLIKE_ICON_PATH,
   HINT_HOME_ICON_PATH,
+  HINT_LIKE_ICON_PATH,
+  HINT_NEXT_ICON_PATH,
+  HINT_PREV_ICON_PATH,
   HINT_SEARCH_ICON_PATH,
-  HINT_SIDEBAR_ICON_PATH
+  HINT_SIDEBAR_ICON_PATH,
+  HINT_SUBMIT_ICON_PATH
 } from "~/src/lib/inline-icons";
 import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import type {
@@ -101,6 +107,18 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_HOME_ICON_PATH);
   } else if (directive === "sidebar") {
     appendMarkerIcon(marker, HINT_SIDEBAR_ICON_PATH);
+  } else if (directive === "next") {
+    appendMarkerIcon(marker, HINT_NEXT_ICON_PATH);
+  } else if (directive === "prev") {
+    appendMarkerIcon(marker, HINT_PREV_ICON_PATH);
+  } else if (directive === "cancel") {
+    appendMarkerIcon(marker, HINT_CANCEL_ICON_PATH);
+  } else if (directive === "submit") {
+    appendMarkerIcon(marker, HINT_SUBMIT_ICON_PATH);
+  } else if (directive === "like") {
+    appendMarkerIcon(marker, HINT_LIKE_ICON_PATH);
+  } else if (directive === "dislike") {
+    appendMarkerIcon(marker, HINT_DISLIKE_ICON_PATH);
   }
 
   if (mode === "new-tab") {

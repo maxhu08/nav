@@ -6,6 +6,12 @@ export type ReservedHintLabels = {
   search: string[];
   home: string[];
   sidebar: string[];
+  next: string[];
+  prev: string[];
+  cancel: string[];
+  submit: string[];
+  like: string[];
+  dislike: string[];
 };
 export type ReservedHintDirective = keyof ReservedHintLabels;
 

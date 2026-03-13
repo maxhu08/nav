@@ -61,7 +61,13 @@ let avoidedAdjacentHintPairs: AdjacentHintPairs = {};
 let reservedHintLabels: ReservedHintLabels = {
   search: [],
   home: [],
-  sidebar: []
+  sidebar: [],
+  next: [],
+  prev: [],
+  cancel: [],
+  submit: [],
+  like: [],
+  dislike: []
 };
 let minHintLabelLength = 2;
 let showCapitalizedLetters = true;
@@ -480,7 +486,13 @@ export const setReservedHintLabels = (labels: ReservedHintLabels): void => {
   reservedHintLabels = {
     search: [...labels.search],
     home: [...labels.home],
-    sidebar: [...labels.sidebar]
+    sidebar: [...labels.sidebar],
+    next: [...labels.next],
+    prev: [...labels.prev],
+    cancel: [...labels.cancel],
+    submit: [...labels.submit],
+    like: [...labels.like],
+    dislike: [...labels.dislike]
   };
 
   if (hintState.active) {
@@ -585,7 +597,16 @@ export const handleHintsKeydown = (event: KeyboardEvent): boolean => {
   }
 
   const key = event.key.toLowerCase();
-  if (!hintAlphabet.includes(key)) return true;
+  if (!hintAlphabet.includes(key)) {
+    const nextTyped = hintState.typed + key;
+    const canMatchReservedLabel = hintState.markers.some((marker) =>
+      marker.label.startsWith(nextTyped)
+    );
+
+    if (!canMatchReservedLabel) {
+      return true;
+    }
+  }
 
   hintState.typed += key;
   applyFilter();
