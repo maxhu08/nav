@@ -282,7 +282,8 @@ c toggle-captions # requires watch mode
 
 export const DEFAULT_HINT_CHARSET = "sadfjklewcmupgh";
 
-export const DEFAULT_HINT_RESERVED_LABELS = `@search kj kjf kjfd
+export const DEFAULT_HINT_RESERVED_LABELS = `@input kj kjf kjfd
+@attach up
 @home sd sdf sdfj
 @sidebar we wer wert
 @next kl

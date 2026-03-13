@@ -60,7 +60,8 @@ let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: AdjacentHintPairs = {};
 let reservedHintLabels: ReservedHintLabels = {
-  search: [],
+  input: [],
+  attach: [],
   home: [],
   sidebar: [],
   next: [],
@@ -484,7 +485,8 @@ export const setAvoidedAdjacentHintPairs = (pairs: AdjacentHintPairs): void => {
 
 export const setReservedHintLabels = (labels: ReservedHintLabels): void => {
   reservedHintLabels = {
-    search: [...labels.search],
+    input: [...labels.input],
+    attach: [...labels.attach],
     home: [...labels.home],
     sidebar: [...labels.sidebar],
     next: [...labels.next],

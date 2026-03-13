@@ -1,13 +1,14 @@
 import {
   EXTERNAL_LINK_ICON_PATH,
   FILE_COPY_ICON_PATH,
+  HINT_ATTACH_ICON_PATH,
   HINT_CANCEL_ICON_PATH,
   HINT_DISLIKE_ICON_PATH,
   HINT_HOME_ICON_PATH,
+  HINT_INPUT_ICON_PATH,
   HINT_LIKE_ICON_PATH,
   HINT_NEXT_ICON_PATH,
   HINT_PREV_ICON_PATH,
-  HINT_SEARCH_ICON_PATH,
   HINT_SIDEBAR_ICON_PATH,
   HINT_SUBMIT_ICON_PATH,
   WATCH_PLAY_ICON_PATH
@@ -134,8 +135,10 @@ export const createHintMarker = (
     letters.push(letter);
   }
 
-  if (directive === "search") {
-    appendMarkerIcon(marker, HINT_SEARCH_ICON_PATH);
+  if (directive === "input") {
+    appendMarkerIcon(marker, HINT_INPUT_ICON_PATH);
+  } else if (directive === "attach") {
+    appendMarkerIcon(marker, HINT_ATTACH_ICON_PATH);
   } else if (directive === "home") {
     appendMarkerIcon(marker, HINT_HOME_ICON_PATH);
   } else if (directive === "sidebar") {

@@ -45,7 +45,8 @@ export type FastConfig = {
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
     reservedLabels: {
-      search: string[];
+      input: string[];
+      attach: string[];
       home: string[];
       sidebar: string[];
       next: string[];
@@ -89,7 +90,8 @@ const isReservedLabelsShapeValid = (
   return (
     typeof value === "object" &&
     value !== null &&
-    Array.isArray((value as Record<string, unknown>).search) &&
+    Array.isArray((value as Record<string, unknown>).input) &&
+    Array.isArray((value as Record<string, unknown>).attach) &&
     Array.isArray((value as Record<string, unknown>).home) &&
     Array.isArray((value as Record<string, unknown>).sidebar) &&
     Array.isArray((value as Record<string, unknown>).next) &&
@@ -213,7 +215,8 @@ const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedL
   const result = parseReservedHintDirectives(value);
   const fallbackResult = parseReservedHintDirectives(DEFAULT_HINT_RESERVED_LABELS);
   return {
-    search: result.search ?? fallbackResult.search ?? [],
+    input: result.input ?? fallbackResult.input ?? [],
+    attach: result.attach ?? fallbackResult.attach ?? [],
     home: result.home ?? fallbackResult.home ?? [],
     sidebar: result.sidebar ?? fallbackResult.sidebar ?? [],
     next: result.next ?? fallbackResult.next ?? [],

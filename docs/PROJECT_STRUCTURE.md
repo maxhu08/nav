@@ -29,7 +29,7 @@ Use this map to decide where new code should go.
 - Pipeline stage modules: `src/core/utils/hints/`
 - The hints flow is organized into explicit stages:
   1. Collect targets: `pipeline.ts` (`collectHintTargets`)
-  2. Assign semantics for special targets (`search`, `home`, `sidebar`): `semantics.ts`
+  2. Assign semantics for special targets (`input`, `attach`, `home`, `sidebar`): `semantics.ts`
   3. Generate and assign labels (charset, minimum length, reserved prefixes, blocked adjacent pairs, fallback): `labels.ts` + `pipeline.ts`
   4. Build marker models and marker DOM nodes: `markers.ts`
   5. Layout markers (thumbnail heuristics, collision avoidance, viewport clamping): `layout.ts`
@@ -47,7 +47,7 @@ Use this map to decide where new code should go.
 - `fastConfig.rules.urls` stores the active mode plus parsed blacklist and whitelist rule arrays.
 - `fastConfig.hotkeys.mappings` is a parsed key-to-action map.
 - `fastConfig.hotkeys.prefixes` is a derived lookup used for multi-key sequence matching.
-- `fastConfig.hints.reservedLabels` stores parsed directive label arrays for special hint targets (for example `search`, `home`, and `sidebar`).
+- `fastConfig.hints.reservedLabels` stores parsed directive label arrays for special hint targets (for example `input`, `attach`, `home`, and `sidebar`).
 - `src/options/scripts/utils/save-config.ts` writes both `config` and a rebuilt `fastConfig` together.
 - In runtime, URL rule patterns are compiled to `RegExp` once on config apply (`src/core/utils/key-state.ts`) and reused for key matching.
 

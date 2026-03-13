@@ -30,6 +30,19 @@ const hasForceNormalModeOption = (value: unknown): boolean => {
   return "forceNormalMode" in rules;
 };
 
+const hasV106ReservedHintDirectives = (value: unknown): boolean => {
+  if (!isObjectRecord(value)) {
+    return false;
+  }
+
+  const hints = value.hints;
+  if (!isObjectRecord(hints) || typeof hints.reservedLabels !== "string") {
+    return false;
+  }
+
+  return hints.reservedLabels.includes("@input ") && hints.reservedLabels.includes("@attach ");
+};
+
 export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Config => {
   // if config before v1.0.3
   if (!hasReservedLabelsOption(config)) {
@@ -41,5 +54,12 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     return deepMerge(structuredClone(fallbackConfig), config);
   }
 
-  return deepMerge(structuredClone(fallbackConfig), config);
+  const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+
+  // if config before v1.0.6
+  if (!hasV106ReservedHintDirectives(config)) {
+    migratedConfig.hints.reservedLabels = fallbackConfig.hints.reservedLabels;
+  }
+
+  return migratedConfig;
 };

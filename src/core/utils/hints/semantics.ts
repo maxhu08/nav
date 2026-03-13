@@ -30,7 +30,8 @@ export const assignHintSemantics = (
   const preferredLabelsByIndex = new Map<number, string>();
   const preferredDirectivesByIndex = new Map<number, ReservedHintDirective>();
   const directiveOrder: ReservedHintDirective[] = [
-    "search",
+    "input",
+    "attach",
     "home",
     "sidebar",
     "next",

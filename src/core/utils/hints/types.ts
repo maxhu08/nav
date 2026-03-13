@@ -3,7 +3,8 @@ import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/hint-
 export type AdjacentHintPairs = Partial<Record<string, Partial<Record<string, true>>>>;
 
 export type ReservedHintLabels = {
-  search: string[];
+  input: string[];
+  attach: string[];
   home: string[];
   sidebar: string[];
   next: string[];

@@ -666,7 +666,7 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
   return uniqueElements;
 };
 
-const SEARCH_ATTRIBUTE_PATTERNS = [
+const INPUT_ATTRIBUTE_PATTERNS = [
   /search/i,
   /find/i,
   /query/i,
@@ -675,6 +675,19 @@ const SEARCH_ATTRIBUTE_PATTERNS = [
   /chat/i,
   /message/i,
   /composer/i
+];
+const ATTACH_ATTRIBUTE_PATTERNS = [
+  /\battach\b/i,
+  /\bupload\b/i,
+  /\bfiles?\b/i,
+  /\battachments?\b/i,
+  /\bimage\b/i,
+  /\bphoto\b/i,
+  /\bmedia\b/i,
+  /\bdocument\b/i,
+  /\bbrowse\b/i,
+  /\bchoose\b/i,
+  /\bcomposer\b/i
 ];
 
 const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
@@ -837,7 +850,7 @@ const getNormalizedSameOriginPath = (href: string): string | null => {
   }
 };
 
-const getSearchCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+const getInputCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
   if (!isSelectableElement(element)) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -856,7 +869,7 @@ const getSearchCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
     "role"
   ]);
 
-  if (textMatchesAnyPattern(attributeText, SEARCH_ATTRIBUTE_PATTERNS)) {
+  if (textMatchesAnyPattern(attributeText, INPUT_ATTRIBUTE_PATTERNS)) {
     score += 120;
   }
 
@@ -885,7 +898,70 @@ const getSearchCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
   return score;
 };
 
-export const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null => {
+const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+  if (!isActivatableElement(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect) return Number.NEGATIVE_INFINITY;
+
+  let score = 0;
+  let hasStrongSignal = false;
+  const textContent = getElementTextContent(element);
+  const attributeText = getJoinedAttributeText(
+    element,
+    ["type", "name", "id", "class", "placeholder", "aria-label", "title", "data-testid", "role"],
+    [textContent]
+  );
+
+  if (textMatchesAnyPattern(attributeText, ATTACH_ATTRIBUTE_PATTERNS)) {
+    score += 260;
+    hasStrongSignal = true;
+  }
+
+  if (element instanceof HTMLInputElement && element.type.toLowerCase() === "file") {
+    score += 320;
+    hasStrongSignal = true;
+
+    if (element.accept) {
+      score += 120;
+    }
+  }
+
+  if (
+    element instanceof HTMLLabelElement &&
+    element.control instanceof HTMLInputElement &&
+    element.control.type.toLowerCase() === "file"
+  ) {
+    score += 340;
+    hasStrongSignal = true;
+  }
+
+  if (element.closest("form")) {
+    score += 60;
+  }
+
+  if (
+    element instanceof HTMLButtonElement ||
+    element instanceof HTMLAnchorElement ||
+    element instanceof HTMLAreaElement ||
+    element.getAttribute("role")?.toLowerCase() === "button"
+  ) {
+    score += 40;
+  }
+
+  if (!hasStrongSignal) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  score += Math.min(220, rect.width) / 10;
+  score += Math.min(120, rect.height) / 12;
+
+  return score;
+};
+
+export const getPreferredInputElementIndex = (elements: HTMLElement[]): number | null => {
   const selectableElementIndexes = elements.flatMap((element, index) =>
     isSelectableElement(element) ? [index] : []
   );
@@ -898,7 +974,27 @@ export const getPreferredSearchElementIndex = (elements: HTMLElement[]): number 
   let bestScore = 180;
 
   elements.forEach((element, index) => {
-    const score = getSearchCandidateScore(element);
+    const score = getInputCandidateScore(element);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+};
+
+export const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null => {
+  return getPreferredInputElementIndex(elements);
+};
+
+export const getPreferredAttachElementIndex = (elements: HTMLElement[]): number | null => {
+  let bestIndex: number | null = null;
+  let bestScore = 220;
+
+  elements.forEach((element, index) => {
+    const score = getAttachCandidateScore(element);
 
     if (score > bestScore) {
       bestScore = score;
@@ -1312,7 +1408,8 @@ export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number
   getPreferredActionDirectiveElementIndex(elements, DISLIKE_ATTRIBUTE_PATTERNS, 220);
 
 type HintDirective =
-  | "search"
+  | "input"
+  | "attach"
   | "home"
   | "sidebar"
   | "next"
@@ -1328,7 +1425,8 @@ type ElementFeatureVector = {
 };
 
 const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
-  search: 180,
+  input: 180,
+  attach: 220,
   home: 180,
   sidebar: 220,
   next: 200,
@@ -1378,21 +1476,27 @@ export const getPreferredDirectiveIndexes = (
       onlySelectableIndex = index;
     }
 
-    updateBest("search", getSearchCandidateScore(element, features.rect), index);
+    updateBest("input", getInputCandidateScore(element, features.rect), index);
+    const attachScore = getAttachCandidateScore(element, features.rect);
+    updateBest("attach", attachScore, index);
     updateBest("home", getHomeCandidateScore(element, features.rect), index);
     updateBest("sidebar", getSidebarCandidateScore(element, features.rect), index);
-    updateBest(
-      "next",
-      getActionDirectiveCandidateScore(
-        element,
-        NEXT_ATTRIBUTE_PATTERNS,
-        {
-          relValues: ["next"]
-        },
-        features.rect
-      ),
-      index
-    );
+    // When an element strongly looks like an attachment/upload control, prefer @attach
+    // and avoid also classifying that same element as @next.
+    if (attachScore === Number.NEGATIVE_INFINITY) {
+      updateBest(
+        "next",
+        getActionDirectiveCandidateScore(
+          element,
+          NEXT_ATTRIBUTE_PATTERNS,
+          {
+            relValues: ["next"]
+          },
+          features.rect
+        ),
+        index
+      );
+    }
     updateBest(
       "prev",
       getActionDirectiveCandidateScore(
@@ -1442,7 +1546,7 @@ export const getPreferredDirectiveIndexes = (
   });
 
   if (selectableCount === 1 && onlySelectableIndex !== null) {
-    bestIndexes.search = onlySelectableIndex;
+    bestIndexes.input = onlySelectableIndex;
   }
 
   return bestIndexes;

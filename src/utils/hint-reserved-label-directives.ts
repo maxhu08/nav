@@ -1,5 +1,6 @@
 export const RESERVED_HINT_DIRECTIVES = [
-  "search",
+  "input",
+  "attach",
   "home",
   "sidebar",
   "next",
