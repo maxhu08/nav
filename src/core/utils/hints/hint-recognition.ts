@@ -890,6 +890,25 @@ const SIDEBAR_TOGGLE_PATTERNS = [
 ];
 const NEXT_ATTRIBUTE_PATTERNS = [/\bnext\b/i, /\bnewer\b/i];
 const NEXT_SHORT_TEXT_PATTERNS = [/^more$/i, /^continue$/i, /^next$/i, /^next page$/i];
+const NEXT_STRONG_ATTRIBUTE_PATTERNS = [
+  /^next$/i,
+  /^next\b/i,
+  /\bnext page\b/i,
+  /\bnext video\b/i,
+  /\bplay next\b/i,
+  /\bskip\b.*\bnext\b/i
+];
+const NEXT_FALSE_POSITIVE_PATTERNS = [
+  /\bsign\s*in\b/i,
+  /\blog\s*in\b/i,
+  /\blog\s*on\b/i,
+  /\bservice ?login\b/i,
+  /\bauth\b/i,
+  /\baccount\b/i,
+  /\bregister\b/i,
+  /\bjoin\b/i
+];
+const NOISY_NEXT_CLASS_PATTERNS = [/\byt-spec-button-shape-next\b/i, /\bbutton-next\b/i];
 const PREV_ATTRIBUTE_PATTERNS = [/\bprev\b/i, /\bprevious\b/i, /\bolder\b/i];
 const PREV_SHORT_TEXT_PATTERNS = [/^back$/i, /^previous$/i, /^previous page$/i, /^prev$/i];
 const CANCEL_ATTRIBUTE_PATTERNS = [/\bcancel\b/i, /\bclose\b/i, /\bdismiss\b/i, /\bexit\b/i];
@@ -1805,6 +1824,57 @@ const getActionDirectiveCandidateScore = (
   return score;
 };
 
+const getNextCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+  const score = getActionDirectiveCandidateScore(
+    element,
+    NEXT_ATTRIBUTE_PATTERNS,
+    {
+      relValues: ["next"],
+      shortTextPatterns: NEXT_SHORT_TEXT_PATTERNS
+    },
+    rectOverride
+  );
+
+  if (score === Number.NEGATIVE_INFINITY) {
+    return score;
+  }
+
+  const textContent = getElementTextContent(element);
+  const semanticAttributeText = getJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "data-test-id", "role", "title", "type"],
+    [textContent]
+  );
+  const fullAttributeText = getJoinedAttributeText(element, [
+    "name",
+    "id",
+    "aria-label",
+    "data-testid",
+    "data-test-id",
+    "role",
+    "title",
+    "class",
+    "type",
+    "href",
+    "rel"
+  ]);
+  const hasStrongSemanticSignal = textMatchesAnyPattern(
+    semanticAttributeText,
+    NEXT_STRONG_ATTRIBUTE_PATTERNS
+  );
+  const hasNoisyClassSignal = textMatchesAnyPattern(fullAttributeText, NOISY_NEXT_CLASS_PATTERNS);
+
+  if (textMatchesAnyPattern(fullAttributeText, NEXT_FALSE_POSITIVE_PATTERNS)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  if (hasNoisyClassSignal && !hasStrongSemanticSignal) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  return hasStrongSemanticSignal ? score + 180 : score;
+};
+
 const getPreferredActionDirectiveElementIndex = (
   elements: HTMLElement[],
   patterns: readonly RegExp[],
@@ -1832,10 +1902,21 @@ const getPreferredActionDirectiveElementIndex = (
 };
 
 export const getPreferredNextElementIndex = (elements: HTMLElement[]): number | null =>
-  getPreferredActionDirectiveElementIndex(elements, NEXT_ATTRIBUTE_PATTERNS, 200, {
-    relValues: ["next"],
-    shortTextPatterns: NEXT_SHORT_TEXT_PATTERNS
-  });
+  (() => {
+    let bestIndex: number | null = null;
+    let bestScore = 200;
+
+    elements.forEach((element, index) => {
+      const score = getNextCandidateScore(element);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
+  })();
 
 export const getPreferredPrevElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, PREV_ATTRIBUTE_PATTERNS, 200, {
@@ -1941,19 +2022,7 @@ export const getPreferredDirectiveIndexes = (
     // When an element strongly looks like an attachment/upload control, prefer @attach
     // and avoid also classifying that same element as @next.
     if (attachScore === Number.NEGATIVE_INFINITY) {
-      updateBest(
-        "next",
-        getActionDirectiveCandidateScore(
-          element,
-          NEXT_ATTRIBUTE_PATTERNS,
-          {
-            relValues: ["next"],
-            shortTextPatterns: NEXT_SHORT_TEXT_PATTERNS
-          },
-          features.rect
-        ),
-        index
-      );
+      updateBest("next", getNextCandidateScore(element, features.rect), index);
     }
     updateBest(
       "prev",
