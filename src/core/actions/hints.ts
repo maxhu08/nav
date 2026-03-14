@@ -13,7 +13,7 @@ import {
   restoreRevealedHintControls,
   revealHoverHintControls
 } from "~/src/core/utils/hints/hint-recognition";
-import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode } from "~/src/core/utils/hints/model";
 import { applyHintFilter } from "~/src/core/utils/hints/input";
 import { buildHintLabelIndex } from "~/src/core/utils/hints/label-index";
 import { clearHintLabelPlanCache } from "~/src/core/utils/hints/labels";

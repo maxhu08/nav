@@ -31,6 +31,13 @@ Use this page as the fast entry point for contributors.
 - Add screenshots, DOM snippets, or steps to reproduce when the issue depends on layout, overlays, or hover-only controls.
 - Use [Issue Reporting](./ISSUE_REPORTING.md) for a copy-paste template.
 
+## Hint Feature Workflow
+
+- For hint changes, use `docs/PROJECT_STRUCTURE.md` as the file map before editing.
+- New directive work usually touches three places: `src/utils/hint-reserved-label-directives.ts`, `src/core/utils/hints/directive-recognition.ts`, and `tests/cases/hints.cases.ts`.
+- Collection and dedupe behavior belongs in `src/core/utils/hints/hint-recognition.ts`, while low-level DOM/visibility helpers belong in `src/core/utils/hints/dom.ts`.
+- Prefer extending the directive registry in `src/core/utils/hints/directive-recognition.ts` instead of adding one-off branching elsewhere in the pipeline.
+
 ## Scope Notes
 
 - Paths ending in `/` are directories.

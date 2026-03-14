@@ -2,7 +2,7 @@ import {
   getMarkerRect,
   revealElementForHintCollection
 } from "~/src/core/utils/hints/hint-recognition";
-import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/model";
 import {
   invalidateMarkerSize,
   setThumbnailMarkerIconVisibility

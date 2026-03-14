@@ -69,6 +69,18 @@ Use `hintScenarioCases` for collection, dedupe, geometry, hit-testing, and label
 - `tests/types.ts`: reusable case shapes
 - `tests/helpers/dom-fixture.ts`: JSDOM and geometry stubs
 
+## Source map
+
+- `src/core/utils/hints/hint-recognition.ts`: collection, dedupe, and hover-only reveal behavior
+- `src/core/utils/hints/directive-recognition.ts`: directive scoring and reserved target selection
+- `src/core/utils/hints/semantics.ts`: reserved label assignment once directive targets are known
+- `src/core/utils/hints/layout.ts`: marker placement and collision behavior
+
+When a regression is about "wrong element got chosen for `@directive`", start with `directive-recognition.ts`.
+When it is about "too many / too few hints showed up", start with `hint-recognition.ts`.
+When it is about label conflicts or reserved labels, start with `semantics.ts` and `labels.ts`.
+When it is about marker overlap or placement, start with `layout.ts`.
+
 ## Run
 
 ```bash

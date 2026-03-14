@@ -13,7 +13,7 @@ import {
   HINT_SUBMIT_ICON_PATH,
   WATCH_PLAY_ICON_PATH
 } from "~/src/lib/inline-icons";
-import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode } from "~/src/core/utils/hints/model";
 import type {
   HintMarker,
   MarkerDomAttributes,

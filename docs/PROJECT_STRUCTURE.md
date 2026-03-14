@@ -30,16 +30,32 @@ Use this map to decide where new code should go.
 
 - Runtime coordinator and public hint API: `src/core/actions/hints.ts`
 - Pipeline stage modules: `src/core/utils/hints/`
+- Hints internals are split by responsibility so contributors can change one layer without reading the full pipeline first:
+  - Shared hint mode/types: `src/core/utils/hints/model.ts`
+  - DOM primitives, visibility checks, and geometry helpers: `src/core/utils/hints/dom.ts`
+  - Target collection, dedupe, hover-only reveal logic, and public compatibility exports: `src/core/utils/hints/hint-recognition.ts`
+  - Directive scoring and reserved-target selection (`@input`, `@attach`, `@home`, `@sidebar`, `@next`, `@prev`, `@cancel`, `@submit`, `@like`, `@dislike`): `src/core/utils/hints/directive-recognition.ts`
+  - Reserved-label assignment: `src/core/utils/hints/semantics.ts`
+  - Label generation: `src/core/utils/hints/labels.ts`
+  - Marker DOM creation and updates: `src/core/utils/hints/markers.ts`
+  - Marker layout and thumbnail placement: `src/core/utils/hints/layout.ts`
+  - Overlay/style rendering: `src/core/utils/hints/renderer.ts`
+  - Typed-input filtering: `src/core/utils/hints/input.ts`
 - The hints flow is organized into explicit stages:
-  1. Collect targets: `pipeline.ts` (`collectHintTargets`)
-  2. Assign semantics for special targets (`input`, `attach`, `home`, `sidebar`): `semantics.ts`
-  3. Generate and assign labels (charset, minimum length, reserved prefixes, blocked adjacent pairs, fallback): `labels.ts` + `pipeline.ts`
-  4. Build marker models and marker DOM nodes: `markers.ts`
-  5. Layout markers (thumbnail heuristics, collision avoidance, viewport clamping): `layout.ts`
-  6. Render overlay and marker CSS: `renderer.ts`
-  7. Apply typed-input filtering and marker visibility updates: `input.ts`
-  8. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hints.ts`
+  1. Collect and dedupe hintable targets: `hint-recognition.ts` + `pipeline.ts` (`collectHintTargets`)
+  2. Score directives and pick reserved targets: `directive-recognition.ts`
+  3. Assign reserved labels for chosen directives: `semantics.ts`
+  4. Generate and assign labels (charset, minimum length, reserved prefixes, blocked adjacent pairs, fallback): `labels.ts` + `pipeline.ts`
+  5. Build marker models and marker DOM nodes: `markers.ts`
+  6. Layout markers (thumbnail heuristics, collision avoidance, viewport clamping): `layout.ts`
+  7. Render overlay and marker CSS: `renderer.ts`
+  8. Apply typed-input filtering and marker visibility updates: `input.ts`
+  9. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hints.ts`
 - Shared hints types live in `src/core/utils/hints/types.ts`.
+- When adding a new directive, follow this order:
+  1. Add the directive name in `src/utils/hint-reserved-label-directives.ts`
+  2. Add its scoring logic and registry entry in `src/core/utils/hints/directive-recognition.ts`
+  3. Add or extend test coverage in `tests/cases/hints.cases.ts` and `tests/hints.test.ts`
 
 ## Config Layers
 

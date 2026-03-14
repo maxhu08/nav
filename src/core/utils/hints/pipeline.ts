@@ -2,7 +2,7 @@ import {
   getSuppressedAttachRelatedHintIndexes,
   getHintableElements
 } from "~/src/core/utils/hints/hint-recognition";
-import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode } from "~/src/core/utils/hints/model";
 import { buildHintLabels } from "~/src/core/utils/hints/labels";
 import { assignHintSemantics } from "~/src/core/utils/hints/semantics";
 import type {

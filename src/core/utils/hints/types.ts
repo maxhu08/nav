@@ -1,4 +1,4 @@
-import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/hint-recognition";
+import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/model";
 import type {
   ReservedHintDirective,
   ReservedHintLabels
