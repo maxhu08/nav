@@ -173,6 +173,7 @@ type ActionDirectiveOptions = {
   relValues?: string[];
   boostDialogContext?: boolean;
   shortTextPatterns?: readonly RegExp[];
+  requireButtonLikeControl?: boolean;
 };
 
 type DirectiveDefinition = {
@@ -332,6 +333,26 @@ const getCachedClosest = (
 
 const textMatchesAnyPattern = (text: string, patterns: readonly RegExp[]): boolean =>
   patterns.some((pattern) => pattern.test(text));
+
+const isButtonLikeControl = (element: HTMLElement): boolean => {
+  if (
+    element instanceof HTMLButtonElement ||
+    element.getAttribute("role")?.toLowerCase() === "button"
+  ) {
+    return true;
+  }
+
+  if (element.hasAttribute("aria-pressed")) {
+    return true;
+  }
+
+  if (element instanceof HTMLInputElement) {
+    const type = element.type.toLowerCase();
+    return type === "button" || type === "submit" || type === "reset" || type === "image";
+  }
+
+  return false;
+};
 
 const getReactionControlAttributeText = (
   element: HTMLElement,
@@ -1021,6 +1042,11 @@ const getActionDirectiveCandidateScore = (
   let hasStrongSignal = false;
   const tagName = element.tagName.toLowerCase();
   const role = element.getAttribute("role")?.toLowerCase();
+
+  if (options.requireButtonLikeControl && !isButtonLikeControl(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
   const semanticControlText = getSemanticControlText(element, features);
   const attributeText = getCachedJoinedAttributeText(
     element,
@@ -1205,6 +1231,7 @@ const getLikeCandidateScore = (
       element,
       LIKE_ATTRIBUTE_PATTERNS,
       {
+        requireButtonLikeControl: true,
         shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
       },
       rectOverride,
@@ -1229,6 +1256,7 @@ const getDislikeCandidateScore = (
       element,
       DISLIKE_ATTRIBUTE_PATTERNS,
       {
+        requireButtonLikeControl: true,
         shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
       },
       rectOverride,
