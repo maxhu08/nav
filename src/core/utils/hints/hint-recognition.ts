@@ -743,12 +743,14 @@ const INPUT_ATTRIBUTE_PATTERNS = [
 const ATTACH_ATTRIBUTE_PATTERNS = [
   /\battach\b/i,
   /\bupload\b/i,
+  /\badd\b.*\bfiles?\b/i,
   /\bfiles?\b/i,
   /\battachments?\b/i,
   /\bdocument\b/i,
   /\bbrowse\b/i,
   /\bchoose\b/i,
-  /\bcomposer\b/i
+  /\bcomposer\b/i,
+  /\bcomposer[-_ ]?plus\b/i
 ];
 const ATTACH_FILE_TYPE_PATTERNS = [/\bimage\b/i, /\bphoto\b/i, /\bmedia\b/i];
 
@@ -973,6 +975,15 @@ const getInputCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | n
 
 const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
   if (!isActivatableElement(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  // @attach should target upload affordances, not the main editable composer input.
+  // Keep file inputs/labels eligible, but skip other selectable controls.
+  if (
+    isSelectableElement(element) &&
+    !(element instanceof HTMLInputElement && element.type.toLowerCase() === "file")
+  ) {
     return Number.NEGATIVE_INFINITY;
   }
 

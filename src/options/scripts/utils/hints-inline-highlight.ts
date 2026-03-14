@@ -8,7 +8,7 @@ import {
 } from "~/src/options/scripts/ui";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import {
-  isReservedHintDirective,
+  normalizeReservedHintDirective,
   RESERVED_HINT_DIRECTIVE_LINE_PATTERN
 } from "~/src/utils/hint-reserved-label-directives";
 
@@ -114,25 +114,28 @@ const renderReservedLabelsHighlight = (
         return wrapToken("hints-reserved-labels-token-invalid", line);
       }
 
-      const directive = (match[1] ?? "").toLowerCase();
+      const directiveValue = (match[1] ?? "").toLowerCase();
+      const directive = normalizeReservedHintDirective(directiveValue);
       const labels = (match[2] ?? "").split(" ");
 
-      if (!isReservedHintDirective(directive)) {
+      if (!directive) {
         hasError = true;
         errors.push({
           code: "invalid-directive",
-          message: `line ${lineNumber}: Unknown directive "@${directive}". See docs#directive-names for valid directives.`
+          message: `line ${lineNumber}: Unknown directive "@${directiveValue}". See docs#directive-names for valid directives.`
         });
       }
 
-      if (seenDirectives.has(directive)) {
+      if (directive && seenDirectives.has(directive)) {
         hasError = true;
         errors.push({
           code: "duplicate-directive",
           message: `line ${lineNumber}: Duplicate "@${directive}" directive.`
         });
       }
-      seenDirectives.add(directive);
+      if (directive) {
+        seenDirectives.add(directive);
+      }
 
       const seenLabels = new Set<string>();
       let previousLabelLength: number | null = null;
@@ -177,7 +180,7 @@ const renderReservedLabelsHighlight = (
       });
 
       return [
-        wrapToken("hints-reserved-labels-token-directive", `@${directive}`),
+        wrapToken("hints-reserved-labels-token-directive", `@${directiveValue}`),
         wrapToken("hints-reserved-labels-token-separator", " "),
         labelTokens.join(wrapToken("hints-reserved-labels-token-separator", " "))
       ].join("");

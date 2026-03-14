@@ -16,6 +16,9 @@ export type ReservedHintDirective = (typeof RESERVED_HINT_DIRECTIVES)[number];
 export const RESERVED_HINT_DIRECTIVE_LINE_PATTERN = /^@([a-z]+) ([a-z]+(?: [a-z]+)*)$/i;
 
 const RESERVED_HINT_DIRECTIVE_SET = new Set<string>(RESERVED_HINT_DIRECTIVES);
+const RESERVED_HINT_DIRECTIVE_ALIASES: Record<string, ReservedHintDirective> = {
+  upload: "attach"
+};
 const NON_WHITESPACE_PATTERN = /\S+/g;
 
 const isAsciiLowercaseWord = (value: string): boolean => {
@@ -35,6 +38,16 @@ const isAsciiLowercaseWord = (value: string): boolean => {
 
 export const isReservedHintDirective = (value: string): value is ReservedHintDirective => {
   return RESERVED_HINT_DIRECTIVE_SET.has(value);
+};
+
+export const normalizeReservedHintDirective = (value: string): ReservedHintDirective | null => {
+  const normalized = value.toLowerCase();
+
+  if (isReservedHintDirective(normalized)) {
+    return normalized;
+  }
+
+  return RESERVED_HINT_DIRECTIVE_ALIASES[normalized] ?? null;
 };
 
 export const parsePreferredLabelsValue = (value: string): string[] => {
@@ -83,8 +96,8 @@ export const parseReservedHintDirectives = (
       continue;
     }
 
-    const directive = (match[1] ?? "").toLowerCase();
-    if (!isReservedHintDirective(directive)) {
+    const directive = normalizeReservedHintDirective((match[1] ?? "").toLowerCase());
+    if (!directive) {
       continue;
     }
 
