@@ -773,33 +773,44 @@ const SIDEBAR_TOGGLE_PATTERNS = [
   /\bsidebar-toggle\b/i,
   /\bdrawer-toggle\b/i
 ];
-const NEXT_ATTRIBUTE_PATTERNS = [/\bnext\b/i, /\bmore\b/i, /\bnewer\b/i, /\bcontinue\b/i];
-const PREV_ATTRIBUTE_PATTERNS = [/\bprev\b/i, /\bprevious\b/i, /\bback\b/i, /\bolder\b/i];
-const CANCEL_ATTRIBUTE_PATTERNS = [
-  /\bcancel\b/i,
-  /\bclose\b/i,
-  /\bdismiss\b/i,
-  /\bexit\b/i,
-  /\bno\b/i
-];
+const NEXT_ATTRIBUTE_PATTERNS = [/\bnext\b/i, /\bnewer\b/i];
+const NEXT_SHORT_TEXT_PATTERNS = [/^more$/i, /^continue$/i, /^next$/i, /^next page$/i];
+const PREV_ATTRIBUTE_PATTERNS = [/\bprev\b/i, /\bprevious\b/i, /\bolder\b/i];
+const PREV_SHORT_TEXT_PATTERNS = [/^back$/i, /^previous$/i, /^previous page$/i, /^prev$/i];
+const CANCEL_ATTRIBUTE_PATTERNS = [/\bcancel\b/i, /\bclose\b/i, /\bdismiss\b/i, /\bexit\b/i];
+const CANCEL_SHORT_TEXT_PATTERNS = [/^no$/i, /^nope$/i, /^not now$/i, /^never mind$/i];
 const SUBMIT_ATTRIBUTE_PATTERNS = [
   /\bsubmit\b/i,
-  /\bok\b/i,
   /\bsave\b/i,
   /\bsend\b/i,
   /\bpost\b/i,
   /\bapply\b/i,
-  /\bconfirm\b/i,
-  /\bdone\b/i
+  /\bconfirm\b/i
 ];
-const LIKE_ATTRIBUTE_PATTERNS = [/\blike\b/i, /\bupvote\b/i, /\bthumb[-_ ]?up\b/i];
+const SUBMIT_SHORT_TEXT_PATTERNS = [/^ok$/i, /^done$/i, /^yes$/i, /^submit$/i];
+const LIKE_ATTRIBUTE_PATTERNS = [/\bupvote\b/i, /\bthumb[-_ ]?up\b/i];
+const LIKE_SHORT_TEXT_PATTERNS = [/^like$/i];
 const DISLIKE_ATTRIBUTE_PATTERNS = [/\bdislike\b/i, /\bdownvote\b/i, /\bthumb[-_ ]?down\b/i];
+const DISLIKE_SHORT_TEXT_PATTERNS = [/^dislike$/i];
 
 const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
 const HOME_PATHS = new Set(["/", "/home", "/homepage", "/dashboard"]);
 
 const getElementTextContent = (element: HTMLElement): string =>
   element.textContent?.replace(/\s+/g, " ").trim() ?? "";
+
+const isLikelyShortControlText = (value: string): boolean => {
+  if (!value) {
+    return false;
+  }
+
+  if (value.length > 24) {
+    return false;
+  }
+
+  const wordCount = value.split(/\s+/).filter((part) => part.length > 0).length;
+  return wordCount > 0 && wordCount <= 4;
+};
 
 const getJoinedAttributeText = (
   element: HTMLElement,
@@ -1331,6 +1342,7 @@ const getActionDirectiveCandidateScore = (
     allowFormSignals?: boolean;
     relValues?: string[];
     boostDialogContext?: boolean;
+    shortTextPatterns?: readonly RegExp[];
   } = {},
   rectOverride?: DOMRect | null
 ): number => {
@@ -1348,14 +1360,29 @@ const getActionDirectiveCandidateScore = (
   const tagName = element.tagName.toLowerCase();
   const role = element.getAttribute("role")?.toLowerCase();
   const textContent = getElementTextContent(element);
-  const attributeText = getJoinedAttributeText(
-    element,
-    ["name", "id", "aria-label", "data-testid", "data-test-id", "role", "title", "class", "type"],
-    [textContent]
-  );
+  const attributeText = getJoinedAttributeText(element, [
+    "name",
+    "id",
+    "aria-label",
+    "data-testid",
+    "data-test-id",
+    "role",
+    "title",
+    "class",
+    "type"
+  ]);
 
   if (textMatchesAnyPattern(attributeText, patterns)) {
     score += 240;
+    hasStrongSignal = true;
+  }
+
+  if (
+    options.shortTextPatterns &&
+    isLikelyShortControlText(textContent) &&
+    textMatchesAnyPattern(textContent, options.shortTextPatterns)
+  ) {
+    score += 220;
     hasStrongSignal = true;
   }
 
@@ -1433,6 +1460,7 @@ const getPreferredActionDirectiveElementIndex = (
     allowFormSignals?: boolean;
     relValues?: string[];
     boostDialogContext?: boolean;
+    shortTextPatterns?: readonly RegExp[];
   } = {}
 ): number | null => {
   let bestIndex: number | null = null;
@@ -1452,29 +1480,37 @@ const getPreferredActionDirectiveElementIndex = (
 
 export const getPreferredNextElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, NEXT_ATTRIBUTE_PATTERNS, 200, {
-    relValues: ["next"]
+    relValues: ["next"],
+    shortTextPatterns: NEXT_SHORT_TEXT_PATTERNS
   });
 
 export const getPreferredPrevElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, PREV_ATTRIBUTE_PATTERNS, 200, {
-    relValues: ["prev"]
+    relValues: ["prev"],
+    shortTextPatterns: PREV_SHORT_TEXT_PATTERNS
   });
 
 export const getPreferredCancelElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, CANCEL_ATTRIBUTE_PATTERNS, 220, {
-    boostDialogContext: true
+    boostDialogContext: true,
+    shortTextPatterns: CANCEL_SHORT_TEXT_PATTERNS
   });
 
 export const getPreferredSubmitElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, SUBMIT_ATTRIBUTE_PATTERNS, 220, {
-    allowFormSignals: true
+    allowFormSignals: true,
+    shortTextPatterns: SUBMIT_SHORT_TEXT_PATTERNS
   });
 
 export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | null =>
-  getPreferredActionDirectiveElementIndex(elements, LIKE_ATTRIBUTE_PATTERNS, 220);
+  getPreferredActionDirectiveElementIndex(elements, LIKE_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
+  });
 
 export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number | null =>
-  getPreferredActionDirectiveElementIndex(elements, DISLIKE_ATTRIBUTE_PATTERNS, 220);
+  getPreferredActionDirectiveElementIndex(elements, DISLIKE_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
+  });
 
 type HintDirective =
   | "input"
@@ -1559,7 +1595,8 @@ export const getPreferredDirectiveIndexes = (
           element,
           NEXT_ATTRIBUTE_PATTERNS,
           {
-            relValues: ["next"]
+            relValues: ["next"],
+            shortTextPatterns: NEXT_SHORT_TEXT_PATTERNS
           },
           features.rect
         ),
@@ -1572,7 +1609,8 @@ export const getPreferredDirectiveIndexes = (
         element,
         PREV_ATTRIBUTE_PATTERNS,
         {
-          relValues: ["prev"]
+          relValues: ["prev"],
+          shortTextPatterns: PREV_SHORT_TEXT_PATTERNS
         },
         features.rect
       ),
@@ -1584,7 +1622,8 @@ export const getPreferredDirectiveIndexes = (
         element,
         CANCEL_ATTRIBUTE_PATTERNS,
         {
-          boostDialogContext: true
+          boostDialogContext: true,
+          shortTextPatterns: CANCEL_SHORT_TEXT_PATTERNS
         },
         features.rect
       ),
@@ -1596,7 +1635,8 @@ export const getPreferredDirectiveIndexes = (
         element,
         SUBMIT_ATTRIBUTE_PATTERNS,
         {
-          allowFormSignals: true
+          allowFormSignals: true,
+          shortTextPatterns: SUBMIT_SHORT_TEXT_PATTERNS
         },
         features.rect
       ),
@@ -1604,12 +1644,26 @@ export const getPreferredDirectiveIndexes = (
     );
     updateBest(
       "like",
-      getActionDirectiveCandidateScore(element, LIKE_ATTRIBUTE_PATTERNS, {}, features.rect),
+      getActionDirectiveCandidateScore(
+        element,
+        LIKE_ATTRIBUTE_PATTERNS,
+        {
+          shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
+        },
+        features.rect
+      ),
       index
     );
     updateBest(
       "dislike",
-      getActionDirectiveCandidateScore(element, DISLIKE_ATTRIBUTE_PATTERNS, {}, features.rect),
+      getActionDirectiveCandidateScore(
+        element,
+        DISLIKE_ATTRIBUTE_PATTERNS,
+        {
+          shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
+        },
+        features.rect
+      ),
       index
     );
   });
