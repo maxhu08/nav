@@ -83,10 +83,6 @@ export const createEmptyReservedHintLabels = (): ReservedHintLabels => {
   return reservedHintLabels;
 };
 
-const cloneLabelList = (value: string[] | undefined): string[] => {
-  return Array.isArray(value) ? [...value] : [];
-};
-
 export const normalizeReservedHintLabels = (
   value: Partial<Record<ReservedHintDirective, string[]>>,
   fallback: Partial<Record<ReservedHintDirective, string[]>> = {}
@@ -96,8 +92,8 @@ export const normalizeReservedHintLabels = (
   for (const directive of RESERVED_HINT_DIRECTIVES) {
     reservedHintLabels[directive] =
       value[directive] !== undefined
-        ? cloneLabelList(value[directive])
-        : cloneLabelList(fallback[directive]);
+        ? [...(value[directive] ?? [])]
+        : [...(fallback[directive] ?? [])];
   }
 
   return reservedHintLabels;

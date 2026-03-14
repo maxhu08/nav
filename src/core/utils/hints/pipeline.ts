@@ -22,6 +22,45 @@ export const collectHintTargets = (mode: LinkMode): HTMLElement[] => {
   return getHintableElements(mode);
 };
 
+const getReservedDirectiveIndex = (
+  reservedDirectivesByIndex: ReadonlyMap<number, ReservedHintDirective>,
+  directive: ReservedHintDirective
+): number | undefined => {
+  for (const [index, candidate] of reservedDirectivesByIndex.entries()) {
+    if (candidate === directive) {
+      return index;
+    }
+  }
+
+  return undefined;
+};
+
+const getSuppressedHintIndexes = (
+  elements: HTMLElement[],
+  reservedDirectivesByIndex: ReadonlyMap<number, ReservedHintDirective>
+): Set<number> => {
+  const suppressedIndexes = new Set<number>();
+  const attachIndex = getReservedDirectiveIndex(reservedDirectivesByIndex, "attach");
+
+  if (attachIndex === undefined) {
+    return suppressedIndexes;
+  }
+
+  for (const index of getAttachEquivalentIndexes(elements, attachIndex)) {
+    if (index !== attachIndex) {
+      suppressedIndexes.add(index);
+    }
+  }
+
+  for (const index of getStronglyOverlappingHintIndexes(elements, attachIndex)) {
+    if (index !== attachIndex && !reservedDirectivesByIndex.has(index)) {
+      suppressedIndexes.add(index);
+    }
+  }
+
+  return suppressedIndexes;
+};
+
 export const assignHintLabels = (
   elements: HTMLElement[],
   reservedHintLabels: ReservedHintLabels,
@@ -31,25 +70,7 @@ export const assignHintLabels = (
     elements,
     reservedHintLabels
   );
-  const suppressedIndexes = new Set<number>();
-  const attachIndex = Array.from(reservedDirectivesByIndex.entries()).find(
-    ([, directive]) => directive === "attach"
-  )?.[0];
-
-  if (attachIndex !== undefined) {
-    for (const index of getAttachEquivalentIndexes(elements, attachIndex)) {
-      if (index !== attachIndex) {
-        suppressedIndexes.add(index);
-      }
-    }
-
-    for (const index of getStronglyOverlappingHintIndexes(elements, attachIndex)) {
-      if (index !== attachIndex && !reservedDirectivesByIndex.has(index)) {
-        suppressedIndexes.add(index);
-      }
-    }
-  }
-
+  const suppressedIndexes = getSuppressedHintIndexes(elements, reservedDirectivesByIndex);
   const visibleCount = elements.length - suppressedIndexes.size;
   const { labels } = buildHintLabels(visibleCount, reservedLabels, labelSettings);
 

@@ -2030,15 +2030,18 @@ export const getPreferredDirectiveIndexes = (
     }
 
     updateBest("input", getInputCandidateScore(element, features.rect), index);
+
     const attachScore = getAttachCandidateScore(element, features.rect);
     updateBest("attach", attachScore, index);
     updateBest("home", getHomeCandidateScore(element, features.rect), index);
     updateBest("sidebar", getSidebarCandidateScore(element, features.rect), index);
+
     // When an element strongly looks like an attachment/upload control, prefer @attach
     // and avoid also classifying that same element as @next.
     if (attachScore === Number.NEGATIVE_INFINITY) {
       updateBest("next", getNextCandidateScore(element, features.rect), index);
     }
+
     updateBest(
       "prev",
       getActionDirectiveCandidateScore(

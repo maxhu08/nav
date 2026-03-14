@@ -28,41 +28,25 @@ export const assignHintSemantics = (
   reservedLabels: string[];
 } => {
   const preferredIndexes = getPreferredDirectiveIndexes(elements);
-  const preferredLabelsByIndex = new Map<number, string>();
-  const preferredDirectivesByIndex = new Map<number, ReservedHintDirective>();
-  for (const directive of RESERVED_HINT_DIRECTIVES) {
-    const preferredIndex = preferredIndexes[directive];
-    if (preferredIndex === null || preferredIndex === undefined) {
-      continue;
-    }
-
-    if (preferredLabelsByIndex.has(preferredIndex)) {
-      continue;
-    }
-
-    const preferredLabel = getPreferredReservedLabel(reservedHintLabels[directive]);
-    if (!preferredLabel) {
-      continue;
-    }
-
-    preferredLabelsByIndex.set(preferredIndex, preferredLabel);
-    preferredDirectivesByIndex.set(preferredIndex, directive);
-  }
-
   const reservedLabelsByIndex = new Map<number, string>();
   const reservedDirectivesByIndex = new Map<number, ReservedHintDirective>();
   const reservedLabels: string[] = [];
+  const claimedIndexes = new Set<number>();
 
-  for (const [index, label] of preferredLabelsByIndex.entries()) {
-    if (doesLabelConflictWithReservedLabels(label, reservedLabels)) {
+  for (const directive of RESERVED_HINT_DIRECTIVES) {
+    const index = preferredIndexes[directive];
+    if (index === null || index === undefined || claimedIndexes.has(index)) {
       continue;
     }
 
-    reservedLabelsByIndex.set(index, label);
-    const directive = preferredDirectivesByIndex.get(index);
-    if (directive) {
-      reservedDirectivesByIndex.set(index, directive);
+    const label = getPreferredReservedLabel(reservedHintLabels[directive]);
+    if (!label || doesLabelConflictWithReservedLabels(label, reservedLabels)) {
+      continue;
     }
+
+    claimedIndexes.add(index);
+    reservedLabelsByIndex.set(index, label);
+    reservedDirectivesByIndex.set(index, directive);
     reservedLabels.push(label);
   }
 
