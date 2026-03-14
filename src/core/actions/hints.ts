@@ -22,7 +22,11 @@ import {
   invalidateMarkerSize,
   setMarkerTypedState
 } from "~/src/core/utils/hints/markers";
-import { revealVideoHintControls, updateMarkerPositions } from "~/src/core/utils/hints/layout";
+import {
+  primeMarkerPositions,
+  revealVideoHintControls,
+  updateMarkerPositions
+} from "~/src/core/utils/hints/layout";
 import { assignHintLabels, collectHintTargets } from "~/src/core/utils/hints/pipeline";
 import {
   applyHintStyles,
@@ -429,13 +433,13 @@ export const activateHints = (
   hintState.onActivate = options.onActivate ?? null;
 
   revealVideoHintControls(markers, hintState.revealedHoverElements);
-
-  updateMarkerPositions(
+  primeMarkerPositions(
     hintState.markers,
     hintState.mode,
     highlightThumbnails,
     MARKER_VARIANT_STYLE_ATTRIBUTE
   );
+  schedulePositionUpdate();
 
   window.addEventListener("scroll", onViewportChange, true);
   window.addEventListener("resize", onViewportChange, true);

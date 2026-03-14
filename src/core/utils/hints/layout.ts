@@ -455,14 +455,6 @@ const isPotentialOccludingElement = (element: Element): element is HTMLElement =
   return style.position === "fixed" || style.position === "sticky";
 };
 
-const isMarkerOccludingPageElement = (target: HTMLElement, element: Element): boolean => {
-  if (!isPotentialOccludingElement(element)) {
-    return false;
-  }
-
-  return !isComposedDescendant(target, element) && !isComposedDescendant(element, target);
-};
-
 const collectViewportOccluders = (): ViewportOccluder[] => {
   const seen = new Set<HTMLElement>();
   const occluders: ViewportOccluder[] = [];
@@ -571,6 +563,101 @@ const isBetterMarkerVisibilityScore = (
   return false;
 };
 
+type PreparedMarkerPlacement = {
+  markerWidth: number;
+  markerHeight: number;
+  markerVariant: MarkerVariant;
+  anchorRect: DOMRect;
+};
+
+const prepareMarkerPlacement = (
+  hint: HintMarker,
+  targetRect: DOMRect,
+  mode: LinkMode,
+  highlightThumbnails: boolean,
+  markerVariantStyleAttribute: string
+): PreparedMarkerPlacement => {
+  const { variant: markerVariant, anchorRect } = getMarkerPlacementInfo(
+    hint.element,
+    targetRect,
+    mode,
+    highlightThumbnails
+  );
+
+  const didChangeThumbnailIconVisibility = setThumbnailMarkerIconVisibility(
+    hint,
+    markerVariant === "thumbnail"
+  );
+
+  if (hint.marker.getAttribute(markerVariantStyleAttribute) !== markerVariant) {
+    hint.marker.setAttribute(markerVariantStyleAttribute, markerVariant);
+    invalidateMarkerSize(hint);
+  } else if (didChangeThumbnailIconVisibility) {
+    invalidateMarkerSize(hint);
+  }
+
+  if (hint.sizeDirty || hint.markerWidth <= 0 || hint.markerHeight <= 0) {
+    const markerRect = hint.marker.getBoundingClientRect();
+    hint.markerWidth = Math.max(1, Math.round(markerRect.width));
+    hint.markerHeight = Math.max(1, Math.round(markerRect.height));
+    hint.sizeDirty = false;
+  }
+
+  return {
+    markerWidth: hint.markerWidth,
+    markerHeight: hint.markerHeight,
+    markerVariant,
+    anchorRect
+  };
+};
+
+export const primeMarkerPositions = (
+  markers: HintMarker[],
+  mode: LinkMode,
+  highlightThumbnails: boolean,
+  markerVariantStyleAttribute: string
+): void => {
+  for (const hint of markers) {
+    const targetRect = getMarkerRect(hint.element);
+
+    if (!targetRect) {
+      if (hint.marker.style.display !== "none") {
+        hint.marker.style.display = "none";
+      }
+      continue;
+    }
+
+    if (hint.marker.style.display === "none") {
+      hint.marker.style.display = "";
+    }
+
+    const { markerWidth, markerHeight, markerVariant, anchorRect } = prepareMarkerPlacement(
+      hint,
+      targetRect,
+      mode,
+      highlightThumbnails,
+      markerVariantStyleAttribute
+    );
+
+    hint.marker.style.zIndex = `${1000 + getMarkerLayoutPriority(hint)}`;
+    const [firstCandidate] = getMarkerPlacementCandidates(
+      anchorRect,
+      markerVariant,
+      hint.directive,
+      markerWidth,
+      markerHeight
+    );
+
+    if (!firstCandidate) {
+      hint.marker.style.display = "none";
+      continue;
+    }
+
+    hint.marker.style.left = `${Math.round(firstCandidate.left)}px`;
+    hint.marker.style.top = `${Math.round(firstCandidate.top)}px`;
+  }
+};
+
 export const updateMarkerPositions = (
   markers: HintMarker[],
   mode: LinkMode,
@@ -597,34 +684,13 @@ export const updateMarkerPositions = (
       hint.marker.style.display = "";
     }
 
-    const { variant: markerVariant, anchorRect } = getMarkerPlacementInfo(
-      hint.element,
+    const { markerWidth, markerHeight, markerVariant, anchorRect } = prepareMarkerPlacement(
+      hint,
       targetRect,
       mode,
-      highlightThumbnails
+      highlightThumbnails,
+      markerVariantStyleAttribute
     );
-
-    const didChangeThumbnailIconVisibility = setThumbnailMarkerIconVisibility(
-      hint,
-      markerVariant === "thumbnail"
-    );
-
-    if (hint.marker.getAttribute(markerVariantStyleAttribute) !== markerVariant) {
-      hint.marker.setAttribute(markerVariantStyleAttribute, markerVariant);
-      invalidateMarkerSize(hint);
-    } else if (didChangeThumbnailIconVisibility) {
-      invalidateMarkerSize(hint);
-    }
-
-    if (hint.sizeDirty || hint.markerWidth <= 0 || hint.markerHeight <= 0) {
-      const markerRect = hint.marker.getBoundingClientRect();
-      hint.markerWidth = Math.max(1, Math.round(markerRect.width));
-      hint.markerHeight = Math.max(1, Math.round(markerRect.height));
-      hint.sizeDirty = false;
-    }
-
-    const markerWidth = hint.markerWidth;
-    const markerHeight = hint.markerHeight;
     hint.marker.style.zIndex = `${1000 + getMarkerLayoutPriority(hint)}`;
     const candidates = getMarkerPlacementCandidates(
       anchorRect,

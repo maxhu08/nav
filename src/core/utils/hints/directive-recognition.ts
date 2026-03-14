@@ -1,7 +1,5 @@
 import { getDeepActiveElement, isSelectableElement } from "~/src/core/utils/is-editable-target";
 import {
-  areRectsEquivalent,
-  getElementTabIndex,
   getHintTargetPreference,
   getMarkerRect,
   hasInteractiveRole,

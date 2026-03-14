@@ -64,6 +64,9 @@ const HOVER_HINT_INTERACTIVE_SELECTOR = [
   "[jsaction]"
 ].join(",");
 const HOVER_HINT_PLAY_CONTROL_PATTERNS = [/\bplay\b/i, /\bpause\b/i, /\bresume\b/i, /\bpreview\b/i];
+const SEMANTIC_DEDUPE_CELL_SIZE = 96;
+
+type SpatialIndex = Map<number, Map<number, number[]>>;
 
 type HintCollectionContext = {
   getRect: (element: HTMLElement) => DOMRect | null;
@@ -154,6 +157,60 @@ const areEquivalentHintTargets = (
   }
 
   return leftElement.tagName === rightElement.tagName;
+};
+
+const forEachSpatialBucket = (rect: DOMRect, callback: (x: number, y: number) => void): void => {
+  const minX = Math.floor(rect.left / SEMANTIC_DEDUPE_CELL_SIZE);
+  const maxX = Math.floor(rect.right / SEMANTIC_DEDUPE_CELL_SIZE);
+  const minY = Math.floor(rect.top / SEMANTIC_DEDUPE_CELL_SIZE);
+  const maxY = Math.floor(rect.bottom / SEMANTIC_DEDUPE_CELL_SIZE);
+
+  for (let y = minY; y <= maxY; y += 1) {
+    for (let x = minX; x <= maxX; x += 1) {
+      callback(x, y);
+    }
+  }
+};
+
+const getSpatialCandidateIndexes = (index: SpatialIndex, rect: DOMRect): number[] => {
+  const candidateIndexes = new Set<number>();
+
+  forEachSpatialBucket(rect, (x, y) => {
+    const row = index.get(y);
+    const bucket = row?.get(x);
+    if (!bucket) {
+      return;
+    }
+
+    for (const candidateIndex of bucket) {
+      candidateIndexes.add(candidateIndex);
+    }
+  });
+
+  return [...candidateIndexes];
+};
+
+const addSpatialCandidateIndex = (
+  index: SpatialIndex,
+  rect: DOMRect,
+  candidateIndex: number
+): void => {
+  forEachSpatialBucket(rect, (x, y) => {
+    const row = index.get(y);
+    const bucket = row?.get(x);
+
+    if (bucket) {
+      bucket.push(candidateIndex);
+      return;
+    }
+
+    if (row) {
+      row.set(x, [candidateIndex]);
+      return;
+    }
+
+    index.set(y, new Map([[x, [candidateIndex]]]));
+  });
 };
 
 const dedupeHintTargets = (
@@ -311,14 +368,28 @@ const dedupeEquivalentSemanticTargets = (
   getSemanticScore: (element: HTMLElement, rectOverride?: DOMRect | null) => number
 ): HTMLElement[] => {
   const deduped: HTMLElement[] = [];
+  const spatialIndex: SpatialIndex = new Map();
 
   for (const element of elements) {
-    const duplicateIndex = deduped.findIndex((candidate) =>
-      areEquivalentSemanticTargets(candidate, element, getRect, getSemanticScore)
-    );
+    const elementRect = getRect(element);
+    const candidateIndexes = elementRect
+      ? getSpatialCandidateIndexes(spatialIndex, elementRect)
+      : [];
+    const duplicateIndex = candidateIndexes.find((candidateIndex) => {
+      const candidate = deduped[candidateIndex];
+      return (
+        !!candidate && areEquivalentSemanticTargets(candidate, element, getRect, getSemanticScore)
+      );
+    });
 
-    if (duplicateIndex === -1) {
+    if (duplicateIndex === undefined) {
+      const nextIndex = deduped.length;
       deduped.push(element);
+
+      if (elementRect) {
+        addSpatialCandidateIndex(spatialIndex, elementRect, nextIndex);
+      }
+
       continue;
     }
 
@@ -328,7 +399,6 @@ const dedupeEquivalentSemanticTargets = (
       continue;
     }
 
-    const elementRect = getRect(element);
     const existingRect = getRect(existing);
     const elementScore = getSemanticScore(element, elementRect);
     const existingScore = getSemanticScore(existing, existingRect);
@@ -338,6 +408,10 @@ const dedupeEquivalentSemanticTargets = (
       (elementScore === existingScore && getPreference(element) > getPreference(existing))
     ) {
       deduped[duplicateIndex] = element;
+
+      if (elementRect) {
+        addSpatialCandidateIndex(spatialIndex, elementRect, duplicateIndex);
+      }
     }
   }
 
