@@ -3,9 +3,48 @@ import {
   getHintableElements,
   getPreferredDirectiveIndexes
 } from "~/src/core/utils/hints/hint-recognition";
-import type { ReservedHintDirective } from "~/src/utils/hint-reserved-label-directives";
-import { hintDirectiveCases } from "~/tests/cases/hints.cases";
+import { assignHintLabels } from "~/src/core/utils/hints/pipeline";
+import {
+  createEmptyReservedHintLabels,
+  type ReservedHintDirective
+} from "~/src/utils/hint-reserved-label-directives";
+import { hintDirectiveCases, hintScenarioCases } from "~/tests/cases/hints.cases";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
+import type { HintRect, HintScenarioCase } from "~/tests/types";
+
+const createRectList = (rect: DOMRect): DOMRectList => {
+  const list = [rect] as unknown as DOMRectList & DOMRect[];
+  list.item = (index: number): DOMRect | null => list[index] ?? null;
+  return list;
+};
+
+const applyRect = (selector: string, rectSpec: HintRect): void => {
+  const element = document.querySelector(selector);
+  expect(element instanceof HTMLElement).toBe(true);
+  if (!(element instanceof HTMLElement)) {
+    return;
+  }
+
+  const rect = new DOMRect(rectSpec.left, rectSpec.top, rectSpec.width, rectSpec.height);
+  element.getBoundingClientRect = (): DOMRect => rect;
+  element.getClientRects = (): DOMRectList => createRectList(rect);
+};
+
+const applyScenario = (scenario: HintScenarioCase): void => {
+  if (scenario.geometry) {
+    for (const [selector, rectSpec] of Object.entries(scenario.geometry)) {
+      applyRect(selector, rectSpec);
+    }
+  }
+
+  if (scenario.elementsFromPointSelectors) {
+    const selectors = scenario.elementsFromPointSelectors;
+    document.elementsFromPoint = () =>
+      selectors
+        .map((selector) => document.querySelector(selector))
+        .filter((element): element is Element => element instanceof Element);
+  }
+};
 
 describe("hints", () => {
   for (const [directive, testCase] of Object.entries(hintDirectiveCases) as Array<
@@ -33,41 +72,74 @@ describe("hints", () => {
     });
   }
 
-  test("collects visible native attach button when hit testing misses it", () => {
-    const fixture = createDomFixture(
-      "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#6be74c' fill='currentColor'></use></svg></button>"
-    );
+  for (const scenario of hintScenarioCases) {
+    test(scenario.desc, () => {
+      const fixture = createDomFixture(scenario.fixtures);
 
-    try {
-      document.elementsFromPoint = () => [];
+      try {
+        applyScenario(scenario);
 
-      const elements = getHintableElements("current-tab");
-      const directives = getPreferredDirectiveIndexes(elements);
+        const elements = getHintableElements("current-tab");
+        const directives = getPreferredDirectiveIndexes(elements);
 
-      expect(elements.length).toBe(1);
-      expect(directives.attach).toBe(0);
-    } finally {
-      fixture.cleanup();
-    }
-  });
+        if (scenario.expect.hintableSelectors) {
+          expect(elements).toHaveLength(scenario.expect.hintableSelectors.length);
 
-  test("prefers the ChatGPT close sidebar button for @sidebar", () => {
-    const fixture = createDomFixture(
-      "<div id='sidebar-header' class='h-header-height flex items-center justify-between'><a data-sidebar-item='true' aria-label='Home' class='text-token-text-primary no-draggable hover:bg-token-surface-hover keyboard-focused:bg-token-surface-hover touch:h-10 touch:w-10 flex h-9 w-9 items-center justify-center rounded-lg focus:outline-none disabled:opacity-50' href='/' data-discover='true'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon-lg'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#55180d' fill='currentColor'></use></svg></a><div class='flex'><button class='text-token-text-tertiary no-draggable hover:bg-token-surface-hover keyboard-focused:bg-token-surface-hover touch:h-10 touch:w-10 flex h-9 w-9 items-center justify-center rounded-lg focus:outline-none disabled:opacity-50 no-draggable cursor-w-resize rtl:cursor-e-resize' aria-expanded='true' aria-controls='stage-slideover-sidebar' aria-label='Close sidebar' data-testid='close-sidebar-button' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' data-rtl-flip='' class='icon max-md:hidden'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#836f7a' fill='currentColor'></use></svg><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon md:hidden'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#85f94b' fill='currentColor'></use></svg></button></div></div>"
-    );
+          scenario.expect.hintableSelectors.forEach((selector, index) => {
+            const expectedElement = document.querySelector(selector);
+            expect(expectedElement instanceof HTMLElement).toBe(true);
+            if (!(expectedElement instanceof HTMLElement)) {
+              return;
+            }
 
-    try {
-      const elements = getHintableElements("current-tab");
-      const directives = getPreferredDirectiveIndexes(elements);
-      const sidebarIndex = directives.sidebar;
+            expect(elements[index]).toBe(expectedElement);
+          });
+        }
 
-      expect(sidebarIndex).not.toBeUndefined();
-      expect(sidebarIndex).not.toBeNull();
-      expect(elements[sidebarIndex as number]?.getAttribute("data-testid")).toBe(
-        "close-sidebar-button"
-      );
-    } finally {
-      fixture.cleanup();
-    }
-  });
+        if (scenario.expect.directiveTargets) {
+          for (const [directive, selector] of Object.entries(
+            scenario.expect.directiveTargets
+          ) as Array<[ReservedHintDirective, string]>) {
+            const directiveIndex = directives[directive];
+            expect(directiveIndex).not.toBeUndefined();
+            expect(directiveIndex).not.toBeNull();
+
+            const expectedElement = document.querySelector(selector);
+            expect(expectedElement instanceof HTMLElement).toBe(true);
+            if (!(expectedElement instanceof HTMLElement)) {
+              return;
+            }
+
+            expect(elements[directiveIndex as number]).toBe(expectedElement);
+          }
+        }
+
+        if (scenario.expect.assignedTargets) {
+          const reservedLabels = createEmptyReservedHintLabels();
+          Object.assign(reservedLabels, scenario.reservedLabels ?? {});
+          const targets = assignHintLabels(elements, reservedLabels, {
+            minHintLabelLength: 2,
+            hintAlphabet: "asdfjkl",
+            reservedHintPrefixes: new Set(),
+            avoidedAdjacentHintPairs: {}
+          });
+
+          expect(targets).toHaveLength(scenario.expect.assignedTargets.length);
+
+          scenario.expect.assignedTargets.forEach((expectedTarget, index) => {
+            const expectedElement = document.querySelector(expectedTarget.selector);
+            expect(expectedElement instanceof HTMLElement).toBe(true);
+            if (!(expectedElement instanceof HTMLElement)) {
+              return;
+            }
+
+            expect(targets[index]?.element).toBe(expectedElement);
+            expect(targets[index]?.directive ?? null).toBe(expectedTarget.directive);
+          });
+        }
+      } finally {
+        fixture.cleanup();
+      }
+    });
+  }
 });

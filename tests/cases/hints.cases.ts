@@ -1,4 +1,4 @@
-import type { HintDirectiveCases } from "~/tests/types";
+import type { HintDirectiveCases, HintScenarioCase } from "~/tests/types";
 
 export const hintDirectiveCases: HintDirectiveCases = {
   input: {
@@ -66,3 +66,95 @@ export const hintDirectiveCases: HintDirectiveCases = {
     ignored: ["<button>Other</button>"]
   }
 };
+
+export const hintScenarioCases: HintScenarioCase[] = [
+  {
+    desc: "collects visible native attach button when hit testing misses it",
+    fixtures: [
+      "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#6be74c' fill='currentColor'></use></svg></button>"
+    ],
+    elementsFromPointSelectors: [],
+    expect: {
+      hintableSelectors: ["#composer-plus-btn"],
+      directiveTargets: {
+        attach: "#composer-plus-btn"
+      }
+    }
+  },
+  {
+    desc: "dedupes overlapping attach wrapper and button targets",
+    fixtures: [
+      "<div role='button' tabindex='0' aria-label='Add files and more' data-testid='composer-plus-wrapper' data-state='closed'><button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#6be74c' fill='currentColor'></use></svg></button></div>"
+    ],
+    geometry: {
+      "[data-testid='composer-plus-wrapper']": { left: 18, top: 18, width: 44, height: 44 },
+      "[data-testid='composer-plus-btn']": { left: 20, top: 20, width: 40, height: 40 }
+    },
+    elementsFromPointSelectors: ["[data-testid='composer-plus-btn']"],
+    expect: {
+      hintableSelectors: ["[data-testid='composer-plus-btn']"],
+      directiveTargets: {
+        attach: "[data-testid='composer-plus-btn']"
+      }
+    }
+  },
+  {
+    desc: "assigns @attach to the most visible overlapping attach control",
+    fixtures: [
+      "<div role='button' tabindex='0' aria-label='Add files and more' data-testid='composer-plus-wrapper' data-state='closed'></div>",
+      "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'></button>"
+    ],
+    geometry: {
+      "[data-testid='composer-plus-wrapper']": { left: 20, top: 20, width: 40, height: 40 },
+      "[data-testid='composer-plus-btn']": { left: 20, top: 20, width: 40, height: 40 }
+    },
+    elementsFromPointSelectors: ["[data-testid='composer-plus-btn']"],
+    expect: {
+      directiveTargets: {
+        attach: "[data-testid='composer-plus-btn']"
+      }
+    }
+  },
+  {
+    desc: "prefers visible attach button over nearby sr-only file input",
+    fixtures: [
+      "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'></button>",
+      "<input type='file' id='upload-photos' class='sr-only select-none' />"
+    ],
+    geometry: {
+      "[data-testid='composer-plus-btn']": { left: 376, top: 384, width: 36, height: 36 },
+      "#upload-photos": { left: 364, top: 430, width: 1, height: 1 }
+    },
+    elementsFromPointSelectors: ["[data-testid='composer-plus-btn']"],
+    expect: {
+      directiveTargets: {
+        attach: "[data-testid='composer-plus-btn']"
+      }
+    }
+  },
+  {
+    desc: "suppresses overlapping generic hints when @attach is assigned",
+    fixtures: [
+      "<div role='button' tabindex='0' aria-label='Add files and more' data-testid='composer-plus-wrapper' data-state='closed'></div>",
+      "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'></button>",
+      "<div role='button' tabindex='0' aria-label='Open uploader menu' data-testid='composer-plus-generic'></div>"
+    ],
+    geometry: {
+      "[data-testid='composer-plus-wrapper']": { left: 18, top: 18, width: 48, height: 48 },
+      "[data-testid='composer-plus-btn']": { left: 20, top: 20, width: 40, height: 40 },
+      "[data-testid='composer-plus-generic']": { left: 16, top: 16, width: 24, height: 24 }
+    },
+    elementsFromPointSelectors: ["[data-testid='composer-plus-btn']"],
+    reservedLabels: {
+      attach: ["up"]
+    },
+    expect: {
+      assignedTargets: [
+        {
+          selector: "[data-testid='composer-plus-btn']",
+          directive: "attach"
+        }
+      ]
+    }
+  }
+];

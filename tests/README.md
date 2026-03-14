@@ -1,24 +1,25 @@
 # Tests
 
-This directory is focused on hint recognition cases so new fixtures can be added without editing
-test logic.
+This directory keeps hint tests data-driven.
 
-## Structure
+## Rules
 
-- `tests/hints.test.ts`: hint directive recognition tests from pasted element `outerHTML`.
-- `tests/cases/hints.cases.ts`: input/output fixtures for hints tests.
-- `tests/helpers/dom-fixture.ts`: JSDOM + geometry stubs for DOM-driven tests.
+- Do not add website-specific logic to `tests/hints.test.ts`.
+- Put site-specific HTML, geometry, and hit-testing behavior in `tests/cases/hints.cases.ts`.
+- Keep every new case in the same standardized shape so future regressions can reuse the same runner.
+- Prefer shared cases over one-off test code.
 
-## Adding a hints case from pasted `outerHTML`
+## Standardized formats
 
-Add an item to `hintDirectiveCases` in `tests/cases/hints.cases.ts`:
+### Directive recognition cases
+
+Use `hintDirectiveCases` for pure recognition checks:
 
 ```ts
-{
-  name: "your case name",
-  for: "next",
-  recognized: [
-    "<button aria-label='Next page'>Next</button>",
+attach: {
+  desc: "detects attach",
+  recognizes: [
+    "<button aria-label='Add files and more'></button>"
   ],
   ignored: [
     "<button>Other</button>"
@@ -26,8 +27,48 @@ Add an item to `hintDirectiveCases` in `tests/cases/hints.cases.ts`:
 }
 ```
 
+### Scenario cases
+
+Use `hintScenarioCases` for collection, dedupe, geometry, hit-testing, and label-assignment regressions:
+
+```ts
+{
+  desc: "prefers visible attach button over nearby hidden file input",
+  fixtures: [
+    "<button data-testid='composer-plus-btn' aria-label='Add files and more'></button>",
+    "<input type='file' id='upload-photos' class='sr-only' />"
+  ],
+  geometry: {
+    "[data-testid='composer-plus-btn']": { left: 376, top: 384, width: 36, height: 36 },
+    "#upload-photos": { left: 364, top: 430, width: 1, height: 1 }
+  },
+  elementsFromPointSelectors: ["[data-testid='composer-plus-btn']"],
+  reservedLabels: {
+    attach: ["up"]
+  },
+  expect: {
+    directiveTargets: {
+      attach: "[data-testid='composer-plus-btn']"
+    },
+    assignedTargets: [
+      {
+        selector: "[data-testid='composer-plus-btn']",
+        directive: "attach"
+      }
+    ]
+  }
+}
+```
+
+## Files
+
+- `tests/hints.test.ts`: generic runner for directive and scenario cases
+- `tests/cases/hints.cases.ts`: all shared fixtures and expectations
+- `tests/types.ts`: reusable case shapes
+- `tests/helpers/dom-fixture.ts`: JSDOM and geometry stubs
+
 ## Run
 
 ```bash
-bun run test
+bun test tests/hints.test.ts
 ```

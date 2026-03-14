@@ -250,6 +250,7 @@ const getMarkerPlacementInfo = (
 const getMarkerPositionCandidates = (
   anchorRect: RectLike,
   shouldHighlightThumbnail: boolean,
+  directive: ReservedHintDirective | null,
   markerWidth: number,
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
@@ -274,6 +275,15 @@ const getMarkerPositionCandidates = (
 
   if (shouldHighlightThumbnail) {
     pushCandidate(centerLeft, centerTop);
+    pushCandidate(centerLeft, top);
+    pushCandidate(left, centerTop);
+  }
+
+  if (directive !== null && !shouldHighlightThumbnail) {
+    pushCandidate(left, top);
+    pushCandidate(right, top);
+    pushCandidate(left, bottom);
+    pushCandidate(right, bottom);
     pushCandidate(centerLeft, top);
     pushCandidate(left, centerTop);
   }
@@ -318,12 +328,14 @@ const getMarkerPositionCandidates = (
 const getMarkerPlacementCandidates = (
   anchorRect: DOMRect,
   markerVariant: MarkerVariant,
+  directive: ReservedHintDirective | null,
   markerWidth: number,
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
   return getMarkerPositionCandidates(
     anchorRect,
     markerVariant === "thumbnail",
+    directive,
     markerWidth,
     markerHeight
   );
@@ -442,6 +454,7 @@ export const updateMarkerPositions = (
     const candidates = getMarkerPlacementCandidates(
       anchorRect,
       markerVariant,
+      hint.directive,
       markerWidth,
       markerHeight
     );

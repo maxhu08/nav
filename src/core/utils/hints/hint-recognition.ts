@@ -436,6 +436,82 @@ const dedupeEquivalentAttachTargets = (
   });
 };
 
+const areEquivalentSemanticTargets = (
+  leftElement: HTMLElement,
+  rightElement: HTMLElement,
+  getRect: (element: HTMLElement) => DOMRect | null,
+  getSemanticScore: (element: HTMLElement, rectOverride?: DOMRect | null) => number
+): boolean => {
+  const leftRect = getRect(leftElement);
+  const rightRect = getRect(rightElement);
+  if (!leftRect || !rightRect) {
+    return false;
+  }
+
+  const intersectionWidth = Math.max(
+    0,
+    Math.min(leftRect.right, rightRect.right) - Math.max(leftRect.left, rightRect.left)
+  );
+  const intersectionHeight = Math.max(
+    0,
+    Math.min(leftRect.bottom, rightRect.bottom) - Math.max(leftRect.top, rightRect.top)
+  );
+  const intersectionArea = intersectionWidth * intersectionHeight;
+  const smallerArea = Math.max(
+    1,
+    Math.min(leftRect.width * leftRect.height, rightRect.width * rightRect.height)
+  );
+
+  if (!areRectsEquivalent(leftRect, rightRect) && intersectionArea / smallerArea < 0.75) {
+    return false;
+  }
+
+  return (
+    getSemanticScore(leftElement, leftRect) !== Number.NEGATIVE_INFINITY &&
+    getSemanticScore(rightElement, rightRect) !== Number.NEGATIVE_INFINITY
+  );
+};
+
+const dedupeEquivalentSemanticTargets = (
+  elements: HTMLElement[],
+  getRect: (element: HTMLElement) => DOMRect | null,
+  getPreference: (element: HTMLElement) => number,
+  getSemanticScore: (element: HTMLElement, rectOverride?: DOMRect | null) => number
+): HTMLElement[] => {
+  const deduped: HTMLElement[] = [];
+
+  for (const element of elements) {
+    const duplicateIndex = deduped.findIndex((candidate) =>
+      areEquivalentSemanticTargets(candidate, element, getRect, getSemanticScore)
+    );
+
+    if (duplicateIndex === -1) {
+      deduped.push(element);
+      continue;
+    }
+
+    const existing = deduped[duplicateIndex];
+    if (!existing) {
+      deduped.push(element);
+      continue;
+    }
+
+    const elementRect = getRect(element);
+    const existingRect = getRect(existing);
+    const elementScore = getSemanticScore(element, elementRect);
+    const existingScore = getSemanticScore(existing, existingRect);
+
+    if (
+      elementScore > existingScore ||
+      (elementScore === existingScore && getPreference(element) > getPreference(existing))
+    ) {
+      deduped[duplicateIndex] = element;
+    }
+  }
+
+  return deduped;
+};
+
 const hasEquivalentAncestorTarget = (
   element: HTMLElement,
   candidates: ReadonlySet<HTMLElement>,
@@ -723,7 +799,12 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     (element) => !hasEquivalentAncestorTarget(element, candidateSet, getRect)
   );
   const uniqueElements = dedupeEquivalentAttachTargets(
-    dedupeHintTargets(withoutEquivalentAncestors, getRect, getIdentity, getPreference),
+    dedupeEquivalentSemanticTargets(
+      dedupeHintTargets(withoutEquivalentAncestors, getRect, getIdentity, getPreference),
+      getRect,
+      getPreference,
+      getAttachCandidateScore
+    ),
     getRect,
     getPreference
   );
@@ -762,6 +843,11 @@ const ATTACH_ATTRIBUTE_PATTERNS = [
   /\bchoose\b/i,
   /\bcomposer\b/i,
   /\bcomposer[-_ ]?plus\b/i
+];
+const ATTACH_EXACT_CONTROL_PATTERNS = [
+  /\bcomposer-plus-btn\b/i,
+  /\badd files and more\b/i,
+  /\bupload files?\b/i
 ];
 const ATTACH_FILE_TYPE_PATTERNS = [/\bimage\b/i, /\bphoto\b/i, /\bmedia\b/i];
 
@@ -1000,6 +1086,51 @@ const getInputCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | n
   return score;
 };
 
+const getAttachAttributeText = (element: HTMLElement): string => {
+  const textContent = getElementTextContent(element);
+  return getJoinedAttributeText(
+    element,
+    ["type", "name", "id", "class", "placeholder", "aria-label", "title", "data-testid", "role"],
+    [textContent]
+  );
+};
+
+const getAttachPresentationPreference = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null
+): number => {
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = getHintTargetPreference(element);
+  const attributeText = getAttachAttributeText(element);
+
+  if (textMatchesAnyPattern(attributeText, ATTACH_EXACT_CONTROL_PATTERNS)) {
+    score += 400;
+  }
+
+  if (element instanceof HTMLButtonElement) {
+    score += 220;
+  }
+
+  if (isIntrinsicInteractiveElement(element)) {
+    score += 140;
+  }
+
+  if (element.hasAttribute("aria-haspopup")) {
+    score += 80;
+  }
+
+  if (element.hasAttribute("aria-label") || element.hasAttribute("title")) {
+    score += 60;
+  }
+
+  score -= Math.min(400, rect.width * rect.height) / 20;
+  return score;
+};
+
 const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
   if (!isActivatableElement(element)) {
     return Number.NEGATIVE_INFINITY;
@@ -1019,15 +1150,15 @@ const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
 
   let score = 0;
   let hasStrongSignal = false;
-  const textContent = getElementTextContent(element);
-  const attributeText = getJoinedAttributeText(
-    element,
-    ["type", "name", "id", "class", "placeholder", "aria-label", "title", "data-testid", "role"],
-    [textContent]
-  );
+  const attributeText = getAttachAttributeText(element);
 
   if (textMatchesAnyPattern(attributeText, ATTACH_ATTRIBUTE_PATTERNS)) {
     score += 260;
+    hasStrongSignal = true;
+  }
+
+  if (textMatchesAnyPattern(attributeText, ATTACH_EXACT_CONTROL_PATTERNS)) {
+    score += 240;
     hasStrongSignal = true;
   }
 
@@ -1069,6 +1200,10 @@ const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
     score += 40;
   }
 
+  if (element.hasAttribute("aria-haspopup")) {
+    score += 40;
+  }
+
   if (!hasStrongSignal) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -1077,6 +1212,127 @@ const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
   score += Math.min(120, rect.height) / 12;
 
   return score;
+};
+
+const getRectOverlapRatio = (leftRect: DOMRect, rightRect: DOMRect): number => {
+  const intersectionWidth = Math.max(
+    0,
+    Math.min(leftRect.right, rightRect.right) - Math.max(leftRect.left, rightRect.left)
+  );
+  const intersectionHeight = Math.max(
+    0,
+    Math.min(leftRect.bottom, rightRect.bottom) - Math.max(leftRect.top, rightRect.top)
+  );
+  const intersectionArea = intersectionWidth * intersectionHeight;
+  const smallerArea = Math.max(
+    1,
+    Math.min(leftRect.width * leftRect.height, rightRect.width * rightRect.height)
+  );
+
+  return intersectionArea / smallerArea;
+};
+
+const getRectGapDistance = (leftRect: DOMRect, rightRect: DOMRect): number => {
+  const horizontalGap = Math.max(
+    0,
+    leftRect.left - rightRect.right,
+    rightRect.left - leftRect.right
+  );
+  const verticalGap = Math.max(0, leftRect.top - rightRect.bottom, rightRect.top - leftRect.bottom);
+
+  return Math.hypot(horizontalGap, verticalGap);
+};
+
+const isLikelyHiddenFileInputControl = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null
+): boolean => {
+  if (!(element instanceof HTMLInputElement) || element.type.toLowerCase() !== "file") {
+    return false;
+  }
+
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  const hiddenClassText = `${element.className} ${element.id}`;
+
+  return (
+    rect.width <= 4 ||
+    rect.height <= 4 ||
+    style.opacity === "0" ||
+    style.clipPath !== "none" ||
+    /\bsr-only\b|\bvisually-hidden\b|\bscreen-reader\b/i.test(hiddenClassText)
+  );
+};
+
+const isRectCenterNearTarget = (
+  targetRect: DOMRect,
+  candidateRect: DOMRect,
+  padding = 12
+): boolean => {
+  const centerX = candidateRect.left + candidateRect.width / 2;
+  const centerY = candidateRect.top + candidateRect.height / 2;
+
+  return (
+    centerX >= targetRect.left - padding &&
+    centerX <= targetRect.right + padding &&
+    centerY >= targetRect.top - padding &&
+    centerY <= targetRect.bottom + padding
+  );
+};
+
+const remapAttachDirectiveIndex = (
+  elements: HTMLElement[],
+  attachIndex: number,
+  getRect: (element: HTMLElement) => DOMRect | null
+): number => {
+  const attachElement = elements[attachIndex];
+  if (!attachElement) {
+    return attachIndex;
+  }
+
+  const attachRect = getRect(attachElement);
+  if (!attachRect) {
+    return attachIndex;
+  }
+
+  let bestIndex = attachIndex;
+  let bestPreference = getAttachPresentationPreference(attachElement, attachRect);
+
+  const shouldPreferVisibleProxy = isLikelyHiddenFileInputControl(attachElement, attachRect);
+
+  elements.forEach((element, index) => {
+    const score = getAttachCandidateScore(element, getRect(element));
+    if (score === Number.NEGATIVE_INFINITY) {
+      return;
+    }
+
+    const rect = getRect(element);
+    if (!rect) {
+      return;
+    }
+
+    const isNearbyVisibleProxy =
+      shouldPreferVisibleProxy &&
+      index !== attachIndex &&
+      !isLikelyHiddenFileInputControl(element, rect) &&
+      getRectGapDistance(attachRect, rect) <= 80;
+
+    if (!isNearbyVisibleProxy && getRectOverlapRatio(attachRect, rect) < 0.7) {
+      return;
+    }
+
+    const preference = getAttachPresentationPreference(element, rect);
+    if (preference > bestPreference) {
+      bestPreference = preference;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
 };
 
 export const getPreferredInputElementIndex = (elements: HTMLElement[]): number | null => {
@@ -1756,5 +2012,71 @@ export const getPreferredDirectiveIndexes = (
     bestIndexes.input = onlySelectableIndex;
   }
 
+  if (bestIndexes.attach !== undefined) {
+    bestIndexes.attach = remapAttachDirectiveIndex(
+      elements,
+      bestIndexes.attach,
+      (element) => getFeatures(element).rect
+    );
+  }
+
   return bestIndexes;
+};
+
+export const getAttachEquivalentIndexes = (
+  elements: HTMLElement[],
+  attachIndex: number
+): number[] => {
+  const attachElement = elements[attachIndex];
+  if (!attachElement) {
+    return [];
+  }
+
+  const attachRect = getMarkerRect(attachElement);
+  if (!attachRect) {
+    return [attachIndex];
+  }
+
+  return elements.flatMap((element, index) => {
+    const score = getAttachCandidateScore(element);
+    if (score === Number.NEGATIVE_INFINITY) {
+      return [];
+    }
+
+    const rect = getMarkerRect(element);
+    if (!rect || getRectOverlapRatio(attachRect, rect) < 0.7) {
+      return [];
+    }
+
+    return [index];
+  });
+};
+
+export const getStronglyOverlappingHintIndexes = (
+  elements: HTMLElement[],
+  targetIndex: number,
+  minimumOverlapRatio = 0.35
+): number[] => {
+  const targetElement = elements[targetIndex];
+  if (!targetElement) {
+    return [];
+  }
+
+  const targetRect = getMarkerRect(targetElement);
+  if (!targetRect) {
+    return [targetIndex];
+  }
+
+  return elements.flatMap((element, index) => {
+    const rect = getMarkerRect(element);
+    if (
+      !rect ||
+      (getRectOverlapRatio(targetRect, rect) < minimumOverlapRatio &&
+        !isRectCenterNearTarget(targetRect, rect))
+    ) {
+      return [];
+    }
+
+    return [index];
+  });
 };

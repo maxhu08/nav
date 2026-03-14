@@ -1,4 +1,8 @@
-import { getHintableElements } from "~/src/core/utils/hints/hint-recognition";
+import {
+  getAttachEquivalentIndexes,
+  getStronglyOverlappingHintIndexes,
+  getHintableElements
+} from "~/src/core/utils/hints/hint-recognition";
 import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
 import { buildHintLabels } from "~/src/core/utils/hints/labels";
 import { assignHintSemantics } from "~/src/core/utils/hints/semantics";
@@ -27,12 +31,36 @@ export const assignHintLabels = (
     elements,
     reservedHintLabels
   );
-  const { labels } = buildHintLabels(elements.length, reservedLabels, labelSettings);
+  const suppressedIndexes = new Set<number>();
+  const attachIndex = Array.from(reservedDirectivesByIndex.entries()).find(
+    ([, directive]) => directive === "attach"
+  )?.[0];
+
+  if (attachIndex !== undefined) {
+    for (const index of getAttachEquivalentIndexes(elements, attachIndex)) {
+      if (index !== attachIndex) {
+        suppressedIndexes.add(index);
+      }
+    }
+
+    for (const index of getStronglyOverlappingHintIndexes(elements, attachIndex)) {
+      if (index !== attachIndex && !reservedDirectivesByIndex.has(index)) {
+        suppressedIndexes.add(index);
+      }
+    }
+  }
+
+  const visibleCount = elements.length - suppressedIndexes.size;
+  const { labels } = buildHintLabels(visibleCount, reservedLabels, labelSettings);
 
   const targets: HintPipelineTarget[] = [];
   let labelIndex = 0;
 
   elements.forEach((element, index) => {
+    if (suppressedIndexes.has(index)) {
+      return;
+    }
+
     const label = reservedLabelsByIndex.get(index) ?? labels[labelIndex++];
 
     if (!label) {

@@ -25,7 +25,7 @@ export const getDefaultHintMarkerCSS = (
   const pendingSelector = `[${letterStyleAttribute}="pending"]`;
   const typedSelector = `[${letterStyleAttribute}="typed"]`;
 
-  return `${markerSelector}{transform:translate(-20%,-20%);transition:none !important;transition-duration:0ms !important;transition-property:none !important;padding:1px 4px;border-radius:3px;background:#eab308;color:#2b1d00;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.28);white-space:nowrap;}${thumbnailMarkerSelector}{transform:translate(0,0);padding:4px 10px;border-radius:6px;font-size:18px;font-weight:800;letter-spacing:.12em;line-height:1.1;box-shadow:0 3px 10px rgba(0,0,0,.4);}${pendingSelector}{color:#000000;}${typedSelector}{color:#ffffff;}`;
+  return `${markerSelector}{transform:translate(0,0);transition:none !important;transition-duration:0ms !important;transition-property:none !important;padding:1px 4px;border-radius:3px;background:#eab308;color:#2b1d00;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.28);white-space:nowrap;}${thumbnailMarkerSelector}{transform:translate(0,0);padding:4px 10px;border-radius:6px;font-size:18px;font-weight:800;letter-spacing:.12em;line-height:1.1;box-shadow:0 3px 10px rgba(0,0,0,.4);}${pendingSelector}{color:#000000;}${typedSelector}{color:#ffffff;}`;
 };
 
 export const applyHintStyles = (styleId: string, hintCSS: string): void => {

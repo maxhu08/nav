@@ -4,7 +4,6 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
-  renameSync,
   rmSync,
   writeFileSync
 } from "node:fs";
@@ -21,8 +20,8 @@ const DIST_DIR = resolve(ROOT, "dist");
 const OUTPUT_DIR = resolve(ROOT, "output");
 const SRC_DIR = resolve(ROOT, "src");
 const STATIC_DIR = resolve(SRC_DIR, "static");
-const DIST_CORE_DIR = resolve(DIST_DIR, "core");
-const DEBUG_MAIN_BUNDLE_PATH = "debug/debug-main.js";
+const CORE_BUNDLE_PATH = "core/index.js";
+const DEBUG_MAIN_BUNDLE_PATH = "core/debug/debug-main.js";
 const ENTRY_FILES = [
   resolve(ROOT, "src", "background.ts"),
   resolve(ROOT, "src", "core", "index.ts"),
@@ -54,7 +53,7 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     content_scripts: [
       {
         matches: ["<all_urls>"],
-        js: ["index.js"],
+        js: [CORE_BUNDLE_PATH],
         run_at: "document_start",
         all_frames: true,
         match_about_blank: true
@@ -95,7 +94,7 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     content_scripts: [
       {
         matches: ["<all_urls>"],
-        js: ["index.js"],
+        js: [CORE_BUNDLE_PATH],
         run_at: "document_start",
         all_frames: true,
         match_about_blank: true
@@ -209,7 +208,6 @@ function clean() {
 function buildBundle(target: BrowserTarget, version = readVersion()) {
   ensureDist();
   runParcel("build", false);
-  flattenDistCoreDirectory();
   syncStaticFiles();
   writeManifest(target, version, undefined, false);
 }
@@ -220,20 +218,6 @@ function ensureDist() {
 
 function syncStaticFiles() {
   copyDirectoryContents(STATIC_DIR, DIST_DIR);
-}
-
-function flattenDistCoreDirectory() {
-  if (!existsSync(DIST_CORE_DIR)) {
-    return;
-  }
-
-  for (const entry of readdirSync(DIST_CORE_DIR)) {
-    const destination = resolve(DIST_DIR, entry);
-    rmSync(destination, { force: true, recursive: true });
-    renameSync(resolve(DIST_CORE_DIR, entry), destination);
-  }
-
-  rmSync(DIST_CORE_DIR, { force: true, recursive: true });
 }
 
 function writeManifest(
@@ -290,14 +274,9 @@ function runParcel(mode: "build" | "watch", isDev: boolean) {
   }
 
   args.push("watch", ...ENTRY_FILES, "--dist-dir", DIST_DIR, "--no-content-hash");
-  const flattenInterval = setInterval(() => {
-    flattenDistCoreDirectory();
-  }, 100);
   const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit", env });
 
   child.on("exit", (code) => {
-    clearInterval(flattenInterval);
-    flattenDistCoreDirectory();
     process.exit(code ?? 0);
   });
 }
@@ -325,8 +304,8 @@ function packageBundle(
   rmSync(zipPath, { force: true });
   cpSync(DIST_DIR, packageDir, { recursive: true });
 
-  if (!existsSync(resolve(packageDir, "index.js"))) {
-    throw new Error("Missing expected build output: dist/index.js");
+  if (!existsSync(resolve(packageDir, CORE_BUNDLE_PATH))) {
+    throw new Error(`Missing expected build output: dist/${CORE_BUNDLE_PATH}`);
   }
 
   runCommand("zip", ["-r", "-FS", zipPath, "."], packageDir);
@@ -339,14 +318,10 @@ function pruneDevOnlyBuildArtifacts() {
     return;
   }
 
-  rmSync(resolve(DIST_DIR, "debug"), { force: true, recursive: true });
+  rmSync(resolve(DIST_DIR, "core", "debug"), { force: true, recursive: true });
 
   for (const entry of readdirSync(DIST_DIR)) {
     if (/^nav-debug\..+\.js$/.test(entry)) {
-      rmSync(resolve(DIST_DIR, entry), { force: true });
-    }
-
-    if (/^debug-main(?:\..+)?\.js$/.test(entry)) {
       rmSync(resolve(DIST_DIR, entry), { force: true });
     }
   }

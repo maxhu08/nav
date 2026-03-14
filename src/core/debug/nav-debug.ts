@@ -1,7 +1,9 @@
 import {
+  getAttachEquivalentIndexes,
   getHintableElements,
   getPreferredDirectiveIndexes,
-  getMarkerRect
+  getMarkerRect,
+  getStronglyOverlappingHintIndexes
 } from "~/src/core/utils/hints/hint-recognition";
 import {
   NAV_DEBUG_HINT_TARGET_REQUEST_EVENT,
@@ -27,6 +29,7 @@ const buildHintTargetDebugResult = (selector: string) => {
   const hintableElements = getHintableElements("current-tab");
   const hintableIndex = hintableElements.indexOf(element);
   const preferredDirectiveIndexes = getPreferredDirectiveIndexes(hintableElements);
+  const attachIndex = preferredDirectiveIndexes.attach;
   const preferredDirectiveForTarget = (
     Object.entries(preferredDirectiveIndexes) as Array<[string, number | undefined]>
   )
@@ -34,6 +37,12 @@ const buildHintTargetDebugResult = (selector: string) => {
     .map(([directive]) => directive);
   const rect = getMarkerRect(element);
   const style = window.getComputedStyle(element);
+  const attachEquivalentIndexes =
+    attachIndex === undefined ? [] : getAttachEquivalentIndexes(hintableElements, attachIndex);
+  const overlappingAttachIndexes =
+    attachIndex === undefined
+      ? []
+      : getStronglyOverlappingHintIndexes(hintableElements, attachIndex);
 
   return {
     targetFound: true,
@@ -46,6 +55,8 @@ const buildHintTargetDebugResult = (selector: string) => {
     totalHintableElements: hintableElements.length,
     preferredDirectiveForTarget,
     preferredDirectiveIndexes,
+    attachEquivalentIndexes,
+    overlappingAttachIndexes,
     isReservedDirectiveMatch: RESERVED_HINT_DIRECTIVES.some(
       (directive) => preferredDirectiveIndexes[directive] === hintableIndex
     ),
@@ -65,7 +76,41 @@ const buildHintTargetDebugResult = (selector: string) => {
       opacity: style.opacity,
       pointerEvents: style.pointerEvents,
       cursor: style.cursor
-    }
+    },
+    nearbyHintables: overlappingAttachIndexes
+      .map((index) => {
+        const candidate = hintableElements[index];
+        if (!candidate) {
+          return null;
+        }
+
+        const candidateRect = getMarkerRect(candidate);
+
+        return {
+          index,
+          tagName: candidate.tagName.toLowerCase(),
+          id: candidate.id || null,
+          className: candidate.className || null,
+          dataTestId: candidate.getAttribute("data-testid"),
+          ariaLabel: candidate.getAttribute("aria-label"),
+          preferredDirectives: (
+            Object.entries(preferredDirectiveIndexes) as Array<[string, number | undefined]>
+          )
+            .filter(([, preferredIndex]) => preferredIndex === index)
+            .map(([directive]) => directive),
+          rect: candidateRect
+            ? {
+                left: candidateRect.left,
+                top: candidateRect.top,
+                right: candidateRect.right,
+                bottom: candidateRect.bottom,
+                width: candidateRect.width,
+                height: candidateRect.height
+              }
+            : null
+        };
+      })
+      .filter(Boolean)
   };
 };
 
