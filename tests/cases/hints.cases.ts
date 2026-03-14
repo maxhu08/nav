@@ -162,5 +162,19 @@ export const hintScenarioCases: HintScenarioCase[] = [
         }
       ]
     }
+  },
+  {
+    desc: "skips hints for intrinsic controls fully covered by another element",
+    fixtures: [
+      "<button id='covered-action' type='button' aria-label='Covered action'>Covered action</button>",
+      "<div id='sticky-navbar-cover' aria-hidden='true'></div>"
+    ],
+    geometry: {
+      "#covered-action": { left: 24, top: 24, width: 120, height: 40 },
+      "#sticky-navbar-cover": { left: 24, top: 24, width: 120, height: 40 }
+    },
+    expect: {
+      hintableSelectors: []
+    }
   }
 ];

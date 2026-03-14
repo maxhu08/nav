@@ -32,6 +32,14 @@ type PlacedMarkerRect = {
 type RectLike = Pick<DOMRect, "left" | "top" | "right" | "bottom" | "width" | "height">;
 type MarkerVariant = "default" | "thumbnail";
 type CollisionGrid = Map<number, Map<number, PlacedMarkerRect[]>>;
+type MarkerVisibilityScore = {
+  clearPoints: number;
+  occludedPoints: number;
+};
+type ViewportOccluder = {
+  element: HTMLElement;
+  rect: DOMRect;
+};
 
 const DIRECTIVE_LAYOUT_PRIORITIES: Partial<Record<ReservedHintDirective, number>> = {
   attach: 100,
@@ -397,6 +405,172 @@ const addToCollisionGrid = (collisionGrid: CollisionGrid, rect: PlacedMarkerRect
   });
 };
 
+const isComposedDescendant = (ancestor: Element, node: Element): boolean => {
+  let current: Node | null = node;
+
+  while (current) {
+    if (current === ancestor) {
+      return true;
+    }
+
+    if (current instanceof ShadowRoot) {
+      current = current.host;
+      continue;
+    }
+
+    current = current.parentNode;
+  }
+
+  return false;
+};
+
+const getElementsAtPoint = (x: number, y: number): Element[] => {
+  try {
+    return typeof document.elementsFromPoint === "function" ? document.elementsFromPoint(x, y) : [];
+  } catch {
+    return [];
+  }
+};
+
+const isPotentialOccludingElement = (element: Element): element is HTMLElement => {
+  if (element instanceof HTMLElement && element.closest("[data-nav-hint-marker]")) {
+    return false;
+  }
+
+  if (!(element instanceof HTMLElement)) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    style.visibility === "collapse" ||
+    style.pointerEvents === "none" ||
+    Number.parseFloat(style.opacity) === 0
+  ) {
+    return false;
+  }
+
+  return style.position === "fixed" || style.position === "sticky";
+};
+
+const isMarkerOccludingPageElement = (target: HTMLElement, element: Element): boolean => {
+  if (!isPotentialOccludingElement(element)) {
+    return false;
+  }
+
+  return !isComposedDescendant(target, element) && !isComposedDescendant(element, target);
+};
+
+const collectViewportOccluders = (): ViewportOccluder[] => {
+  const seen = new Set<HTMLElement>();
+  const occluders: ViewportOccluder[] = [];
+  const sampleInset = 8;
+  const sampleColumns = Math.max(3, Math.min(8, Math.round(window.innerWidth / 240)));
+  const sampleRows = Math.max(3, Math.min(6, Math.round(window.innerHeight / 180)));
+  const xStep =
+    sampleColumns <= 1 ? 0 : (window.innerWidth - sampleInset * 2) / (sampleColumns - 1);
+  const yStep = sampleRows <= 1 ? 0 : (window.innerHeight - sampleInset * 2) / (sampleRows - 1);
+  const edgePoints: Array<[number, number]> = [];
+
+  for (let column = 0; column < sampleColumns; column += 1) {
+    const x = Math.round(sampleInset + column * xStep);
+    edgePoints.push([x, sampleInset]);
+    edgePoints.push([x, Math.max(sampleInset, window.innerHeight - sampleInset)]);
+  }
+
+  for (let row = 0; row < sampleRows; row += 1) {
+    const y = Math.round(sampleInset + row * yStep);
+    edgePoints.push([sampleInset, y]);
+    edgePoints.push([Math.max(sampleInset, window.innerWidth - sampleInset), y]);
+  }
+
+  for (const [x, y] of edgePoints) {
+    for (const element of getElementsAtPoint(x, y)) {
+      if (!(element instanceof HTMLElement) || seen.has(element)) {
+        continue;
+      }
+
+      if (!isPotentialOccludingElement(element)) {
+        continue;
+      }
+
+      const rect = element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        continue;
+      }
+
+      seen.add(element);
+      occluders.push({ element, rect });
+    }
+  }
+
+  return occluders;
+};
+
+const isPointInsideRect = (x: number, y: number, rect: RectLike): boolean =>
+  x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+
+const getMarkerVisibilityScore = (
+  target: HTMLElement,
+  rect: PlacedMarkerRect,
+  occluders: readonly ViewportOccluder[]
+): MarkerVisibilityScore => {
+  const points: Array<[number, number]> = [
+    [(rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2],
+    [rect.left + 1, rect.top + 1],
+    [(rect.left + rect.right) / 2, rect.top + 1],
+    [rect.right - 1, rect.top + 1],
+    [rect.left + 1, (rect.top + rect.bottom) / 2],
+    [rect.right - 1, (rect.top + rect.bottom) / 2],
+    [rect.left + 1, rect.bottom - 1],
+    [(rect.left + rect.right) / 2, rect.bottom - 1],
+    [rect.right - 1, rect.bottom - 1]
+  ];
+  const score: MarkerVisibilityScore = {
+    clearPoints: 0,
+    occludedPoints: 0
+  };
+
+  for (const [x, y] of points) {
+    if (
+      occluders.some(
+        ({ element, rect: occluderRect }) =>
+          !isComposedDescendant(target, element) &&
+          !isComposedDescendant(element, target) &&
+          isPointInsideRect(x, y, occluderRect)
+      )
+    ) {
+      score.occludedPoints += 1;
+      continue;
+    }
+
+    score.clearPoints += 1;
+  }
+
+  return score;
+};
+
+const isBetterMarkerVisibilityScore = (
+  candidate: MarkerVisibilityScore,
+  best: MarkerVisibilityScore | null
+): boolean => {
+  if (!best) {
+    return true;
+  }
+
+  if (candidate.occludedPoints !== best.occludedPoints) {
+    return candidate.occludedPoints < best.occludedPoints;
+  }
+
+  if (candidate.clearPoints !== best.clearPoints) {
+    return candidate.clearPoints > best.clearPoints;
+  }
+
+  return false;
+};
+
 export const updateMarkerPositions = (
   markers: HintMarker[],
   mode: LinkMode,
@@ -404,6 +578,7 @@ export const updateMarkerPositions = (
   markerVariantStyleAttribute: string
 ): void => {
   const collisionGrid: CollisionGrid = new Map();
+  const viewportOccluders = highlightThumbnails ? collectViewportOccluders() : [];
   const markersByPlacementPriority = [...markers].sort(
     (left, right) => getMarkerLayoutPriority(right) - getMarkerLayoutPriority(left)
   );
@@ -460,6 +635,7 @@ export const updateMarkerPositions = (
     );
 
     let chosenRect: PlacedMarkerRect | null = null;
+    let bestVisibilityScore: MarkerVisibilityScore | null = null;
 
     for (const candidate of candidates) {
       const nextRect = createPlacedMarkerRect(
@@ -469,9 +645,21 @@ export const updateMarkerPositions = (
         markerHeight
       );
 
-      if (!hasCollision(collisionGrid, nextRect)) {
+      if (hasCollision(collisionGrid, nextRect)) {
+        continue;
+      }
+
+      const visibilityScore =
+        markerVariant === "thumbnail"
+          ? getMarkerVisibilityScore(hint.element, nextRect, viewportOccluders)
+          : { clearPoints: 1, occludedPoints: 0 };
+      if (isBetterMarkerVisibilityScore(visibilityScore, bestVisibilityScore)) {
         chosenRect = nextRect;
-        break;
+        bestVisibilityScore = visibilityScore;
+
+        if (visibilityScore.occludedPoints === 0) {
+          break;
+        }
       }
     }
 

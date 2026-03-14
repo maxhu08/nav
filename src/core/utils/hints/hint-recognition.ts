@@ -73,16 +73,21 @@ const isComposedDescendant = (ancestor: Element, node: Element): boolean => {
   return false;
 };
 
-const intersectsAtPoint = (element: HTMLElement, x: number, y: number): boolean => {
+type PointHitTestResult = "reachable" | "occluded" | "missing";
+
+const getPointHitTestResult = (element: HTMLElement, x: number, y: number): PointHitTestResult => {
   const topElement = getTopElementAtPoint(x, y);
 
-  return (
-    !!topElement &&
-    (isComposedDescendant(element, topElement) || isComposedDescendant(topElement, element))
-  );
+  if (!topElement) {
+    return "missing";
+  }
+
+  return isComposedDescendant(element, topElement) || isComposedDescendant(topElement, element)
+    ? "reachable"
+    : "occluded";
 };
 
-const hasClickablePoint = (element: HTMLElement, rect: DOMRect): boolean => {
+const getClickablePointResults = (element: HTMLElement, rect: DOMRect): PointHitTestResult[] => {
   const points: Array<[number, number]> = [
     [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5],
     [rect.left + 0.1, rect.top + 0.1],
@@ -91,7 +96,7 @@ const hasClickablePoint = (element: HTMLElement, rect: DOMRect): boolean => {
     [rect.right - 0.1, rect.bottom - 0.1]
   ];
 
-  return points.some(([x, y]) => intersectsAtPoint(element, x, y));
+  return points.map(([x, y]) => getPointHitTestResult(element, x, y));
 };
 
 const ACTIVATABLE_ROLES = new Set([
@@ -639,7 +644,17 @@ const isElementVisibleAndClickable = (element: HTMLElement): boolean => {
     return false;
   }
 
-  return hasClickablePoint(element, rect) || isIntrinsicInteractiveElement(element);
+  const clickablePointResults = getClickablePointResults(element, rect);
+
+  if (clickablePointResults.includes("reachable")) {
+    return true;
+  }
+
+  if (!isIntrinsicInteractiveElement(element)) {
+    return false;
+  }
+
+  return !clickablePointResults.includes("occluded");
 };
 
 const isHintable = (element: HTMLElement): boolean => {

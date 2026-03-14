@@ -46,7 +46,6 @@ import { type ActionName } from "~/src/utils/hotkeys";
 
 type ActionHandler = (count?: number) => boolean;
 type CoreMode = "normal" | "find" | "watch";
-const HINT_EXIT_KEY_GRACE_MS = 180;
 const IS_NAV_DEBUG_ENABLED = process.env.NAV_DEV === "true";
 
 const FRAME_PROXY_ACTIONS = new Set<ActionName>([
@@ -67,7 +66,6 @@ let isInitialized = false;
 let isForceNormalModeEnabled = false;
 let isStartupFocusGuardActive = false;
 let isForceNormalModeGuardAttached = false;
-let hintExitGraceUntil = 0;
 let shouldBypassNextTypingKeyAfterHintSelect = false;
 
 const isFrameActionMessage = (value: unknown): value is FrameActionMessage => {
@@ -336,7 +334,6 @@ const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
 
       if (actionName) {
         exitHints();
-        hintExitGraceUntil = performance.now() + HINT_EXIT_KEY_GRACE_MS;
         consumeKeyboardEvent(event);
         return true;
       }
@@ -349,10 +346,6 @@ const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
   }
 
   if (handleHintsKeydown(event)) {
-    if (!areHintsActive() && event.key === "Escape") {
-      hintExitGraceUntil = performance.now() + HINT_EXIT_KEY_GRACE_MS;
-    }
-
     consumeKeyboardEvent(event);
   }
 
@@ -517,11 +510,6 @@ const handleKeydown = (event: KeyboardEvent): void => {
 
   if (shouldBypassNextTypingKeyAfterHintSelect && isLikelyTypingKey(event)) {
     shouldBypassNextTypingKeyAfterHintSelect = false;
-    keyState.clearPendingState();
-    return;
-  }
-
-  if (performance.now() < hintExitGraceUntil && isLikelyTypingKey(event)) {
     keyState.clearPendingState();
     return;
   }
