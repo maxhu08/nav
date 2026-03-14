@@ -791,7 +791,7 @@ const SUBMIT_ATTRIBUTE_PATTERNS = [
   /\bconfirm\b/i
 ];
 const SUBMIT_SHORT_TEXT_PATTERNS = [/^ok$/i, /^done$/i, /^yes$/i, /^submit$/i];
-const LIKE_ATTRIBUTE_PATTERNS = [/\bupvote\b/i, /\bthumb[-_ ]?up\b/i];
+const LIKE_ATTRIBUTE_PATTERNS = [/\blike\b/i, /\bupvote\b/i, /\bthumb[-_ ]?up\b/i];
 const LIKE_SHORT_TEXT_PATTERNS = [/^like$/i];
 const DISLIKE_ATTRIBUTE_PATTERNS = [/\bdislike\b/i, /\bdownvote\b/i, /\bthumb[-_ ]?down\b/i];
 const DISLIKE_SHORT_TEXT_PATTERNS = [/^dislike$/i];
