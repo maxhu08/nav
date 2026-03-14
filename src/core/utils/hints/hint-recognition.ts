@@ -948,6 +948,31 @@ const HOME_PATHS = new Set(["/", "/home", "/homepage", "/dashboard"]);
 const getElementTextContent = (element: HTMLElement): string =>
   element.textContent?.replace(/\s+/g, " ").trim() ?? "";
 
+type ElementFeatureVector = {
+  rect: DOMRect | null;
+  isSelectable: boolean;
+  textContent?: string;
+  joinedAttributeTextCache: Map<string, string>;
+  closestCache: Map<string, Element | null>;
+};
+
+const getCachedElementTextContent = (
+  element: HTMLElement,
+  features?: ElementFeatureVector
+): string => {
+  if (!features) {
+    return getElementTextContent(element);
+  }
+
+  if (features.textContent !== undefined) {
+    return features.textContent;
+  }
+
+  const textContent = getElementTextContent(element);
+  features.textContent = textContent;
+  return textContent;
+};
+
 const isLikelyShortControlText = (value: string): boolean => {
   if (!value) {
     return false;
@@ -969,6 +994,45 @@ const getJoinedAttributeText = (
   [...attributeNames.map((name) => element.getAttribute(name)), ...extras]
     .filter((value): value is string => typeof value === "string" && value.length > 0)
     .join(" ");
+
+const getCachedJoinedAttributeText = (
+  element: HTMLElement,
+  attributeNames: string[],
+  extras: string[] = [],
+  features?: ElementFeatureVector
+): string => {
+  if (!features) {
+    return getJoinedAttributeText(element, attributeNames, extras);
+  }
+
+  const cacheKey = `${attributeNames.join("\u0000")}::${extras.join("\u0001")}`;
+  const cachedValue = features.joinedAttributeTextCache.get(cacheKey);
+  if (cachedValue !== undefined) {
+    return cachedValue;
+  }
+
+  const value = getJoinedAttributeText(element, attributeNames, extras);
+  features.joinedAttributeTextCache.set(cacheKey, value);
+  return value;
+};
+
+const getCachedClosest = (
+  element: HTMLElement,
+  selector: string,
+  features?: ElementFeatureVector
+): Element | null => {
+  if (!features) {
+    return element.closest(selector);
+  }
+
+  if (features.closestCache.has(selector)) {
+    return features.closestCache.get(selector) ?? null;
+  }
+
+  const match = element.closest(selector);
+  features.closestCache.set(selector, match);
+  return match;
+};
 
 const textMatchesAnyPattern = (text: string, patterns: readonly RegExp[]): boolean =>
   patterns.some((pattern) => pattern.test(text));
@@ -1072,7 +1136,11 @@ const getNormalizedSameOriginPath = (href: string): string | null => {
   }
 };
 
-const getInputCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+const getInputCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
   if (!isSelectableElement(element)) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -1081,15 +1149,12 @@ const getInputCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | n
   if (!rect) return Number.NEGATIVE_INFINITY;
 
   let score = 100;
-  const attributeText = getJoinedAttributeText(element, [
-    "type",
-    "name",
-    "id",
-    "placeholder",
-    "aria-label",
-    "data-testid",
-    "role"
-  ]);
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    ["type", "name", "id", "placeholder", "aria-label", "data-testid", "role"],
+    [],
+    features
+  );
 
   if (textMatchesAnyPattern(attributeText, INPUT_ATTRIBUTE_PATTERNS)) {
     score += 120;
@@ -1110,7 +1175,7 @@ const getInputCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | n
     score += 60;
   }
 
-  if (element.closest("search, [role='search'], form")) {
+  if (getCachedClosest(element, "search, [role='search'], form", features)) {
     score += 30;
   }
 
@@ -1120,18 +1185,20 @@ const getInputCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | n
   return score;
 };
 
-const getAttachAttributeText = (element: HTMLElement): string => {
-  const textContent = getElementTextContent(element);
-  return getJoinedAttributeText(
+const getAttachAttributeText = (element: HTMLElement, features?: ElementFeatureVector): string => {
+  const textContent = getCachedElementTextContent(element, features);
+  return getCachedJoinedAttributeText(
     element,
     ["type", "name", "id", "class", "placeholder", "aria-label", "title", "data-testid", "role"],
-    [textContent]
+    [textContent],
+    features
   );
 };
 
 const getAttachPresentationPreference = (
   element: HTMLElement,
-  rectOverride?: DOMRect | null
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
 ): number => {
   const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
   if (!rect) {
@@ -1139,7 +1206,7 @@ const getAttachPresentationPreference = (
   }
 
   let score = getHintTargetPreference(element);
-  const attributeText = getAttachAttributeText(element);
+  const attributeText = getAttachAttributeText(element, features);
 
   if (textMatchesAnyPattern(attributeText, ATTACH_EXACT_CONTROL_PATTERNS)) {
     score += 400;
@@ -1165,7 +1232,11 @@ const getAttachPresentationPreference = (
   return score;
 };
 
-const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+const getAttachCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
   if (!isActivatableElement(element)) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -1184,7 +1255,7 @@ const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
 
   let score = 0;
   let hasStrongSignal = false;
-  const attributeText = getAttachAttributeText(element);
+  const attributeText = getAttachAttributeText(element, features);
 
   if (textMatchesAnyPattern(attributeText, ATTACH_ATTRIBUTE_PATTERNS)) {
     score += 260;
@@ -1221,7 +1292,7 @@ const getAttachCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
     hasStrongSignal = true;
   }
 
-  if (element.closest("form")) {
+  if (getCachedClosest(element, "form", features)) {
     score += 60;
   }
 
@@ -1413,7 +1484,11 @@ export const getPreferredAttachElementIndex = (elements: HTMLElement[]): number 
   return bestIndex;
 };
 
-const getHomeCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+const getHomeCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
   if (
     !(
       element instanceof HTMLAnchorElement ||
@@ -1431,19 +1506,19 @@ const getHomeCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | nu
 
   let score = 0;
   let hasStrongSignal = false;
-  const textContent = getElementTextContent(element);
-  const logoText = getJoinedAttributeText(element, [
-    "id",
-    "class",
-    "data-testid",
-    "aria-label",
-    "title"
-  ]);
+  const textContent = getCachedElementTextContent(element, features);
+  const logoText = getCachedJoinedAttributeText(
+    element,
+    ["id", "class", "data-testid", "aria-label", "title"],
+    [],
+    features
+  );
   const hasLogoSignal = textMatchesAnyPattern(logoText, HOME_LOGO_PATTERNS);
-  const attributeText = getJoinedAttributeText(
+  const attributeText = getCachedJoinedAttributeText(
     element,
     ["name", "id", "aria-label", "data-testid", "role", "title", "class"],
-    [textContent]
+    [textContent],
+    features
   );
 
   if (textMatchesAnyPattern(attributeText, HOME_ATTRIBUTE_PATTERNS)) {
@@ -1478,7 +1553,7 @@ const getHomeCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | nu
     score += 40;
   }
 
-  if (element.closest("nav, header, [role='navigation']")) {
+  if (getCachedClosest(element, "nav, header, [role='navigation']", features)) {
     score += 40;
   }
 
@@ -1553,7 +1628,11 @@ const getSidebarControlsSignalScore = (element: HTMLElement): number => {
   return score;
 };
 
-const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+const getSidebarCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
   if (!isActivatableElement(element) || isSelectableElement(element)) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -1565,11 +1644,12 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
   let hasStrongSignal = false;
   const tagName = element.tagName.toLowerCase();
   const role = element.getAttribute("role")?.toLowerCase();
-  const textContent = getElementTextContent(element);
-  const attributeText = getJoinedAttributeText(
+  const textContent = getCachedElementTextContent(element, features);
+  const attributeText = getCachedJoinedAttributeText(
     element,
     ["name", "id", "aria-label", "data-testid", "role", "title", "class"],
-    [textContent]
+    [textContent],
+    features
   );
   const controlsSignalScore = getSidebarControlsSignalScore(element);
   const hasSidebarAttributeSignal = textMatchesAnyPattern(
@@ -1613,7 +1693,7 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
     hasStrongSignal = true;
   }
 
-  if (element.id === "guide-button" || !!element.closest("#guide-button")) {
+  if (element.id === "guide-button" || !!getCachedClosest(element, "#guide-button", features)) {
     score += 700;
     hasStrongSignal = true;
   }
@@ -1624,8 +1704,10 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
   }
 
   if (
-    element.closest(
-      "header, [role='banner'], [role='navigation'], [id*='masthead' i], [class*='masthead' i], [id*='topbar' i], [class*='topbar' i]"
+    getCachedClosest(
+      element,
+      "header, [role='banner'], [role='navigation'], [id*='masthead' i], [class*='masthead' i], [id*='topbar' i], [class*='topbar' i]",
+      features
     )
   ) {
     score += 120;
@@ -1643,7 +1725,7 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
     score += 30;
   }
 
-  if (element.closest("header, [role='banner'], [role='navigation']")) {
+  if (getCachedClosest(element, "header, [role='banner'], [role='navigation']", features)) {
     score += 40;
   }
 
@@ -1685,7 +1767,11 @@ export const getPreferredSidebarElementIndex = (elements: HTMLElement[]): number
   return bestIndex;
 };
 
-const getCancelCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+const getCancelCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
   const score = getActionDirectiveCandidateScore(
     element,
     CANCEL_ATTRIBUTE_PATTERNS,
@@ -1693,24 +1779,20 @@ const getCancelCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | 
       boostDialogContext: true,
       shortTextPatterns: CANCEL_SHORT_TEXT_PATTERNS
     },
-    rectOverride
+    rectOverride,
+    features
   );
 
   if (score === Number.NEGATIVE_INFINITY) {
     return score;
   }
 
-  const attributeText = getJoinedAttributeText(element, [
-    "name",
-    "id",
-    "aria-label",
-    "data-testid",
-    "data-test-id",
-    "role",
-    "title",
-    "class",
-    "type"
-  ]);
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "data-test-id", "role", "title", "class", "type"],
+    [],
+    features
+  );
 
   if (
     textMatchesAnyPattern(attributeText, SIDEBAR_CONTAINER_PATTERNS) ||
@@ -1731,7 +1813,8 @@ const getActionDirectiveCandidateScore = (
     boostDialogContext?: boolean;
     shortTextPatterns?: readonly RegExp[];
   } = {},
-  rectOverride?: DOMRect | null
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
 ): number => {
   if (!isActivatableElement(element) || isSelectableElement(element)) {
     return Number.NEGATIVE_INFINITY;
@@ -1746,18 +1829,13 @@ const getActionDirectiveCandidateScore = (
   let hasStrongSignal = false;
   const tagName = element.tagName.toLowerCase();
   const role = element.getAttribute("role")?.toLowerCase();
-  const textContent = getElementTextContent(element);
-  const attributeText = getJoinedAttributeText(element, [
-    "name",
-    "id",
-    "aria-label",
-    "data-testid",
-    "data-test-id",
-    "role",
-    "title",
-    "class",
-    "type"
-  ]);
+  const textContent = getCachedElementTextContent(element, features);
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "data-test-id", "role", "title", "class", "type"],
+    [],
+    features
+  );
 
   if (textMatchesAnyPattern(attributeText, patterns)) {
     score += 240;
@@ -1804,26 +1882,32 @@ const getActionDirectiveCandidateScore = (
       hasStrongSignal = true;
     }
 
-    if (element.closest("form")) {
+    if (getCachedClosest(element, "form", features)) {
       score += 70;
     }
   }
 
   if (options.boostDialogContext) {
-    if (element.closest("dialog, [role='dialog'], [aria-modal='true']")) {
+    if (getCachedClosest(element, "dialog, [role='dialog'], [aria-modal='true']", features)) {
       score += 90;
     }
 
     if (
-      element.closest("[id*='modal' i], [class*='modal' i], [id*='popup' i], [class*='popup' i]")
+      getCachedClosest(
+        element,
+        "[id*='modal' i], [class*='modal' i], [id*='popup' i], [class*='popup' i]",
+        features
+      )
     ) {
       score += 70;
     }
   }
 
   if (
-    element.closest(
-      "[aria-label*='pagination' i], [class*='pagination' i], nav, [role='navigation']"
+    getCachedClosest(
+      element,
+      "[aria-label*='pagination' i], [class*='pagination' i], nav, [role='navigation']",
+      features
     )
   ) {
     score += 60;
@@ -1839,7 +1923,11 @@ const getActionDirectiveCandidateScore = (
   return score;
 };
 
-const getNextCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+const getNextCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
   const score = getActionDirectiveCandidateScore(
     element,
     NEXT_ATTRIBUTE_PATTERNS,
@@ -1847,32 +1935,39 @@ const getNextCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | nu
       relValues: ["next"],
       shortTextPatterns: NEXT_SHORT_TEXT_PATTERNS
     },
-    rectOverride
+    rectOverride,
+    features
   );
 
   if (score === Number.NEGATIVE_INFINITY) {
     return score;
   }
 
-  const textContent = getElementTextContent(element);
-  const semanticAttributeText = getJoinedAttributeText(
+  const textContent = getCachedElementTextContent(element, features);
+  const semanticAttributeText = getCachedJoinedAttributeText(
     element,
     ["name", "id", "aria-label", "data-testid", "data-test-id", "role", "title", "type"],
-    [textContent]
+    [textContent],
+    features
   );
-  const fullAttributeText = getJoinedAttributeText(element, [
-    "name",
-    "id",
-    "aria-label",
-    "data-testid",
-    "data-test-id",
-    "role",
-    "title",
-    "class",
-    "type",
-    "href",
-    "rel"
-  ]);
+  const fullAttributeText = getCachedJoinedAttributeText(
+    element,
+    [
+      "name",
+      "id",
+      "aria-label",
+      "data-testid",
+      "data-test-id",
+      "role",
+      "title",
+      "class",
+      "type",
+      "href",
+      "rel"
+    ],
+    [],
+    features
+  );
   const hasStrongSemanticSignal = textMatchesAnyPattern(
     semanticAttributeText,
     NEXT_STRONG_ATTRIBUTE_PATTERNS
@@ -1972,11 +2067,6 @@ export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number
     shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
   });
 
-type ElementFeatureVector = {
-  rect: DOMRect | null;
-  isSelectable: boolean;
-};
-
 const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   input: 180,
   attach: 220,
@@ -2007,7 +2097,9 @@ export const getPreferredDirectiveIndexes = (
 
     const features: ElementFeatureVector = {
       rect: getMarkerRect(element),
-      isSelectable: isSelectableElement(element)
+      isSelectable: isSelectableElement(element),
+      joinedAttributeTextCache: new Map(),
+      closestCache: new Map()
     };
 
     featureCache.set(element, features);
@@ -2029,17 +2121,17 @@ export const getPreferredDirectiveIndexes = (
       onlySelectableIndex = index;
     }
 
-    updateBest("input", getInputCandidateScore(element, features.rect), index);
+    updateBest("input", getInputCandidateScore(element, features.rect, features), index);
 
-    const attachScore = getAttachCandidateScore(element, features.rect);
+    const attachScore = getAttachCandidateScore(element, features.rect, features);
     updateBest("attach", attachScore, index);
-    updateBest("home", getHomeCandidateScore(element, features.rect), index);
-    updateBest("sidebar", getSidebarCandidateScore(element, features.rect), index);
+    updateBest("home", getHomeCandidateScore(element, features.rect, features), index);
+    updateBest("sidebar", getSidebarCandidateScore(element, features.rect, features), index);
 
     // When an element strongly looks like an attachment/upload control, prefer @attach
     // and avoid also classifying that same element as @next.
     if (attachScore === Number.NEGATIVE_INFINITY) {
-      updateBest("next", getNextCandidateScore(element, features.rect), index);
+      updateBest("next", getNextCandidateScore(element, features.rect, features), index);
     }
 
     updateBest(
@@ -2051,11 +2143,12 @@ export const getPreferredDirectiveIndexes = (
           relValues: ["prev"],
           shortTextPatterns: PREV_SHORT_TEXT_PATTERNS
         },
-        features.rect
+        features.rect,
+        features
       ),
       index
     );
-    updateBest("cancel", getCancelCandidateScore(element, features.rect), index);
+    updateBest("cancel", getCancelCandidateScore(element, features.rect, features), index);
     updateBest(
       "submit",
       getActionDirectiveCandidateScore(
@@ -2065,7 +2158,8 @@ export const getPreferredDirectiveIndexes = (
           allowFormSignals: true,
           shortTextPatterns: SUBMIT_SHORT_TEXT_PATTERNS
         },
-        features.rect
+        features.rect,
+        features
       ),
       index
     );
@@ -2077,7 +2171,8 @@ export const getPreferredDirectiveIndexes = (
         {
           shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
         },
-        features.rect
+        features.rect,
+        features
       ),
       index
     );
@@ -2089,7 +2184,8 @@ export const getPreferredDirectiveIndexes = (
         {
           shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
         },
-        features.rect
+        features.rect,
+        features
       ),
       index
     );
@@ -2124,19 +2220,23 @@ export const getAttachEquivalentIndexes = (
     return [attachIndex];
   }
 
-  return elements.flatMap((element, index) => {
+  const equivalentIndexes: number[] = [];
+
+  elements.forEach((element, index) => {
     const score = getAttachCandidateScore(element);
     if (score === Number.NEGATIVE_INFINITY) {
-      return [];
+      return;
     }
 
     const rect = getMarkerRect(element);
     if (!rect || getRectOverlapRatio(attachRect, rect) < 0.7) {
-      return [];
+      return;
     }
 
-    return [index];
+    equivalentIndexes.push(index);
   });
+
+  return equivalentIndexes;
 };
 
 export const getStronglyOverlappingHintIndexes = (
@@ -2154,16 +2254,65 @@ export const getStronglyOverlappingHintIndexes = (
     return [targetIndex];
   }
 
-  return elements.flatMap((element, index) => {
+  const overlappingIndexes: number[] = [];
+
+  elements.forEach((element, index) => {
     const rect = getMarkerRect(element);
     if (
       !rect ||
       (getRectOverlapRatio(targetRect, rect) < minimumOverlapRatio &&
         !isRectCenterNearTarget(targetRect, rect))
     ) {
-      return [];
+      return;
     }
 
-    return [index];
+    overlappingIndexes.push(index);
   });
+
+  return overlappingIndexes;
+};
+
+export const getSuppressedAttachRelatedHintIndexes = (
+  elements: HTMLElement[],
+  attachIndex: number,
+  reservedDirectivesByIndex: ReadonlyMap<number, HintDirective>
+): Set<number> => {
+  const suppressedIndexes = new Set<number>();
+  const attachElement = elements[attachIndex];
+
+  if (!attachElement) {
+    return suppressedIndexes;
+  }
+
+  const attachRect = getMarkerRect(attachElement);
+  if (!attachRect) {
+    return suppressedIndexes;
+  }
+
+  elements.forEach((element, index) => {
+    if (index === attachIndex) {
+      return;
+    }
+
+    const rect = getMarkerRect(element);
+    if (!rect) {
+      return;
+    }
+
+    const overlapRatio = getRectOverlapRatio(attachRect, rect);
+
+    if (getAttachCandidateScore(element) !== Number.NEGATIVE_INFINITY && overlapRatio >= 0.7) {
+      suppressedIndexes.add(index);
+      return;
+    }
+
+    if (
+      !reservedDirectivesByIndex.has(index) &&
+      (overlapRatio >= 0.35 || isRectCenterNearTarget(attachRect, rect))
+    ) {
+      suppressedIndexes.add(index);
+    }
+  });
+
+  return suppressedIndexes;
 };

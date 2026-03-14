@@ -1,6 +1,5 @@
 import {
-  getAttachEquivalentIndexes,
-  getStronglyOverlappingHintIndexes,
+  getSuppressedAttachRelatedHintIndexes,
   getHintableElements
 } from "~/src/core/utils/hints/hint-recognition";
 import type { LinkMode } from "~/src/core/utils/hints/hint-recognition";
@@ -46,19 +45,7 @@ const getSuppressedHintIndexes = (
     return suppressedIndexes;
   }
 
-  for (const index of getAttachEquivalentIndexes(elements, attachIndex)) {
-    if (index !== attachIndex) {
-      suppressedIndexes.add(index);
-    }
-  }
-
-  for (const index of getStronglyOverlappingHintIndexes(elements, attachIndex)) {
-    if (index !== attachIndex && !reservedDirectivesByIndex.has(index)) {
-      suppressedIndexes.add(index);
-    }
-  }
-
-  return suppressedIndexes;
+  return getSuppressedAttachRelatedHintIndexes(elements, attachIndex, reservedDirectivesByIndex);
 };
 
 export const assignHintLabels = (
