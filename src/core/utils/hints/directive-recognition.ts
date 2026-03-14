@@ -41,6 +41,14 @@ const ATTACH_EXACT_CONTROL_PATTERNS = [
   /\bupload files?\b/i
 ];
 const ATTACH_FILE_TYPE_PATTERNS = [/\bimage\b/i, /\bphoto\b/i, /\bmedia\b/i];
+const SHARE_ATTRIBUTE_PATTERNS = [
+  /\bshare\b/i,
+  /\brepost\b/i,
+  /\breshare\b/i,
+  /\bforward\b/i,
+  /\bcopy\b.*\blink\b/i
+];
+const SHARE_SHORT_TEXT_PATTERNS = [/^share$/i, /^repost$/i, /^forward$/i];
 
 const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
 const SIDEBAR_ATTRIBUTE_PATTERNS = [
@@ -1365,6 +1373,11 @@ export const getPreferredSubmitElementIndex = (elements: HTMLElement[]): number 
     shortTextPatterns: SUBMIT_SHORT_TEXT_PATTERNS
   });
 
+export const getPreferredShareElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, SHARE_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: SHARE_SHORT_TEXT_PATTERNS
+  });
+
 export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, LIKE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
@@ -1385,6 +1398,20 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
     directive: "attach",
     threshold: 220,
     getScore: (element, rect, features) => getAttachCandidateScore(element, rect, features)
+  },
+  {
+    directive: "share",
+    threshold: 220,
+    getScore: (element, rect, features) =>
+      getActionDirectiveCandidateScore(
+        element,
+        SHARE_ATTRIBUTE_PATTERNS,
+        {
+          shortTextPatterns: SHARE_SHORT_TEXT_PATTERNS
+        },
+        rect,
+        features
+      )
   },
   {
     directive: "home",
@@ -1454,6 +1481,7 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
 const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   input: 180,
   attach: 220,
+  share: 220,
   home: 180,
   sidebar: 220,
   next: 200,

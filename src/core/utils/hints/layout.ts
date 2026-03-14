@@ -42,6 +42,7 @@ const DIRECTIVE_LAYOUT_PRIORITIES: Partial<Record<ReservedHintDirective, number>
   input: 90,
   submit: 80,
   cancel: 70,
+  share: 65,
   next: 60,
   prev: 60,
   home: 50,

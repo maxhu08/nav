@@ -9,6 +9,7 @@ import {
   HINT_LIKE_ICON_PATH,
   HINT_NEXT_ICON_PATH,
   HINT_PREV_ICON_PATH,
+  HINT_SHARE_ICON_PATH,
   HINT_SIDEBAR_ICON_PATH,
   HINT_SUBMIT_ICON_PATH,
   WATCH_PLAY_ICON_PATH
@@ -139,6 +140,8 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_INPUT_ICON_PATH);
   } else if (directive === "attach") {
     appendMarkerIcon(marker, HINT_ATTACH_ICON_PATH);
+  } else if (directive === "share") {
+    appendMarkerIcon(marker, HINT_SHARE_ICON_PATH);
   } else if (directive === "home") {
     appendMarkerIcon(marker, HINT_HOME_ICON_PATH);
   } else if (directive === "sidebar") {

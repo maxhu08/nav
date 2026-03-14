@@ -15,6 +15,14 @@ export const hintDirectiveCases: HintDirectiveCases = {
     ],
     ignored: ["<button>Other</button>"]
   },
+  share: {
+    desc: "detects share",
+    recognizes: [
+      "<button aria-label='Share this post'>Share</button>",
+      "<button data-testid='repost-button' title='Repost'>Repost</button>"
+    ],
+    ignored: ["<button>Other</button>"]
+  },
   home: {
     desc: "detects home",
     recognizes: ["<a href='/' rel='home'>Home</a>"],
