@@ -47,6 +47,7 @@ import { type ActionName } from "~/src/utils/hotkeys";
 type ActionHandler = (count?: number) => boolean;
 type CoreMode = "normal" | "find" | "watch";
 const HINT_EXIT_KEY_GRACE_MS = 180;
+const IS_NAV_DEBUG_ENABLED = process.env.NAV_DEV === "true";
 
 const FRAME_PROXY_ACTIONS = new Set<ActionName>([
   "watch-mode",
@@ -575,6 +576,11 @@ export const initCoreNavigation = (): void => {
   }
 
   isInitialized = true;
+  if (IS_NAV_DEBUG_ENABLED) {
+    void import("~/src/core/utils/nav-debug").then(({ installNavDebugApi }) => {
+      installNavDebugApi();
+    });
+  }
   installScrollTracking();
   const onOptionsPage = isOptionsPage();
 

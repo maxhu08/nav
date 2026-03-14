@@ -25,6 +25,7 @@ const DIST_CORE_DIR = resolve(DIST_DIR, "core");
 const ENTRY_FILES = [
   resolve(ROOT, "src", "background.ts"),
   resolve(ROOT, "src", "core", "index.ts"),
+  resolve(ROOT, "src", "core", "debug-main.ts"),
   resolve(ROOT, "src", "popup.html"),
   resolve(ROOT, "src", "options.html"),
   resolve(ROOT, "src", "docs.html")
@@ -144,8 +145,8 @@ async function main() {
       clean();
       ensureDist();
       syncStaticFiles();
-      writeManifest(target);
-      runParcel("watch");
+      writeManifest(target, readVersion(), undefined, true);
+      runParcel("watch", true);
       return;
     case "build":
       clean();
@@ -154,6 +155,7 @@ async function main() {
     case "package":
       clean();
       buildBundle(target);
+      pruneDevOnlyBuildArtifacts();
       packageBundle(target);
       return;
     case "rc": {
@@ -162,6 +164,7 @@ async function main() {
 
       clean();
       buildBundle(target, release.baseVersion);
+      pruneDevOnlyBuildArtifacts();
       annotateRcBuild(target, release.rcVersion);
       packageBundle(target, {
         packageVersion: release.rcVersion,
@@ -204,10 +207,10 @@ function clean() {
 
 function buildBundle(target: BrowserTarget, version = readVersion()) {
   ensureDist();
-  runParcel("build");
+  runParcel("build", false);
   flattenDistCoreDirectory();
   syncStaticFiles();
-  writeManifest(target, version);
+  writeManifest(target, version, undefined, false);
 }
 
 function ensureDist() {
@@ -232,22 +235,45 @@ function flattenDistCoreDirectory() {
   rmSync(DIST_CORE_DIR, { force: true, recursive: true });
 }
 
-function writeManifest(target: BrowserTarget, version = readVersion(), versionName?: string) {
-  const manifest = {
-    ...MANIFESTS[target],
+function writeManifest(
+  target: BrowserTarget,
+  version = readVersion(),
+  versionName?: string,
+  isDev = false
+) {
+  const manifest = structuredClone(MANIFESTS[target]);
+
+  if (isDev && target === "chrome") {
+    const contentScripts = manifest.content_scripts as Array<Record<string, unknown>>;
+    contentScripts.push({
+      matches: ["<all_urls>"],
+      js: ["debug-main.js"],
+      run_at: "document_start",
+      all_frames: true,
+      match_about_blank: true,
+      world: "MAIN"
+    });
+  }
+
+  const withVersion = {
+    ...manifest,
     version,
     ...(versionName ? { version_name: versionName } : {})
   };
 
-  writeFileSync(resolve(DIST_DIR, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  writeFileSync(resolve(DIST_DIR, "manifest.json"), `${JSON.stringify(withVersion, null, 2)}\n`);
 }
 
 function readVersion() {
   return readFileSync(VERSION_FILE, "utf8").trim();
 }
 
-function runParcel(mode: "build" | "watch") {
+function runParcel(mode: "build" | "watch", isDev: boolean) {
   const args = ["x", "parcel"];
+  const env = {
+    ...process.env,
+    NAV_DEV: isDev ? "true" : "false"
+  };
 
   if (mode === "build") {
     args.push(
@@ -258,7 +284,7 @@ function runParcel(mode: "build" | "watch") {
       "--no-source-maps",
       "--no-content-hash"
     );
-    runCommand(process.execPath, args);
+    runCommand(process.execPath, args, ROOT, env);
     return;
   }
 
@@ -266,7 +292,7 @@ function runParcel(mode: "build" | "watch") {
   const flattenInterval = setInterval(() => {
     flattenDistCoreDirectory();
   }, 100);
-  const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit" });
+  const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit", env });
 
   child.on("exit", (code) => {
     clearInterval(flattenInterval);
@@ -307,6 +333,22 @@ function packageBundle(
   console.log(`Build complete\nExtension: ${packageDir}\nZip: ${zipPath}`);
 }
 
+function pruneDevOnlyBuildArtifacts() {
+  if (!existsSync(DIST_DIR)) {
+    return;
+  }
+
+  for (const entry of readdirSync(DIST_DIR)) {
+    if (/^nav-debug\..+\.js$/.test(entry)) {
+      rmSync(resolve(DIST_DIR, entry), { force: true });
+    }
+
+    if (/^debug-main(?:\..+)?\.js$/.test(entry)) {
+      rmSync(resolve(DIST_DIR, entry), { force: true });
+    }
+  }
+}
+
 function packageSource() {
   const version = readVersion();
   const zipPath = resolve(OUTPUT_DIR, `nav-v${version}-source.zip`);
@@ -334,10 +376,16 @@ function packageSource() {
   console.log(`Source package complete\nZip: ${zipPath}`);
 }
 
-function runCommand(command: string, args: string[], cwd = ROOT) {
+function runCommand(
+  command: string,
+  args: string[],
+  cwd = ROOT,
+  env: NodeJS.ProcessEnv = process.env
+) {
   const result = spawnSync(command, args, {
     cwd,
-    stdio: "inherit"
+    stdio: "inherit",
+    env
   });
 
   if (result.status !== 0) {

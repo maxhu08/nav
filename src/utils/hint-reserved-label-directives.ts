@@ -12,6 +12,7 @@ export const RESERVED_HINT_DIRECTIVES = [
 ] as const;
 
 export type ReservedHintDirective = (typeof RESERVED_HINT_DIRECTIVES)[number];
+export type ReservedHintLabels = Record<ReservedHintDirective, string[]>;
 
 export const RESERVED_HINT_DIRECTIVE_LINE_PATTERN = /^@([a-z]+) ([a-z]+(?: [a-z]+)*)$/i;
 
@@ -70,6 +71,51 @@ export const parsePreferredLabelsValue = (value: string): string[] => {
   }
 
   return normalizedLabels;
+};
+
+export const createEmptyReservedHintLabels = (): ReservedHintLabels => {
+  const reservedHintLabels = {} as ReservedHintLabels;
+
+  for (const directive of RESERVED_HINT_DIRECTIVES) {
+    reservedHintLabels[directive] = [];
+  }
+
+  return reservedHintLabels;
+};
+
+const cloneLabelList = (value: string[] | undefined): string[] => {
+  return Array.isArray(value) ? [...value] : [];
+};
+
+export const normalizeReservedHintLabels = (
+  value: Partial<Record<ReservedHintDirective, string[]>>,
+  fallback: Partial<Record<ReservedHintDirective, string[]>> = {}
+): ReservedHintLabels => {
+  const reservedHintLabels = createEmptyReservedHintLabels();
+
+  for (const directive of RESERVED_HINT_DIRECTIVES) {
+    reservedHintLabels[directive] =
+      value[directive] !== undefined
+        ? cloneLabelList(value[directive])
+        : cloneLabelList(fallback[directive]);
+  }
+
+  return reservedHintLabels;
+};
+
+export const isReservedHintLabelsShapeValid = (value: unknown): value is ReservedHintLabels => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  for (const directive of RESERVED_HINT_DIRECTIVES) {
+    if (!Array.isArray(record[directive])) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 export const parseReservedHintDirectives = (

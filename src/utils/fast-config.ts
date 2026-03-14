@@ -14,7 +14,12 @@ import {
   isActionName,
   parseHotkeyMappingsValue
 } from "~/src/utils/hotkeys";
-import { parseReservedHintDirectives } from "~/src/utils/hint-reserved-label-directives";
+import {
+  type ReservedHintLabels,
+  isReservedHintLabelsShapeValid,
+  normalizeReservedHintLabels,
+  parseReservedHintDirectives
+} from "~/src/utils/hint-reserved-label-directives";
 
 export type FastRule = {
   pattern: string;
@@ -44,18 +49,7 @@ export type FastConfig = {
     css: string;
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
-    reservedLabels: {
-      input: string[];
-      attach: string[];
-      home: string[];
-      sidebar: string[];
-      next: string[];
-      prev: string[];
-      cancel: string[];
-      submit: string[];
-      like: string[];
-      dislike: string[];
-    };
+    reservedLabels: ReservedHintLabels;
   };
 };
 
@@ -84,25 +78,6 @@ const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => 
   return true;
 };
 
-const isReservedLabelsShapeValid = (
-  value: unknown
-): value is FastConfig["hints"]["reservedLabels"] => {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    Array.isArray((value as Record<string, unknown>).input) &&
-    Array.isArray((value as Record<string, unknown>).attach) &&
-    Array.isArray((value as Record<string, unknown>).home) &&
-    Array.isArray((value as Record<string, unknown>).sidebar) &&
-    Array.isArray((value as Record<string, unknown>).next) &&
-    Array.isArray((value as Record<string, unknown>).prev) &&
-    Array.isArray((value as Record<string, unknown>).cancel) &&
-    Array.isArray((value as Record<string, unknown>).submit) &&
-    Array.isArray((value as Record<string, unknown>).like) &&
-    Array.isArray((value as Record<string, unknown>).dislike)
-  );
-};
-
 const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastConfig => {
   return (
     typeof value?.rules?.forceNormalMode === "boolean" &&
@@ -118,7 +93,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
     value?.hints?.avoidAdjacentPairs !== null &&
-    isReservedLabelsShapeValid(value?.hints?.reservedLabels)
+    isReservedHintLabelsShapeValid(value?.hints?.reservedLabels)
   );
 };
 
@@ -214,18 +189,7 @@ const parseAvoidAdjacentPairsValue = (
 const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedLabels"] => {
   const result = parseReservedHintDirectives(value);
   const fallbackResult = parseReservedHintDirectives(DEFAULT_HINT_RESERVED_LABELS);
-  return {
-    input: result.input ?? fallbackResult.input ?? [],
-    attach: result.attach ?? fallbackResult.attach ?? [],
-    home: result.home ?? fallbackResult.home ?? [],
-    sidebar: result.sidebar ?? fallbackResult.sidebar ?? [],
-    next: result.next ?? fallbackResult.next ?? [],
-    prev: result.prev ?? fallbackResult.prev ?? [],
-    cancel: result.cancel ?? fallbackResult.cancel ?? [],
-    submit: result.submit ?? fallbackResult.submit ?? [],
-    like: result.like ?? fallbackResult.like ?? [],
-    dislike: result.dislike ?? fallbackResult.dislike ?? []
-  };
+  return normalizeReservedHintLabels(result, fallbackResult);
 };
 
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {

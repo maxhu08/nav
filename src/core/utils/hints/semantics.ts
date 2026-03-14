@@ -1,6 +1,7 @@
 import { getPreferredDirectiveIndexes } from "~/src/core/utils/hints/hint-recognition";
 import { doesLabelConflictWithReservedLabels } from "~/src/core/utils/hints/labels";
 import type { ReservedHintDirective, ReservedHintLabels } from "~/src/core/utils/hints/types";
+import { RESERVED_HINT_DIRECTIVES } from "~/src/utils/hint-reserved-label-directives";
 
 const RESERVED_LABEL_PATTERN = /^[a-z]+$/;
 
@@ -29,20 +30,7 @@ export const assignHintSemantics = (
   const preferredIndexes = getPreferredDirectiveIndexes(elements);
   const preferredLabelsByIndex = new Map<number, string>();
   const preferredDirectivesByIndex = new Map<number, ReservedHintDirective>();
-  const directiveOrder: ReservedHintDirective[] = [
-    "input",
-    "attach",
-    "home",
-    "sidebar",
-    "next",
-    "prev",
-    "cancel",
-    "submit",
-    "like",
-    "dislike"
-  ];
-
-  for (const directive of directiveOrder) {
+  for (const directive of RESERVED_HINT_DIRECTIVES) {
     const preferredIndex = preferredIndexes[directive];
     if (preferredIndex === null || preferredIndex === undefined) {
       continue;

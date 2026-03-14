@@ -1,6 +1,10 @@
 import { getExtensionNamespace } from "~/src/utils/extension-id";
 import { DEFAULT_HINT_CHARSET } from "~/src/utils/hotkeys";
 import {
+  createEmptyReservedHintLabels,
+  normalizeReservedHintLabels
+} from "~/src/utils/hint-reserved-label-directives";
+import {
   getDeepActiveElement,
   isEditableElement,
   isSelectableElement
@@ -59,18 +63,7 @@ const BLURRING_INPUT_TYPES = new Set([
 let hintAlphabet = DEFAULT_HINT_CHARSET;
 let reservedHintPrefixes = new Set<string>();
 let avoidedAdjacentHintPairs: AdjacentHintPairs = {};
-let reservedHintLabels: ReservedHintLabels = {
-  input: [],
-  attach: [],
-  home: [],
-  sidebar: [],
-  next: [],
-  prev: [],
-  cancel: [],
-  submit: [],
-  like: [],
-  dislike: []
-};
+let reservedHintLabels: ReservedHintLabels = createEmptyReservedHintLabels();
 let minHintLabelLength = 2;
 let showCapitalizedLetters = true;
 let highlightThumbnails = false;
@@ -484,18 +477,7 @@ export const setAvoidedAdjacentHintPairs = (pairs: AdjacentHintPairs): void => {
 };
 
 export const setReservedHintLabels = (labels: ReservedHintLabels): void => {
-  reservedHintLabels = {
-    input: [...labels.input],
-    attach: [...labels.attach],
-    home: [...labels.home],
-    sidebar: [...labels.sidebar],
-    next: [...labels.next],
-    prev: [...labels.prev],
-    cancel: [...labels.cancel],
-    submit: [...labels.submit],
-    like: [...labels.like],
-    dislike: [...labels.dislike]
-  };
+  reservedHintLabels = normalizeReservedHintLabels(labels);
 
   if (hintState.active) {
     exitHints();

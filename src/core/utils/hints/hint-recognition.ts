@@ -1,4 +1,5 @@
 import { getDeepActiveElement, isSelectableElement } from "~/src/core/utils/is-editable-target";
+import type { ReservedHintDirective as HintDirective } from "~/src/utils/hint-reserved-label-directives";
 
 export type LinkMode = "current-tab" | "new-tab" | "copy-link" | "copy-image";
 
@@ -1522,18 +1523,6 @@ export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number
   getPreferredActionDirectiveElementIndex(elements, DISLIKE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
   });
-
-type HintDirective =
-  | "input"
-  | "attach"
-  | "home"
-  | "sidebar"
-  | "next"
-  | "prev"
-  | "cancel"
-  | "submit"
-  | "like"
-  | "dislike";
 
 type ElementFeatureVector = {
   rect: DOMRect | null;

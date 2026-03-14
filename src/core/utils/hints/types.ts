@@ -1,20 +1,14 @@
 import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/hint-recognition";
+import type {
+  ReservedHintDirective,
+  ReservedHintLabels
+} from "~/src/utils/hint-reserved-label-directives";
+export type {
+  ReservedHintDirective,
+  ReservedHintLabels
+} from "~/src/utils/hint-reserved-label-directives";
 
 export type AdjacentHintPairs = Partial<Record<string, Partial<Record<string, true>>>>;
-
-export type ReservedHintLabels = {
-  input: string[];
-  attach: string[];
-  home: string[];
-  sidebar: string[];
-  next: string[];
-  prev: string[];
-  cancel: string[];
-  submit: string[];
-  like: string[];
-  dislike: string[];
-};
-export type ReservedHintDirective = keyof ReservedHintLabels;
 
 export type HintMarker = {
   element: HTMLElement;
