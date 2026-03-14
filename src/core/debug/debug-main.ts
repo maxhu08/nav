@@ -1,7 +1,8 @@
 import {
   NAV_DEBUG_HINT_TARGET_REQUEST_EVENT,
   NAV_DEBUG_HINT_TARGET_RESPONSE_EVENT
-} from "~/src/core/utils/debug/events";
+} from "~/src/core/debug/events";
+import { installNavDebugApi } from "~/src/core/debug/nav-debug";
 
 type NavDebugApi = {
   hintTarget: (selector: string) => Promise<unknown>;
@@ -46,6 +47,8 @@ const requestDebug = (requestEventName: string, responseEventName: string, selec
     }, 1200);
   });
 };
+
+installNavDebugApi();
 
 window.navDebug = {
   hintTarget: (selector: string) =>

@@ -50,4 +50,24 @@ describe("hints", () => {
       fixture.cleanup();
     }
   });
+
+  test("prefers the ChatGPT close sidebar button for @sidebar", () => {
+    const fixture = createDomFixture(
+      "<div id='sidebar-header' class='h-header-height flex items-center justify-between'><a data-sidebar-item='true' aria-label='Home' class='text-token-text-primary no-draggable hover:bg-token-surface-hover keyboard-focused:bg-token-surface-hover touch:h-10 touch:w-10 flex h-9 w-9 items-center justify-center rounded-lg focus:outline-none disabled:opacity-50' href='/' data-discover='true'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon-lg'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#55180d' fill='currentColor'></use></svg></a><div class='flex'><button class='text-token-text-tertiary no-draggable hover:bg-token-surface-hover keyboard-focused:bg-token-surface-hover touch:h-10 touch:w-10 flex h-9 w-9 items-center justify-center rounded-lg focus:outline-none disabled:opacity-50 no-draggable cursor-w-resize rtl:cursor-e-resize' aria-expanded='true' aria-controls='stage-slideover-sidebar' aria-label='Close sidebar' data-testid='close-sidebar-button' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' data-rtl-flip='' class='icon max-md:hidden'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#836f7a' fill='currentColor'></use></svg><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon md:hidden'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#85f94b' fill='currentColor'></use></svg></button></div></div>"
+    );
+
+    try {
+      const elements = getHintableElements("current-tab");
+      const directives = getPreferredDirectiveIndexes(elements);
+      const sidebarIndex = directives.sidebar;
+
+      expect(sidebarIndex).not.toBeUndefined();
+      expect(sidebarIndex).not.toBeNull();
+      expect(elements[sidebarIndex as number]?.getAttribute("data-testid")).toBe(
+        "close-sidebar-button"
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

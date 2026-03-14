@@ -22,10 +22,11 @@ const OUTPUT_DIR = resolve(ROOT, "output");
 const SRC_DIR = resolve(ROOT, "src");
 const STATIC_DIR = resolve(SRC_DIR, "static");
 const DIST_CORE_DIR = resolve(DIST_DIR, "core");
+const DEBUG_MAIN_BUNDLE_PATH = "debug/debug-main.js";
 const ENTRY_FILES = [
   resolve(ROOT, "src", "background.ts"),
   resolve(ROOT, "src", "core", "index.ts"),
-  resolve(ROOT, "src", "core", "utils", "debug", "debug-main.ts"),
+  resolve(ROOT, "src", "core", "debug", "debug-main.ts"),
   resolve(ROOT, "src", "popup.html"),
   resolve(ROOT, "src", "options.html"),
   resolve(ROOT, "src", "docs.html")
@@ -247,7 +248,7 @@ function writeManifest(
     const contentScripts = manifest.content_scripts as Array<Record<string, unknown>>;
     contentScripts.push({
       matches: ["<all_urls>"],
-      js: ["debug-main.js"],
+      js: [DEBUG_MAIN_BUNDLE_PATH],
       run_at: "document_start",
       all_frames: true,
       match_about_blank: true,
@@ -337,6 +338,8 @@ function pruneDevOnlyBuildArtifacts() {
   if (!existsSync(DIST_DIR)) {
     return;
   }
+
+  rmSync(resolve(DIST_DIR, "debug"), { force: true, recursive: true });
 
   for (const entry of readdirSync(DIST_DIR)) {
     if (/^nav-debug\..+\.js$/.test(entry)) {

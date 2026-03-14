@@ -777,6 +777,22 @@ const SIDEBAR_ATTRIBUTE_PATTERNS = [
   /\bdrawer\b/i
 ];
 const SIDEBAR_CONTAINER_PATTERNS = [/\bsidebar\b/i, /\bside-nav\b/i, /\bsidenav\b/i, /\bdrawer\b/i];
+const SIDEBAR_OPEN_CLOSE_PATTERNS = [
+  /\bopen\s+sidebar\b/i,
+  /\bclose\s+sidebar\b/i,
+  /\bopen\s+drawer\b/i,
+  /\bclose\s+drawer\b/i,
+  /\bcollapse\b.*\bsidebar\b/i,
+  /\bexpand\b.*\bsidebar\b/i,
+  /\bclose-sidebar-button\b/i,
+  /\bopen-sidebar-button\b/i
+];
+const SIDEBAR_NON_NAVIGATION_PATTERNS = [
+  /\bprofile\b/i,
+  /\baccount\b/i,
+  /\buser\b/i,
+  /\bavatar\b/i
+];
 const SIDEBAR_TOGGLE_PATTERNS = [
   /\bguide\b/i,
   /\bguide-button\b/i,
@@ -1266,6 +1282,19 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
     [textContent]
   );
   const controlsSignalScore = getSidebarControlsSignalScore(element);
+  const hasSidebarAttributeSignal = textMatchesAnyPattern(
+    attributeText,
+    SIDEBAR_ATTRIBUTE_PATTERNS
+  );
+  const hasSidebarToggleSignal = textMatchesAnyPattern(attributeText, SIDEBAR_TOGGLE_PATTERNS);
+  const hasNonNavigationMenuSignal = textMatchesAnyPattern(
+    attributeText,
+    SIDEBAR_NON_NAVIGATION_PATTERNS
+  );
+
+  if (hasNonNavigationMenuSignal && controlsSignalScore === 0 && !hasSidebarAttributeSignal) {
+    return Number.NEGATIVE_INFINITY;
+  }
 
   score += controlsSignalScore;
   if (controlsSignalScore > 0) {
@@ -1284,8 +1313,13 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
     score += 20;
   }
 
-  if (textMatchesAnyPattern(attributeText, SIDEBAR_ATTRIBUTE_PATTERNS)) {
+  if (hasSidebarAttributeSignal) {
     score += 220;
+    hasStrongSignal = true;
+  }
+
+  if (textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)) {
+    score += 320;
     hasStrongSignal = true;
   }
 
@@ -1294,7 +1328,7 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
     hasStrongSignal = true;
   }
 
-  if (textMatchesAnyPattern(attributeText, SIDEBAR_TOGGLE_PATTERNS)) {
+  if (hasSidebarToggleSignal) {
     score += 260;
     hasStrongSignal = true;
   }
@@ -1309,6 +1343,10 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
 
   if (element.hasAttribute("aria-expanded")) {
     score += 70;
+
+    if (element.getAttribute("aria-expanded") === "true" && controlsSignalScore > 0) {
+      score += 180;
+    }
   }
 
   if (element.hasAttribute("aria-haspopup")) {
@@ -1319,7 +1357,7 @@ const getSidebarCandidateScore = (element: HTMLElement, rectOverride?: DOMRect |
     score += 40;
   }
 
-  if (!hasStrongSignal && score < 220) {
+  if (!hasStrongSignal) {
     return Number.NEGATIVE_INFINITY;
   }
 
@@ -1355,6 +1393,43 @@ export const getPreferredSidebarElementIndex = (elements: HTMLElement[]): number
   });
 
   return bestIndex;
+};
+
+const getCancelCandidateScore = (element: HTMLElement, rectOverride?: DOMRect | null): number => {
+  const score = getActionDirectiveCandidateScore(
+    element,
+    CANCEL_ATTRIBUTE_PATTERNS,
+    {
+      boostDialogContext: true,
+      shortTextPatterns: CANCEL_SHORT_TEXT_PATTERNS
+    },
+    rectOverride
+  );
+
+  if (score === Number.NEGATIVE_INFINITY) {
+    return score;
+  }
+
+  const attributeText = getJoinedAttributeText(element, [
+    "name",
+    "id",
+    "aria-label",
+    "data-testid",
+    "data-test-id",
+    "role",
+    "title",
+    "class",
+    "type"
+  ]);
+
+  if (
+    textMatchesAnyPattern(attributeText, SIDEBAR_CONTAINER_PATTERNS) ||
+    getSidebarControlsSignalScore(element) > 0
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  return score;
 };
 
 const getActionDirectiveCandidateScore = (
@@ -1513,10 +1588,21 @@ export const getPreferredPrevElementIndex = (elements: HTMLElement[]): number | 
   });
 
 export const getPreferredCancelElementIndex = (elements: HTMLElement[]): number | null =>
-  getPreferredActionDirectiveElementIndex(elements, CANCEL_ATTRIBUTE_PATTERNS, 220, {
-    boostDialogContext: true,
-    shortTextPatterns: CANCEL_SHORT_TEXT_PATTERNS
-  });
+  (() => {
+    let bestIndex: number | null = null;
+    let bestScore = 220;
+
+    elements.forEach((element, index) => {
+      const score = getCancelCandidateScore(element);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
+  })();
 
 export const getPreferredSubmitElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, SUBMIT_ATTRIBUTE_PATTERNS, 220, {
@@ -1626,19 +1712,7 @@ export const getPreferredDirectiveIndexes = (
       ),
       index
     );
-    updateBest(
-      "cancel",
-      getActionDirectiveCandidateScore(
-        element,
-        CANCEL_ATTRIBUTE_PATTERNS,
-        {
-          boostDialogContext: true,
-          shortTextPatterns: CANCEL_SHORT_TEXT_PATTERNS
-        },
-        features.rect
-      ),
-      index
-    );
+    updateBest("cancel", getCancelCandidateScore(element, features.rect), index);
     updateBest(
       "submit",
       getActionDirectiveCandidateScore(

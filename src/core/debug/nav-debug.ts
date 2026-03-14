@@ -6,7 +6,7 @@ import {
 import {
   NAV_DEBUG_HINT_TARGET_REQUEST_EVENT,
   NAV_DEBUG_HINT_TARGET_RESPONSE_EVENT
-} from "~/src/core/utils/debug/events";
+} from "~/src/core/debug/events";
 import { RESERVED_HINT_DIRECTIVES } from "~/src/utils/hint-reserved-label-directives";
 
 type NavDebugRequestDetail = {
