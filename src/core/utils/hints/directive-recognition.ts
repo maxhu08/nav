@@ -114,6 +114,37 @@ const LIKE_ATTRIBUTE_PATTERNS = [/\blike\b/i, /\bupvote\b/i, /\bthumb[-_ ]?up\b/
 const LIKE_SHORT_TEXT_PATTERNS = [/^like$/i];
 const DISLIKE_ATTRIBUTE_PATTERNS = [/\bdislike\b/i, /\bdownvote\b/i, /\bthumb[-_ ]?down\b/i];
 const DISLIKE_SHORT_TEXT_PATTERNS = [/^dislike$/i];
+const REACTION_WRAPPER_SELECTOR = [
+  "like-button-view-model",
+  "dislike-button-view-model",
+  "toggle-button-view-model",
+  "button-view-model",
+  "[class*='segmented-start' i]",
+  "[class*='segmented-end' i]",
+  "[class*='likebutton' i]",
+  "[class*='dislikebutton' i]",
+  "[data-testid*='like' i]",
+  "[data-testid*='dislike' i]",
+  "[id*='like' i]",
+  "[id*='dislike' i]"
+].join(", ");
+const LIKE_STABLE_CONTROL_PATTERNS = [
+  /\bsegmented-start\b/i,
+  /\blike-button\b/i,
+  /\blikebutton\b/i,
+  /\blike-button-view-model\b/i,
+  /\bytlikebuttonviewmodelhost\b/i,
+  /\bthumb[-_ ]?up\b/i,
+  /\bupvote\b/i
+];
+const DISLIKE_STABLE_CONTROL_PATTERNS = [
+  /\bsegmented-end\b/i,
+  /\bdislike-button\b/i,
+  /\bdislikebutton\b/i,
+  /\bdislike-button-view-model\b/i,
+  /\bthumb[-_ ]?down\b/i,
+  /\bdownvote\b/i
+];
 
 const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
 const HOME_PATHS = new Set(["/", "/home", "/homepage", "/dashboard"]);
@@ -223,6 +254,51 @@ const getCachedClosest = (
 
 const textMatchesAnyPattern = (text: string, patterns: readonly RegExp[]): boolean =>
   patterns.some((pattern) => pattern.test(text));
+
+const getReactionControlAttributeText = (
+  element: HTMLElement,
+  features?: ElementFeatureVector
+): string =>
+  getCachedJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "data-test-id", "title", "class", "type"],
+    [element.tagName.toLowerCase()],
+    features
+  );
+
+const getReactionWrappers = (
+  element: HTMLElement,
+  features?: ElementFeatureVector
+): HTMLElement[] => {
+  const wrappers: HTMLElement[] = [];
+  let current = getCachedClosest(element, REACTION_WRAPPER_SELECTOR, features);
+
+  while (current instanceof HTMLElement) {
+    if (current !== element) {
+      wrappers.push(current);
+    }
+
+    current = current.parentElement?.closest(REACTION_WRAPPER_SELECTOR) ?? null;
+  }
+
+  return wrappers;
+};
+
+const getReactionSignalText = (element: HTMLElement, features?: ElementFeatureVector): string => {
+  const parts = [getReactionControlAttributeText(element, features)];
+
+  for (const wrapper of getReactionWrappers(element, features)) {
+    parts.push(
+      getJoinedAttributeText(
+        wrapper,
+        ["name", "id", "aria-label", "data-testid", "data-test-id", "title", "class", "type"],
+        [wrapper.tagName.toLowerCase()]
+      )
+    );
+  }
+
+  return parts.filter((part) => part.length > 0).join(" ");
+};
 
 const getNormalizedSameOriginPath = (href: string): string | null => {
   try {
@@ -984,6 +1060,121 @@ const getActionDirectiveCandidateScore = (
   return score;
 };
 
+const hasReactionSiblingSignal = (
+  element: HTMLElement,
+  siblingPatterns: readonly RegExp[],
+  features?: ElementFeatureVector
+): boolean => {
+  const candidateContainers = [
+    element.parentElement,
+    ...getReactionWrappers(element, features).map((wrapper) => wrapper.parentElement)
+  ].filter((container): container is HTMLElement => container instanceof HTMLElement);
+
+  return candidateContainers.some((parent) =>
+    Array.from(parent.children).some((sibling) => {
+      if (sibling === element || !(sibling instanceof HTMLElement)) {
+        return false;
+      }
+
+      const siblingText = getReactionSignalText(sibling);
+      return textMatchesAnyPattern(siblingText, siblingPatterns);
+    })
+  );
+};
+
+const getReactionDirectiveCandidateScore = (
+  element: HTMLElement,
+  controlPatterns: readonly RegExp[],
+  siblingPatterns: readonly RegExp[],
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  if (!isActivatableElement(element) || isSelectableElement(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = Number.NEGATIVE_INFINITY;
+  const attributeText = getReactionSignalText(element, features);
+  const hasStableSignal = textMatchesAnyPattern(attributeText, controlPatterns);
+  const hasSiblingSignal = hasReactionSiblingSignal(element, siblingPatterns, features);
+
+  if (!hasStableSignal && !hasSiblingSignal) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  score = 200;
+
+  if (hasStableSignal) {
+    score += 120;
+  }
+
+  if (hasSiblingSignal) {
+    score += 70;
+  }
+
+  if (element.hasAttribute("aria-pressed")) {
+    score += 20;
+  }
+
+  score += Math.min(120, rect.height) / 10;
+  score += Math.min(220, rect.width) / 12;
+
+  return score;
+};
+
+const getLikeCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number =>
+  Math.max(
+    getActionDirectiveCandidateScore(
+      element,
+      LIKE_ATTRIBUTE_PATTERNS,
+      {
+        shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
+      },
+      rectOverride,
+      features
+    ),
+    getReactionDirectiveCandidateScore(
+      element,
+      LIKE_STABLE_CONTROL_PATTERNS,
+      DISLIKE_STABLE_CONTROL_PATTERNS,
+      rectOverride,
+      features
+    )
+  );
+
+const getDislikeCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number =>
+  Math.max(
+    getActionDirectiveCandidateScore(
+      element,
+      DISLIKE_ATTRIBUTE_PATTERNS,
+      {
+        shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
+      },
+      rectOverride,
+      features
+    ),
+    getReactionDirectiveCandidateScore(
+      element,
+      DISLIKE_STABLE_CONTROL_PATTERNS,
+      LIKE_STABLE_CONTROL_PATTERNS,
+      rectOverride,
+      features
+    )
+  );
+
 const getCancelCandidateScore = (
   element: HTMLElement,
   rectOverride?: DOMRect | null,
@@ -1225,30 +1416,12 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
   {
     directive: "like",
     threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        LIKE_ATTRIBUTE_PATTERNS,
-        {
-          shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
+    getScore: (element, rect, features) => getLikeCandidateScore(element, rect, features)
   },
   {
     directive: "dislike",
     threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        DISLIKE_ATTRIBUTE_PATTERNS,
-        {
-          shortTextPatterns: DISLIKE_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
+    getScore: (element, rect, features) => getDislikeCandidateScore(element, rect, features)
   }
 ];
 
