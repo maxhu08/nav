@@ -89,4 +89,50 @@ describe("hint marker layout", () => {
       fixture.cleanup();
     }
   });
+
+  test("hides markers for targets that scrolled fully offscreen", () => {
+    const fixture = createDomFixture("<button id='target'>Open</button>");
+
+    try {
+      const target = document.querySelector("#target");
+      expect(target instanceof HTMLElement).toBe(true);
+
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const offscreenRect = new DOMRect(-120, 24, 80, 32);
+      target.getBoundingClientRect = (): DOMRect => offscreenRect;
+      target.getClientRects = (): DOMRectList => {
+        const list = [offscreenRect] as unknown as DOMRectList & DOMRect[];
+        list.item = (index: number): DOMRect | null => list[index] ?? null;
+        return list;
+      };
+
+      const marker = document.createElement("span");
+      const markerRect = createMarkerRect(40, 20);
+      marker.getBoundingClientRect = (): DOMRect => markerRect;
+      document.body.append(marker);
+
+      const hint: HintMarker = {
+        element: target,
+        marker,
+        thumbnailIcon: null,
+        label: "ab",
+        directive: null,
+        letters: [],
+        visible: true,
+        renderedTyped: "",
+        markerWidth: 0,
+        markerHeight: 0,
+        sizeDirty: true
+      };
+
+      updateMarkerPositions([hint], "current-tab", false, "data-nav-hint-marker-variant");
+
+      expect(marker.style.display).toBe("none");
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

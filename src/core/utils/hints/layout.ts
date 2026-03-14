@@ -91,6 +91,12 @@ const createPlacedMarkerRect = (
   bottom: top + height
 });
 
+const isRectWithinViewport = (rect: RectLike): boolean =>
+  rect.right > 0 &&
+  rect.bottom > 0 &&
+  rect.left < window.innerWidth &&
+  rect.top < window.innerHeight;
+
 const getRectArea = (rect: Pick<DOMRect, "width" | "height">): number =>
   Math.max(0, rect.width) * Math.max(0, rect.height);
 
@@ -620,7 +626,7 @@ export const primeMarkerPositions = (
   for (const hint of markers) {
     const targetRect = getMarkerRect(hint.element);
 
-    if (!targetRect) {
+    if (!targetRect || !isRectWithinViewport(targetRect)) {
       if (hint.marker.style.display !== "none") {
         hint.marker.style.display = "none";
       }
@@ -673,7 +679,7 @@ export const updateMarkerPositions = (
   for (const hint of markersByPlacementPriority) {
     const targetRect = getMarkerRect(hint.element);
 
-    if (!targetRect) {
+    if (!targetRect || !isRectWithinViewport(targetRect)) {
       if (hint.marker.style.display !== "none") {
         hint.marker.style.display = "none";
       }
@@ -691,6 +697,7 @@ export const updateMarkerPositions = (
       highlightThumbnails,
       markerVariantStyleAttribute
     );
+
     hint.marker.style.zIndex = `${1000 + getMarkerLayoutPriority(hint)}`;
     const candidates = getMarkerPlacementCandidates(
       anchorRect,
