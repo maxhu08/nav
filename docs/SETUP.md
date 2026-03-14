@@ -40,15 +40,27 @@ bun install
 
 - Dev build: `bun run dev` or `bun run dev:firefox`
 - Production builds: `bun run build:chrome`, `bun run build:firefox`
+- Windows Firefox build alias: `bun run build:firefox:windows`
 - Package zips: `bun run package:chrome`, `bun run package:firefox`
 - Release candidate packages: `bun run rc:chrome`, `bun run rc:firefox`
 - Source package zip: `bun run package:source`
 - Validate changes: `bun run check`
+- Run tests: `bun run test`
 - Format code: `bun run format`
 
 ## Load Extension Locally
 
-1. Open browser extension settings.
-2. Enable Developer Mode.
-3. Click "Load unpacked".
-4. Select the generated `dist/` directory.
+### Chromium-based browsers
+
+1. Run `bun run dev` or `bun run build:chrome`.
+2. Open the browser's extensions page.
+3. Enable Developer Mode.
+4. Click "Load unpacked".
+5. Select the generated `dist/` directory.
+
+### Firefox
+
+1. Run `bun run dev:firefox` or `bun run build:firefox`.
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Click "Load Temporary Add-on...".
+4. Choose `dist/manifest.json`.

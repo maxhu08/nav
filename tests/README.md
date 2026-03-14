@@ -5,6 +5,7 @@ This directory keeps hint tests data-driven.
 ## Rules
 
 - Do not add website-specific logic to `tests/hints.test.ts`.
+- Keep `tests/hint-layout.test.ts` focused on layout and collision behavior, not site-specific fixtures.
 - Put site-specific HTML, geometry, and hit-testing behavior in `tests/cases/hints.cases.ts`.
 - Keep every new case in the same standardized shape so future regressions can reuse the same runner.
 - Prefer shared cases over one-off test code.
@@ -63,6 +64,7 @@ Use `hintScenarioCases` for collection, dedupe, geometry, hit-testing, and label
 ## Files
 
 - `tests/hints.test.ts`: generic runner for directive and scenario cases
+- `tests/hint-layout.test.ts`: focused regression coverage for marker placement and collision handling
 - `tests/cases/hints.cases.ts`: all shared fixtures and expectations
 - `tests/types.ts`: reusable case shapes
 - `tests/helpers/dom-fixture.ts`: JSDOM and geometry stubs
@@ -70,5 +72,12 @@ Use `hintScenarioCases` for collection, dedupe, geometry, hit-testing, and label
 ## Run
 
 ```bash
+bun run test
+```
+
+Or run only one file while iterating:
+
+```bash
 bun test tests/hints.test.ts
+bun test tests/hint-layout.test.ts
 ```

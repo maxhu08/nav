@@ -17,10 +17,19 @@ Use this page as the fast entry point for contributors.
 - Package zip files: `bun run package:chrome` and `bun run package:firefox`
 - Build release candidate artifacts: `bun run rc:chrome` and `bun run rc:firefox`
 - Package the source tree: `bun run package:source`
+- Run tests: `bun run test`
 - Validate changes before committing: `bun run check`
 - Format code before committing: `bun run format`
 - Formatter is also enforced by the pre-commit hook with `oxfmt`.
 - Commit messages are also checked by `commitlint` in the `commit-msg` hook. See [Committing](./COMMITTING.md).
+
+## Reporting Hint or Directive Issues
+
+- If hint targeting, reserved labels, or directive behavior does not act as expected, write up the issue in a way that someone else can reproduce quickly.
+- Include the page URL or site name, what target you expected nav to choose, what it picked instead, and whether the problem is specific to `@input`, `@attach`, `@next`, `@prev`, or another directive.
+- If possible, include the relevant config values for `hints.reservedLabels`, `hints.charset`, `hints.minLabelLength`, and any matching `rules.urls.*` entries.
+- Add screenshots, DOM snippets, or steps to reproduce when the issue depends on layout, overlays, or hover-only controls.
+- Use [Issue Reporting](./ISSUE_REPORTING.md) for a copy-paste template.
 
 ## Scope Notes
 

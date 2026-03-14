@@ -5,9 +5,12 @@ Use this map to decide where new code should go.
 ## Main Directories
 
 - `src/core/`: shared navigation runtime, content script entry, and page interaction logic.
+- `src/background.ts`: background service worker for tab commands, frame messaging, and image fetch fallbacks.
 - `src/options/`: options page scripts and helpers.
 - `src/docs/`: docs page scripts.
 - `src/popup/`: extension popup implementation.
+- `src/lib/`: shared inline SVG/icon definitions used by runtime and extension pages.
+- `src/static/`: files copied directly into `dist/` during build.
 - `src/utils/`: shared config and reusable utilities.
 - `src/shared/`: CSS shared across extension pages.
 - `src/assets/`: extension icons and bundled assets.
@@ -67,11 +70,26 @@ Use this map to decide where new code should go.
 - Init script: `src/docs/scripts/init.ts`
 - The docs page is mostly static markup, but it also boots the shared core navigation runtime so hotkeys and hints behave the same there.
 
+## Popup and Background
+
+- Popup entry: `src/popup.html`
+- Popup scripts: `src/popup/`
+- The popup mainly opens the options page and can pass the active tab URL into the options flow for quick site exclusion/inclusion.
+- Background entry: `src/background.ts`
+- The background worker handles tab-management actions, cross-frame runtime bridge messages, and fallback image fetching for clipboard copy.
+
+## Debug Runtime
+
+- Dev-only main-world debug entry: `src/core/debug/debug-main.ts`
+- Supporting debug helpers: `src/core/debug/`
+- Chrome dev builds add this extra entry so the extension can inspect page-level keyboard/debug behavior without shipping it in production packages.
+
 ## Build Scripts
 
 - Task runner: `scripts/tasks.ts`
 - This file handles `clean`, `dev`, `build`, `package`, `rc`, and `source` tasks.
-- It generates manifests, runs Parcel, copies assets, and creates package artifacts.
+- It bundles `src/background.ts`, `src/core/index.ts`, `src/core/debug/debug-main.ts`, `src/popup.html`, `src/options.html`, and `src/docs.html`.
+- It generates manifests, runs Parcel, copies files from `src/static/`, and creates package artifacts.
 
 ## Useful Rule of Thumb
 
