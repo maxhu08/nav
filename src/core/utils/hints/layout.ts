@@ -36,10 +36,6 @@ type MarkerVisibilityScore = {
   clearPoints: number;
   occludedPoints: number;
 };
-type ViewportOccluder = {
-  element: HTMLElement;
-  rect: DOMRect;
-};
 
 const DIRECTIVE_LAYOUT_PRIORITIES: Partial<Record<ReservedHintDirective, number>> = {
   attach: 100,
@@ -162,7 +158,10 @@ const isImplicitThumbnailElement = (element: HTMLElement): boolean => {
 
 const collectUniqueThumbnailElements = (element: HTMLElement): HTMLElement[] => {
   const seen = new Set<HTMLElement>();
-  seen.add(element);
+
+  if (isImplicitThumbnailElement(element) || element.hasAttribute("data-thumbnail")) {
+    seen.add(element);
+  }
 
   for (const candidate of Array.from(element.querySelectorAll<HTMLElement>(THUMBNAIL_SELECTOR))) {
     seen.add(candidate);
@@ -461,59 +460,27 @@ const isPotentialOccludingElement = (element: Element): element is HTMLElement =
   return style.position === "fixed" || style.position === "sticky";
 };
 
-const collectViewportOccluders = (): ViewportOccluder[] => {
-  const seen = new Set<HTMLElement>();
-  const occluders: ViewportOccluder[] = [];
-  const sampleInset = 8;
-  const sampleColumns = Math.max(3, Math.min(8, Math.round(window.innerWidth / 240)));
-  const sampleRows = Math.max(3, Math.min(6, Math.round(window.innerHeight / 180)));
-  const xStep =
-    sampleColumns <= 1 ? 0 : (window.innerWidth - sampleInset * 2) / (sampleColumns - 1);
-  const yStep = sampleRows <= 1 ? 0 : (window.innerHeight - sampleInset * 2) / (sampleRows - 1);
-  const edgePoints: Array<[number, number]> = [];
+const isPointOccludedForThumbnailMarker = (target: HTMLElement, x: number, y: number): boolean => {
+  for (const element of getElementsAtPoint(x, y)) {
+    if (!(element instanceof HTMLElement)) {
+      continue;
+    }
 
-  for (let column = 0; column < sampleColumns; column += 1) {
-    const x = Math.round(sampleInset + column * xStep);
-    edgePoints.push([x, sampleInset]);
-    edgePoints.push([x, Math.max(sampleInset, window.innerHeight - sampleInset)]);
-  }
+    if (isComposedDescendant(target, element) || isComposedDescendant(element, target)) {
+      return false;
+    }
 
-  for (let row = 0; row < sampleRows; row += 1) {
-    const y = Math.round(sampleInset + row * yStep);
-    edgePoints.push([sampleInset, y]);
-    edgePoints.push([Math.max(sampleInset, window.innerWidth - sampleInset), y]);
-  }
-
-  for (const [x, y] of edgePoints) {
-    for (const element of getElementsAtPoint(x, y)) {
-      if (!(element instanceof HTMLElement) || seen.has(element)) {
-        continue;
-      }
-
-      if (!isPotentialOccludingElement(element)) {
-        continue;
-      }
-
-      const rect = element.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        continue;
-      }
-
-      seen.add(element);
-      occluders.push({ element, rect });
+    if (isPotentialOccludingElement(element)) {
+      return true;
     }
   }
 
-  return occluders;
+  return false;
 };
-
-const isPointInsideRect = (x: number, y: number, rect: RectLike): boolean =>
-  x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 
 const getMarkerVisibilityScore = (
   target: HTMLElement,
-  rect: PlacedMarkerRect,
-  occluders: readonly ViewportOccluder[]
+  rect: PlacedMarkerRect
 ): MarkerVisibilityScore => {
   const points: Array<[number, number]> = [
     [(rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2],
@@ -532,14 +499,7 @@ const getMarkerVisibilityScore = (
   };
 
   for (const [x, y] of points) {
-    if (
-      occluders.some(
-        ({ element, rect: occluderRect }) =>
-          !isComposedDescendant(target, element) &&
-          !isComposedDescendant(element, target) &&
-          isPointInsideRect(x, y, occluderRect)
-      )
-    ) {
+    if (isPointOccludedForThumbnailMarker(target, x, y)) {
       score.occludedPoints += 1;
       continue;
     }
@@ -671,7 +631,6 @@ export const updateMarkerPositions = (
   markerVariantStyleAttribute: string
 ): void => {
   const collisionGrid: CollisionGrid = new Map();
-  const viewportOccluders = highlightThumbnails ? collectViewportOccluders() : [];
   const markersByPlacementPriority = [...markers].sort(
     (left, right) => getMarkerLayoutPriority(right) - getMarkerLayoutPriority(left)
   );
@@ -724,7 +683,7 @@ export const updateMarkerPositions = (
 
       const visibilityScore =
         markerVariant === "thumbnail"
-          ? getMarkerVisibilityScore(hint.element, nextRect, viewportOccluders)
+          ? getMarkerVisibilityScore(hint.element, nextRect)
           : { clearPoints: 1, occludedPoints: 0 };
       if (isBetterMarkerVisibilityScore(visibilityScore, bestVisibilityScore)) {
         chosenRect = nextRect;
