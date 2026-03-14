@@ -114,6 +114,12 @@ describe("hints", () => {
           }
         }
 
+        if (scenario.expect.missingDirectiveTargets) {
+          for (const directive of scenario.expect.missingDirectiveTargets) {
+            expect(directives[directive]).toBeUndefined();
+          }
+        }
+
         if (scenario.expect.assignedTargets) {
           const reservedLabels = createEmptyReservedHintLabels();
           Object.assign(reservedLabels, scenario.reservedLabels ?? {});

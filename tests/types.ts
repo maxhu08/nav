@@ -21,6 +21,7 @@ export type HintRect = {
 export type HintScenarioExpectation = {
   hintableSelectors?: string[];
   directiveTargets?: Partial<Record<ReservedHintDirective, string>>;
+  missingDirectiveTargets?: ReservedHintDirective[];
   assignedTargets?: Array<{
     selector: string;
     directive: ReservedHintDirective | null;
