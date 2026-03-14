@@ -577,7 +577,7 @@ export const initCoreNavigation = (): void => {
 
   isInitialized = true;
   if (IS_NAV_DEBUG_ENABLED) {
-    void import("~/src/core/utils/nav-debug").then(({ installNavDebugApi }) => {
+    void import("~/src/core/utils/debug/nav-debug").then(({ installNavDebugApi }) => {
       installNavDebugApi();
     });
   }

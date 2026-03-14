@@ -25,7 +25,7 @@ const DIST_CORE_DIR = resolve(DIST_DIR, "core");
 const ENTRY_FILES = [
   resolve(ROOT, "src", "background.ts"),
   resolve(ROOT, "src", "core", "index.ts"),
-  resolve(ROOT, "src", "core", "debug-main.ts"),
+  resolve(ROOT, "src", "core", "utils", "debug", "debug-main.ts"),
   resolve(ROOT, "src", "popup.html"),
   resolve(ROOT, "src", "options.html"),
   resolve(ROOT, "src", "docs.html")

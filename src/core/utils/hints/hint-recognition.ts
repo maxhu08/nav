@@ -176,6 +176,16 @@ const isClickableByTagName = (element: HTMLElement, tagName: string): boolean =>
   }
 };
 
+const isIntrinsicInteractiveElement = (element: HTMLElement): boolean => {
+  const tagName = element.tagName.toLowerCase();
+
+  if (tagName === "a" || tagName === "area") {
+    return !!element.getAttribute("href");
+  }
+
+  return isClickableByTagName(element, tagName);
+};
+
 const isEditableHintTarget = (element: HTMLElement): boolean => {
   const contentEditable = element.getAttribute("contenteditable")?.toLowerCase();
   return !!contentEditable && ["", "contenteditable", "true"].includes(contentEditable);
@@ -553,7 +563,7 @@ const isElementVisibleAndClickable = (element: HTMLElement): boolean => {
     return false;
   }
 
-  return hasClickablePoint(element, rect);
+  return hasClickablePoint(element, rect) || isIntrinsicInteractiveElement(element);
 };
 
 const isHintable = (element: HTMLElement): boolean => {

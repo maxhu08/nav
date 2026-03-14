@@ -1,5 +1,7 @@
-const NAV_DEBUG_HINT_TARGET_REQUEST_EVENT = "nav-debug-hint-target-request";
-const NAV_DEBUG_HINT_TARGET_RESPONSE_EVENT = "nav-debug-hint-target-response";
+import {
+  NAV_DEBUG_HINT_TARGET_REQUEST_EVENT,
+  NAV_DEBUG_HINT_TARGET_RESPONSE_EVENT
+} from "~/src/core/utils/debug/events";
 
 type NavDebugApi = {
   hintTarget: (selector: string) => Promise<unknown>;
