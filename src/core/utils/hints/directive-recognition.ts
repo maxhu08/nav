@@ -182,6 +182,30 @@ type DirectiveDefinition = {
   ) => number;
 };
 
+const getBestScoringElementIndex = (
+  elements: HTMLElement[],
+  threshold: number,
+  getScore: (element: HTMLElement, index: number) => number
+): number | null => {
+  let bestIndex: number | null = null;
+  let bestScore = threshold;
+
+  for (let index = 0; index < elements.length; index += 1) {
+    const element = elements[index];
+    if (!element) {
+      continue;
+    }
+
+    const score = getScore(element, index);
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  }
+
+  return bestIndex;
+};
+
 const getElementTextContent = (element: HTMLElement): string =>
   element.textContent?.replace(/\s+/g, " ").trim() ?? "";
 
@@ -678,27 +702,28 @@ const remapAttachDirectiveIndex = (
 };
 
 export const getPreferredInputElementIndex = (elements: HTMLElement[]): number | null => {
-  const selectableElementIndexes = elements.flatMap((element, index) =>
-    isSelectableElement(element) ? [index] : []
-  );
+  let selectableCount = 0;
+  let onlySelectableIndex: number | null = null;
 
-  if (selectableElementIndexes.length === 1) {
-    return selectableElementIndexes[0] ?? null;
+  for (let index = 0; index < elements.length; index += 1) {
+    const element = elements[index];
+    if (!element || !isSelectableElement(element)) {
+      continue;
+    }
+
+    selectableCount += 1;
+    onlySelectableIndex = index;
+
+    if (selectableCount > 1) {
+      break;
+    }
   }
 
-  let bestIndex: number | null = null;
-  let bestScore = 180;
+  if (selectableCount === 1) {
+    return onlySelectableIndex;
+  }
 
-  elements.forEach((element, index) => {
-    const score = getInputCandidateScore(element);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-
-  return bestIndex;
+  return getBestScoringElementIndex(elements, 180, (element) => getInputCandidateScore(element));
 };
 
 export const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null => {
@@ -706,19 +731,7 @@ export const getPreferredSearchElementIndex = (elements: HTMLElement[]): number 
 };
 
 export const getPreferredAttachElementIndex = (elements: HTMLElement[]): number | null => {
-  let bestIndex: number | null = null;
-  let bestScore = 220;
-
-  elements.forEach((element, index) => {
-    const score = getAttachCandidateScore(element);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-
-  return bestIndex;
+  return getBestScoringElementIndex(elements, 220, (element) => getAttachCandidateScore(element));
 };
 
 const getHomeCandidateScore = (
@@ -803,19 +816,7 @@ const getHomeCandidateScore = (
 };
 
 export const getPreferredHomeElementIndex = (elements: HTMLElement[]): number | null => {
-  let bestIndex: number | null = null;
-  let bestScore = 180;
-
-  elements.forEach((element, index) => {
-    const score = getHomeCandidateScore(element);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-
-  return bestIndex;
+  return getBestScoringElementIndex(elements, 180, (element) => getHomeCandidateScore(element));
 };
 
 const getSidebarControlsSignalScore = (element: HTMLElement): number => {
@@ -993,19 +994,7 @@ const getSidebarCandidateScore = (
 };
 
 export const getPreferredSidebarElementIndex = (elements: HTMLElement[]): number | null => {
-  let bestIndex: number | null = null;
-  let bestScore = 220;
-
-  elements.forEach((element, index) => {
-    const score = getSidebarCandidateScore(element);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-
-  return bestIndex;
+  return getBestScoringElementIndex(elements, 220, (element) => getSidebarCandidateScore(element));
 };
 
 const getActionDirectiveCandidateScore = (
@@ -1355,36 +1344,13 @@ const getPreferredActionDirectiveElementIndex = (
   threshold: number,
   options: ActionDirectiveOptions = {}
 ): number | null => {
-  let bestIndex: number | null = null;
-  let bestScore = threshold;
-
-  elements.forEach((element, index) => {
-    const score = getActionDirectiveCandidateScore(element, patterns, options);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-
-  return bestIndex;
+  return getBestScoringElementIndex(elements, threshold, (element) =>
+    getActionDirectiveCandidateScore(element, patterns, options)
+  );
 };
 
-export const getPreferredNextElementIndex = (elements: HTMLElement[]): number | null => {
-  let bestIndex: number | null = null;
-  let bestScore = 200;
-
-  elements.forEach((element, index) => {
-    const score = getNextCandidateScore(element);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-
-  return bestIndex;
-};
+export const getPreferredNextElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 200, (element) => getNextCandidateScore(element));
 
 export const getPreferredPrevElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, PREV_ATTRIBUTE_PATTERNS, 200, {
@@ -1392,21 +1358,8 @@ export const getPreferredPrevElementIndex = (elements: HTMLElement[]): number | 
     shortTextPatterns: PREV_SHORT_TEXT_PATTERNS
   });
 
-export const getPreferredCancelElementIndex = (elements: HTMLElement[]): number | null => {
-  let bestIndex: number | null = null;
-  let bestScore = 220;
-
-  elements.forEach((element, index) => {
-    const score = getCancelCandidateScore(element);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-
-  return bestIndex;
-};
+export const getPreferredCancelElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 220, (element) => getCancelCandidateScore(element));
 
 export const getPreferredSubmitElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, SUBMIT_ATTRIBUTE_PATTERNS, 220, {
