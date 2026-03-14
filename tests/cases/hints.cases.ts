@@ -10,7 +10,8 @@ export const hintDirectiveCases: HintDirectiveCases = {
     desc: "detects attach",
     recognizes: [
       "<input type='file' aria-label='Upload file' />",
-      "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#6be74c' fill='currentColor'></use></svg></button>"
+      "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#6be74c' fill='currentColor'></use></svg></button>",
+      "<button type='button' class='toolbar-action icon-paperclip' title='Choose from computer' data-testid='paperclip-button'></button>"
     ],
     ignored: ["<button>Other</button>"]
   },
@@ -54,7 +55,11 @@ export const hintDirectiveCases: HintDirectiveCases = {
   },
   submit: {
     desc: "detects submit",
-    recognizes: ["<button type='submit'>Submit</button>"],
+    recognizes: [
+      "<button type='submit'>Submit</button>",
+      "<form><button type='button'>Reply</button></form>",
+      "<form><input type='submit' value='Publish' /></form>"
+    ],
     ignored: ["<button>Other</button>"]
   },
   like: {

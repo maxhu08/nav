@@ -24,11 +24,16 @@ const ATTACH_ATTRIBUTE_PATTERNS = [
   /\battach\b/i,
   /\bupload\b/i,
   /\badd\b.*\bfiles?\b/i,
+  /\bpick\b.*\bfiles?\b/i,
+  /\bselect\b.*\bfiles?\b/i,
+  /\bchoose\b.*\bcomputer\b/i,
   /\bfiles?\b/i,
   /\battachments?\b/i,
   /\bdocument\b/i,
   /\bbrowse\b/i,
   /\bchoose\b/i,
+  /\bpaperclip\b/i,
+  /\bdropzone\b/i,
   /\bcomposer\b/i,
   /\bcomposer[-_ ]?plus\b/i
 ];
@@ -107,9 +112,11 @@ const SUBMIT_ATTRIBUTE_PATTERNS = [
   /\bsend\b/i,
   /\bpost\b/i,
   /\bapply\b/i,
-  /\bconfirm\b/i
+  /\bconfirm\b/i,
+  /\brepl(?:y|ies)\b/i,
+  /\bpublish\b/i
 ];
-const SUBMIT_SHORT_TEXT_PATTERNS = [/^ok$/i, /^done$/i, /^yes$/i, /^submit$/i];
+const SUBMIT_SHORT_TEXT_PATTERNS = [/^ok$/i, /^done$/i, /^yes$/i, /^submit$/i, /^reply$/i];
 const LIKE_ATTRIBUTE_PATTERNS = [/\blike\b/i, /\bupvote\b/i, /\bthumb[-_ ]?up\b/i];
 const LIKE_SHORT_TEXT_PATTERNS = [/^like$/i];
 const DISLIKE_ATTRIBUTE_PATTERNS = [/\bdislike\b/i, /\bdownvote\b/i, /\bthumb[-_ ]?down\b/i];
@@ -193,6 +200,49 @@ const getCachedElementTextContent = (
   const textContent = getElementTextContent(element);
   features.textContent = textContent;
   return textContent;
+};
+
+const getElementValueText = (element: HTMLElement): string => {
+  if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) {
+    return element.value?.trim() ?? "";
+  }
+
+  return "";
+};
+
+const getCachedElementValueText = (
+  element: HTMLElement,
+  features?: ElementFeatureVector
+): string => {
+  if (!features) {
+    return getElementValueText(element);
+  }
+
+  const cacheKey = "__value_text__";
+  const cachedValue = features.joinedAttributeTextCache.get(cacheKey);
+  if (cachedValue !== undefined) {
+    return cachedValue;
+  }
+
+  const value = getElementValueText(element);
+  features.joinedAttributeTextCache.set(cacheKey, value);
+  return value;
+};
+
+const getSemanticControlText = (element: HTMLElement, features?: ElementFeatureVector): string => {
+  const textContent = getCachedElementTextContent(element, features);
+  const valueText = getCachedElementValueText(element, features);
+  const combinedText = [textContent, valueText]
+    .filter((part) => part.length > 0)
+    .join(" ")
+    .trim();
+
+  if (!combinedText || combinedText.length > 48) {
+    return "";
+  }
+
+  const wordCount = combinedText.split(/\s+/).filter((part) => part.length > 0).length;
+  return wordCount <= 6 ? combinedText : "";
 };
 
 const isLikelyShortControlText = (value: string): boolean => {
@@ -366,10 +416,22 @@ const getInputCandidateScore = (
 
 const getAttachAttributeText = (element: HTMLElement, features?: ElementFeatureVector): string => {
   const textContent = getCachedElementTextContent(element, features);
+  const valueText = getCachedElementValueText(element, features);
   return getCachedJoinedAttributeText(
     element,
-    ["type", "name", "id", "class", "placeholder", "aria-label", "title", "data-testid", "role"],
-    [textContent],
+    [
+      "type",
+      "name",
+      "id",
+      "class",
+      "placeholder",
+      "aria-label",
+      "title",
+      "data-testid",
+      "role",
+      "value"
+    ],
+    [textContent, valueText],
     features
   );
 };
@@ -966,11 +1028,23 @@ const getActionDirectiveCandidateScore = (
   let hasStrongSignal = false;
   const tagName = element.tagName.toLowerCase();
   const role = element.getAttribute("role")?.toLowerCase();
-  const textContent = getCachedElementTextContent(element, features);
+  const semanticControlText = getSemanticControlText(element, features);
   const attributeText = getCachedJoinedAttributeText(
     element,
-    ["name", "id", "aria-label", "data-testid", "data-test-id", "role", "title", "class", "type"],
-    [],
+    [
+      "name",
+      "id",
+      "aria-label",
+      "aria-description",
+      "data-testid",
+      "data-test-id",
+      "role",
+      "title",
+      "class",
+      "type",
+      "value"
+    ],
+    [semanticControlText],
     features
   );
 
@@ -981,8 +1055,9 @@ const getActionDirectiveCandidateScore = (
 
   if (
     options.shortTextPatterns &&
-    isLikelyShortControlText(textContent) &&
-    textMatchesAnyPattern(textContent, options.shortTextPatterns)
+    semanticControlText &&
+    isLikelyShortControlText(semanticControlText) &&
+    textMatchesAnyPattern(semanticControlText, options.shortTextPatterns)
   ) {
     score += 220;
     hasStrongSignal = true;
