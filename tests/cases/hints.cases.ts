@@ -26,6 +26,14 @@ export const hintDirectiveCases: HintDirectiveCases = {
     ],
     ignored: ["<button>Other</button>"]
   },
+  download: {
+    desc: "detects download",
+    recognizes: [
+      "<a href='/files/report.pdf' download aria-label='Download report pdf'>Download</a>",
+      "<button type='button' data-testid='download-button' title='Export image'>Export</button>"
+    ],
+    ignored: ["<button type='button'>Other</button>"]
+  },
   home: {
     desc: "detects home",
     recognizes: ["<a href='/' rel='home'>Home</a>"],

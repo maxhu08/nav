@@ -43,6 +43,7 @@ const DIRECTIVE_LAYOUT_PRIORITIES: Partial<Record<ReservedHintDirective, number>
   submit: 80,
   cancel: 70,
   share: 65,
+  download: 64,
   next: 60,
   prev: 60,
   home: 50,

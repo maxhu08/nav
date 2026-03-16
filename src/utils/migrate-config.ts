@@ -4,7 +4,8 @@ import {
   hasForceNormalModeOption,
   hasReservedLabelsOption,
   hasV106ReservedHintDirectives,
-  hasV108ShareReservedHintDirective
+  hasV108ShareReservedHintDirective,
+  hasV109DownloadReservedHintDirective
 } from "~/src/utils/migrate/config-helpers";
 
 const appendMissingShareDirective = (reservedLabels: string): string => {
@@ -15,6 +16,16 @@ const appendMissingShareDirective = (reservedLabels: string): string => {
   }
 
   return `${trimmedReservedLabels}\n@share sh`;
+};
+
+const appendMissingDownloadDirective = (reservedLabels: string): string => {
+  const trimmedReservedLabels = reservedLabels.trim();
+
+  if (trimmedReservedLabels.length === 0) {
+    return "@download dl";
+  }
+
+  return `${trimmedReservedLabels}\n@download dl`;
 };
 
 export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Config => {
@@ -38,6 +49,12 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   // if config before v1.0.8
   if (!hasV108ShareReservedHintDirective(config)) {
     migratedConfig.hints.reservedLabels = appendMissingShareDirective(
+      migratedConfig.hints.reservedLabels
+    );
+  }
+
+  if (!hasV109DownloadReservedHintDirective(config)) {
+    migratedConfig.hints.reservedLabels = appendMissingDownloadDirective(
       migratedConfig.hints.reservedLabels
     );
   }
