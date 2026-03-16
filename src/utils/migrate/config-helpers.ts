@@ -52,3 +52,16 @@ export const hasV108ShareReservedHintDirective = (value: unknown): boolean => {
 
   return hints.reservedLabels.includes("@share ");
 };
+
+export const hasV109DownloadReservedHintDirective = (value: unknown): boolean => {
+  if (!isObjectRecord(value)) {
+    return false;
+  }
+
+  const hints = value.hints;
+  if (!isObjectRecord(hints) || typeof hints.reservedLabels !== "string") {
+    return false;
+  }
+
+  return hints.reservedLabels.includes("@download ");
+};

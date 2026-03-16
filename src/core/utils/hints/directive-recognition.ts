@@ -47,6 +47,17 @@ const SHARE_ATTRIBUTE_PATTERNS = [
   /\bcopy\b.*\blink\b/i
 ];
 const SHARE_SHORT_TEXT_PATTERNS = [/^share$/i, /^repost$/i, /^forward$/i];
+const DOWNLOAD_ATTRIBUTE_PATTERNS = [
+  /\bdownload\b/i,
+  /\boffline\b/i,
+  /\bexport\b/i,
+  /\bsave\b.*\b(file|image|video|audio|photo|media|pdf|document)\b/i
+];
+const DOWNLOAD_SHORT_TEXT_PATTERNS = [
+  /^download$/i,
+  /^export$/i,
+  /^save (file|image|video|audio|photo|media|pdf|document)$/i
+];
 
 const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
 const SIDEBAR_ATTRIBUTE_PATTERNS = [
@@ -1398,6 +1409,11 @@ export const getPreferredShareElementIndex = (elements: HTMLElement[]): number |
     shortTextPatterns: SHARE_SHORT_TEXT_PATTERNS
   });
 
+export const getPreferredDownloadElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, DOWNLOAD_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: DOWNLOAD_SHORT_TEXT_PATTERNS
+  });
+
 export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, LIKE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
@@ -1428,6 +1444,20 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
         SHARE_ATTRIBUTE_PATTERNS,
         {
           shortTextPatterns: SHARE_SHORT_TEXT_PATTERNS
+        },
+        rect,
+        features
+      )
+  },
+  {
+    directive: "download",
+    threshold: 220,
+    getScore: (element, rect, features) =>
+      getActionDirectiveCandidateScore(
+        element,
+        DOWNLOAD_ATTRIBUTE_PATTERNS,
+        {
+          shortTextPatterns: DOWNLOAD_SHORT_TEXT_PATTERNS
         },
         rect,
         features
@@ -1502,6 +1532,7 @@ const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   input: 180,
   attach: 220,
   share: 220,
+  download: 220,
   home: 180,
   sidebar: 220,
   next: 200,

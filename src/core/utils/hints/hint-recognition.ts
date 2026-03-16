@@ -17,6 +17,7 @@ export {
   getAttachEquivalentIndexes,
   getPreferredAttachElementIndex,
   getPreferredCancelElementIndex,
+  getPreferredDownloadElementIndex,
   getPreferredDirectiveIndexes,
   getPreferredDislikeElementIndex,
   getPreferredHomeElementIndex,

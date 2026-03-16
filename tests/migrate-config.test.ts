@@ -27,6 +27,31 @@ describe("migrateOldConfig", () => {
     expect(migratedConfig.hints.reservedLabels).toContain("@attach up");
   });
 
+  test("adds the download directive for configs before v1.0.9", () => {
+    const oldConfig = {
+      ...structuredClone(defaultConfig),
+      hints: {
+        ...structuredClone(defaultConfig).hints,
+        reservedLabels: `@input kj kjf kjfd
+@attach up
+@share sh
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+      }
+    };
+
+    const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+    expect(migratedConfig.hints.reservedLabels).toContain("@download dl");
+    expect(migratedConfig.hints.reservedLabels).toContain("@share sh");
+  });
+
   test("does not duplicate the share directive when it already exists", () => {
     const config = structuredClone(defaultConfig);
 
@@ -34,5 +59,15 @@ describe("migrateOldConfig", () => {
     const shareDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@share /gm) ?? [];
 
     expect(shareDirectiveMatches).toHaveLength(1);
+  });
+
+  test("does not duplicate the download directive when it already exists", () => {
+    const config = structuredClone(defaultConfig);
+
+    const migratedConfig = migrateOldConfig(config, defaultConfig);
+    const downloadDirectiveMatches =
+      migratedConfig.hints.reservedLabels.match(/^@download /gm) ?? [];
+
+    expect(downloadDirectiveMatches).toHaveLength(1);
   });
 });
