@@ -377,9 +377,7 @@ const dedupeEquivalentSemanticTargets = (
       : [];
     const duplicateIndex = candidateIndexes.find((candidateIndex) => {
       const candidate = deduped[candidateIndex];
-      return (
-        !!candidate && areEquivalentSemanticTargets(candidate, element, getRect, getSemanticScore)
-      );
+      return areEquivalentSemanticTargets(candidate, element, getRect, getSemanticScore);
     });
 
     if (duplicateIndex === undefined) {
@@ -394,11 +392,6 @@ const dedupeEquivalentSemanticTargets = (
     }
 
     const existing = deduped[duplicateIndex];
-    if (!existing) {
-      deduped.push(element);
-      continue;
-    }
-
     const existingRect = getRect(existing);
     const elementScore = getSemanticScore(element, elementRect);
     const existingScore = getSemanticScore(existing, existingRect);
@@ -484,7 +477,7 @@ const createHintCollectionContext = (): HintCollectionContext => {
 
   const getRect = (element: HTMLElement): DOMRect | null => {
     if (rectCache.has(element)) {
-      return rectCache.get(element) ?? null;
+      return rectCache.get(element)!;
     }
 
     const rect = getMarkerRect(element);
@@ -494,7 +487,7 @@ const createHintCollectionContext = (): HintCollectionContext => {
 
   const getIdentity = (element: HTMLElement): string | null => {
     if (identityCache.has(element)) {
-      return identityCache.get(element) ?? null;
+      return identityCache.get(element)!;
     }
 
     const identity = getHintIdentity(element);

@@ -197,9 +197,6 @@ const getBestScoringElementIndex = (
 
   for (let index = 0; index < elements.length; index += 1) {
     const element = elements[index];
-    if (!element) {
-      continue;
-    }
 
     const score = getScore(element, index);
     if (score > bestScore) {
@@ -323,7 +320,7 @@ const getCachedClosest = (
   }
 
   if (features.closestCache.has(selector)) {
-    return features.closestCache.get(selector) ?? null;
+    return features.closestCache.get(selector)!;
   }
 
   const match = element.closest(selector);
@@ -682,9 +679,6 @@ const remapAttachDirectiveIndex = (
   getRect: (element: HTMLElement) => DOMRect | null
 ): number => {
   const attachElement = elements[attachIndex];
-  if (!attachElement) {
-    return attachIndex;
-  }
 
   const attachRect = getRect(attachElement);
   if (!attachRect) {
@@ -732,7 +726,7 @@ export const getPreferredInputElementIndex = (elements: HTMLElement[]): number |
 
   for (let index = 0; index < elements.length; index += 1) {
     const element = elements[index];
-    if (!element || !isSelectableElement(element)) {
+    if (!isSelectableElement(element)) {
       continue;
     }
 
@@ -1588,9 +1582,6 @@ export const getAttachEquivalentIndexes = (
   attachIndex: number
 ): number[] => {
   const attachElement = elements[attachIndex];
-  if (!attachElement) {
-    return [];
-  }
 
   const attachRect = getMarkerRect(attachElement);
   if (!attachRect) {
@@ -1622,9 +1613,6 @@ export const getStronglyOverlappingHintIndexes = (
   minimumOverlapRatio = 0.35
 ): number[] => {
   const targetElement = elements[targetIndex];
-  if (!targetElement) {
-    return [];
-  }
 
   const targetRect = getMarkerRect(targetElement);
   if (!targetRect) {
@@ -1656,10 +1644,6 @@ export const getSuppressedAttachRelatedHintIndexes = (
 ): Set<number> => {
   const suppressedIndexes = new Set<number>();
   const attachElement = elements[attachIndex];
-
-  if (!attachElement) {
-    return suppressedIndexes;
-  }
 
   const attachRect = getMarkerRect(attachElement);
   if (!attachRect) {

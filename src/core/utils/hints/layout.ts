@@ -615,11 +615,6 @@ export const primeMarkerPositions = (
       markerHeight
     );
 
-    if (!firstCandidate) {
-      hint.marker.style.display = "none";
-      continue;
-    }
-
     hint.marker.style.left = `${Math.round(firstCandidate.left)}px`;
     hint.marker.style.top = `${Math.round(firstCandidate.top)}px`;
   }

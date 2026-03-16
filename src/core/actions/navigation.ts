@@ -70,10 +70,6 @@ const findElementWithRel = (relValue: "prev" | "next"): Element | null => {
   for (let index = 0; index < elements.length; index += 1) {
     const element = elements[index];
 
-    if (!element) {
-      continue;
-    }
-
     const rel = element.getAttribute("rel") ?? "";
     const relValues = rel
       .toLowerCase()
@@ -97,7 +93,7 @@ const findMatchingLink = (patterns: readonly string[]): Element | null => {
   for (let index = elements.length - 1; index >= 0; index -= 1) {
     const element = elements[index];
 
-    if (!element || !isVisible(element)) {
+    if (!isVisible(element)) {
       continue;
     }
 
@@ -136,7 +132,7 @@ const findMatchingLink = (patterns: readonly string[]): Element | null => {
       return a.wordCount - b.wordCount;
     })
     .filter((candidate, _, allCandidates) => {
-      const shortestWordCount = allCandidates[0]?.wordCount ?? Number.MAX_SAFE_INTEGER;
+      const shortestWordCount = allCandidates[0].wordCount;
       return candidate.wordCount <= shortestWordCount + 1;
     });
 
