@@ -1,0 +1,102 @@
+#hints-avoid-adjacent-pairs-container,
+#hints-charset-container,
+#hints-reserved-labels-container {
+  display: grid;
+}
+
+.hints-inline-editor-layer {
+  grid-area: 1 / 1;
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  line-height: 1.5rem;
+}
+
+#hints-min-label-length-input::-webkit-outer-spin-button,
+#hints-min-label-length-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#hints-min-label-length-input {
+  -moz-appearance: textfield;
+}
+
+#hints-charset-highlight,
+#hints-reserved-labels-highlight,
+#hints-avoid-adjacent-pairs-highlight {
+  pointer-events: none;
+  color: #fafafa;
+}
+
+#hints-charset-highlight,
+#hints-reserved-labels-highlight {
+  padding: 0.25rem 0.5rem;
+}
+
+.hints-inline-input,
+.hints-reserved-labels-textarea,
+.hints-avoid-adjacent-pairs-textarea {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: #fafafa;
+}
+
+.hints-inline-input::selection,
+.hints-reserved-labels-textarea::selection,
+.hints-avoid-adjacent-pairs-textarea::selection {
+  background-color: #ffffff20;
+}
+
+.hints-inline-token-valid,
+.hints-avoid-adjacent-pairs-token-valid,
+.hints-reserved-labels-token-valid {
+  color: #569cd6;
+}
+
+.hints-inline-token-separator,
+.hints-avoid-adjacent-pairs-token-comment,
+.hints-reserved-labels-token-comment,
+.hints-reserved-labels-token-separator {
+  color: #737373;
+}
+
+.hints-inline-token-invalid,
+.hints-avoid-adjacent-pairs-token-invalid,
+.hints-reserved-labels-token-invalid {
+  color: #f43f5e;
+}
+
+.hints-reserved-labels-editor-layer,
+.hints-avoid-adjacent-pairs-editor-layer {
+  grid-area: 1 / 1;
+  height: 20rem;
+  margin: 0;
+  overflow: auto;
+  padding: 0.25rem 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  line-height: 1.5rem;
+}
+
+.hints-reserved-labels-editor-layer {
+  tab-size: 2;
+}
+
+.hints-reserved-labels-textarea {
+  margin: 0;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+}
+
+.hints-reserved-labels-token-directive {
+  color: #c586c0;
+}

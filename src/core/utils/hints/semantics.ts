@@ -35,7 +35,7 @@ export const assignHintSemantics = (
 
   for (const directive of RESERVED_HINT_DIRECTIVES) {
     const index = preferredIndexes[directive];
-    if (index === null || index === undefined || claimedIndexes.has(index)) {
+    if (index === undefined || claimedIndexes.has(index)) {
       continue;
     }
 

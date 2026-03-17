@@ -48,5 +48,11 @@ Example:
 
 - If a control renders but does not persist, check `save-helpers`.
 - If a control persists but does not show initial state, check `fill-helpers`.
-- If an option saves correctly but the runtime does not react to it, check `buildFastConfig` and the `chrome.storage.onChanged` handling in `src/core/navigation.ts`.
+- If an option saves correctly but the runtime does not react to it, check `buildFastConfig`, the `chrome.storage.onChanged` handling in `src/core/navigation.ts`, and the runtime listener/setup helpers under `src/core/navigation/`.
 - If an element lookup fails, check that its ID matches the suffix helpers in `ui-helpers.ts`.
+
+## Styles
+
+- The options page stylesheet entrypoint is `src/options/styles/index.css`.
+- Keep feature-specific style blocks in the closest split stylesheet under `src/options/styles/` instead of growing `index.css` directly.
+- Current split files roughly map to feature areas: `base.css`, `rules-editors.css`, `hotkeys.css`, `hints.css`, `color-picker.css`, and `custom-css.css`.

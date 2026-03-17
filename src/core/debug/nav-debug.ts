@@ -80,9 +80,6 @@ const buildHintTargetDebugResult = (selector: string) => {
     nearbyHintables: overlappingAttachIndexes
       .map((index) => {
         const candidate = hintableElements[index];
-        if (!candidate) {
-          return null;
-        }
 
         const candidateRect = getMarkerRect(candidate);
 

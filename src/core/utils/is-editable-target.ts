@@ -35,7 +35,7 @@ export const getDeepActiveElement = (root: Document | ShadowRoot = document): El
   return activeElement;
 };
 
-export const isEditableTarget = (target: EventTarget | null): boolean => {
+export const isEditableTarget = (target: EventTarget | null | undefined): boolean => {
   if (!(target instanceof Element)) {
     return false;
   }

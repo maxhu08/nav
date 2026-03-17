@@ -4,7 +4,6 @@ import {
   areHintsPendingSelection,
   exitHints,
   handleHintsKeydown,
-  HINT_SELECTABLE_ACTIVATED_EVENT,
   setReservedHintPrefixes
 } from "~/src/core/actions/hints";
 import {
@@ -31,16 +30,15 @@ import {
   FOCUS_INDICATOR_EVENT,
   findStyleParams,
   getFindBar,
-  getFindInput,
-  isFindUIElement
+  getFindInput
 } from "~/src/core/utils/get-ui";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import { createKeyState, getKeyToken, isModifierKey } from "~/src/core/utils/key-state";
-import {
-  sendFrameActionMessage,
-  subscribeToFrameActionMessages
-} from "~/src/core/utils/runtime-bridge";
+import { subscribeToFrameActionMessages } from "~/src/core/utils/runtime-bridge";
 import { ensureToastWrapper } from "~/src/core/utils/sonner";
+import { isFrameActionMessage, proxyActionToFrames } from "~/src/core/navigation/frame-actions";
+import { createForceNormalModeController } from "~/src/core/navigation/force-normal-mode";
+import { registerRuntimeListeners } from "~/src/core/navigation/init-listeners";
 import { type FastConfig } from "~/src/utils/fast-config";
 import { type ActionName } from "~/src/utils/hotkeys";
 
@@ -48,66 +46,14 @@ type ActionHandler = (count?: number) => boolean;
 type CoreMode = "normal" | "find" | "watch";
 const IS_NAV_DEBUG_ENABLED = process.env.NAV_DEV === "true";
 
-const FRAME_PROXY_ACTIONS = new Set<ActionName>([
-  "watch-mode",
-  "toggle-fullscreen",
-  "toggle-play-pause",
-  "toggle-loop",
-  "toggle-mute",
-  "toggle-captions"
-]);
-
-type FrameActionMessage = {
-  actionName: ActionName;
-};
-
 let currentMode: CoreMode = "normal";
 let isInitialized = false;
-let isForceNormalModeEnabled = false;
-let isStartupFocusGuardActive = false;
-let isForceNormalModeGuardAttached = false;
 let shouldBypassNextTypingKeyAfterHintSelect = false;
-
-const isFrameActionMessage = (value: unknown): value is FrameActionMessage => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const data = value as Partial<FrameActionMessage>;
-  return (
-    typeof data.actionName === "string" && FRAME_PROXY_ACTIONS.has(data.actionName as ActionName)
-  );
-};
-
-const proxyActionToFrames = (actionName: ActionName): boolean => {
-  if (!FRAME_PROXY_ACTIONS.has(actionName)) {
-    return false;
-  }
-
-  return sendFrameActionMessage(actionName);
-};
 
 const isMode = (mode: CoreMode): boolean => currentMode === mode;
 
 const setMode = (mode: CoreMode): void => {
   currentMode = mode;
-};
-
-const getHintSelectableActivationDetail = (
-  event: Event
-): { didFocusImmediately: boolean } | null => {
-  if (!(event instanceof CustomEvent) || !event.detail || typeof event.detail !== "object") {
-    return null;
-  }
-
-  const detail = event.detail as Partial<{ didFocusImmediately: unknown }>;
-  if (typeof detail.didFocusImmediately !== "boolean") {
-    return null;
-  }
-
-  return {
-    didFocusImmediately: detail.didFocusImmediately
-  };
 };
 
 const isOptionsPage = (): boolean => {
@@ -235,7 +181,7 @@ const isKeydownFromEditableTarget = (event: KeyboardEvent): boolean => {
     return true;
   }
 
-  return event.composedPath().some((target) => isEditableTarget(target ?? null));
+  return event.composedPath().some((target) => isEditableTarget(target));
 };
 
 const blurActiveEditableTarget = (): boolean => {
@@ -249,76 +195,16 @@ const blurActiveEditableTarget = (): boolean => {
   return true;
 };
 
-const deactivateStartupFocusGuardFromUserEvent = (event: Event): void => {
-  if (!event.isTrusted || !isForceNormalModeEnabled) {
-    return;
-  }
-
-  isStartupFocusGuardActive = false;
-};
-
-const handleForceNormalModeFocusIn = (event: FocusEvent): void => {
-  if (!isForceNormalModeEnabled || !isStartupFocusGuardActive || !isEditableTarget(event.target)) {
-    return;
-  }
-
-  if (blurActiveEditableTarget()) {
-    setMode("normal");
-    keyState.clearPendingState();
-    return;
-  }
-
-  if (event.target instanceof HTMLElement) {
-    event.target.blur();
-    setMode("normal");
-    keyState.clearPendingState();
-  }
-};
-
-const attachForceNormalModeGuard = (): void => {
-  if (isForceNormalModeGuardAttached) {
-    return;
-  }
-
-  isForceNormalModeGuardAttached = true;
-  document.addEventListener("keydown", deactivateStartupFocusGuardFromUserEvent, true);
-  document.addEventListener("pointerdown", deactivateStartupFocusGuardFromUserEvent, true);
-  document.addEventListener("mousedown", deactivateStartupFocusGuardFromUserEvent, true);
-  document.addEventListener("touchstart", deactivateStartupFocusGuardFromUserEvent, true);
-  document.addEventListener("focusin", handleForceNormalModeFocusIn, true);
-};
-
-const detachForceNormalModeGuard = (): void => {
-  if (!isForceNormalModeGuardAttached) {
-    return;
-  }
-
-  isForceNormalModeGuardAttached = false;
-  isStartupFocusGuardActive = false;
-  document.removeEventListener("keydown", deactivateStartupFocusGuardFromUserEvent, true);
-  document.removeEventListener("pointerdown", deactivateStartupFocusGuardFromUserEvent, true);
-  document.removeEventListener("mousedown", deactivateStartupFocusGuardFromUserEvent, true);
-  document.removeEventListener("touchstart", deactivateStartupFocusGuardFromUserEvent, true);
-  document.removeEventListener("focusin", handleForceNormalModeFocusIn, true);
-};
+const forceNormalMode = createForceNormalModeController({
+  isOptionsPage,
+  setMode,
+  clearPendingState: keyState.clearPendingState,
+  blurActiveEditableTarget,
+  isEditableTarget
+});
 
 const setForceNormalMode = (value: boolean): void => {
-  isForceNormalModeEnabled = value;
-
-  if (isOptionsPage()) {
-    return;
-  }
-
-  if (value) {
-    isStartupFocusGuardActive = true;
-    setMode("normal");
-    keyState.clearPendingState();
-    blurActiveEditableTarget();
-    attachForceNormalModeGuard();
-    return;
-  }
-
-  detachForceNormalModeGuard();
+  forceNormalMode.setForceNormalMode(value);
 };
 
 const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
@@ -469,12 +355,7 @@ const handleFrameActionMessage = (message: unknown): void => {
 };
 
 const handleKeydown = (event: KeyboardEvent): void => {
-  if (event.isTrusted && isForceNormalModeEnabled) {
-    // Disable startup editable blur guard before handling actions.
-    // Window capture keydown handlers run before document capture handlers,
-    // so this prevents first-key races with hint-driven input focusing.
-    isStartupFocusGuardActive = false;
-  }
+  forceNormalMode.handleKeydownCapture(event);
 
   if (!keyState.hasAllowedActionMappings()) {
     if (areHintsActive()) {
@@ -573,37 +454,24 @@ export const initCoreNavigation = (): void => {
   const onOptionsPage = isOptionsPage();
 
   if (!onOptionsPage) {
-    focusIndicator.syncStyles();
-    focusIndicator.ensureOverlay();
-    findMode.ensureFindUI();
-
-    window.addEventListener(
-      FOCUS_INDICATOR_EVENT,
-      focusIndicator.handleFocusIndicatorEvent as EventListener,
-      true
-    );
-    window.addEventListener("beforeinput", focusIndicator.handleEditableBeforeInput, true);
-    window.addEventListener("compositionstart", focusIndicator.handleEditableBeforeInput, true);
-    window.addEventListener("resize", focusIndicator.scheduleOverlayPosition, true);
-    window.addEventListener("scroll", focusIndicator.scheduleOverlayPosition, true);
-    window.addEventListener("resize", watchController.syncWatchHintsOverlay, true);
-    window.addEventListener("scroll", watchController.syncWatchHintsOverlay, true);
-    document.addEventListener("fullscreenchange", watchController.syncWatchHintsOverlay, true);
-    document.addEventListener("play", watchController.handleWatchMediaStateChange, true);
-    document.addEventListener("pause", watchController.handleWatchMediaStateChange, true);
-    document.addEventListener("ended", watchController.handleWatchMediaStateChange, true);
-    document.addEventListener("mousedown", (event) => {
-      if (!isFindUIElement(event.target)) {
-        findMode.hideFindBar();
-      }
-    });
-    window.addEventListener(HINT_SELECTABLE_ACTIVATED_EVENT, (event) => {
-      const detail = getHintSelectableActivationDetail(event);
-      shouldBypassNextTypingKeyAfterHintSelect = !detail?.didFocusImmediately;
-    });
-    document.addEventListener("focusin", (event) => {
-      if (isEditableTarget(event.target)) {
-        shouldBypassNextTypingKeyAfterHintSelect = false;
+    registerRuntimeListeners({
+      focusIndicator: {
+        syncStyles: focusIndicator.syncStyles,
+        ensureOverlay: focusIndicator.ensureOverlay,
+        handleFocusIndicatorEvent: focusIndicator.handleFocusIndicatorEvent as EventListener,
+        handleEditableBeforeInput: focusIndicator.handleEditableBeforeInput,
+        scheduleOverlayPosition: focusIndicator.scheduleOverlayPosition
+      },
+      findMode: {
+        ensureFindUI: findMode.ensureFindUI,
+        hideFindBar: findMode.hideFindBar
+      },
+      watchController: {
+        syncWatchHintsOverlay: watchController.syncWatchHintsOverlay,
+        handleWatchMediaStateChange: watchController.handleWatchMediaStateChange
+      },
+      setShouldBypassNextTypingKeyAfterHintSelect: (value): void => {
+        shouldBypassNextTypingKeyAfterHintSelect = value;
       }
     });
   }

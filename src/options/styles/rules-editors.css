@@ -1,0 +1,98 @@
+#rules-urls-blacklist-container,
+#rules-urls-whitelist-container {
+  display: grid;
+}
+
+.rules-urls-editor-layer {
+  grid-area: 1 / 1;
+  height: 40rem;
+  margin: 0;
+  overflow: auto;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  line-height: 1.5rem;
+}
+
+#rules-urls-blacklist-highlight,
+#rules-urls-whitelist-highlight {
+  pointer-events: none;
+  color: #fafafa;
+}
+
+.nav-dialog-rules-editor-container {
+  display: grid;
+}
+
+.rules-urls-textarea {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: #fafafa;
+}
+
+.nav-dialog-rules-editor-layer {
+  grid-area: 1 / 1;
+  height: 8rem;
+  margin: 0;
+  overflow: auto;
+  padding: 0.25rem 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  line-height: 1.5rem;
+}
+
+.nav-dialog-rules-editor-layer[aria-hidden="true"] {
+  pointer-events: none;
+  color: #fafafa;
+}
+
+.nav-dialog-rules-textarea {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: #fafafa;
+}
+
+.nav-dialog-rules-textarea::selection,
+.rules-urls-textarea::selection {
+  background-color: #ffffff20;
+}
+
+.rules-urls-token-comment {
+  color: #737373;
+}
+
+.rules-urls-token-prefix {
+  color: #569cd6;
+}
+
+.rules-urls-token-operator {
+  color: #c586c0;
+}
+
+.rules-urls-token-regex-pattern {
+  color: #d06969;
+}
+
+.rules-urls-token-regex-class,
+.rules-urls-token-regex-escape,
+.rules-urls-token-regex-quantifier {
+  color: #d6b97c;
+}
+
+.rules-urls-token-regex-group {
+  color: #cd9077;
+}
+
+.rules-urls-token-action {
+  color: #dcdcaa;
+}
+
+.rules-urls-token-invalid {
+  color: #f43f5e;
+}
