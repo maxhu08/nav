@@ -400,7 +400,11 @@ const hasEquivalentAncestorTarget = (
   return false;
 };
 
-export const createHintCollectionContext = (): HintCollectionContext => {
+export const createHintCollectionContext = (
+  options: {
+    getRect?: (element: HTMLElement) => DOMRect | null;
+  } = {}
+): HintCollectionContext => {
   const rectCache = new WeakMap<HTMLElement, DOMRect | null>();
   const identityCache = new WeakMap<HTMLElement, string | null>();
   const depthCache = new WeakMap<HTMLElement, number>();
@@ -411,7 +415,7 @@ export const createHintCollectionContext = (): HintCollectionContext => {
       return rectCache.get(element)!;
     }
 
-    const rect = getMarkerRect(element);
+    const rect = options.getRect ? options.getRect(element) : getMarkerRect(element);
     rectCache.set(element, rect);
     return rect;
   };

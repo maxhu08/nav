@@ -1,6 +1,13 @@
 import { isSelectableElement } from "~/src/core/utils/is-editable-target";
 
 export type RectLike = Pick<DOMRect, "left" | "top" | "right" | "bottom" | "width" | "height">;
+type PointHitTestResult = "reachable" | "occluded" | "missing";
+
+export type HintVisibilityContext = {
+  getRect: (element: HTMLElement) => DOMRect | null;
+  isHintable: (element: HTMLElement) => boolean;
+  isVisibleHintTarget: (element: HTMLElement) => boolean;
+};
 
 const ACTIVATABLE_ROLES = new Set([
   "button",
@@ -34,7 +41,7 @@ const INTERACTIVE_DATA_ATTRIBUTES = ["data-state"] as const;
 export const getMarkerRect = (element: HTMLElement): DOMRect | null => {
   let bestRect: DOMRect | null = null;
 
-  for (const rect of Array.from(element.getClientRects())) {
+  for (const rect of element.getClientRects()) {
     if (rect.width <= 0 || rect.height <= 0) {
       continue;
     }
@@ -96,30 +103,66 @@ const isComposedDescendant = (ancestor: Element, node: Element): boolean => {
   return false;
 };
 
-type PointHitTestResult = "reachable" | "occluded" | "missing";
-
-const getPointHitTestResult = (element: HTMLElement, x: number, y: number): PointHitTestResult => {
-  const topElement = getTopElementAtPoint(x, y);
-
-  if (!topElement) {
-    return "missing";
-  }
-
-  return isComposedDescendant(element, topElement) || isComposedDescendant(topElement, element)
-    ? "reachable"
-    : "occluded";
+const isRectInViewport = (rect: DOMRect): boolean => {
+  return !(
+    rect.bottom < 0 ||
+    rect.right < 0 ||
+    rect.top > window.innerHeight ||
+    rect.left > window.innerWidth
+  );
 };
 
-const getClickablePointResults = (element: HTMLElement, rect: DOMRect): PointHitTestResult[] => {
-  const points: Array<[number, number]> = [
-    [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5],
-    [rect.left + 0.1, rect.top + 0.1],
-    [rect.right - 0.1, rect.top + 0.1],
-    [rect.left + 0.1, rect.bottom - 0.1],
-    [rect.right - 0.1, rect.bottom - 0.1]
-  ];
+const isStyleVisibleAndClickable = (style: CSSStyleDeclaration): boolean => {
+  return !(
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    style.visibility === "collapse" ||
+    Number.parseFloat(style.opacity) === 0 ||
+    style.pointerEvents === "none"
+  );
+};
 
-  return points.map(([x, y]) => getPointHitTestResult(element, x, y));
+const getCenterPoint = (rect: DOMRect): [number, number] => [
+  rect.left + rect.width * 0.5,
+  rect.top + rect.height * 0.5
+];
+
+const getCornerPoints = (rect: DOMRect): Array<[number, number]> => [
+  [rect.left + 0.1, rect.top + 0.1],
+  [rect.right - 0.1, rect.top + 0.1],
+  [rect.left + 0.1, rect.bottom - 0.1],
+  [rect.right - 0.1, rect.bottom - 0.1]
+];
+
+const getAdaptiveHitTestResult = (
+  element: HTMLElement,
+  rect: DOMRect,
+  isIntrinsic: boolean,
+  getCachedPointHitTestResult: (element: HTMLElement, x: number, y: number) => PointHitTestResult
+): boolean => {
+  const [centerX, centerY] = getCenterPoint(rect);
+  const centerResult = getCachedPointHitTestResult(element, centerX, centerY);
+  if (centerResult === "reachable") {
+    return true;
+  }
+
+  if (!isIntrinsic) {
+    const [cornerX, cornerY] = getCornerPoints(rect)[0]!;
+    return getCachedPointHitTestResult(element, cornerX, cornerY) === "reachable";
+  }
+
+  let sawOccludedPoint = centerResult === "occluded";
+
+  for (const [x, y] of getCornerPoints(rect)) {
+    const result = getCachedPointHitTestResult(element, x, y);
+    if (result === "reachable") {
+      return true;
+    }
+
+    sawOccludedPoint ||= result === "occluded";
+  }
+
+  return !sawOccludedPoint;
 };
 
 export const getElementTabIndex = (element: HTMLElement): number | null => {
@@ -295,61 +338,111 @@ const isExcludedHintTarget = (element: HTMLElement): boolean => {
   );
 };
 
-const isElementVisibleAndClickable = (element: HTMLElement): boolean => {
-  const rect = getMarkerRect(element);
-  if (!rect) {
-    return false;
-  }
+export const createHintVisibilityContext = (): HintVisibilityContext => {
+  const activatableCache = new WeakMap<HTMLElement, boolean>();
+  const pointResultCache = new Map<string, Element | null>();
+  const rectCache = new WeakMap<HTMLElement, DOMRect | null>();
+  const styleCache = new WeakMap<HTMLElement, CSSStyleDeclaration>();
+  const visibleTargetCache = new WeakMap<HTMLElement, boolean>();
 
-  if (
-    rect.bottom < 0 ||
-    rect.right < 0 ||
-    rect.top > window.innerHeight ||
-    rect.left > window.innerWidth
-  ) {
-    return false;
-  }
+  const getRect = (element: HTMLElement): DOMRect | null => {
+    if (rectCache.has(element)) {
+      return rectCache.get(element)!;
+    }
 
-  const style = window.getComputedStyle(element);
-  if (
-    style.display === "none" ||
-    style.visibility === "hidden" ||
-    style.visibility === "collapse" ||
-    Number.parseFloat(style.opacity) === 0 ||
-    style.pointerEvents === "none"
-  ) {
-    return false;
-  }
+    const rect = getMarkerRect(element);
+    rectCache.set(element, rect);
+    return rect;
+  };
 
-  const clickablePointResults = getClickablePointResults(element, rect);
+  const getStyle = (element: HTMLElement): CSSStyleDeclaration => {
+    const cachedStyle = styleCache.get(element);
+    if (cachedStyle) {
+      return cachedStyle;
+    }
 
-  if (clickablePointResults.includes("reachable")) {
-    return true;
-  }
+    const style = window.getComputedStyle(element);
+    styleCache.set(element, style);
+    return style;
+  };
 
-  if (!isIntrinsicInteractiveElement(element)) {
-    return false;
-  }
+  const getCachedPointHitTestResult = (
+    element: HTMLElement,
+    x: number,
+    y: number
+  ): PointHitTestResult => {
+    const pointKey = `${Math.round(x * 2) / 2}:${Math.round(y * 2) / 2}`;
+    let topElement = pointResultCache.get(pointKey);
 
-  return !clickablePointResults.includes("occluded");
+    if (topElement === undefined) {
+      topElement = getTopElementAtPoint(x, y);
+      pointResultCache.set(pointKey, topElement);
+    }
+
+    if (!topElement) {
+      return "missing";
+    }
+
+    return isComposedDescendant(element, topElement) || isComposedDescendant(topElement, element)
+      ? "reachable"
+      : "occluded";
+  };
+
+  const isVisibleTarget = (element: HTMLElement): boolean => {
+    const cachedVisibility = visibleTargetCache.get(element);
+    if (cachedVisibility !== undefined) {
+      return cachedVisibility;
+    }
+
+    const rect = getRect(element);
+    const isVisible =
+      !!rect &&
+      isRectInViewport(rect) &&
+      isStyleVisibleAndClickable(getStyle(element)) &&
+      getAdaptiveHitTestResult(
+        element,
+        rect,
+        isIntrinsicInteractiveElement(element),
+        getCachedPointHitTestResult
+      );
+
+    visibleTargetCache.set(element, isVisible);
+    return isVisible;
+  };
+
+  const isHintable = (element: HTMLElement): boolean => {
+    if (isExcludedHintTarget(element)) {
+      return false;
+    }
+
+    const cachedActivatable = activatableCache.get(element);
+    const isActivatable = cachedActivatable ?? isActivatableElement(element);
+    if (cachedActivatable === undefined) {
+      activatableCache.set(element, isActivatable);
+    }
+
+    return isActivatable && isVisibleTarget(element);
+  };
+
+  const isVisibleHintTarget = (element: HTMLElement): boolean => {
+    if (isExcludedHintTarget(element)) {
+      return false;
+    }
+
+    return isVisibleTarget(element);
+  };
+
+  return {
+    getRect,
+    isHintable,
+    isVisibleHintTarget
+  };
 };
 
 export const isHintable = (element: HTMLElement): boolean => {
-  if (isExcludedHintTarget(element)) {
-    return false;
-  }
-
-  if (!isActivatableElement(element)) {
-    return false;
-  }
-
-  return isElementVisibleAndClickable(element);
+  return createHintVisibilityContext().isHintable(element);
 };
 
 export const isVisibleHintTarget = (element: HTMLElement): boolean => {
-  if (isExcludedHintTarget(element)) {
-    return false;
-  }
-
-  return isElementVisibleAndClickable(element);
+  return createHintVisibilityContext().isVisibleHintTarget(element);
 };

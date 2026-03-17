@@ -5,6 +5,7 @@ import {
   normalizeReservedHintLabels
 } from "~/src/utils/hint-reserved-label-directives";
 import { createHintActivator } from "~/src/core/actions/hints/activation";
+import { createHintActivationCacheController } from "~/src/core/actions/hints/cache";
 import {
   restoreRevealedHintControls,
   revealHoverHintControls
@@ -90,6 +91,34 @@ const { dispatchFocusIndicator, openHintInCurrentTab, openHintInNewTab } = creat
   selectableActivatedEvent: HINT_SELECTABLE_ACTIVATED_EVENT
 });
 
+const getHintActivationSettingsKey = (mode: LinkMode): string => {
+  return JSON.stringify({
+    avoidedAdjacentHintPairs,
+    hintAlphabet,
+    minHintLabelLength,
+    mode,
+    reservedHintLabels,
+    reservedHintPrefixes: [...reservedHintPrefixes].sort(),
+    showCapitalizedLetters
+  });
+};
+const hintActivationCache = createHintActivationCacheController({
+  getSettingsKey: getHintActivationSettingsKey
+});
+
+const restoreCachedMarkers = (markers: HintState["markers"]): void => {
+  for (const hint of markers) {
+    if (!hint.visible) {
+      hint.marker.style.display = "";
+      hint.visible = true;
+    }
+
+    if (hint.renderedTyped.length > 0) {
+      setMarkerTypedState(hint, "", markerDomAttributes);
+    }
+  }
+};
+
 const schedulePositionUpdate = (): void => {
   if (!hintState.active || hintState.frameHandle !== null) return;
 
@@ -117,15 +146,14 @@ const clearFrameHandle = (): void => {
 
 export const exitHints = (): void => {
   if (!hintState.active) return;
-
   clearFrameHandle();
-
   window.removeEventListener("scroll", onViewportChange, true);
   window.removeEventListener("resize", onViewportChange, true);
   window.removeEventListener("blur", exitHints, true);
-
-  restoreRevealedHintControls(hintState.revealedHoverElements);
-  hintState.overlay?.remove();
+  hintActivationCache.withoutInvalidation(() => {
+    restoreRevealedHintControls(hintState.revealedHoverElements);
+    hintState.overlay?.remove();
+  });
 
   hintState.active = false;
   hintState.mode = "current-tab";
@@ -197,11 +225,50 @@ export const activateHints = (
   exitHints();
   initializeHintCSS();
   applyHintStyles(STYLE_ID, hintCSS);
-  revealHoverHintControls(mode, hintState.revealedHoverElements);
+  hintActivationCache.ensureObserver();
+  hintActivationCache.withoutInvalidation(() => {
+    revealHoverHintControls(mode, hintState.revealedHoverElements);
+  });
+
+  const cachedActivation = hintActivationCache.getReusable(mode);
+  if (cachedActivation) {
+    restoreCachedMarkers(cachedActivation.markers);
+    hintActivationCache.withoutInvalidation(() => {
+      document.documentElement.appendChild(cachedActivation.overlay);
+    });
+
+    hintState.active = true;
+    hintState.mode = mode;
+    hintState.typed = "";
+    hintState.markers = cachedActivation.markers;
+    hintState.visibleMarkers = cachedActivation.markers;
+    hintState.labelIndex = cachedActivation.labelIndex;
+    hintState.overlay = cachedActivation.overlay;
+    hintState.onActivate = options.onActivate ?? null;
+
+    hintActivationCache.withoutInvalidation(() => {
+      revealVideoHintControls(cachedActivation.markers, hintState.revealedHoverElements);
+    });
+    primeMarkerPositions(
+      cachedActivation.markers,
+      hintState.mode,
+      highlightThumbnails,
+      MARKER_VARIANT_STYLE_ATTRIBUTE
+    );
+    schedulePositionUpdate();
+
+    window.addEventListener("scroll", onViewportChange, true);
+    window.addEventListener("resize", onViewportChange, true);
+    window.addEventListener("blur", exitHints, true);
+
+    return true;
+  }
 
   const elements = collectHintTargets(mode);
   if (elements.length === 0) {
-    restoreRevealedHintControls(hintState.revealedHoverElements);
+    hintActivationCache.withoutInvalidation(() => {
+      restoreRevealedHintControls(hintState.revealedHoverElements);
+    });
     return false;
   }
 
@@ -228,22 +295,38 @@ export const activateHints = (
   }
 
   if (markers.length === 0) {
-    restoreRevealedHintControls(hintState.revealedHoverElements);
+    hintActivationCache.withoutInvalidation(() => {
+      restoreRevealedHintControls(hintState.revealedHoverElements);
+    });
     return false;
   }
-
-  document.documentElement.appendChild(overlay);
+  hintActivationCache.withoutInvalidation(() => {
+    document.documentElement.appendChild(overlay);
+  });
 
   hintState.active = true;
   hintState.mode = mode;
   hintState.typed = "";
   hintState.markers = markers;
   hintState.visibleMarkers = markers;
-  hintState.labelIndex = buildHintLabelIndex(markers);
+  const labelIndex = buildHintLabelIndex(markers);
+  hintState.labelIndex = labelIndex;
   hintState.overlay = overlay;
   hintState.onActivate = options.onActivate ?? null;
-
-  revealVideoHintControls(markers, hintState.revealedHoverElements);
+  hintActivationCache.set({
+    labelIndex,
+    markers,
+    mode,
+    overlay,
+    scrollX: window.scrollX,
+    scrollY: window.scrollY,
+    settingsKey: getHintActivationSettingsKey(mode),
+    viewportHeight: window.innerHeight,
+    viewportWidth: window.innerWidth
+  });
+  hintActivationCache.withoutInvalidation(() => {
+    revealVideoHintControls(markers, hintState.revealedHoverElements);
+  });
   primeMarkerPositions(
     hintState.markers,
     hintState.mode,
@@ -267,6 +350,7 @@ export const areHintsPendingSelection = (): boolean =>
 export const setHintCharset = (charset: string): void => {
   hintAlphabet = charset;
   clearHintLabelPlanCache();
+  hintActivationCache.invalidate();
 
   if (hintState.active) {
     exitHints();
@@ -276,6 +360,7 @@ export const setHintCharset = (charset: string): void => {
 export const setReservedHintPrefixes = (prefixes: Iterable<string>): void => {
   reservedHintPrefixes = new Set(prefixes);
   clearHintLabelPlanCache();
+  hintActivationCache.invalidate();
 
   if (hintState.active) {
     exitHints();
@@ -285,6 +370,7 @@ export const setReservedHintPrefixes = (prefixes: Iterable<string>): void => {
 export const setAvoidedAdjacentHintPairs = (pairs: AdjacentHintPairs): void => {
   avoidedAdjacentHintPairs = pairs;
   clearHintLabelPlanCache();
+  hintActivationCache.invalidate();
 
   if (hintState.active) {
     exitHints();
@@ -293,6 +379,7 @@ export const setAvoidedAdjacentHintPairs = (pairs: AdjacentHintPairs): void => {
 
 export const setReservedHintLabels = (labels: ReservedHintLabels): void => {
   reservedHintLabels = normalizeReservedHintLabels(labels);
+  hintActivationCache.invalidate();
 
   if (hintState.active) {
     exitHints();
@@ -302,6 +389,7 @@ export const setReservedHintLabels = (labels: ReservedHintLabels): void => {
 export const setMinHintLabelLength = (value: number): void => {
   minHintLabelLength = Number.isInteger(value) && value >= 1 ? value : 2;
   clearHintLabelPlanCache();
+  hintActivationCache.invalidate();
 
   if (hintState.active) {
     exitHints();
@@ -310,6 +398,7 @@ export const setMinHintLabelLength = (value: number): void => {
 
 export const setShowCapitalizedLetters = (nextShowCapitalizedLetters: boolean): void => {
   showCapitalizedLetters = nextShowCapitalizedLetters;
+  hintActivationCache.invalidate();
 
   if (!hintState.active) {
     return;
@@ -337,6 +426,7 @@ export const setShowCapitalizedLetters = (nextShowCapitalizedLetters: boolean): 
 
 export const setHighlightThumbnails = (nextHighlightThumbnails: boolean): void => {
   highlightThumbnails = nextHighlightThumbnails;
+  hintActivationCache.invalidate();
 
   if (hintState.active) {
     schedulePositionUpdate();
@@ -352,6 +442,7 @@ export const setHintCSS = (nextHintCSS: string): void => {
       LETTER_STYLE_ATTRIBUTE
     );
   applyHintStyles(STYLE_ID, hintCSS);
+  hintActivationCache.invalidate();
 
   if (!hintState.active) {
     return;

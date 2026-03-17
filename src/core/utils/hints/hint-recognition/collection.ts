@@ -1,4 +1,8 @@
-import { isHintable, isVisibleHintTarget } from "~/src/core/utils/hints/dom";
+import {
+  createHintVisibilityContext,
+  getElementTabIndex,
+  hasInteractiveRole
+} from "~/src/core/utils/hints/dom";
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import {
   createHintCollectionContext,
@@ -7,8 +11,7 @@ import {
 
 const HINT_SELECTORS_COPY_LINK = "a[href],area[href]";
 const HINT_SELECTORS_COPY_IMAGE = "img";
-
-export const HINT_SELECTORS_DEFAULT = [
+const HINT_SELECTORS_DEFAULT_STRONG = [
   "a[href]",
   "area[href]",
   "button",
@@ -19,12 +22,14 @@ export const HINT_SELECTORS_DEFAULT = [
   "embed",
   "label",
   "summary",
-  "[onclick]",
-  "[role]",
-  "[tabindex]",
   "[contenteditable='true']",
-  "[contenteditable='']",
-  "[jsaction]"
+  "[contenteditable='']"
+].join(",");
+const HINT_SELECTORS_DEFAULT_WEAK = ["[onclick]", "[role]", "[tabindex]", "[jsaction]"].join(",");
+
+export const HINT_SELECTORS_DEFAULT = [
+  HINT_SELECTORS_DEFAULT_STRONG,
+  HINT_SELECTORS_DEFAULT_WEAK
 ].join(",");
 
 const getHintSelector = (mode: LinkMode): string => {
@@ -39,27 +44,77 @@ const getHintSelector = (mode: LinkMode): string => {
   return HINT_SELECTORS_DEFAULT;
 };
 
-const isEligibleHintTarget = (element: HTMLElement, mode: LinkMode): boolean => {
+const hasWeakHintSignal = (element: HTMLElement): boolean => {
+  if (hasInteractiveRole(element)) {
+    return true;
+  }
+
+  const tabIndex = getElementTabIndex(element);
+  if (tabIndex !== null && tabIndex >= 0) {
+    return true;
+  }
+
+  return element.hasAttribute("onclick") || element.hasAttribute("jsaction");
+};
+
+const isEligibleHintTarget = (
+  element: HTMLElement,
+  mode: LinkMode,
+  visibility: ReturnType<typeof createHintVisibilityContext>
+): boolean => {
   if (mode === "copy-image") {
     return (
       element instanceof HTMLImageElement &&
       !!(element.currentSrc || element.src) &&
-      isVisibleHintTarget(element)
+      visibility.isVisibleHintTarget(element)
     );
   }
 
-  return isHintable(element);
+  return visibility.isHintable(element);
+};
+
+const appendEligibleElements = (
+  target: HTMLElement[],
+  selector: string,
+  mode: LinkMode,
+  seen: Set<HTMLElement>,
+  visibility: ReturnType<typeof createHintVisibilityContext>,
+  options: {
+    requireWeakSignal?: boolean;
+  } = {}
+): void => {
+  for (const element of document.querySelectorAll<HTMLElement>(selector)) {
+    if (seen.has(element)) {
+      continue;
+    }
+
+    seen.add(element);
+
+    if (options.requireWeakSignal && !hasWeakHintSignal(element)) {
+      continue;
+    }
+
+    if (isEligibleHintTarget(element, mode, visibility)) {
+      target.push(element);
+    }
+  }
 };
 
 export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
-  const selector = getHintSelector(mode);
-  const { getRect, getIdentity, getDepth, getPreference } = createHintCollectionContext();
+  const visibility = createHintVisibilityContext();
+  const { getRect, getIdentity, getDepth, getPreference } = createHintCollectionContext({
+    getRect: visibility.getRect
+  });
   const elements: HTMLElement[] = [];
+  const seen = new Set<HTMLElement>();
 
-  for (const element of Array.from(document.querySelectorAll<HTMLElement>(selector))) {
-    if (isEligibleHintTarget(element, mode)) {
-      elements.push(element);
-    }
+  if (mode === "copy-link" || mode === "new-tab" || mode === "copy-image") {
+    appendEligibleElements(elements, getHintSelector(mode), mode, seen, visibility);
+  } else {
+    appendEligibleElements(elements, HINT_SELECTORS_DEFAULT_STRONG, mode, seen, visibility);
+    appendEligibleElements(elements, HINT_SELECTORS_DEFAULT_WEAK, mode, seen, visibility, {
+      requireWeakSignal: true
+    });
   }
 
   const uniqueElements = dedupeCollectedHintTargets(elements, {
@@ -69,24 +124,26 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     getPreference
   });
 
-  uniqueElements.sort((leftElement, rightElement) => {
-    const leftRect = getRect(leftElement);
-    const rightRect = getRect(rightElement);
+  return uniqueElements
+    .map((element) => ({
+      depth: getDepth(element),
+      element,
+      rect: getRect(element)
+    }))
+    .sort((left, right) => {
+      if (!left.rect || !right.rect) {
+        return 0;
+      }
 
-    if (!leftRect || !rightRect) {
-      return 0;
-    }
+      if (left.rect.top !== right.rect.top) {
+        return left.rect.top - right.rect.top;
+      }
 
-    if (leftRect.top !== rightRect.top) {
-      return leftRect.top - rightRect.top;
-    }
+      if (left.rect.left !== right.rect.left) {
+        return left.rect.left - right.rect.left;
+      }
 
-    if (leftRect.left !== rightRect.left) {
-      return leftRect.left - rightRect.left;
-    }
-
-    return getDepth(leftElement) - getDepth(rightElement);
-  });
-
-  return uniqueElements;
+      return left.depth - right.depth;
+    })
+    .map(({ element }) => element);
 };
