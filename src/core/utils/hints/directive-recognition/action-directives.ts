@@ -9,6 +9,8 @@ import {
   LIKE_ATTRIBUTE_PATTERNS,
   LIKE_SHORT_TEXT_PATTERNS,
   LIKE_STABLE_CONTROL_PATTERNS,
+  LOGIN_ATTRIBUTE_PATTERNS,
+  LOGIN_SHORT_TEXT_PATTERNS,
   NEXT_ATTRIBUTE_PATTERNS,
   NEXT_FALSE_POSITIVE_PATTERNS,
   NEXT_SHORT_TEXT_PATTERNS,
@@ -423,6 +425,11 @@ export const getPreferredShareElementIndex = (elements: HTMLElement[]): number |
 export const getPreferredDownloadElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, DOWNLOAD_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: DOWNLOAD_SHORT_TEXT_PATTERNS
+  });
+
+export const getPreferredLoginElementIndex = (elements: HTMLElement[]): number | null =>
+  getPreferredActionDirectiveElementIndex(elements, LOGIN_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: LOGIN_SHORT_TEXT_PATTERNS
   });
 
 export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | null =>

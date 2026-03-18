@@ -3,6 +3,7 @@ export const RESERVED_HINT_DIRECTIVES = [
   "attach",
   "share",
   "download",
+  "login",
   "home",
   "sidebar",
   "next",

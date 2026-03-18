@@ -7,6 +7,7 @@ import {
   HINT_DISLIKE_ICON_PATH,
   HINT_HOME_ICON_PATH,
   HINT_INPUT_ICON_PATH,
+  HINT_LOGIN_ICON_PATH,
   HINT_LIKE_ICON_PATH,
   HINT_NEXT_ICON_PATH,
   HINT_PREV_ICON_PATH,
@@ -145,6 +146,8 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_SHARE_ICON_PATH);
   } else if (directive === "download") {
     appendMarkerIcon(marker, HINT_DOWNLOAD_ICON_PATH);
+  } else if (directive === "login") {
+    appendMarkerIcon(marker, HINT_LOGIN_ICON_PATH);
   } else if (directive === "home") {
     appendMarkerIcon(marker, HINT_HOME_ICON_PATH);
   } else if (directive === "sidebar") {

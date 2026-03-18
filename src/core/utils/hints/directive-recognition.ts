@@ -1,6 +1,8 @@
 import {
   DOWNLOAD_ATTRIBUTE_PATTERNS,
   DOWNLOAD_SHORT_TEXT_PATTERNS,
+  LOGIN_ATTRIBUTE_PATTERNS,
+  LOGIN_SHORT_TEXT_PATTERNS,
   PREV_ATTRIBUTE_PATTERNS,
   PREV_SHORT_TEXT_PATTERNS,
   SHARE_ATTRIBUTE_PATTERNS,
@@ -21,6 +23,7 @@ import {
   getPreferredCancelElementIndex,
   getPreferredDislikeElementIndex,
   getPreferredDownloadElementIndex,
+  getPreferredLoginElementIndex,
   getPreferredLikeElementIndex,
   getPreferredNextElementIndex,
   getPreferredPrevElementIndex,
@@ -96,6 +99,20 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
       )
   },
   {
+    directive: "login",
+    threshold: 220,
+    getScore: (element, rect, features) =>
+      getActionDirectiveCandidateScore(
+        element,
+        LOGIN_ATTRIBUTE_PATTERNS,
+        {
+          shortTextPatterns: LOGIN_SHORT_TEXT_PATTERNS
+        },
+        rect,
+        features
+      )
+  },
+  {
     directive: "home",
     threshold: 180,
     getScore: (element, rect, features) => getHomeCandidateScore(element, rect, features)
@@ -165,6 +182,7 @@ const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   attach: 220,
   share: 220,
   download: 220,
+  login: 220,
   home: 180,
   sidebar: 220,
   next: 200,
@@ -249,6 +267,7 @@ export {
   getPreferredDownloadElementIndex,
   getPreferredHomeElementIndex,
   getPreferredInputElementIndex,
+  getPreferredLoginElementIndex,
   getPreferredLikeElementIndex,
   getPreferredNextElementIndex,
   getPreferredPrevElementIndex,

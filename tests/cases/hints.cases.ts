@@ -34,6 +34,14 @@ export const hintDirectiveCases: HintDirectiveCases = {
     ],
     ignored: ["<button type='button'>Other</button>"]
   },
+  login: {
+    desc: "detects login",
+    recognizes: [
+      "<a href='/signin' aria-label='Sign in to continue'>Sign in</a>",
+      "<button type='button' data-testid='login-button' title='Log in'>Log in</button>"
+    ],
+    ignored: ["<button type='button'>Other</button>"]
+  },
   home: {
     desc: "detects home",
     recognizes: ["<a href='/' rel='home'>Home</a>"],

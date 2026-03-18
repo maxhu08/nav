@@ -48,8 +48,35 @@ describe("migrateOldConfig", () => {
 
     const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
 
+    expect(migratedConfig.hints.reservedLabels).toContain("@login si");
     expect(migratedConfig.hints.reservedLabels).toContain("@download dl");
     expect(migratedConfig.hints.reservedLabels).toContain("@share sh");
+  });
+
+  test("adds the login directive for configs before v1.0.9", () => {
+    const oldConfig = {
+      ...structuredClone(defaultConfig),
+      hints: {
+        ...structuredClone(defaultConfig).hints,
+        reservedLabels: `@input kj kjf kjfd
+@attach up
+@share sh
+@download dl
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+      }
+    };
+
+    const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+    expect(migratedConfig.hints.reservedLabels).toContain("@login si");
+    expect(migratedConfig.hints.reservedLabels).toContain("@download dl");
   });
 
   test("does not duplicate the share directive when it already exists", () => {
@@ -69,5 +96,14 @@ describe("migrateOldConfig", () => {
       migratedConfig.hints.reservedLabels.match(/^@download /gm) ?? [];
 
     expect(downloadDirectiveMatches).toHaveLength(1);
+  });
+
+  test("does not duplicate the login directive when it already exists", () => {
+    const config = structuredClone(defaultConfig);
+
+    const migratedConfig = migrateOldConfig(config, defaultConfig);
+    const loginDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@login /gm) ?? [];
+
+    expect(loginDirectiveMatches).toHaveLength(1);
   });
 });

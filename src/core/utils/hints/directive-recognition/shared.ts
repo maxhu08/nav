@@ -68,6 +68,17 @@ export const DOWNLOAD_SHORT_TEXT_PATTERNS = [
   /^export$/i,
   /^save (file|image|video|audio|photo|media|pdf|document)$/i
 ];
+export const LOGIN_ATTRIBUTE_PATTERNS = [
+  /\bsign[\s-]?in\b/i,
+  /\blog[\s-]?in\b/i,
+  /\blog[\s-]?on\b/i,
+  /\blogin\b/i,
+  /\bservice ?login\b/i,
+  /\bauthenticate\b/i,
+  /\bauth\b/i,
+  /\bsso\b/i
+];
+export const LOGIN_SHORT_TEXT_PATTERNS = [/^sign[\s-]?in$/i, /^log[\s-]?in$/i, /^login$/i];
 export const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
 export const SIDEBAR_ATTRIBUTE_PATTERNS = [
   /\bmenu\b/i,
