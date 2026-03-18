@@ -151,8 +151,6 @@ export const LIKE_SHORT_TEXT_PATTERNS = [/^like$/i];
 export const DISLIKE_ATTRIBUTE_PATTERNS = [/\bdislike\b/i, /\bdownvote\b/i, /\bthumb[-_ ]?down\b/i];
 export const DISLIKE_SHORT_TEXT_PATTERNS = [/^dislike$/i];
 export const REACTION_WRAPPER_SELECTOR = [
-  "like-button-view-model",
-  "dislike-button-view-model",
   "toggle-button-view-model",
   "button-view-model",
   "[class*='segmented-start' i]",
@@ -168,8 +166,6 @@ export const LIKE_STABLE_CONTROL_PATTERNS = [
   /\bsegmented-start\b/i,
   /\blike-button\b/i,
   /\blikebutton\b/i,
-  /\blike-button-view-model\b/i,
-  /\bytlikebuttonviewmodelhost\b/i,
   /\bthumb[-_ ]?up\b/i,
   /\bupvote\b/i
 ];
@@ -177,7 +173,6 @@ export const DISLIKE_STABLE_CONTROL_PATTERNS = [
   /\bsegmented-end\b/i,
   /\bdislike-button\b/i,
   /\bdislikebutton\b/i,
-  /\bdislike-button-view-model\b/i,
   /\bthumb[-_ ]?down\b/i,
   /\bdownvote\b/i
 ];
@@ -377,6 +372,19 @@ export const getReactionControlAttributeText = (
     features
   );
 
+const isAmbiguousReactionWrapper = (element: HTMLElement): boolean => {
+  const attributeText = getJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "data-test-id", "title", "class", "type"],
+    [element.tagName.toLowerCase()]
+  );
+
+  return (
+    textMatchesAnyPattern(attributeText, LIKE_ATTRIBUTE_PATTERNS) &&
+    textMatchesAnyPattern(attributeText, DISLIKE_ATTRIBUTE_PATTERNS)
+  );
+};
+
 export const getReactionWrappers = (
   element: HTMLElement,
   features?: ElementFeatureVector
@@ -385,7 +393,7 @@ export const getReactionWrappers = (
   let current = getCachedClosest(element, REACTION_WRAPPER_SELECTOR, features);
 
   while (current instanceof HTMLElement) {
-    if (current !== element) {
+    if (current !== element && !isAmbiguousReactionWrapper(current)) {
       wrappers.push(current);
     }
 

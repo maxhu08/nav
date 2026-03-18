@@ -213,7 +213,7 @@ const getReactionDirectiveCandidateScore = (
   const hasStableSignal = textMatchesAnyPattern(attributeText, controlPatterns);
   const hasSiblingSignal = hasReactionSiblingSignal(element, siblingPatterns, features);
 
-  if (!hasStableSignal && !hasSiblingSignal) {
+  if (!hasStableSignal) {
     return Number.NEGATIVE_INFINITY;
   }
 

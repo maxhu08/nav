@@ -228,6 +228,54 @@ const getAssociatedFileInput = (element: HTMLElement): HTMLInputElement | null =
   return null;
 };
 
+const getAssociatedLabelControl = (element: HTMLElement): HTMLElement | null => {
+  if (element instanceof HTMLLabelElement && element.control instanceof HTMLElement) {
+    return element.control;
+  }
+
+  const ancestorLabel = element.closest("label");
+  if (ancestorLabel instanceof HTMLLabelElement && ancestorLabel.control instanceof HTMLElement) {
+    return ancestorLabel.control;
+  }
+
+  return null;
+};
+
+const dedupeEquivalentLabelTargets = (
+  elements: HTMLElement[],
+  getPreference: (element: HTMLElement) => number
+): HTMLElement[] => {
+  const labelRepresentatives = new Map<HTMLElement, HTMLElement>();
+
+  for (const element of elements) {
+    const control = getAssociatedLabelControl(element);
+    if (!control) {
+      continue;
+    }
+
+    const existing = labelRepresentatives.get(control);
+    if (!existing) {
+      labelRepresentatives.set(control, element);
+      continue;
+    }
+
+    const elementScore = (element === control ? 1000 : 0) + getPreference(element);
+    const existingScore = (existing === control ? 1000 : 0) + getPreference(existing);
+    if (elementScore > existingScore) {
+      labelRepresentatives.set(control, element);
+    }
+  }
+
+  return elements.filter((element) => {
+    const control = getAssociatedLabelControl(element);
+    if (!control) {
+      return true;
+    }
+
+    return labelRepresentatives.get(control) === element;
+  });
+};
+
 const dedupeEquivalentAttachTargets = (
   elements: HTMLElement[],
   getRect: (element: HTMLElement) => DOMRect | null,
@@ -471,10 +519,13 @@ export const dedupeCollectedHintTargets = (
 
   return dedupeEquivalentAttachTargets(
     dedupeEquivalentSemanticTargets(
-      dedupeHintTargets(
-        withoutEquivalentAncestors,
-        context.getRect,
-        context.getIdentity,
+      dedupeEquivalentLabelTargets(
+        dedupeHintTargets(
+          withoutEquivalentAncestors,
+          context.getRect,
+          context.getIdentity,
+          context.getPreference
+        ),
         context.getPreference
       ),
       context.getRect,
