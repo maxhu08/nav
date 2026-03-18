@@ -11,7 +11,8 @@ export const hintDirectiveCases: HintDirectiveCases = {
     recognizes: [
       "<input type='file' aria-label='Upload file' />",
       "<button type='button' class='composer-btn' data-testid='composer-plus-btn' aria-label='Add files and more' id='composer-plus-btn' aria-haspopup='menu' aria-expanded='false' data-state='closed'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true' class='icon'><use href='/cdn/assets/sprites-core-il7yfj1b.svg#6be74c' fill='currentColor'></use></svg></button>",
-      "<button type='button' class='toolbar-action icon-paperclip' title='Choose from computer' data-testid='paperclip-button'></button>"
+      "<button type='button' class='toolbar-action icon-paperclip' title='Choose from computer' data-testid='paperclip-button'></button>",
+      "<button type='button' aria-label='Update profile photo' aria-busy='false'><img alt='First Last' src='https://example.com/avatar.png' /></button>"
     ],
     ignored: [
       "<button>Other</button>",
@@ -210,6 +211,18 @@ export const hintScenarioCases: HintScenarioCase[] = [
           directive: "attach"
         }
       ]
+    }
+  },
+  {
+    desc: "detects profile photo update button as attach without site-specific selectors",
+    fixtures: [
+      "<button id='profile-photo-button' type='button' class='relative rounded-full p-1' aria-label='Update profile photo' aria-busy='false'><img alt='First Last' class='rounded-full object-cover' src='https://example.com/avatar.png' /><div class='absolute bottom-0 end-0'><div class='flex h-7 w-7 items-center justify-center rounded-full'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true'><path d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z'></path></svg></div></div></button>",
+      "<button id='generic-profile-button' type='button' aria-label='Open profile menu'>Profile</button>"
+    ],
+    expect: {
+      directiveTargets: {
+        attach: "#profile-photo-button"
+      }
     }
   },
   {

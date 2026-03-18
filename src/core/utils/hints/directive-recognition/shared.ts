@@ -31,6 +31,7 @@ export const INPUT_ATTRIBUTE_PATTERNS = [
 export const ATTACH_ATTRIBUTE_PATTERNS = [
   /\battach\b/i,
   /\bupload\b/i,
+  /\b(update|change|edit)\b.*\b(photo|avatar|image|picture)\b/i,
   /\badd\b.*\bfiles?\b/i,
   /\bpick\b.*\bfiles?\b/i,
   /\bselect\b.*\bfiles?\b/i,
@@ -46,7 +47,8 @@ export const ATTACH_ATTRIBUTE_PATTERNS = [
 export const ATTACH_EXACT_CONTROL_PATTERNS = [
   /\bcomposer-plus-btn\b/i,
   /\badd files and more\b/i,
-  /\bupload files?\b/i
+  /\bupload files?\b/i,
+  /\bupdate profile photo\b/i
 ];
 export const ATTACH_FILE_TYPE_PATTERNS = [/\bimage\b/i, /\bphoto\b/i, /\bmedia\b/i];
 export const SHARE_ATTRIBUTE_PATTERNS = [

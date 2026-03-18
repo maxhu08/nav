@@ -80,9 +80,13 @@ const appendMarkerIcon = (
 };
 
 export const setThumbnailMarkerIconVisibility = (
-  hint: Pick<HintMarker, "thumbnailIcon">,
+  hint: Pick<HintMarker, "directive" | "thumbnailIcon">,
   isVisible: boolean
 ): boolean => {
+  if (hint.directive === "attach") {
+    isVisible = false;
+  }
+
   const icon = hint.thumbnailIcon;
   if (!icon) {
     return false;
