@@ -3,13 +3,17 @@ import type {
   ReservedHintLabels
 } from "~/src/utils/hint-reserved-label-directives";
 
-export type HintDirectiveCase = {
+export type TestDefinition<T> = {
   desc: string;
+  test: T;
+};
+
+export type DirectiveTestType = {
   recognizes: string[];
   ignored: string[];
 };
 
-export type HintDirectiveCases = Record<ReservedHintDirective, HintDirectiveCase>;
+export type DirectiveTestCase = TestDefinition<DirectiveTestType>;
 
 export type HintRect = {
   left: number;
@@ -28,11 +32,20 @@ export type HintScenarioExpectation = {
   }>;
 };
 
-export type HintScenarioCase = {
-  desc: string;
+export type HintScenarioTestType = {
   fixtures: string[];
   geometry?: Record<string, HintRect>;
   elementsFromPointSelectors?: string[];
   reservedLabels?: Partial<ReservedHintLabels>;
   expect: HintScenarioExpectation;
 };
+
+export type HintScenarioCase = TestDefinition<HintScenarioTestType>;
+
+export type ConfigMigrationTestType = () => void;
+
+export type ConfigMigrationTestCase = TestDefinition<ConfigMigrationTestType>;
+
+export type HintLayoutTestType = () => void;
+
+export type HintLayoutTestCase = TestDefinition<HintLayoutTestType>;
