@@ -43,6 +43,46 @@ const getReservedLabels = (config: unknown): string => {
     : "";
 };
 
+const hasHotkeyMapping = (mappings: string, sequence: string, action: string): boolean => {
+  return mappings
+    .split("\n")
+    .map((line) => {
+      const commentStartIndex = line.indexOf("#");
+      return commentStartIndex === -1 ? line.trim() : line.slice(0, commentStartIndex).trim();
+    })
+    .some((line) => line === `${sequence} ${action}`);
+};
+
+const addHotkeyMappingIfMissing = (mappings: string, sequence: string, action: string): string => {
+  if (hasHotkeyMapping(mappings, sequence, action)) {
+    return mappings;
+  }
+
+  const trimmedMappings = mappings.trimEnd();
+  const mappingLine = `${sequence} ${action}`;
+
+  if (trimmedMappings.length === 0) {
+    return mappingLine;
+  }
+
+  return `${trimmedMappings}\n${mappingLine}`;
+};
+
+const getHotkeyMappings = (config: unknown): string => {
+  if (typeof config !== "object" || config === null) {
+    return "";
+  }
+
+  const hotkeys = (config as { hotkeys?: unknown }).hotkeys;
+  if (typeof hotkeys !== "object" || hotkeys === null) {
+    return "";
+  }
+
+  return typeof (hotkeys as { mappings?: unknown }).mappings === "string"
+    ? (hotkeys as { mappings: string }).mappings
+    : "";
+};
+
 export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Config => {
   // if config before v1.0.3
   if (!hasReservedLabelsOption(config)) {
@@ -56,6 +96,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
 
   const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
   const originalReservedLabels = getReservedLabels(config);
+  const originalHotkeyMappings = getHotkeyMappings(config);
 
   // if config before v1.0.6
   if (!hasDirective(originalReservedLabels, "input")) {
@@ -99,6 +140,15 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
       migratedConfig.hints.reservedLabels,
       "download",
       "dl"
+    );
+  }
+
+  // if config before v1.10.0
+  if (!hasHotkeyMapping(originalHotkeyMappings, "yc", "yank-current-tab-url-clean")) {
+    migratedConfig.hotkeys.mappings = addHotkeyMappingIfMissing(
+      migratedConfig.hotkeys.mappings,
+      "yc",
+      "yank-current-tab-url-clean"
     );
   }
 

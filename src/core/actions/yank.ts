@@ -1,5 +1,6 @@
 import { activateHints } from "~/src/core/actions/hints";
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
+import { getCleanUrl, getNormalizedUrl } from "~/src/utils/url";
 
 type FetchImageResponse = {
   ok: boolean;
@@ -141,14 +142,8 @@ const writeClipboardImage = async (image: HTMLImageElement): Promise<ImageClipbo
   }
 };
 
-const getNormalizedUrl = (value: string): string => {
-  const url = new URL(value);
-  const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
-
-  return `${url.origin}${pathname}${url.search}${url.hash}`;
-};
-
 const getNormalizedCurrentUrl = (): string => getNormalizedUrl(window.location.href);
+const getCleanCurrentUrl = (): string => getCleanUrl(window.location.href);
 
 const getLinkUrl = (element: HTMLElement): string | null => {
   if (
@@ -241,6 +236,21 @@ export const yankCurrentTabUrl = (): boolean => {
     }
 
     showYankToast("error", "Could not yank current tab URL", "Clipboard access was denied.");
+  });
+
+  return true;
+};
+
+export const yankCurrentTabUrlClean = (): boolean => {
+  const currentUrl = getCleanCurrentUrl();
+
+  void writeClipboard(currentUrl).then((didCopy) => {
+    if (didCopy) {
+      showYankToast("success", "Clean current tab URL yanked", currentUrl);
+      return;
+    }
+
+    showYankToast("error", "Could not yank clean current tab URL", "Clipboard access was denied.");
   });
 
   return true;

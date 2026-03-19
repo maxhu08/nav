@@ -21,6 +21,7 @@ export type ActionName =
   | "yank-image"
   | "yank-image-url"
   | "yank-current-tab-url"
+  | "yank-current-tab-url-clean"
   | "history-go-prev"
   | "history-go-next"
   | "follow-prev"
@@ -58,6 +59,7 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "yank-image",
   "yank-image-url",
   "yank-current-tab-url",
+  "yank-current-tab-url-clean",
   "history-go-prev",
   "history-go-next",
   "follow-prev",
@@ -259,6 +261,7 @@ yl yank-link-url
 yi yank-image
 yI yank-image-url
 yy yank-current-tab-url
+yc yank-current-tab-url-clean
 
 # misc
 H history-go-prev

@@ -22,7 +22,13 @@ import { createEnableFindModeAction } from "~/src/core/actions/find";
 import { createFindModeController } from "~/src/core/actions/find-mode";
 import { createWatchController } from "~/src/core/actions/watch-mode";
 import { goHistory, createTabCommandAction } from "~/src/core/actions/tabs";
-import { yankCurrentTabUrl, yankImage, yankImageUrl, yankLinkUrl } from "~/src/core/actions/yank";
+import {
+  yankCurrentTabUrl,
+  yankCurrentTabUrlClean,
+  yankImage,
+  yankImageUrl,
+  yankLinkUrl
+} from "~/src/core/actions/yank";
 import { createStorageChangeHandler, syncFastConfig } from "~/src/core/utils/fast-config-sync";
 import { createFocusIndicatorController } from "~/src/core/utils/focus-indicator";
 import {
@@ -140,6 +146,7 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "yank-image": yankImage,
   "yank-image-url": yankImageUrl,
   "yank-current-tab-url": yankCurrentTabUrl,
+  "yank-current-tab-url-clean": yankCurrentTabUrlClean,
   "scroll-down": scrollDown,
   "scroll-half-page-down": scrollHalfPageDown,
   "scroll-half-page-up": scrollHalfPageUp,
