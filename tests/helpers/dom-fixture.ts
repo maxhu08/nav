@@ -37,14 +37,20 @@ const installDomGlobals = (window: JSDOM["window"]): (() => void) => {
   const entries: Array<[GlobalKey, unknown]> = [
     ["window", window],
     ["document", window.document],
+    ["history", window.history],
     ["navigator", window.navigator],
     ["Node", domWindow.Node],
+    ["NodeFilter", domWindow.NodeFilter],
     ["Element", domWindow.Element],
     ["HTMLElement", domWindow.HTMLElement],
+    ["HTMLDivElement", domWindow.HTMLDivElement],
+    ["HTMLSpanElement", domWindow.HTMLSpanElement],
+    ["HTMLStyleElement", domWindow.HTMLStyleElement],
     ["HTMLInputElement", domWindow.HTMLInputElement],
     ["HTMLTextAreaElement", domWindow.HTMLTextAreaElement],
     ["HTMLButtonElement", domWindow.HTMLButtonElement],
     ["HTMLSelectElement", domWindow.HTMLSelectElement],
+    ["HTMLVideoElement", domWindow.HTMLVideoElement],
     ["HTMLAnchorElement", domWindow.HTMLAnchorElement],
     ["HTMLAreaElement", domWindow.HTMLAreaElement],
     ["HTMLLabelElement", domWindow.HTMLLabelElement],
@@ -92,7 +98,9 @@ const installGeometryStubs = (root: HTMLElement): void => {
 };
 
 export const createDomFixture = (outerHTML: string | string[]): DomFixture => {
-  const dom = new JSDOM("<!doctype html><html><body></body></html>");
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "https://example.com/"
+  });
   const cleanupGlobals = installDomGlobals(dom.window);
 
   const root = document.createElement("div");

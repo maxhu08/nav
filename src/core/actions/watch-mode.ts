@@ -18,6 +18,8 @@ import {
 
 export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
+  let watchRouteKey = window.location.href;
+  let isWaitingForWatchVideoRefresh = false;
   let watchShowCapitalizedLetters = false;
   const captionsStateByVideo = new WeakMap<HTMLVideoElement, boolean>();
   let lastWatchToastMessage = "";
@@ -47,14 +49,44 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     return null;
   };
 
+  const refreshWatchRouteKey = (): boolean => {
+    const nextRouteKey = window.location.href;
+    if (nextRouteKey === watchRouteKey) {
+      return false;
+    }
+
+    watchRouteKey = nextRouteKey;
+    watchVideoElement = null;
+    isWaitingForWatchVideoRefresh = true;
+    return true;
+  };
+
+  const reacquireWatchVideo = (): HTMLVideoElement | null => {
+    const nextVideo = pickBestWatchVideo(null);
+    if (!nextVideo) {
+      return null;
+    }
+
+    watchVideoElement = nextVideo;
+    isWaitingForWatchVideoRefresh = false;
+    return nextVideo;
+  };
+
   const exitWatchMode = (): void => {
     deps.setMode("normal");
+    isWaitingForWatchVideoRefresh = false;
     overlay.hideOverlay();
   };
 
   const getActiveWatchVideo = (): HTMLVideoElement | null => {
     if (!deps.isWatchMode()) {
       return null;
+    }
+
+    refreshWatchRouteKey();
+
+    if (isWaitingForWatchVideoRefresh) {
+      return reacquireWatchVideo();
     }
 
     const trackedVideo = getTrackedWatchVideo();
@@ -106,6 +138,22 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
       syncWatchHintsOverlay();
     },
+    handleWatchRouteChange: (): void => {
+      if (!deps.isWatchMode()) {
+        watchRouteKey = window.location.href;
+        return;
+      }
+
+      refreshWatchRouteKey();
+      syncWatchHintsOverlay();
+    },
+    handleWatchDomMutation: (): void => {
+      if (!deps.isWatchMode() || !isWaitingForWatchVideoRefresh) {
+        return;
+      }
+
+      syncWatchHintsOverlay();
+    },
     getWatchActionSequences: (): Record<
       "toggle-fullscreen" | "toggle-play-pause" | "toggle-loop" | "toggle-mute" | "toggle-captions",
       string
@@ -119,17 +167,21 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     isWatchModeActive: (): boolean => getActiveWatchVideo() !== null,
     exitWatchMode,
     toggleVideoControls: (): boolean => {
-      if (deps.isWatchMode()) {
+      const currentVideo = getActiveWatchVideo();
+      const targetVideo = pickBestWatchVideo(null);
+
+      if (deps.isWatchMode() && currentVideo && currentVideo === targetVideo) {
         exitWatchMode();
         return true;
       }
 
-      const targetVideo = pickBestWatchVideo(getTrackedWatchVideo());
       if (!targetVideo) {
         return false;
       }
 
       watchVideoElement = targetVideo;
+      watchRouteKey = window.location.href;
+      isWaitingForWatchVideoRefresh = false;
       deps.setMode("watch");
       targetVideo.focus({ preventScroll: true });
       syncWatchHintsOverlay();

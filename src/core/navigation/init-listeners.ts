@@ -34,6 +34,8 @@ type RuntimeListenerDeps = {
   watchController: {
     syncWatchHintsOverlay: EventListener;
     handleWatchMediaStateChange: EventListener;
+    handleWatchRouteChange: EventListener;
+    handleWatchDomMutation: () => void;
   };
   setShouldBypassNextTypingKeyAfterHintSelect: (value: boolean) => void;
 };
@@ -55,10 +57,31 @@ export const registerRuntimeListeners = ({
   window.addEventListener("scroll", focusIndicator.scheduleOverlayPosition, true);
   window.addEventListener("resize", watchController.syncWatchHintsOverlay, true);
   window.addEventListener("scroll", watchController.syncWatchHintsOverlay, true);
+  window.addEventListener("popstate", watchController.handleWatchRouteChange, true);
+  window.addEventListener("hashchange", watchController.handleWatchRouteChange, true);
   document.addEventListener("fullscreenchange", watchController.syncWatchHintsOverlay, true);
   document.addEventListener("play", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("pause", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("ended", watchController.handleWatchMediaStateChange, true);
+  const originalPushState = history.pushState;
+  history.pushState = function (...args) {
+    const result = originalPushState.apply(this, args);
+    watchController.handleWatchRouteChange(new Event("pushstate"));
+    return result;
+  };
+  const originalReplaceState = history.replaceState;
+  history.replaceState = function (...args) {
+    const result = originalReplaceState.apply(this, args);
+    watchController.handleWatchRouteChange(new Event("replacestate"));
+    return result;
+  };
+  const watchDomObserver = new MutationObserver(() => {
+    watchController.handleWatchDomMutation();
+  });
+  watchDomObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
   document.addEventListener("mousedown", (event) => {
     if (!isFindUIElement(event.target)) {
       findMode.hideFindBar();

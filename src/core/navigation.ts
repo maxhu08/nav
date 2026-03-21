@@ -475,7 +475,9 @@ export const initCoreNavigation = (): void => {
       },
       watchController: {
         syncWatchHintsOverlay: watchController.syncWatchHintsOverlay,
-        handleWatchMediaStateChange: watchController.handleWatchMediaStateChange
+        handleWatchMediaStateChange: watchController.handleWatchMediaStateChange,
+        handleWatchRouteChange: watchController.handleWatchRouteChange,
+        handleWatchDomMutation: watchController.handleWatchDomMutation
       },
       setShouldBypassNextTypingKeyAfterHintSelect: (value): void => {
         shouldBypassNextTypingKeyAfterHintSelect = value;
