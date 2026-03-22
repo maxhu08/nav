@@ -1,8 +1,7 @@
-# Changes in 1.0.8
+# Changes in 1.1.0
 
 in this release:
 
-- improve hint and directive recognition and rendering
-- add login directive
+- add copy current url clean action
 - performance improvements
 - bug fixes
