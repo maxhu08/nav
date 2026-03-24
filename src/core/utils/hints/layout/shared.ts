@@ -1,6 +1,6 @@
 import type { HintMarker, ReservedHintDirective } from "~/src/core/utils/hints/types";
 
-export const MARKER_VIEWPORT_PADDING = 4;
+export const MARKER_VIEWPORT_PADDING = 8;
 export const MARKER_COLLISION_GAP = 2;
 export const MARKER_ANCHOR_INSET = 2;
 export const MARKER_COLLISION_CELL_SIZE = 80;
@@ -60,14 +60,27 @@ export const clampMarkerPosition = (
   width: number,
   height: number
 ): Pick<PlacedMarkerRect, "left" | "top"> => ({
-  left: Math.min(
-    Math.max(MARKER_VIEWPORT_PADDING, left),
-    Math.max(MARKER_VIEWPORT_PADDING, window.innerWidth - width - MARKER_VIEWPORT_PADDING)
-  ),
-  top: Math.min(
-    Math.max(MARKER_VIEWPORT_PADDING, top),
-    Math.max(MARKER_VIEWPORT_PADDING, window.innerHeight - height - MARKER_VIEWPORT_PADDING)
-  )
+  left: (() => {
+    const viewportWidth = Math.max(0, window.innerWidth - MARKER_VIEWPORT_PADDING * 2);
+    const clampedWidth = Math.min(width, viewportWidth);
+
+    return Math.min(
+      Math.max(MARKER_VIEWPORT_PADDING, left),
+      Math.max(MARKER_VIEWPORT_PADDING, window.innerWidth - clampedWidth - MARKER_VIEWPORT_PADDING)
+    );
+  })(),
+  top: (() => {
+    const viewportHeight = Math.max(0, window.innerHeight - MARKER_VIEWPORT_PADDING * 2);
+    const clampedHeight = Math.min(height, viewportHeight);
+
+    return Math.min(
+      Math.max(MARKER_VIEWPORT_PADDING, top),
+      Math.max(
+        MARKER_VIEWPORT_PADDING,
+        window.innerHeight - clampedHeight - MARKER_VIEWPORT_PADDING
+      )
+    );
+  })()
 });
 
 export const createPlacedMarkerRect = (

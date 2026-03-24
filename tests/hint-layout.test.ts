@@ -302,7 +302,7 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
 
         expect(marker.getAttribute("data-nav-hint-marker-variant")).toBe("thumbnail");
         expect(marker.style.top).not.toBe("70px");
-        expect(marker.style.top).toBe("4px");
+        expect(marker.style.top).toBe("8px");
       } finally {
         fixture.cleanup();
       }
