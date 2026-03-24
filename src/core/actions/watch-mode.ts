@@ -1,20 +1,15 @@
 import { FOCUS_INDICATOR_EVENT } from "~/src/core/utils/get-ui";
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
-import {
-  findSiteToggleControl,
-  getCaptionsState,
-  getResolvedCaptionsState,
-  getVideoMutedState,
-  setInternalCaptionsState,
-  toggleMuteWithFallback
-} from "~/src/core/actions/watch-mode/controls";
+import { findSiteToggleControl, getVideoMutedState } from "~/src/core/actions/watch-mode/controls";
 import { createWatchOverlayController } from "~/src/core/actions/watch-mode/overlay";
 import { isVideoVisible, type WatchControllerDeps } from "~/src/core/actions/watch-mode/shared";
 import {
-  getToggleableTextTracks,
-  pickBestWatchVideo,
-  toggleWatchVideoTextTracks
-} from "~/src/core/actions/watch-mode/video-state";
+  toggleWatchCaptionsState,
+  toggleWatchLoopState,
+  toggleWatchMuteState,
+  toggleWatchPlayPauseState
+} from "~/src/core/actions/watch-mode/toggles";
+import { pickBestWatchVideo } from "~/src/core/actions/watch-mode/video-state";
 
 export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
@@ -125,6 +120,14 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     overlay.showOverlay(video);
   };
 
+  const toggleDeps = {
+    getVideo: getActiveWatchVideo,
+    showActivationIndicator: showWatchActivationIndicator,
+    exitWatchMode,
+    showToast: showWatchToggleToast,
+    captionsStateByVideo
+  };
+
   return {
     setWatchShowCapitalizedLetters: (value: boolean): void => {
       watchShowCapitalizedLetters = value;
@@ -188,109 +191,28 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return true;
     },
     toggleWatchPlayPause: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-
-      if (video.paused || video.ended) {
-        void video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
-
-      exitWatchMode();
-      return true;
+      return toggleWatchPlayPauseState(toggleDeps, { exitAfterToggle: true });
     },
     toggleWatchLoop: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-      const wasLooping = video.loop;
-      const siteLoopControl = findSiteToggleControl(video, "loop");
-      if (siteLoopControl) {
-        siteLoopControl.click();
-      } else {
-        video.loop = !video.loop;
-      }
-
-      const isLooping = siteLoopControl
-        ? video.loop === wasLooping
-          ? !wasLooping
-          : video.loop
-        : video.loop;
-      showWatchToggleToast(isLooping ? "Loop on" : "Loop off");
-      exitWatchMode();
-      return true;
+      return toggleWatchLoopState(toggleDeps, {
+        exitAfterToggle: true,
+        toastOnStateChange: true
+      });
     },
     toggleWatchMute: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-      const isMuted = toggleMuteWithFallback(video);
-      showWatchToggleToast(isMuted ? "Video muted" : "Video unmuted");
-      exitWatchMode();
-      return true;
+      return toggleWatchMuteState(toggleDeps, {
+        exitAfterToggle: true,
+        toastOnStateChange: true
+      });
     },
     toggleWatchCaptions: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-      const siteCaptionsControl = findSiteToggleControl(video, "captions");
-      const hadTracks = getToggleableTextTracks(video).length > 0;
-      const wasCaptionsOn = getResolvedCaptionsState(
-        video,
-        siteCaptionsControl,
-        captionsStateByVideo
-      );
-      if (siteCaptionsControl) {
-        siteCaptionsControl.click();
-      } else if (!toggleWatchVideoTextTracks(video)) {
-        showWatchToggleToast("Captions unavailable");
-        exitWatchMode();
-        return true;
-      }
-
-      let captionsOn = getCaptionsState(video, siteCaptionsControl);
-      if (captionsOn === null || captionsOn === wasCaptionsOn) {
-        if (!siteCaptionsControl && hadTracks && toggleWatchVideoTextTracks(video)) {
-          captionsOn = getToggleableTextTracks(video).some((track) => track.mode === "showing");
-        } else {
-          captionsOn = !wasCaptionsOn;
-        }
-      }
-
-      setInternalCaptionsState(captionsStateByVideo, video, captionsOn);
-      showWatchToggleToast(captionsOn ? "Captions on" : "Captions off");
-      exitWatchMode();
-      return true;
+      return toggleWatchCaptionsState(toggleDeps, {
+        exitAfterToggle: true,
+        toastOnStateChange: true
+      });
     },
     togglePlayPause: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-
-      if (video.paused || video.ended) {
-        void video.play().catch(() => {});
-        return true;
-      }
-
-      video.pause();
-      return true;
+      return toggleWatchPlayPauseState(toggleDeps);
     },
     toggleFullscreen: (): boolean => {
       const video = getActiveWatchVideo();
@@ -322,59 +244,13 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return true;
     },
     toggleLoop: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-      const wasLooping = video.loop;
-      const siteLoopControl = findSiteToggleControl(video, "loop");
-      if (siteLoopControl) {
-        siteLoopControl.click();
-      } else {
-        video.loop = !video.loop;
-      }
-      if (!siteLoopControl && video.loop === wasLooping) {
-        video.loop = !video.loop;
-      }
-      return true;
+      return toggleWatchLoopState(toggleDeps);
     },
     toggleMute: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-      toggleMuteWithFallback(video);
-      return true;
+      return toggleWatchMuteState(toggleDeps);
     },
     toggleCaptions: (): boolean => {
-      const video = getActiveWatchVideo();
-      if (!video) {
-        return false;
-      }
-
-      showWatchActivationIndicator(video);
-      const siteCaptionsControl = findSiteToggleControl(video, "captions");
-      const hadTracks = getToggleableTextTracks(video).length > 0;
-      if (siteCaptionsControl) {
-        const currentState = getResolvedCaptionsState(
-          video,
-          siteCaptionsControl,
-          captionsStateByVideo
-        );
-        setInternalCaptionsState(captionsStateByVideo, video, !currentState);
-        siteCaptionsControl.click();
-        return true;
-      }
-
-      if (!hadTracks) {
-        return false;
-      }
-
-      return toggleWatchVideoTextTracks(video);
+      return toggleWatchCaptionsState(toggleDeps);
     }
   };
 };

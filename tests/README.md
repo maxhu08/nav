@@ -1,36 +1,43 @@
 # Tests
 
-This directory keeps hint tests data-driven.
+This directory keeps runtime behavior tests grouped by feature so new contributors can find the right coverage quickly.
 
 ## Rules
 
-- Do not add website-specific logic to `tests/hints.test.ts`.
-- Keep `tests/hint-layout.test.ts` focused on layout and collision behavior, not site-specific fixtures.
-- Put site-specific HTML, geometry, and hit-testing behavior in `tests/cases/hints.cases.ts`.
-- Keep every new case in the same standardized shape so future regressions can reuse the same runner.
-- Prefer shared cases over one-off test code.
+- Put tests in the folder that matches the feature under test.
+- Keep `tests/hint-layout.test.ts` focused on marker placement and collision behavior.
+- Put shared JSDOM fixtures, geometry stubs, and reusable helpers in `tests/helpers/`.
+- Prefer small focused files over one large catch-all runner.
+- Keep new test cases in a standardized shape so helpers can be reused across regressions.
+
+## Layout
+
+- `tests/directives/*.test.ts`: directive recognition coverage grouped by directive name.
+- `tests/hints/*.test.ts`: hint collection, visibility, and site-specific regressions.
+- `tests/hint-layout.test.ts`: marker placement and collision handling.
+- `tests/watch-mode.test.ts`: watch mode route and video reacquisition behavior.
+- `tests/config.test.ts`: config migration coverage.
+- `tests/url.test.ts`: URL normalization and cleanup coverage.
+- `tests/types.ts`: reusable case shapes.
+- `tests/helpers/dom-fixture.ts`: JSDOM and geometry stubs.
 
 ## Standardized formats
 
 ### Directive recognition cases
 
-Use `hintDirectiveCases` for pure recognition checks:
+Use directive-specific cases for pure recognition checks:
 
 ```ts
 attach: {
   desc: "detects attach",
-  recognizes: [
-    "<button aria-label='Add files and more'></button>"
-  ],
-  ignored: [
-    "<button>Other</button>"
-  ]
+  recognizes: ["<button aria-label='Add files and more'></button>"],
+  ignored: ["<button>Other</button>"]
 }
 ```
 
 ### Scenario cases
 
-Use `hintScenarioCases` for collection, dedupe, geometry, hit-testing, and label-assignment regressions:
+Use scenario cases for collection, dedupe, geometry, hit-testing, and label-assignment regressions:
 
 ```ts
 {
@@ -61,25 +68,19 @@ Use `hintScenarioCases` for collection, dedupe, geometry, hit-testing, and label
 }
 ```
 
-## Files
-
-- `tests/hints.test.ts`: generic runner for directive and scenario cases
-- `tests/hint-layout.test.ts`: focused regression coverage for marker placement and collision handling
-- `tests/cases/hints.cases.ts`: all shared fixtures and expectations
-- `tests/types.ts`: reusable case shapes
-- `tests/helpers/dom-fixture.ts`: JSDOM and geometry stubs
-
 ## Source map
 
-- `src/core/utils/hints/hint-recognition.ts`: collection, dedupe, and hover-only reveal behavior
-- `src/core/utils/hints/directive-recognition.ts`: directive scoring and reserved target selection
-- `src/core/utils/hints/semantics.ts`: reserved label assignment once directive targets are known
-- `src/core/utils/hints/layout.ts`: marker placement and collision behavior
+- `src/core/actions/hints.ts`: public hints facade used by the runtime.
+- `src/core/actions/hints/controller.ts`: hint session lifecycle, filtering, caching, and activation flow.
+- `src/core/utils/hints/hint-recognition.ts`: collection, dedupe, and hover-only reveal behavior.
+- `src/core/utils/hints/directive-recognition.ts`: directive scoring and reserved target selection.
+- `src/core/utils/hints/semantics.ts`: reserved label assignment once directive targets are known.
+- `src/core/utils/hints/layout.ts`: marker placement and collision behavior.
 
-When a regression is about "wrong element got chosen for `@directive`", start with `directive-recognition.ts`.
-When it is about "too many / too few hints showed up", start with `hint-recognition.ts`.
-When it is about label conflicts or reserved labels, start with `semantics.ts` and `labels.ts`.
-When it is about marker overlap or placement, start with `layout.ts`.
+When a regression is about "wrong element got chosen for `@directive`", start with `src/core/utils/hints/directive-recognition.ts`.
+When it is about "too many / too few hints showed up", start with `src/core/utils/hints/hint-recognition.ts` and `src/core/actions/hints/controller.ts`.
+When it is about label conflicts or reserved labels, start with `src/core/utils/hints/semantics.ts` and `src/core/utils/hints/labels.ts`.
+When it is about marker overlap or placement, start with `src/core/utils/hints/layout.ts`.
 
 ## Run
 
@@ -87,9 +88,10 @@ When it is about marker overlap or placement, start with `layout.ts`.
 bun run test
 ```
 
-Or run only one file while iterating:
+Or run a focused area while iterating:
 
 ```bash
-bun test tests/hints.test.ts
+bun test tests/hints
 bun test tests/hint-layout.test.ts
+bun test tests/directives/attach.test.ts
 ```

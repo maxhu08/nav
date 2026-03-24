@@ -1,24 +1,13 @@
 import type { ActionName } from "~/src/utils/hotkeys";
+import {
+  BRIDGE_PORT_NAME,
+  type BridgeMessage,
+  normalizeToastPayload,
+  type ToastPayload
+} from "~/src/shared/runtime-bridge";
 
 type FrameActionListener = (actionName: ActionName) => void;
-type ToastType = "success" | "info" | "warning" | "error";
-type ToastPayload = {
-  content: string;
-  description?: string;
-  toastType?: ToastType;
-};
 type ToastListener = (payload: ToastPayload) => void;
-
-type BridgeMessage =
-  | {
-      type: "frame-action";
-      actionName: ActionName;
-    }
-  | ({
-      type: "toast-proxy";
-    } & ToastPayload);
-
-const BRIDGE_PORT_NAME = "nav-runtime-bridge";
 
 let port: chrome.runtime.Port | null = null;
 let reconnectTimeout: number | null = null;
@@ -62,18 +51,11 @@ const handleBridgeMessage = (message: unknown): void => {
     return;
   }
 
-  if (data.type === "toast-proxy" && typeof data.content === "string") {
-    const payload: ToastPayload = {
-      content: data.content,
-      description: typeof data.description === "string" ? data.description : "",
-      toastType:
-        data.toastType === "success" ||
-        data.toastType === "info" ||
-        data.toastType === "warning" ||
-        data.toastType === "error"
-          ? data.toastType
-          : "info"
-    };
+  if (data.type === "toast-proxy") {
+    const payload = normalizeToastPayload(data);
+    if (!payload) {
+      return;
+    }
 
     for (const listener of toastListeners) {
       listener(payload);

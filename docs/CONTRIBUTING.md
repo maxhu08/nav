@@ -35,8 +35,8 @@ Use this page as the fast entry point for contributors.
 ## Hint Feature Workflow
 
 - For hint changes, use `docs/PROJECT_STRUCTURE.md` as the file map before editing.
-- New directive work usually touches three places: `src/utils/hint-reserved-label-directives.ts`, `src/core/utils/hints/directive-recognition.ts` plus one of its helper modules under `src/core/utils/hints/directive-recognition/`, and `tests/cases/hints.cases.ts`.
-- Collection and dedupe behavior belongs under `src/core/utils/hints/hint-recognition/`, while low-level DOM/visibility helpers belong in `src/core/utils/hints/dom.ts`.
+- New directive work usually touches three places: `src/utils/hint-reserved-label-directives.ts`, `src/core/utils/hints/directive-recognition.ts` plus one of its helper modules under `src/core/utils/hints/directive-recognition/`, and the matching regression coverage under `tests/directives/` or `tests/hints/`.
+- Collection and dedupe behavior belongs under `src/core/utils/hints/hint-recognition/`, while low-level DOM/visibility helpers belong in `src/core/utils/hints/dom/` with `src/core/utils/hints/dom.ts` as the facade.
 - Prefer extending the directive facade/registry in `src/core/utils/hints/directive-recognition.ts` and then putting directive-specific scoring in the closest helper module instead of adding one-off branching elsewhere in the pipeline.
 
 ## Refactor Conventions

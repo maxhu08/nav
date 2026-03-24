@@ -18,12 +18,12 @@ Use this map to decide where new code should go.
 
 ## Core Navigation Runtime
 
-- Shared runtime: `src/core/navigation.ts`
+- Shared runtime entry and wiring: `src/core/navigation.ts`
 - Navigation helper modules: `src/core/navigation/`
 - Content script entry: `src/core/index.ts`
 - Action handlers: `src/core/actions/`
 - Core utilities: `src/core/utils/`
-- `src/core/navigation.ts` is the runtime facade. It wires the feature controllers together and delegates focused logic to `src/core/navigation/`.
+- `src/core/navigation.ts` wires feature controllers together and keeps runtime startup flow in one place.
 - `src/core/navigation/frame-actions.ts` handles frame-proxied actions and message validation.
 - `src/core/navigation/force-normal-mode.ts` owns startup editable-focus guards for force-normal-mode.
 - `src/core/navigation/init-listeners.ts` installs runtime DOM listeners and cross-feature event bridges.
@@ -37,12 +37,23 @@ Use this map to decide where new code should go.
 - Pipeline stage modules: `src/core/utils/hints/`
 - Hints internals are split by responsibility so contributors can change one layer without reading the full pipeline first:
   - Shared hint mode/types: `src/core/utils/hints/model.ts`
-  - DOM primitives, visibility checks, and geometry helpers: `src/core/utils/hints/dom.ts`
-  - Hint session lifecycle and activation entrypoint: `src/core/actions/hints.ts`
+  - DOM facade re-exporting shared hint DOM helpers: `src/core/utils/hints/dom.ts`
+  - DOM geometry helpers: `src/core/utils/hints/dom/geometry.ts`
+  - DOM interactivity and target-preference scoring: `src/core/utils/hints/dom/interactive.ts`
+  - DOM visibility and hit-testing helpers: `src/core/utils/hints/dom/visibility.ts`
+  - DOM shared hint types/constants: `src/core/utils/hints/dom/shared.ts`
+  - Hint session lifecycle and activation entrypoint: `src/core/actions/hints/controller.ts`
   - Hint activation behavior (focus, click simulation, tab-open behavior): `src/core/actions/hints/activation.ts`
   - Target collection facade and public compatibility exports: `src/core/utils/hints/hint-recognition.ts`
   - Hint collection and ordering: `src/core/utils/hints/hint-recognition/collection.ts`
-  - Hint dedupe and collection caches: `src/core/utils/hints/hint-recognition/dedupe.ts`
+  - Hint collection caches and derived context: `src/core/utils/hints/hint-recognition/context.ts`
+  - Hint dedupe pipeline facade: `src/core/utils/hints/hint-recognition/dedupe.ts`
+  - Structural equivalent-target dedupe: `src/core/utils/hints/hint-recognition/equivalent.ts`
+  - Label/control dedupe: `src/core/utils/hints/hint-recognition/labels.ts`
+  - File-input attach dedupe: `src/core/utils/hints/hint-recognition/attach.ts`
+  - Spatial semantic dedupe: `src/core/utils/hints/hint-recognition/semantic.ts`
+  - Ancestor-link suppression: `src/core/utils/hints/hint-recognition/ancestor.ts`
+  - Hint-recognition shared types: `src/core/utils/hints/hint-recognition/shared.ts`
   - Hover-only reveal helpers: `src/core/utils/hints/hint-recognition/reveal.ts`
   - Directive scoring facade and reserved-target selection (`@input`, `@attach`, `@home`, `@sidebar`, `@next`, `@prev`, `@cancel`, `@submit`, `@like`, `@dislike`): `src/core/utils/hints/directive-recognition.ts`
   - Shared directive text/feature helpers and constants: `src/core/utils/hints/directive-recognition/shared.ts`
@@ -69,12 +80,12 @@ Use this map to decide where new code should go.
   6. Layout markers (thumbnail heuristics, collision avoidance, viewport clamping): `layout.ts` plus `layout/`
   7. Render overlay and marker CSS: `renderer.ts`
   8. Apply typed-input filtering and marker visibility updates: `input.ts`
-  9. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hints.ts`
+  9. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hints/controller.ts`
 - Shared hints types live in `src/core/utils/hints/types.ts`.
 - When adding a new directive, follow this order:
   1. Add the directive name in `src/utils/hint-reserved-label-directives.ts`
   2. Add its scoring logic and registry entry in `src/core/utils/hints/directive-recognition.ts`
-  3. Add or extend test coverage in `tests/cases/hints.cases.ts` and `tests/hints.test.ts`
+  3. Add or extend test coverage in the matching file under `tests/directives/` or `tests/hints/`
 
 ## Config Layers
 
@@ -113,6 +124,10 @@ Use this map to decide where new code should go.
 - Popup scripts: `src/popup/`
 - The popup mainly opens the options page and can pass the active tab URL into the options flow for quick site exclusion/inclusion.
 - Background entry: `src/background.ts`
+- Background runtime bridge fanout: `src/background/bridge.ts`
+- Background tab-command handlers: `src/background/tab-commands.ts`
+- Background image-fetch fallback: `src/background/fetch-image.ts`
+- Shared background/runtime message shapes: `src/shared/background-messages.ts` and `src/shared/runtime-bridge.ts`
 - The background worker handles tab-management actions, cross-frame runtime bridge messages, and fallback image fetching for clipboard copy.
 
 ## Other Refactored Runtime Areas
@@ -121,7 +136,13 @@ Use this map to decide where new code should go.
 - Find mode UI builder/helpers: `src/core/actions/find-mode/ui.ts`
 - Watch mode facade: `src/core/actions/watch-mode.ts`
 - Watch mode shared constants/types: `src/core/actions/watch-mode/shared.ts`
-- Watch control detection and toggle-state inference: `src/core/actions/watch-mode/controls.ts` and `src/core/actions/watch-mode/toggle-state.ts`
+- Watch control facade: `src/core/actions/watch-mode/controls.ts`
+- Watch control text/keyword helpers: `src/core/actions/watch-mode/control-text.ts`
+- Watch control detection and scoring: `src/core/actions/watch-mode/control-detection.ts`
+- Watch control state inference: `src/core/actions/watch-mode/control-state.ts`
+- Watch mute fallback helper: `src/core/actions/watch-mode/mute.ts`
+- Watch toggle-state inference helpers: `src/core/actions/watch-mode/toggle-state.ts`
+- Watch mode toggle helpers shared by watch-mode and direct actions: `src/core/actions/watch-mode/toggles.ts`
 - Watch overlay rendering: `src/core/actions/watch-mode/overlay.ts`
 - Watch video discovery and text-track helpers: `src/core/actions/watch-mode/video-state.ts`
 - Toast facade: `src/core/utils/sonner.ts`

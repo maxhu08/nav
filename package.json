@@ -22,7 +22,7 @@
     "format": "oxfmt --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,html}\"",
     "format:check": "oxfmt --check \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,html}\"",
     "commitlint": "commitlint",
-    "test": "bun test tests/*.test.ts",
+    "test": "bun test tests",
     "lint": "oxlint src scripts --deny-warnings",
     "lint:fix": "oxlint src scripts --fix --deny-warnings",
     "check": "bun run format:check && bun run lint && bun run typecheck",

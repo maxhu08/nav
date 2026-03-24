@@ -48,7 +48,7 @@ Example:
 
 - If a control renders but does not persist, check `save-helpers`.
 - If a control persists but does not show initial state, check `fill-helpers`.
-- If an option saves correctly but the runtime does not react to it, check `buildFastConfig`, the `chrome.storage.onChanged` handling in `src/core/navigation.ts`, and the runtime listener/setup helpers under `src/core/navigation/`.
+- If an option saves correctly but the runtime does not react to it, check `buildFastConfig`, the config sync helpers in `src/core/utils/fast-config-sync.ts`, and the runtime listener/setup helpers under `src/core/navigation/`.
 - If an element lookup fails, check that its ID matches the suffix helpers in `ui-helpers.ts`.
 
 ## Styles

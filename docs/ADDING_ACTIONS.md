@@ -17,7 +17,7 @@ If the action changes an existing behavior, decide whether the old action name s
 - Put the implementation in the closest runtime module under `src/core/actions/`
 - If it is a simple tab-management action, it may go through `src/core/actions/tabs.ts` and `src/background.ts`
 - If it is a page action, add it to the relevant feature module such as `src/core/actions/yank.ts`, `src/core/actions/find.ts`, or `src/core/actions/watch-mode.ts`
-- Register the action in `src/core/navigation.ts`
+- Register the action in `src/core/navigation/actions.ts`
 - Add the action name to `ActionName` and `VALID_ACTION_NAMES` in `src/utils/hotkeys.ts`
 
 ## 2. Update the Default Config
@@ -66,7 +66,7 @@ Edit the keyboard bindings block in `README.md` so it matches `DEFAULT_HOTKEY_MA
 ## Quick File Checklist
 
 - `src/core/actions/...`
-- `src/core/navigation.ts`
+- `src/core/navigation/actions.ts`
 - `src/utils/hotkeys.ts`
 - `src/utils/migrate-config.ts`
 - `src/docs.html`

@@ -1,12 +1,7 @@
 import { activateHints } from "~/src/core/actions/hints";
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 import { getCleanUrl, getNormalizedUrl } from "~/src/utils/url";
-
-type FetchImageResponse = {
-  ok: boolean;
-  bytes?: number[];
-  mimeType?: string;
-};
+import type { FetchImageMessage, FetchImageResponse } from "~/src/shared/background-messages";
 
 type ImageClipboardResult = "success" | "unsupported" | "error";
 
@@ -98,15 +93,14 @@ const writeClipboardImage = async (image: HTMLImageElement): Promise<ImageClipbo
   const fetchImageBlobFromBackground = async (): Promise<Blob | null> => {
     try {
       const response = await new Promise<FetchImageResponse>((resolve) => {
-        chrome.runtime.sendMessage(
-          {
-            type: "fetch-image",
-            url: source
-          },
-          (result?: FetchImageResponse) => {
-            resolve(result ?? { ok: false });
-          }
-        );
+        const message: FetchImageMessage = {
+          type: "fetch-image",
+          url: source
+        };
+
+        chrome.runtime.sendMessage(message, (result?: FetchImageResponse) => {
+          resolve(result ?? { ok: false });
+        });
       });
 
       if (!response.ok || !response.mimeType || !response.bytes) {

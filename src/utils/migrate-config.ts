@@ -68,10 +68,11 @@ const addHotkeyMappingIfMissing = (mappings: string, sequence: string, action: s
   return `${trimmedMappings}\n${mappingLine}`;
 };
 
-const renameHotkeyActionIfPresent = (
+const renameHotkeyMappingIfPresent = (
   mappings: string,
-  targetSequence: string,
+  oldSequence: string,
   oldAction: string,
+  newSequence: string,
   newAction: string
 ): string => {
   return mappings
@@ -93,18 +94,13 @@ const renameHotkeyActionIfPresent = (
 
       const sequence = trimmedContent.slice(0, separatorIndex).trim();
       const action = trimmedContent.slice(separatorIndex).trim();
-
-      if (targetSequence !== "*" && sequence !== targetSequence) {
-        return line;
-      }
-
-      if (action !== oldAction) {
+      if (sequence !== oldSequence || action !== oldAction) {
         return line;
       }
 
       const leadingWhitespace = content.match(/^\s*/)?.[0] ?? "";
       const trailingWhitespace = content.match(/\s*$/)?.[0] ?? "";
-      return `${leadingWhitespace}${sequence} ${newAction}${trailingWhitespace}${comment}`;
+      return `${leadingWhitespace}${newSequence} ${newAction}${trailingWhitespace}${comment}`;
     })
     .join("\n");
 };
@@ -194,6 +190,14 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   }
 
   // if config before v1.1.1
+  migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
+    migratedConfig.hotkeys.mappings,
+    "yb",
+    "duplicate-current-tab-base",
+    "yo",
+    "duplicate-current-tab-origin"
+  );
+
   if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
     migratedConfig.hotkeys.mappings = addHotkeyMappingIfMissing(
       migratedConfig.hotkeys.mappings,
