@@ -1,4 +1,6 @@
 import {
+  DELETE_ATTRIBUTE_PATTERNS,
+  DELETE_SHORT_TEXT_PATTERNS,
   DOWNLOAD_ATTRIBUTE_PATTERNS,
   DOWNLOAD_SHORT_TEXT_PATTERNS,
   LOGIN_ATTRIBUTE_PATTERNS,
@@ -7,6 +9,8 @@ import {
   MICROPHONE_SHORT_TEXT_PATTERNS,
   PREV_ATTRIBUTE_PATTERNS,
   PREV_SHORT_TEXT_PATTERNS,
+  SAVE_ATTRIBUTE_PATTERNS,
+  SAVE_SHORT_TEXT_PATTERNS,
   SHARE_ATTRIBUTE_PATTERNS,
   SHARE_SHORT_TEXT_PATTERNS,
   SUBMIT_ATTRIBUTE_PATTERNS,
@@ -136,6 +140,34 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
       )
   },
   {
+    directive: "delete",
+    threshold: 220,
+    getScore: (element, rect, features) =>
+      getActionDirectiveCandidateScore(
+        element,
+        DELETE_ATTRIBUTE_PATTERNS,
+        {
+          shortTextPatterns: DELETE_SHORT_TEXT_PATTERNS
+        },
+        rect,
+        features
+      )
+  },
+  {
+    directive: "save",
+    threshold: 220,
+    getScore: (element, rect, features) =>
+      getActionDirectiveCandidateScore(
+        element,
+        SAVE_ATTRIBUTE_PATTERNS,
+        {
+          shortTextPatterns: SAVE_SHORT_TEXT_PATTERNS
+        },
+        rect,
+        features
+      )
+  },
+  {
     directive: "copy",
     threshold: 220,
     getScore: (element, rect, features) => getCopyCandidateScore(element, rect, features)
@@ -217,6 +249,8 @@ const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   download: 220,
   login: 220,
   microphone: 220,
+  delete: 220,
+  save: 220,
   copy: 220,
   hide: 240,
   home: 180,

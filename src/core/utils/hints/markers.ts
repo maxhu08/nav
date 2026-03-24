@@ -3,6 +3,7 @@ import {
   FILE_COPY_ICON_PATH,
   HINT_ATTACH_ICON_PATH,
   HINT_CANCEL_ICON_PATH,
+  HINT_DELETE_ICON_PATH,
   HINT_DOWNLOAD_ICON_PATH,
   HINT_DISLIKE_ICON_PATH,
   HINT_FOCUS_MODE_ICON_PATH,
@@ -15,6 +16,7 @@ import {
   HINT_MORE_ICON_PATH,
   HINT_NEXT_ICON_PATH,
   HINT_PREV_ICON_PATH,
+  HINT_SAVE_ICON_PATH,
   HINT_SHARE_ICON_PATH,
   HINT_SIDEBAR_ICON_PATH,
   HINT_SUBMIT_ICON_PATH,
@@ -170,6 +172,10 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_LOGIN_ICON_PATH);
   } else if (directive === "microphone") {
     appendMarkerIcon(marker, HINT_MICROPHONE_ICON_PATH);
+  } else if (directive === "delete") {
+    appendMarkerIcon(marker, HINT_DELETE_ICON_PATH);
+  } else if (directive === "save") {
+    appendMarkerIcon(marker, HINT_SAVE_ICON_PATH);
   } else if (directive === "copy") {
     appendMarkerIcon(marker, FILE_COPY_ICON_PATH);
   } else if (directive === "hide") {

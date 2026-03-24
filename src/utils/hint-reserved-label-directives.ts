@@ -5,6 +5,8 @@ export const RESERVED_HINT_DIRECTIVES = [
   "download",
   "login",
   "microphone",
+  "delete",
+  "save",
   "copy",
   "hide",
   "home",

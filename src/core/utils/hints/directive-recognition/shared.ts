@@ -106,6 +106,42 @@ export const MICROPHONE_SHORT_TEXT_PATTERNS = [
   /^voice$/i,
   /^push[\s-]?to[\s-]?talk$/i
 ];
+export const DELETE_ATTRIBUTE_PATTERNS = [
+  /\bdelete\b/i,
+  /\btrash\b/i,
+  /\bremove\b/i,
+  /\bdelete[-_ ]?bin\b/i,
+  /\bdelete[-_ ]?button\b/i,
+  /\btrash[-_ ]?button\b/i
+];
+export const DELETE_SHORT_TEXT_PATTERNS = [
+  /^delete$/i,
+  /^remove$/i,
+  /^trash$/i,
+  /^delete item$/i,
+  /^remove item$/i
+];
+export const SAVE_ATTRIBUTE_PATTERNS = [
+  /\bsave\b/i,
+  /\bbookmark\b/i,
+  /\bfavorite\b/i,
+  /\bfavourite\b/i,
+  /\bwatch[-_ ]?later\b/i,
+  /\bread[-_ ]?later\b/i,
+  /\bplaylist\b/i,
+  /\bcollection\b/i,
+  /\blibrary\b/i,
+  /\bstar\b/i
+];
+export const SAVE_SHORT_TEXT_PATTERNS = [
+  /^save$/i,
+  /^bookmark$/i,
+  /^favorite$/i,
+  /^favourite$/i,
+  /^watch later$/i,
+  /^read later$/i,
+  /^star$/i
+];
 export const COPY_ATTRIBUTE_PATTERNS = [
   /\bcopy\b/i,
   /\bclipboard\b/i,

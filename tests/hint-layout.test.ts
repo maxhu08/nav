@@ -309,6 +309,57 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "keeps directive menu item hints centered like other menu rows",
+    test: () => {
+      const fixture = createDomFixture(
+        "<div role='menuitem' id='delete-item' tabindex='0' aria-label='Delete chat'>Delete</div>"
+      );
+
+      try {
+        const deleteItem = document.querySelector("#delete-item");
+        expect(deleteItem instanceof HTMLElement).toBe(true);
+
+        if (!(deleteItem instanceof HTMLElement)) {
+          return;
+        }
+
+        const itemRect = new DOMRect(20, 40, 260, 36);
+        deleteItem.getBoundingClientRect = (): DOMRect => itemRect;
+        deleteItem.getClientRects = (): DOMRectList => {
+          const list = [itemRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const marker = document.createElement("span");
+        marker.getBoundingClientRect = (): DOMRect => createMarkerRect(58, 20);
+        document.body.append(marker);
+
+        const hint: HintMarker = {
+          element: deleteItem,
+          marker,
+          thumbnailIcon: null,
+          label: "dd",
+          directive: "delete",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions([hint], "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(marker.style.left).toBe("121px");
+        expect(marker.style.top).toBe("48px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "places row menu hints on the right and row click hints near the middle",
     test: () => {
       const fixture = createDomFixture([

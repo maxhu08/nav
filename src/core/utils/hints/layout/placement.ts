@@ -23,6 +23,16 @@ export const getMarkerPlacementCandidates = (
     element.closest(
       "[aria-label='Response actions'], [aria-label*='actions' i][role='group']"
     ) instanceof HTMLElement;
+  const role = element.getAttribute("role")?.toLowerCase();
+  const isCenteredMenuLikeTarget =
+    !shouldHighlightThumbnail &&
+    !isResponseActionButton &&
+    anchorRect.width >= 180 &&
+    anchorRect.height <= 64 &&
+    (role === "menuitem" ||
+      role === "menuitemcheckbox" ||
+      role === "menuitemradio" ||
+      role === "option");
   const isWideRowLikeTarget =
     !shouldHighlightThumbnail &&
     directive === null &&
@@ -96,6 +106,11 @@ export const getMarkerPlacementCandidates = (
       pushCandidate(right, centerTop);
       pushCandidate(right, top);
     } else {
+      if (isCenteredMenuLikeTarget) {
+        pushCandidate(centerLeft, centerTop);
+        pushCandidate(centerLeft, top);
+      }
+
       pushCandidate(left, centerTop);
       pushCandidate(right, top);
       pushCandidate(left, top);

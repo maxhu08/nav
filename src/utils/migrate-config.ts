@@ -199,6 +199,24 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   }
 
   // if config before v1.1.2
+  if (!hasDirective(originalReservedLabels, "delete")) {
+    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
+      migratedConfig.hints.reservedLabels,
+      "delete",
+      "dd"
+    );
+  }
+
+  // if config before v1.1.2
+  if (!hasDirective(originalReservedLabels, "save")) {
+    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
+      migratedConfig.hints.reservedLabels,
+      "save",
+      "sv"
+    );
+  }
+
+  // if config before v1.1.2
   if (!hasDirective(originalReservedLabels, "copy")) {
     migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
       migratedConfig.hints.reservedLabels,
