@@ -6,7 +6,7 @@ export const directiveTestCase: DirectiveTestCase = {
   desc: "detects search-style text inputs while ignoring unrelated buttons",
   test: {
     recognizes: ["<input type='text' aria-label='Search' />"],
-    ignored: ["<button>Other</button>"]
+    ignores: ["<button>Other</button>"]
   }
 };
 

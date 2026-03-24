@@ -9,7 +9,7 @@ export const directiveTestCase: DirectiveTestCase = {
       "<a href='/signin' aria-label='Sign in to continue'>Sign in</a>",
       "<button type='button' data-testid='login-button' title='Log in'>Log in</button>"
     ],
-    ignored: ["<button type='button'>Other</button>"]
+    ignores: ["<button type='button'>Other</button>"]
   }
 };
 

@@ -6,7 +6,7 @@ export const directiveTestCase: DirectiveTestCase = {
   desc: "detects home navigation links while ignoring unrelated buttons",
   test: {
     recognizes: ["<a href='/' rel='home'>Home</a>"],
-    ignored: ["<button>Other</button>"]
+    ignores: ["<button>Other</button>"]
   }
 };
 

@@ -10,7 +10,7 @@ export type TestDefinition<T> = {
 
 export type DirectiveTestType = {
   recognizes: string[];
-  ignored: string[];
+  ignores: string[];
 };
 
 export type DirectiveTestCase = TestDefinition<DirectiveTestType>;

@@ -9,7 +9,7 @@ export const directiveTestCase: DirectiveTestCase = {
       "<button aria-label='Share this post'>Share</button>",
       "<button data-testid='repost-button' title='Repost'>Repost</button>"
     ],
-    ignored: ["<button>Other</button>"]
+    ignores: ["<button>Other</button>"]
   }
 };
 

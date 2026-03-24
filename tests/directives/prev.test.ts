@@ -6,7 +6,7 @@ export const directiveTestCase: DirectiveTestCase = {
   desc: "detects previous-navigation links while ignoring unrelated buttons",
   test: {
     recognizes: ["<a href='/prev' rel='prev'>Previous</a>"],
-    ignored: ["<button>Other</button>"]
+    ignores: ["<button>Other</button>"]
   }
 };
 

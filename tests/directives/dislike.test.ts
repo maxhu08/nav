@@ -10,7 +10,7 @@ export const directiveTestCase: DirectiveTestCase = {
       "<button class='yt-spec-button-shape-next yt-spec-button-shape-next--segmented-end' aria-pressed='true' aria-label='Undo dislike'>Disliked</button>",
       "<div class='yt-spec-button-shape-next yt-spec-button-shape-next--segmented-end'><button aria-pressed='true' aria-label='Undo dislike'>Disliked</button></div>"
     ],
-    ignored: [
+    ignores: [
       "<button>Other</button>",
       "<a href='/watch?v=456' id='video-title-2' title='Albums I dislike from 2025'>Albums I dislike from 2025</a>"
     ]

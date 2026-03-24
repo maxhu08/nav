@@ -11,7 +11,7 @@ export const directiveTestCase: DirectiveTestCase = {
       "<div class='yt-spec-button-shape-next yt-spec-button-shape-next--segmented-start'><button aria-pressed='true' aria-label='Unlike this video'>Liked</button></div>",
       "<like-button-view-model class='ytLikeButtonViewModelHost ytwReelActionBarViewModelHostDesktopActionButton'><toggle-button-view-model><button-view-model class='ytSpecButtonViewModelHost'><label class='yt-spec-button-shape-with-label'><button class='yt-spec-button-shape-next yt-spec-button-shape-next--filled yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-l yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--enable-backdrop-filter-experiment' aria-pressed='true' aria-label='26,959 likes' aria-disabled='false'><div aria-hidden='true' class='yt-spec-button-shape-next__icon'></div></button><div class='yt-spec-button-shape-with-label__label' aria-hidden='false'><span role='text'>26K</span></div></label></button-view-model></toggle-button-view-model></like-button-view-model>"
     ],
-    ignored: [
+    ignores: [
       "<button>Other</button>",
       "<a href='/watch?v=123' id='video-title' title='Videos I like to rewatch'>Videos I like to rewatch</a>"
     ]
