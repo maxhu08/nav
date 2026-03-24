@@ -6,9 +6,10 @@ Use this page as the fast entry point for contributors.
 
 1. Read [Setup](./SETUP.md) and run the project locally.
 2. Follow [Coding Style](./CODING_STYLE.md) while you code.
-3. If you touch options UI or config persistence, read [Options Page](./OPTIONS_PAGE.md).
-4. Check [Project Structure](./PROJECT_STRUCTURE.md) if you are unsure where code belongs.
-5. Use [Committing](./COMMITTING.md) before opening a PR.
+3. If you add or rename an action, read [Adding Actions](./ADDING_ACTIONS.md).
+4. If you touch options UI or config persistence, read [Options Page](./OPTIONS_PAGE.md).
+5. Check [Project Structure](./PROJECT_STRUCTURE.md) if you are unsure where code belongs.
+6. Use [Committing](./COMMITTING.md) before opening a PR.
 
 ## Useful Things
 
