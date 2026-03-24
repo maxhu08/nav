@@ -520,6 +520,66 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
         fixture.cleanup();
       }
     }
+  },
+  {
+    desc: "places hide directive markers at the popup top-right inside the backdrop",
+    test: () => {
+      const fixture = createDomFixture(
+        "<div id='popup-wrapper' class='rd-popup-wrapper'><div id='popup-surface' class='rd-popup download-list'><div class='rd-popup-body'><div class='rd-popup-content'><h2>Download</h2></div></div></div></div>"
+      );
+
+      try {
+        const wrapper = document.querySelector("#popup-wrapper");
+        const popup = document.querySelector("#popup-surface");
+        expect(wrapper instanceof HTMLElement).toBe(true);
+        expect(popup instanceof HTMLElement).toBe(true);
+
+        if (!(wrapper instanceof HTMLElement) || !(popup instanceof HTMLElement)) {
+          return;
+        }
+
+        const wrapperRect = new DOMRect(0, 0, 360, 260);
+        const popupRect = new DOMRect(56, 36, 248, 188);
+        wrapper.getBoundingClientRect = (): DOMRect => wrapperRect;
+        wrapper.getClientRects = (): DOMRectList => {
+          const list = [wrapperRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        popup.getBoundingClientRect = (): DOMRect => popupRect;
+        popup.getClientRects = (): DOMRectList => {
+          const list = [popupRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const marker = document.createElement("span");
+        marker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(marker);
+
+        const hint: HintMarker = {
+          element: wrapper,
+          marker,
+          thumbnailIcon: null,
+          label: "hi",
+          directive: "hide",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions([hint], "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(marker.style.left).toBe("254px");
+        expect(marker.style.top).toBe("38px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
   }
 ];
 

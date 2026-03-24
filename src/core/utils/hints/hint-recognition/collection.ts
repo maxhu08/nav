@@ -3,6 +3,7 @@ import {
   getElementTabIndex,
   hasInteractiveRole
 } from "~/src/core/utils/hints/dom";
+import { getHideCandidateScore } from "~/src/core/utils/hints/directive-recognition/action-directives";
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import {
   createHintCollectionContext,
@@ -26,6 +27,23 @@ const HINT_SELECTORS_DEFAULT_STRONG = [
   "[contenteditable='']"
 ].join(",");
 const HINT_SELECTORS_DEFAULT_WEAK = ["[onclick]", "[role]", "[tabindex]", "[jsaction]"].join(",");
+const HINT_SELECTORS_HIDE_CANDIDATES = [
+  "dialog",
+  "[role='dialog']",
+  "[aria-modal='true']",
+  "[id*='modal' i]",
+  "[class*='modal' i]",
+  "[id*='popup' i]",
+  "[class*='popup' i]",
+  "[id*='overlay' i]",
+  "[class*='overlay' i]",
+  "[id*='backdrop' i]",
+  "[class*='backdrop' i]",
+  "[id*='scrim' i]",
+  "[class*='scrim' i]",
+  "[id*='lightbox' i]",
+  "[class*='lightbox' i]"
+].join(",");
 
 export const HINT_SELECTORS_DEFAULT = [
   HINT_SELECTORS_DEFAULT_STRONG,
@@ -131,6 +149,27 @@ const appendEligibleElements = (
   }
 };
 
+const appendLikelyHideElements = (
+  target: HTMLElement[],
+  seen: Set<HTMLElement>,
+  visibility: ReturnType<typeof createHintVisibilityContext>
+): void => {
+  for (const root of getHintSearchRoots()) {
+    for (const element of root.querySelectorAll<HTMLElement>(HINT_SELECTORS_HIDE_CANDIDATES)) {
+      if (seen.has(element) || !visibility.isVisibleHintTarget(element)) {
+        continue;
+      }
+
+      if (getHideCandidateScore(element) <= 240) {
+        continue;
+      }
+
+      seen.add(element);
+      target.push(element);
+    }
+  }
+};
+
 export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
   const visibility = createHintVisibilityContext();
   const { getRect, getIdentity, getDepth, getPreference } = createHintCollectionContext({
@@ -146,6 +185,7 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     appendEligibleElements(elements, HINT_SELECTORS_DEFAULT_WEAK, mode, seen, visibility, {
       requireWeakSignal: true
     });
+    appendLikelyHideElements(elements, seen, visibility);
   }
 
   const uniqueElements = dedupeCollectedHintTargets(elements, {

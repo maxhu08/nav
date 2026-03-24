@@ -294,6 +294,7 @@ export const DEFAULT_HINT_RESERVED_LABELS = `@input kj kjf kjfd
 @download dl
 @login si
 @microphone mic
+@hide hi
 @home sd sdf sdfj
 @sidebar we wer wert
 @next kl

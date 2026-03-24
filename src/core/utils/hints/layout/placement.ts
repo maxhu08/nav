@@ -49,7 +49,15 @@ export const getMarkerPlacementCandidates = (
   }
 
   if ((directive !== null || labelIcon !== null) && !shouldHighlightThumbnail) {
-    if (labelIcon === "more") {
+    if (directive === "hide") {
+      pushCandidate(right, top);
+      pushCandidate(right, centerTop);
+      pushCandidate(centerLeft, top);
+      pushCandidate(left, top);
+      pushCandidate(right, bottom);
+      pushCandidate(left, centerTop);
+      pushCandidate(left, top);
+    } else if (labelIcon === "more") {
       pushCandidate(right, centerTop);
       pushCandidate(right, top);
       pushCandidate(right, bottom);

@@ -198,6 +198,15 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     );
   }
 
+  // if config before v1.1.2
+  if (!hasDirective(originalReservedLabels, "hide")) {
+    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
+      migratedConfig.hints.reservedLabels,
+      "hide",
+      "hi"
+    );
+  }
+
   // if config before v1.1.1
   migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
     migratedConfig.hotkeys.mappings,

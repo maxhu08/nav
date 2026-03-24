@@ -1,4 +1,5 @@
 import { getMarkerRect } from "~/src/core/utils/hints/hint-recognition";
+import { POPUP_DIALOG_SELECTOR } from "~/src/core/utils/hints/directive-recognition/shared";
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import {
   invalidateMarkerSize,
@@ -195,6 +196,39 @@ const getCompositeRowAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMRe
   return rowRect;
 };
 
+const getHideDirectiveAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMRect | null => {
+  if (hint.directive !== "hide") {
+    return null;
+  }
+
+  let bestRect: DOMRect | null = null;
+  let bestArea = 0;
+
+  for (const popup of hint.element.querySelectorAll<HTMLElement>(POPUP_DIALOG_SELECTOR)) {
+    const popupRect = getMarkerRect(popup);
+    if (!popupRect) {
+      continue;
+    }
+
+    if (
+      popupRect.left < targetRect.left ||
+      popupRect.top < targetRect.top ||
+      popupRect.right > targetRect.right ||
+      popupRect.bottom > targetRect.bottom
+    ) {
+      continue;
+    }
+
+    const area = popupRect.width * popupRect.height;
+    if (area > bestArea) {
+      bestArea = area;
+      bestRect = popupRect;
+    }
+  }
+
+  return bestRect;
+};
+
 const getMarkerPlacementInfo = (
   element: HTMLElement,
   targetRect: DOMRect,
@@ -239,9 +273,11 @@ export const prepareMarkerPlacement = (
     mode,
     highlightThumbnails
   );
+  const hideAnchorRect =
+    markerVariant === "default" ? getHideDirectiveAnchorRect(hint, targetRect) : null;
   const sharedRowAnchorRect =
     markerVariant === "default" ? getCompositeRowAnchorRect(hint, targetRect) : null;
-  const placementAnchorRect = sharedRowAnchorRect ?? anchorRect;
+  const placementAnchorRect = hideAnchorRect ?? sharedRowAnchorRect ?? anchorRect;
 
   const didChangeThumbnailIconVisibility = setThumbnailMarkerIconVisibility(
     hint,

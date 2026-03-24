@@ -7,6 +7,7 @@ export {
   getPreferredDirectiveIndexes,
   getPreferredDislikeElementIndex,
   getPreferredDownloadElementIndex,
+  getPreferredHideElementIndex,
   getPreferredHomeElementIndex,
   getPreferredInputElementIndex,
   getPreferredLikeElementIndex,

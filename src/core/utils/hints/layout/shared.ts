@@ -37,6 +37,7 @@ const DIRECTIVE_LAYOUT_PRIORITIES: Partial<Record<ReservedHintDirective, number>
   download: 64,
   login: 63,
   microphone: 62,
+  hide: 61,
   next: 60,
   prev: 60,
   home: 50,

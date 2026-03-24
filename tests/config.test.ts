@@ -150,6 +150,36 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
     }
   },
   {
+    desc: "adds the hide directive for configs before v1.1.2",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hints: {
+          ...structuredClone(defaultConfig).hints,
+          reservedLabels: `@input kj kjf kjfd
+@attach up
+@share sh
+@download dl
+@login si
+@microphone mic
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.reservedLabels).toContain("@hide hi");
+      expect(migratedConfig.hints.reservedLabels).toContain("@microphone mic");
+    }
+  },
+  {
     desc: "adds the clean current tab URL hotkey for configs before v1.10.0",
     test: () => {
       const oldConfig = {
@@ -284,6 +314,17 @@ c toggle-captions # requires watch mode`
         migratedConfig.hints.reservedLabels.match(/^@microphone /gm) ?? [];
 
       expect(microphoneDirectiveMatches).toHaveLength(1);
+    }
+  },
+  {
+    desc: "does not duplicate the hide directive when it already exists",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+
+      const migratedConfig = migrateOldConfig(config, defaultConfig);
+      const hideDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@hide /gm) ?? [];
+
+      expect(hideDirectiveMatches).toHaveLength(1);
     }
   },
   {

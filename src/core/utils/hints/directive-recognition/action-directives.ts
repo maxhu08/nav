@@ -6,6 +6,9 @@ import {
   DISLIKE_STABLE_CONTROL_PATTERNS,
   DOWNLOAD_ATTRIBUTE_PATTERNS,
   DOWNLOAD_SHORT_TEXT_PATTERNS,
+  HIDE_ATTRIBUTE_PATTERNS,
+  HIDE_CLOSE_CONTROL_PATTERNS,
+  HIDE_CONTAINER_PATTERNS,
   LIKE_ATTRIBUTE_PATTERNS,
   LIKE_SHORT_TEXT_PATTERNS,
   LIKE_STABLE_CONTROL_PATTERNS,
@@ -21,6 +24,7 @@ import {
   NOISY_NEXT_CLASS_PATTERNS,
   PREV_ATTRIBUTE_PATTERNS,
   PREV_SHORT_TEXT_PATTERNS,
+  POPUP_DIALOG_SELECTOR,
   SHARE_ATTRIBUTE_PATTERNS,
   SHARE_SHORT_TEXT_PATTERNS,
   SIDEBAR_CONTAINER_PATTERNS,
@@ -172,6 +176,177 @@ export const getActionDirectiveCandidateScore = (
 
   score += Math.min(120, rect.height) / 10;
   score += Math.min(220, rect.width) / 12;
+
+  return score;
+};
+
+const getLargestContainedPopup = (
+  element: HTMLElement,
+  features?: ElementFeatureVector
+): HTMLElement | null => {
+  const containerRect = features?.rect ?? getMarkerRect(element);
+  if (!containerRect) {
+    return null;
+  }
+
+  let bestPopup: HTMLElement | null = null;
+  let bestArea = 0;
+
+  for (const candidate of element.querySelectorAll<HTMLElement>(POPUP_DIALOG_SELECTOR)) {
+    if (candidate === element) {
+      continue;
+    }
+
+    const rect = getMarkerRect(candidate);
+    if (!rect || rect.width <= 0 || rect.height <= 0) {
+      continue;
+    }
+
+    if (
+      rect.width > containerRect.width ||
+      rect.height > containerRect.height ||
+      rect.left < containerRect.left ||
+      rect.top < containerRect.top ||
+      rect.right > containerRect.right ||
+      rect.bottom > containerRect.bottom
+    ) {
+      continue;
+    }
+
+    const area = rect.width * rect.height;
+    if (area > bestArea) {
+      bestArea = area;
+      bestPopup = candidate;
+    }
+  }
+
+  return bestPopup;
+};
+
+const hasPopupDismissControl = (popup: HTMLElement): boolean => {
+  for (const control of popup.querySelectorAll<HTMLElement>(
+    "button, [role='button'], a[href], input:not([type='hidden']), summary, [tabindex], [onclick], [jsaction]"
+  )) {
+    const attributeText = getCachedJoinedAttributeText(
+      control,
+      [
+        "name",
+        "id",
+        "aria-label",
+        "aria-description",
+        "data-testid",
+        "data-test-id",
+        "role",
+        "title",
+        "class",
+        "type",
+        "value"
+      ],
+      [getSemanticControlText(control)],
+      undefined
+    );
+
+    if (textMatchesAnyPattern(attributeText, HIDE_CLOSE_CONTROL_PATTERNS)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const getHideCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect || rect.width < 120 || rect.height < 80) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const popup = getLargestContainedPopup(element, {
+    rect,
+    isSelectable: features?.isSelectable ?? isSelectableElement(element),
+    textContent: features?.textContent,
+    joinedAttributeTextCache: features?.joinedAttributeTextCache ?? new Map(),
+    closestCache: features?.closestCache ?? new Map()
+  });
+  if (!popup) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  if (hasPopupDismissControl(popup)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const popupRect = getMarkerRect(popup);
+  if (!popupRect) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const containerArea = rect.width * rect.height;
+  const popupArea = popupRect.width * popupRect.height;
+  if (containerArea <= popupArea * 1.2) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    [
+      "name",
+      "id",
+      "aria-label",
+      "aria-description",
+      "data-testid",
+      "data-test-id",
+      "role",
+      "title",
+      "class"
+    ],
+    [getSemanticControlText(element)],
+    features
+  );
+  const popupAttributeText = getCachedJoinedAttributeText(
+    popup,
+    [
+      "name",
+      "id",
+      "aria-label",
+      "aria-description",
+      "data-testid",
+      "data-test-id",
+      "role",
+      "title",
+      "class"
+    ],
+    [getSemanticControlText(popup)],
+    undefined
+  );
+
+  let score = 200;
+
+  if (textMatchesAnyPattern(attributeText, HIDE_CONTAINER_PATTERNS)) {
+    score += 120;
+  }
+
+  if (textMatchesAnyPattern(attributeText, HIDE_ATTRIBUTE_PATTERNS)) {
+    score += 80;
+  }
+
+  if (textMatchesAnyPattern(popupAttributeText, HIDE_ATTRIBUTE_PATTERNS)) {
+    score += 70;
+  }
+
+  if (popup.parentElement === element) {
+    score += 40;
+  }
+
+  if (!isActivatableElement(element)) {
+    score += 40;
+  }
+
+  score += Math.min(240, rect.width) / 8;
+  score += Math.min(240, rect.height) / 10;
 
   return score;
 };
@@ -470,6 +645,9 @@ export const getPreferredLoginElementIndex = (elements: HTMLElement[]): number |
 export const getPreferredMicrophoneElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getMicrophoneCandidateScore(element));
 
+export const getPreferredHideElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 240, (element) => getHideCandidateScore(element));
+
 export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, LIKE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
@@ -483,6 +661,7 @@ export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number
 export {
   getCancelCandidateScore,
   getDislikeCandidateScore,
+  getHideCandidateScore,
   getLikeCandidateScore,
   getMicrophoneCandidateScore,
   getNextCandidateScore

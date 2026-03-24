@@ -106,6 +106,39 @@ export const MICROPHONE_SHORT_TEXT_PATTERNS = [
   /^voice$/i,
   /^push[\s-]?to[\s-]?talk$/i
 ];
+export const HIDE_ATTRIBUTE_PATTERNS = [
+  /\bhide\b/i,
+  /\bclose\b/i,
+  /\bdismiss\b/i,
+  /\bexit\b/i,
+  /\boverlay\b/i,
+  /\bbackdrop\b/i,
+  /\bscrim\b/i,
+  /\bmask\b/i,
+  /\bmodal\b/i,
+  /\bpopup\b/i,
+  /\bdialog\b/i,
+  /\blightbox\b/i
+];
+export const HIDE_CONTAINER_PATTERNS = [
+  /\boverlay\b/i,
+  /\bbackdrop\b/i,
+  /\bscrim\b/i,
+  /\bmask\b/i,
+  /\bwrapper\b/i,
+  /\bmodal\b/i,
+  /\bpopup\b/i,
+  /\bdialog\b/i,
+  /\blightbox\b/i
+];
+export const HIDE_CLOSE_CONTROL_PATTERNS = [
+  /\bclose\b/i,
+  /\bcancel\b/i,
+  /\bdismiss\b/i,
+  /\bexit\b/i,
+  /\bnot now\b/i,
+  /\bnever mind\b/i
+];
 export const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
 export const SIDEBAR_ATTRIBUTE_PATTERNS = [
   /\bmenu\b/i,
@@ -233,6 +266,17 @@ export const DISLIKE_STABLE_CONTROL_PATTERNS = [
 ];
 export const HOME_LOGO_PATTERNS = [/\blogo\b/i, /\bbrand\b/i];
 export const HOME_PATHS = new Set(["/", "/home", "/homepage", "/dashboard"]);
+export const POPUP_DIALOG_SELECTOR = [
+  "dialog",
+  "[role='dialog']",
+  "[aria-modal='true']",
+  "[id*='modal' i]",
+  "[class*='modal' i]",
+  "[id*='popup' i]",
+  "[class*='popup' i]",
+  "[id*='lightbox' i]",
+  "[class*='lightbox' i]"
+].join(", ");
 
 export type ElementFeatureVector = {
   rect: DOMRect | null;

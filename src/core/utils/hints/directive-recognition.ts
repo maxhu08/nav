@@ -21,10 +21,12 @@ import {
   getCancelCandidateScore,
   getDislikeCandidateScore,
   getLikeCandidateScore,
+  getHideCandidateScore,
   getNextCandidateScore,
   getPreferredCancelElementIndex,
   getPreferredDislikeElementIndex,
   getPreferredDownloadElementIndex,
+  getPreferredHideElementIndex,
   getPreferredLoginElementIndex,
   getPreferredLikeElementIndex,
   getPreferredMicrophoneElementIndex,
@@ -132,6 +134,11 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
       )
   },
   {
+    directive: "hide",
+    threshold: 240,
+    getScore: (element, rect, features) => getHideCandidateScore(element, rect, features)
+  },
+  {
     directive: "home",
     threshold: 180,
     getScore: (element, rect, features) => getHomeCandidateScore(element, rect, features)
@@ -203,6 +210,7 @@ const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   download: 220,
   login: 220,
   microphone: 220,
+  hide: 240,
   home: 180,
   sidebar: 220,
   next: 200,
@@ -293,6 +301,7 @@ export {
   getPreferredCancelElementIndex,
   getPreferredDislikeElementIndex,
   getPreferredDownloadElementIndex,
+  getPreferredHideElementIndex,
   getPreferredHomeElementIndex,
   getPreferredInputElementIndex,
   getPreferredLoginElementIndex,
