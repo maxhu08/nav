@@ -81,6 +81,31 @@ export const LOGIN_ATTRIBUTE_PATTERNS = [
   /\bsso\b/i
 ];
 export const LOGIN_SHORT_TEXT_PATTERNS = [/^sign[\s-]?in$/i, /^log[\s-]?in$/i, /^login$/i];
+export const MICROPHONE_ATTRIBUTE_PATTERNS = [
+  /\bmicrophone\b/i,
+  /\bmicrophone[-_ ]?(button|toggle|control)\b/i,
+  /\bmic\b/i,
+  /\bmic[-_ ]?(button|toggle|control)\b/i,
+  /\bdictat(?:e|ion)\b/i,
+  /\bvoice\b/i,
+  /\bvoice[-_ ]?(input|mode|chat|search)\b/i,
+  /\baudio input\b/i,
+  /\bpush[\s-]?to[\s-]?talk\b/i,
+  /\bmute\b.*\bmicrophone\b/i,
+  /\bunmute\b.*\bmicrophone\b/i
+];
+export const MICROPHONE_STRONG_ATTRIBUTE_PATTERNS = [
+  /\bdictat(?:e|ion)\b/i,
+  /\bmicrophone\b/i,
+  /\bpush[\s-]?to[\s-]?talk\b/i
+];
+export const MICROPHONE_SHORT_TEXT_PATTERNS = [
+  /^dictate$/i,
+  /^mic$/i,
+  /^microphone$/i,
+  /^voice$/i,
+  /^push[\s-]?to[\s-]?talk$/i
+];
 export const HOME_ATTRIBUTE_PATTERNS = [/\bhome\b/i, /\bhomepage\b/i];
 export const SIDEBAR_ATTRIBUTE_PATTERNS = [
   /\bmenu\b/i,

@@ -11,6 +11,9 @@ import {
   LIKE_STABLE_CONTROL_PATTERNS,
   LOGIN_ATTRIBUTE_PATTERNS,
   LOGIN_SHORT_TEXT_PATTERNS,
+  MICROPHONE_ATTRIBUTE_PATTERNS,
+  MICROPHONE_STRONG_ATTRIBUTE_PATTERNS,
+  MICROPHONE_SHORT_TEXT_PATTERNS,
   NEXT_ATTRIBUTE_PATTERNS,
   NEXT_FALSE_POSITIVE_PATTERNS,
   NEXT_SHORT_TEXT_PATTERNS,
@@ -388,6 +391,38 @@ const getNextCandidateScore = (
   return hasStrongSemanticSignal ? score + 180 : score;
 };
 
+const getMicrophoneCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  const score = getActionDirectiveCandidateScore(
+    element,
+    MICROPHONE_ATTRIBUTE_PATTERNS,
+    {
+      requireButtonLikeControl: true,
+      shortTextPatterns: MICROPHONE_SHORT_TEXT_PATTERNS
+    },
+    rectOverride,
+    features
+  );
+
+  if (score === Number.NEGATIVE_INFINITY) {
+    return score;
+  }
+
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    ["name", "id", "aria-label", "data-testid", "data-test-id", "title", "class", "type"],
+    [getSemanticControlText(element, features)],
+    features
+  );
+
+  return textMatchesAnyPattern(attributeText, MICROPHONE_STRONG_ATTRIBUTE_PATTERNS)
+    ? score + 160
+    : score;
+};
+
 const getPreferredActionDirectiveElementIndex = (
   elements: HTMLElement[],
   patterns: readonly RegExp[],
@@ -432,6 +467,9 @@ export const getPreferredLoginElementIndex = (elements: HTMLElement[]): number |
     shortTextPatterns: LOGIN_SHORT_TEXT_PATTERNS
   });
 
+export const getPreferredMicrophoneElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 220, (element) => getMicrophoneCandidateScore(element));
+
 export const getPreferredLikeElementIndex = (elements: HTMLElement[]): number | null =>
   getPreferredActionDirectiveElementIndex(elements, LIKE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: LIKE_SHORT_TEXT_PATTERNS
@@ -446,5 +484,6 @@ export {
   getCancelCandidateScore,
   getDislikeCandidateScore,
   getLikeCandidateScore,
+  getMicrophoneCandidateScore,
   getNextCandidateScore
 };

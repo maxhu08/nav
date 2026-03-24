@@ -55,11 +55,11 @@ Use this map to decide where new code should go.
   - Ancestor-link suppression: `src/core/utils/hints/hint-recognition/ancestor.ts`
   - Hint-recognition shared types: `src/core/utils/hints/hint-recognition/shared.ts`
   - Hover-only reveal helpers: `src/core/utils/hints/hint-recognition/reveal.ts`
-  - Directive scoring facade and reserved-target selection (`@input`, `@attach`, `@home`, `@sidebar`, `@next`, `@prev`, `@cancel`, `@submit`, `@like`, `@dislike`): `src/core/utils/hints/directive-recognition.ts`
+  - Directive scoring facade and reserved-target selection (`@input`, `@attach`, `@share`, `@download`, `@login`, `@microphone`, `@home`, `@sidebar`, `@next`, `@prev`, `@cancel`, `@submit`, `@like`, `@dislike`): `src/core/utils/hints/directive-recognition.ts`
   - Shared directive text/feature helpers and constants: `src/core/utils/hints/directive-recognition/shared.ts`
   - Input and attach scoring plus overlap helpers: `src/core/utils/hints/directive-recognition/input-attach.ts`
   - Home and sidebar scoring: `src/core/utils/hints/directive-recognition/home-sidebar.ts`
-  - Action-like directive scoring (`next`, `prev`, `cancel`, `submit`, `share`, `download`, reactions): `src/core/utils/hints/directive-recognition/action-directives.ts`
+  - Action-like directive scoring (`next`, `prev`, `cancel`, `submit`, `share`, `download`, `login`, `microphone`, reactions): `src/core/utils/hints/directive-recognition/action-directives.ts`
   - Reserved-label assignment: `src/core/utils/hints/semantics.ts`
   - Label generation: `src/core/utils/hints/labels.ts`
   - Marker DOM creation and updates: `src/core/utils/hints/markers.ts`

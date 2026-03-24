@@ -190,6 +190,15 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   }
 
   // if config before v1.1.1
+  if (!hasDirective(originalReservedLabels, "microphone")) {
+    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
+      migratedConfig.hints.reservedLabels,
+      "microphone",
+      "mic"
+    );
+  }
+
+  // if config before v1.1.1
   migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
     migratedConfig.hotkeys.mappings,
     "yb",

@@ -4,6 +4,7 @@ export const RESERVED_HINT_DIRECTIVES = [
   "share",
   "download",
   "login",
+  "microphone",
   "home",
   "sidebar",
   "next",

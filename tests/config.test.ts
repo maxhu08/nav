@@ -121,6 +121,35 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
     }
   },
   {
+    desc: "adds the microphone directive for configs before v1.1.1",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hints: {
+          ...structuredClone(defaultConfig).hints,
+          reservedLabels: `@input kj kjf kjfd
+@attach up
+@share sh
+@download dl
+@login si
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.reservedLabels).toContain("@microphone mic");
+      expect(migratedConfig.hints.reservedLabels).toContain("@login si");
+    }
+  },
+  {
     desc: "adds the clean current tab URL hotkey for configs before v1.10.0",
     test: () => {
       const oldConfig = {
@@ -243,6 +272,18 @@ c toggle-captions # requires watch mode`
       const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
 
       expect(migratedConfig.hotkeys.mappings).toContain("yo duplicate-current-tab-origin");
+    }
+  },
+  {
+    desc: "does not duplicate the microphone directive when it already exists",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+
+      const migratedConfig = migrateOldConfig(config, defaultConfig);
+      const microphoneDirectiveMatches =
+        migratedConfig.hints.reservedLabels.match(/^@microphone /gm) ?? [];
+
+      expect(microphoneDirectiveMatches).toHaveLength(1);
     }
   },
   {

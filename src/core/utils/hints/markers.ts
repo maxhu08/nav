@@ -10,6 +10,7 @@ import {
   HINT_INPUT_ICON_PATH,
   HINT_LOGIN_ICON_PATH,
   HINT_LIKE_ICON_PATH,
+  HINT_MICROPHONE_ICON_PATH,
   HINT_MORE_ICON_PATH,
   HINT_NEXT_ICON_PATH,
   HINT_PREV_ICON_PATH,
@@ -166,6 +167,8 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_DOWNLOAD_ICON_PATH);
   } else if (directive === "login") {
     appendMarkerIcon(marker, HINT_LOGIN_ICON_PATH);
+  } else if (directive === "microphone") {
+    appendMarkerIcon(marker, HINT_MICROPHONE_ICON_PATH);
   } else if (directive === "home") {
     appendMarkerIcon(marker, HINT_HOME_ICON_PATH);
   } else if (directive === "sidebar") {

@@ -3,6 +3,8 @@ import {
   DOWNLOAD_SHORT_TEXT_PATTERNS,
   LOGIN_ATTRIBUTE_PATTERNS,
   LOGIN_SHORT_TEXT_PATTERNS,
+  MICROPHONE_ATTRIBUTE_PATTERNS,
+  MICROPHONE_SHORT_TEXT_PATTERNS,
   PREV_ATTRIBUTE_PATTERNS,
   PREV_SHORT_TEXT_PATTERNS,
   SHARE_ATTRIBUTE_PATTERNS,
@@ -25,6 +27,7 @@ import {
   getPreferredDownloadElementIndex,
   getPreferredLoginElementIndex,
   getPreferredLikeElementIndex,
+  getPreferredMicrophoneElementIndex,
   getPreferredNextElementIndex,
   getPreferredPrevElementIndex,
   getPreferredShareElementIndex,
@@ -114,6 +117,21 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
       )
   },
   {
+    directive: "microphone",
+    threshold: 220,
+    getScore: (element, rect, features) =>
+      getActionDirectiveCandidateScore(
+        element,
+        MICROPHONE_ATTRIBUTE_PATTERNS,
+        {
+          requireButtonLikeControl: true,
+          shortTextPatterns: MICROPHONE_SHORT_TEXT_PATTERNS
+        },
+        rect,
+        features
+      )
+  },
+  {
     directive: "home",
     threshold: 180,
     getScore: (element, rect, features) => getHomeCandidateScore(element, rect, features)
@@ -184,6 +202,7 @@ const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   share: 220,
   download: 220,
   login: 220,
+  microphone: 220,
   home: 180,
   sidebar: 220,
   next: 200,
@@ -278,6 +297,7 @@ export {
   getPreferredInputElementIndex,
   getPreferredLoginElementIndex,
   getPreferredLikeElementIndex,
+  getPreferredMicrophoneElementIndex,
   getPreferredNextElementIndex,
   getPreferredPrevElementIndex,
   getPreferredSearchElementIndex,
