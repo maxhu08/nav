@@ -17,7 +17,7 @@ const splitLines = (value: string): string[] => {
 const joinLines = (lines: string[]): string => {
   const normalizedLines = [...lines];
 
-  while (normalizedLines.length > 0 && normalizedLines.at(-1)?.trim() === "") {
+  while (normalizedLines.length > 0 && normalizedLines.at(-1)!.trim() === "") {
     normalizedLines.pop();
   }
 

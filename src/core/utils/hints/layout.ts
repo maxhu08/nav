@@ -102,7 +102,7 @@ const placeResponseActionGroupMarkers = (
       RESPONSE_ACTION_ROW_GAP * (placements.length - 1);
     const rowCenter = (leftEdge + rightEdge) / 2;
     const desiredStartLeft =
-      rowCenter - totalWidth / 2 - (placements[0]?.hint.directive === "copy" ? 4 : 0);
+      rowCenter - totalWidth / 2 - (placements[0].hint.directive === "copy" ? 4 : 0);
     let currentLeft = Math.max(MARKER_VIEWPORT_PADDING, desiredStartLeft);
     const rowTop = Math.max(MARKER_VIEWPORT_PADDING, topEdge - Math.round(maxMarkerHeight * 0.45));
 

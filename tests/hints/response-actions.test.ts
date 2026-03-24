@@ -91,14 +91,14 @@ describe("response action hints", () => {
         avoidedAdjacentHintPairs: {}
       });
 
-      expect(targets[0]?.element.id).toBe("generic-copy");
-      expect(targets[0]?.directive).toBeNull();
-      expect(targets[1]?.element.id).toBe("copy-response");
-      expect(targets[1]?.directive).toBe("copy");
-      expect(targets[4]?.element.id).toBe("share-response");
-      expect(targets[4]?.directive).toBe("share");
-      expect(targets[6]?.element.id).toBe("more-response-actions");
-      expect(targets[6]?.labelIcon).toBe("more");
+      expect(targets[0].element.id).toBe("generic-copy");
+      expect(targets[0].directive).toBeNull();
+      expect(targets[1].element.id).toBe("copy-response");
+      expect(targets[1].directive).toBe("copy");
+      expect(targets[4].element.id).toBe("share-response");
+      expect(targets[4].directive).toBe("share");
+      expect(targets[6].element.id).toBe("more-response-actions");
+      expect(targets[6].labelIcon).toBe("more");
     } finally {
       fixture.cleanup();
     }

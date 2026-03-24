@@ -235,6 +235,14 @@ export const createHintsController = (): HintsController => {
     hintState.onActivate = onActivate ?? null;
   };
 
+  const getActiveLabelIndex = (): NonNullable<HintState["labelIndex"]> => {
+    return hintState.labelIndex!;
+  };
+
+  const getActiveOverlay = (): NonNullable<HintState["overlay"]> => {
+    return hintState.overlay!;
+  };
+
   const primeActiveHintSession = (): void => {
     hintActivationCache.withoutInvalidation(() => {
       revealVideoHintControls(hintState.markers, hintState.revealedHoverElements);
@@ -375,9 +383,11 @@ export const createHintsController = (): HintsController => {
 
   const handleCharacterKey = (key: string): boolean => {
     const normalizedKey = key.toLowerCase();
+    const labelIndex = getActiveLabelIndex();
+
     if (!hintAlphabet.includes(normalizedKey)) {
       const nextTyped = hintState.typed + normalizedKey;
-      const canMatchReservedLabel = hintState.labelIndex?.hasPrefix(nextTyped) === true;
+      const canMatchReservedLabel = labelIndex.hasPrefix(nextTyped);
       if (!canMatchReservedLabel) {
         return true;
       }
@@ -398,7 +408,7 @@ export const createHintsController = (): HintsController => {
     unregisterHintViewportListeners();
     hintActivationCache.withoutInvalidation(() => {
       restoreRevealedHintControls(hintState.revealedHoverElements);
-      hintState.overlay?.remove();
+      getActiveOverlay().remove();
     });
     resetActiveHintState();
   };
@@ -471,7 +481,7 @@ export const createHintsController = (): HintsController => {
       }
 
       if (event.key === "Enter") {
-        const exactMatch = hintState.labelIndex?.getExact(hintState.typed);
+        const exactMatch = getActiveLabelIndex().getExact(hintState.typed);
         if (exactMatch) {
           activateHint(exactMatch);
           return true;
