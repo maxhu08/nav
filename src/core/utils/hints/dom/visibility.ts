@@ -11,12 +11,27 @@ import {
 const getTopElementAtPoint = (
   x: number,
   y: number,
-  root: Document | ShadowRoot = document
+  root: Document | ShadowRoot = document,
+  visitedRoots: Set<Document | ShadowRoot> = new Set(),
+  visitedElements: Set<Element> = new Set()
 ): Element | null => {
+  if (visitedRoots.has(root)) {
+    return null;
+  }
+
+  visitedRoots.add(root);
   const topElement = root.elementsFromPoint(x, y)[0] ?? null;
 
+  if (!topElement || visitedElements.has(topElement)) {
+    return topElement;
+  }
+
+  visitedElements.add(topElement);
+
   if (topElement instanceof HTMLElement && topElement.shadowRoot) {
-    return getTopElementAtPoint(x, y, topElement.shadowRoot) ?? topElement;
+    return (
+      getTopElementAtPoint(x, y, topElement.shadowRoot, visitedRoots, visitedElements) ?? topElement
+    );
   }
 
   return topElement;

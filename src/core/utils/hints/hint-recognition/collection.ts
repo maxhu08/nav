@@ -73,6 +73,35 @@ const isEligibleHintTarget = (
   return visibility.isHintable(element);
 };
 
+const getHintSearchRoots = (): Array<Document | ShadowRoot> => {
+  const roots: Array<Document | ShadowRoot> = [];
+  const visitedRoots = new Set<Document | ShadowRoot>();
+
+  const visitRoot = (root: Document | ShadowRoot): void => {
+    if (visitedRoots.has(root)) {
+      return;
+    }
+
+    visitedRoots.add(root);
+    roots.push(root);
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    let node: Node | null = walker.nextNode();
+
+    while (node) {
+      if (node instanceof HTMLElement && node.shadowRoot) {
+        visitRoot(node.shadowRoot);
+      }
+
+      node = walker.nextNode();
+    }
+  };
+
+  visitRoot(document);
+
+  return roots;
+};
+
 const appendEligibleElements = (
   target: HTMLElement[],
   selector: string,
@@ -83,19 +112,21 @@ const appendEligibleElements = (
     requireWeakSignal?: boolean;
   } = {}
 ): void => {
-  for (const element of document.querySelectorAll<HTMLElement>(selector)) {
-    if (seen.has(element)) {
-      continue;
-    }
+  for (const root of getHintSearchRoots()) {
+    for (const element of root.querySelectorAll<HTMLElement>(selector)) {
+      if (seen.has(element)) {
+        continue;
+      }
 
-    seen.add(element);
+      seen.add(element);
 
-    if (options.requireWeakSignal && !hasWeakHintSignal(element)) {
-      continue;
-    }
+      if (options.requireWeakSignal && !hasWeakHintSignal(element)) {
+        continue;
+      }
 
-    if (isEligibleHintTarget(element, mode, visibility)) {
-      target.push(element);
+      if (isEligibleHintTarget(element, mode, visibility)) {
+        target.push(element);
+      }
     }
   }
 };
