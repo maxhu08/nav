@@ -1,10 +1,9 @@
-# Changes in 1.1.1
+# Changes in 1.1.2
 
 in this release:
 
-- improve hint deduping and rendering behavior
-- add indicators for expand/collapse and more buttons
-- add duplicate-current-tab-origin action
-- add microphone directive
+- fix extension not working on firefox
+- improve hint rendering behavior
+- add hide, save, copy, delete directives
 - performance improvements
 - bug fixes
