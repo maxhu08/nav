@@ -360,6 +360,57 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "keeps directive guide row hints centered like other modular rows",
+    test: () => {
+      const fixture = createDomFixture(
+        "<nav aria-label='Guide'><a id='home-row' class='style-scope ytd-guide-entry-renderer' href='/'>Home</a></nav>"
+      );
+
+      try {
+        const homeRow = document.querySelector("#home-row");
+        expect(homeRow instanceof HTMLElement).toBe(true);
+
+        if (!(homeRow instanceof HTMLElement)) {
+          return;
+        }
+
+        const rowRect = new DOMRect(20, 40, 260, 36);
+        homeRow.getBoundingClientRect = (): DOMRect => rowRect;
+        homeRow.getClientRects = (): DOMRectList => {
+          const list = [rowRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const marker = document.createElement("span");
+        marker.getBoundingClientRect = (): DOMRect => createMarkerRect(58, 20);
+        document.body.append(marker);
+
+        const hint: HintMarker = {
+          element: homeRow,
+          marker,
+          thumbnailIcon: null,
+          label: "hh",
+          directive: "home",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions([hint], "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(marker.style.left).toBe("121px");
+        expect(marker.style.top).toBe("48px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "places row menu hints on the right and row click hints near the middle",
     test: () => {
       const fixture = createDomFixture([

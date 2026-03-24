@@ -27,6 +27,8 @@ import {
   PREV_ATTRIBUTE_PATTERNS,
   PREV_SHORT_TEXT_PATTERNS,
   POPUP_DIALOG_SELECTOR,
+  SAVE_ATTRIBUTE_PATTERNS,
+  SAVE_SHORT_TEXT_PATTERNS,
   SHARE_ATTRIBUTE_PATTERNS,
   SHARE_SHORT_TEXT_PATTERNS,
   SIDEBAR_CONTAINER_PATTERNS,
@@ -37,6 +39,7 @@ import {
   getCachedElementTextContent,
   getCachedJoinedAttributeText,
   getMarkerRect,
+  getNormalizedSameOriginPath,
   getReactionSignalText,
   getReactionWrappers,
   getSemanticControlText,
@@ -49,6 +52,66 @@ import {
   type ElementFeatureVector
 } from "~/src/core/utils/hints/directive-recognition/shared";
 import { getSidebarControlsSignalScore } from "~/src/core/utils/hints/directive-recognition/home-sidebar";
+
+const SAVE_NAVIGATION_CONTAINER_SELECTOR = [
+  "nav",
+  "[role='navigation']",
+  "ytd-guide-entry-renderer",
+  "ytd-guide-section-renderer",
+  "[class*='guide-entry' i]",
+  "[class*='guide' i]"
+].join(", ");
+
+const isWatchLaterNavigationLink = (
+  element: HTMLElement,
+  features?: ElementFeatureVector
+): boolean => {
+  const linkLikeElement =
+    element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement
+      ? element
+      : element.closest("a[href], area[href]");
+
+  if (
+    !(linkLikeElement instanceof HTMLAnchorElement || linkLikeElement instanceof HTMLAreaElement)
+  ) {
+    return false;
+  }
+
+  const href = linkLikeElement.getAttribute("href");
+  if (!href || getNormalizedSameOriginPath(href) !== "/playlist") {
+    return false;
+  }
+
+  let isWatchLaterHref = false;
+
+  try {
+    const resolvedUrl = new URL(href, window.location.href);
+    isWatchLaterHref =
+      resolvedUrl.origin === window.location.origin &&
+      resolvedUrl.searchParams.get("list") === "WL";
+  } catch {
+    return false;
+  }
+
+  if (!isWatchLaterHref) {
+    return false;
+  }
+
+  const attributeText = getCachedJoinedAttributeText(
+    linkLikeElement,
+    ["aria-label", "title", "id", "class", "role"],
+    [getSemanticControlText(linkLikeElement, features), getSemanticControlText(element, features)],
+    features
+  );
+
+  return (
+    /\bwatch[-_ ]?later\b/i.test(attributeText) &&
+    (getCachedClosest(linkLikeElement, SAVE_NAVIGATION_CONTAINER_SELECTOR, features) instanceof
+      HTMLElement ||
+      getCachedClosest(element, SAVE_NAVIGATION_CONTAINER_SELECTOR, features) instanceof
+        HTMLElement)
+  );
+};
 
 export const getActionDirectiveCandidateScore = (
   element: HTMLElement,
@@ -600,6 +663,26 @@ const getMicrophoneCandidateScore = (
     : score;
 };
 
+const getSaveCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  if (isWatchLaterNavigationLink(element, features)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  return getActionDirectiveCandidateScore(
+    element,
+    SAVE_ATTRIBUTE_PATTERNS,
+    {
+      shortTextPatterns: SAVE_SHORT_TEXT_PATTERNS
+    },
+    rectOverride,
+    features
+  );
+};
+
 const getCopyCandidateScore = (
   element: HTMLElement,
   rectOverride?: DOMRect | null,
@@ -695,6 +778,9 @@ export const getPreferredLoginElementIndex = (elements: HTMLElement[]): number |
 export const getPreferredMicrophoneElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getMicrophoneCandidateScore(element));
 
+export const getPreferredSaveElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 220, (element) => getSaveCandidateScore(element));
+
 export const getPreferredCopyElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getCopyCandidateScore(element));
 
@@ -719,5 +805,6 @@ export {
   getHideCandidateScore,
   getLikeCandidateScore,
   getMicrophoneCandidateScore,
-  getNextCandidateScore
+  getNextCandidateScore,
+  getSaveCandidateScore
 };

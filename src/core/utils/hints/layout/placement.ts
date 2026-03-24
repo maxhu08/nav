@@ -17,6 +17,21 @@ export const getMarkerPlacementCandidates = (
   markerWidth: number,
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
+  const centeredRowContainer = element.closest(
+    [
+      "[role='menu']",
+      "[role='menubar']",
+      "[role='listbox']",
+      "nav",
+      "[role='navigation']",
+      "ytd-guide-renderer",
+      "ytd-guide-section-renderer",
+      "ytd-guide-entry-renderer",
+      "[class*='guide' i]",
+      "[class*='menu' i]",
+      "[class*='list' i]"
+    ].join(", ")
+  );
   const shouldHighlightThumbnail = markerVariant === "thumbnail";
   const isResponseActionButton =
     element.matches("button, [role='button']") &&
@@ -32,7 +47,8 @@ export const getMarkerPlacementCandidates = (
     (role === "menuitem" ||
       role === "menuitemcheckbox" ||
       role === "menuitemradio" ||
-      role === "option");
+      role === "option" ||
+      centeredRowContainer instanceof HTMLElement);
   const isWideRowLikeTarget =
     !shouldHighlightThumbnail &&
     directive === null &&
@@ -109,6 +125,7 @@ export const getMarkerPlacementCandidates = (
       if (isCenteredMenuLikeTarget) {
         pushCandidate(centerLeft, centerTop);
         pushCandidate(centerLeft, top);
+        pushCandidate(right, centerTop);
       }
 
       pushCandidate(left, centerTop);

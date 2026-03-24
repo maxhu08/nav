@@ -10,8 +10,6 @@ import {
   MICROPHONE_SHORT_TEXT_PATTERNS,
   PREV_ATTRIBUTE_PATTERNS,
   PREV_SHORT_TEXT_PATTERNS,
-  SAVE_ATTRIBUTE_PATTERNS,
-  SAVE_SHORT_TEXT_PATTERNS,
   SHARE_ATTRIBUTE_PATTERNS,
   SHARE_SHORT_TEXT_PATTERNS,
   SUBMIT_ATTRIBUTE_PATTERNS,
@@ -40,6 +38,7 @@ import {
   getPreferredNextElementIndex,
   getPreferredPrevElementIndex,
   getPreferredShareElementIndex,
+  getSaveCandidateScore,
   getPreferredSubmitElementIndex
 } from "~/src/core/utils/hints/directive-recognition/action-directives";
 import {
@@ -111,9 +110,11 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
   createActionDirectiveDefinition("delete", DELETE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: DELETE_SHORT_TEXT_PATTERNS
   }),
-  createActionDirectiveDefinition("save", SAVE_ATTRIBUTE_PATTERNS, 220, {
-    shortTextPatterns: SAVE_SHORT_TEXT_PATTERNS
-  }),
+  {
+    directive: "save",
+    threshold: 220,
+    getScore: (element, rect, features) => getSaveCandidateScore(element, rect, features)
+  },
   {
     directive: "copy",
     threshold: 220,
