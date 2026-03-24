@@ -1,4 +1,5 @@
 import {
+  getPreferredDirectiveIndexes,
   getSuppressedAttachRelatedHintIndexes,
   getHintableElements
 } from "~/src/core/utils/hints/hint-recognition";
@@ -203,6 +204,12 @@ export const assignHintLabels = (
   reservedHintLabels: ReservedHintLabels,
   labelSettings: HintLabelPlanSettings
 ): HintPipelineTarget[] => {
+  const preferredDirectiveIndexes = getPreferredDirectiveIndexes(elements);
+  const directiveCandidateIndexes = new Set<number>(
+    Object.values(preferredDirectiveIndexes).filter(
+      (index): index is number => typeof index === "number"
+    )
+  );
   const { reservedLabelsByIndex, reservedDirectivesByIndex, reservedLabels } = assignHintSemantics(
     elements,
     reservedHintLabels
@@ -231,7 +238,7 @@ export const assignHintLabels = (
       element,
       label,
       directive,
-      labelIcon: getHintLabelIcon(element, directive)
+      labelIcon: directiveCandidateIndexes.has(index) ? null : getHintLabelIcon(element, directive)
     });
   });
 

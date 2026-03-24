@@ -6,11 +6,13 @@ import {
   SIDEBAR_CONTAINER_PATTERNS,
   SIDEBAR_NON_NAVIGATION_PATTERNS,
   SIDEBAR_OPEN_CLOSE_PATTERNS,
+  SIDEBAR_STRONG_ATTRIBUTE_PATTERNS,
   SIDEBAR_TOGGLE_PATTERNS,
   getBestScoringElementIndex,
   getCachedClosest,
   getCachedElementTextContent,
   getCachedJoinedAttributeText,
+  getHintTargetPreference,
   getJoinedAttributeText,
   getMarkerRect,
   hasInteractiveRole,
@@ -20,6 +22,42 @@ import {
   type ElementFeatureVector
 } from "~/src/core/utils/hints/directive-recognition/shared";
 import { getNormalizedSameOriginPath } from "~/src/core/utils/hints/directive-recognition/shared";
+import {
+  getRectOverlapRatio,
+  isRectCenterNearTarget
+} from "~/src/core/utils/hints/directive-recognition/input-attach";
+
+const SIDEBAR_ANCESTOR_ATTRIBUTE_NAMES = [
+  "name",
+  "id",
+  "aria-label",
+  "data-testid",
+  "data-test-id",
+  "role",
+  "title",
+  "class",
+  "action",
+  "noun",
+  "source"
+];
+
+const getAncestorSidebarSignalText = (element: HTMLElement): string => {
+  const parts: string[] = [];
+  let current = element.parentElement;
+  let depth = 0;
+
+  while (current && depth < 3) {
+    parts.push(
+      getJoinedAttributeText(current, SIDEBAR_ANCESTOR_ATTRIBUTE_NAMES, [
+        current.tagName.toLowerCase()
+      ])
+    );
+    current = current.parentElement;
+    depth += 1;
+  }
+
+  return parts.filter((part) => part.length > 0).join(" ");
+};
 
 const getHomeCandidateScore = (
   element: HTMLElement,
@@ -181,17 +219,40 @@ const getSidebarCandidateScore = (
     features
   );
   const controlsSignalScore = getSidebarControlsSignalScore(element);
+  const ancestorSignalText = getAncestorSidebarSignalText(element);
   const hasSidebarAttributeSignal = textMatchesAnyPattern(
     attributeText,
     SIDEBAR_ATTRIBUTE_PATTERNS
   );
+  const hasStrongSidebarAttributeSignal = textMatchesAnyPattern(
+    attributeText,
+    SIDEBAR_STRONG_ATTRIBUTE_PATTERNS
+  );
+  const hasAncestorSidebarSignal = textMatchesAnyPattern(
+    ancestorSignalText,
+    SIDEBAR_ATTRIBUTE_PATTERNS
+  );
+  const hasAncestorStrongSidebarSignal = textMatchesAnyPattern(
+    ancestorSignalText,
+    SIDEBAR_STRONG_ATTRIBUTE_PATTERNS
+  );
   const hasSidebarToggleSignal = textMatchesAnyPattern(attributeText, SIDEBAR_TOGGLE_PATTERNS);
+  const hasAncestorSidebarToggleSignal = textMatchesAnyPattern(
+    ancestorSignalText,
+    SIDEBAR_TOGGLE_PATTERNS
+  );
   const hasNonNavigationMenuSignal = textMatchesAnyPattern(
     attributeText,
     SIDEBAR_NON_NAVIGATION_PATTERNS
   );
 
-  if (hasNonNavigationMenuSignal && controlsSignalScore === 0 && !hasSidebarAttributeSignal) {
+  if (
+    hasNonNavigationMenuSignal &&
+    controlsSignalScore === 0 &&
+    !hasStrongSidebarAttributeSignal &&
+    !hasAncestorStrongSidebarSignal &&
+    !textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)
+  ) {
     return Number.NEGATIVE_INFINITY;
   }
 
@@ -217,6 +278,11 @@ const getSidebarCandidateScore = (
     hasStrongSignal = true;
   }
 
+  if (hasAncestorSidebarSignal) {
+    score += 180;
+    hasStrongSignal = true;
+  }
+
   if (textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)) {
     score += 320;
     hasStrongSignal = true;
@@ -229,6 +295,11 @@ const getSidebarCandidateScore = (
 
   if (hasSidebarToggleSignal) {
     score += 260;
+    hasStrongSignal = true;
+  }
+
+  if (hasAncestorSidebarToggleSignal) {
+    score += 220;
     hasStrongSignal = true;
   }
 
@@ -284,4 +355,83 @@ export const getPreferredSidebarElementIndex = (elements: HTMLElement[]): number
   return getBestScoringElementIndex(elements, 220, (element) => getSidebarCandidateScore(element));
 };
 
-export { getHomeCandidateScore, getSidebarCandidateScore };
+const getSidebarPresentationPreference = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = getHintTargetPreference(element);
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    ["id", "class", "aria-label", "title", "data-testid", "role", "type"],
+    [],
+    features
+  );
+
+  if (
+    element instanceof HTMLButtonElement ||
+    element.getAttribute("role")?.toLowerCase() === "button"
+  ) {
+    score += 220;
+  }
+
+  if (element.hasAttribute("aria-label") || element.hasAttribute("title")) {
+    score += 120;
+  }
+
+  if (textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)) {
+    score += 160;
+  }
+
+  if (textMatchesAnyPattern(attributeText, SIDEBAR_TOGGLE_PATTERNS)) {
+    score += 120;
+  }
+
+  score -= Math.min(600, rect.width * rect.height) / 18;
+  return score;
+};
+
+export const remapSidebarDirectiveIndex = (
+  elements: HTMLElement[],
+  sidebarIndex: number,
+  getRect: (element: HTMLElement) => DOMRect | null
+): number => {
+  const sidebarElement = elements[sidebarIndex];
+  const sidebarRect = getRect(sidebarElement);
+  if (!sidebarRect) {
+    return sidebarIndex;
+  }
+
+  let bestIndex = sidebarIndex;
+  let bestPreference = getSidebarPresentationPreference(sidebarElement, sidebarRect);
+
+  elements.forEach((element, index) => {
+    const score = getSidebarCandidateScore(element, getRect(element));
+    if (score === Number.NEGATIVE_INFINITY) {
+      return;
+    }
+
+    const rect = getRect(element);
+    if (
+      !rect ||
+      (getRectOverlapRatio(sidebarRect, rect) < 0.7 && !isRectCenterNearTarget(sidebarRect, rect))
+    ) {
+      return;
+    }
+
+    const preference = getSidebarPresentationPreference(element, rect);
+    if (preference > bestPreference) {
+      bestPreference = preference;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+};
+
+export { getHomeCandidateScore, getSidebarCandidateScore, getSidebarPresentationPreference };

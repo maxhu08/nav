@@ -92,6 +92,14 @@ export const SIDEBAR_ATTRIBUTE_PATTERNS = [
   /\bnavigation rail\b/i,
   /\bdrawer\b/i
 ];
+export const SIDEBAR_STRONG_ATTRIBUTE_PATTERNS = [
+  /\bhamburger\b/i,
+  /\bnavigation\b/i,
+  /\bsidebar\b/i,
+  /\bside-nav\b/i,
+  /\bsidenav\b/i,
+  /\bnavigation rail\b/i
+];
 export const SIDEBAR_CONTAINER_PATTERNS = [
   /\bsidebar\b/i,
   /\bside-nav\b/i,
@@ -101,18 +109,27 @@ export const SIDEBAR_CONTAINER_PATTERNS = [
 export const SIDEBAR_OPEN_CLOSE_PATTERNS = [
   /\bopen\s+sidebar\b/i,
   /\bclose\s+sidebar\b/i,
+  /\bopen\s+navigation\b/i,
+  /\bclose\s+navigation\b/i,
   /\bopen\s+drawer\b/i,
   /\bclose\s+drawer\b/i,
   /\bcollapse\b.*\bsidebar\b/i,
   /\bexpand\b.*\bsidebar\b/i,
+  /\bcollapse\b.*\bnavigation\b/i,
+  /\bexpand\b.*\bnavigation\b/i,
   /\bclose-sidebar-button\b/i,
-  /\bopen-sidebar-button\b/i
+  /\bopen-sidebar-button\b/i,
+  /\bnav-collapse\b/i,
+  /\bnav-expand\b/i
 ];
 export const SIDEBAR_NON_NAVIGATION_PATTERNS = [
   /\bprofile\b/i,
   /\baccount\b/i,
   /\buser\b/i,
-  /\bavatar\b/i
+  /\bavatar\b/i,
+  /\bactions?\b/i,
+  /\boptions?\b/i,
+  /\boverflow\b/i
 ];
 export const SIDEBAR_TOGGLE_PATTERNS = [
   /\bguide\b/i,

@@ -39,14 +39,15 @@ export const assignHintSemantics = (
       continue;
     }
 
+    claimedIndexes.add(index);
+    reservedDirectivesByIndex.set(index, directive);
+
     const label = getPreferredReservedLabel(reservedHintLabels[directive]);
     if (!label || doesLabelConflictWithReservedLabels(label, reservedLabels)) {
       continue;
     }
 
-    claimedIndexes.add(index);
     reservedLabelsByIndex.set(index, label);
-    reservedDirectivesByIndex.set(index, directive);
     reservedLabels.push(label);
   }
 

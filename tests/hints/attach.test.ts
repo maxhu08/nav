@@ -175,6 +175,41 @@ export const hintScenarioCases: HintScenarioCase[] = [
     }
   },
   {
+    desc: "suppresses collapse icons when a control is already the preferred sidebar directive",
+    test: {
+      fixtures: [
+        `<button rpl="" class="bg-neutral-background shadow-xs
+button-small px-[calc(var(--rem10)-var(--button-border-width,0px))]
+button-bordered
+
+
+icon
+items-center justify-center
+button inline-flex " id="flex-nav-collapse-button">
+      <span class="flex items-center justify-center">
+      <span class="flex"><svg rpl="" fill="currentColor" height="16" icon-name="menu" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.1 4.801H2.9a.9.9 0 010-1.8h14.199a.9.9 0 01.001 1.8zM18 10a.9.9 0 00-.9-.9H2.9a.9.9 0 000 1.8h14.199A.9.9 0 0018 10zm0 6.1a.9.9 0 00-.9-.9H2.9a.9.9 0 000 1.8h14.199a.9.9 0 00.901-.9z"></path>
+    </svg></span>
+      
+    </span>
+    <faceplate-screen-reader-content>Collapse Navigation</faceplate-screen-reader-content>
+    </button>`
+      ],
+      expect: {
+        directiveTargets: {
+          sidebar: "#flex-nav-collapse-button"
+        },
+        assignedTargets: [
+          {
+            selector: "#flex-nav-collapse-button",
+            directive: "sidebar",
+            labelIcon: null
+          }
+        ]
+      }
+    }
+  },
+  {
     desc: "assigns the more icon to a generic popup-menu options trigger inside a composite row",
     test: {
       fixtures: [

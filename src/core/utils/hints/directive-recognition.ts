@@ -34,7 +34,8 @@ import {
   getHomeCandidateScore,
   getPreferredHomeElementIndex,
   getPreferredSidebarElementIndex,
-  getSidebarCandidateScore
+  getSidebarCandidateScore,
+  remapSidebarDirectiveIndex
 } from "~/src/core/utils/hints/directive-recognition/home-sidebar";
 import {
   getAttachCandidateScore,
@@ -251,6 +252,14 @@ export const getPreferredDirectiveIndexes = (
     bestIndexes.attach = remapAttachDirectiveIndex(
       elements,
       bestIndexes.attach,
+      (element) => getFeatures(element).rect
+    );
+  }
+
+  if (bestIndexes.sidebar !== undefined) {
+    bestIndexes.sidebar = remapSidebarDirectiveIndex(
+      elements,
+      bestIndexes.sidebar,
       (element) => getFeatures(element).rect
     );
   }
