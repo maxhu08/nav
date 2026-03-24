@@ -6,7 +6,7 @@ export type HintVisibilityContext = {
   isVisibleHintTarget: (element: HTMLElement) => boolean;
 };
 
-export type PointHitTestResult = "reachable" | "occluded" | "missing";
+export type PointHitTestResult = "reachable" | "occluded" | "popup-occluded" | "missing";
 
 export const ACTIVATABLE_ROLES = new Set([
   "button",

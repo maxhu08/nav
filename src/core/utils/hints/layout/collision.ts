@@ -96,6 +96,16 @@ const getElementsAtPoint = (x: number, y: number): Element[] => {
   }
 };
 
+const POPUP_OCCLUDER_SELECTOR = [
+  "dialog",
+  "[role='dialog']",
+  "[aria-modal='true']",
+  "[id*='modal' i]",
+  "[class*='modal' i]",
+  "[id*='popup' i]",
+  "[class*='popup' i]"
+].join(",");
+
 const isPotentialOccludingElement = (element: Element): element is HTMLElement => {
   if (element instanceof HTMLElement && element.closest("[data-nav-hint-marker]")) {
     return false;
@@ -116,10 +126,14 @@ const isPotentialOccludingElement = (element: Element): element is HTMLElement =
     return false;
   }
 
-  return style.position === "fixed" || style.position === "sticky";
+  return (
+    style.position === "fixed" ||
+    style.position === "sticky" ||
+    element.matches(POPUP_OCCLUDER_SELECTOR)
+  );
 };
 
-const isPointOccludedForThumbnailMarker = (target: HTMLElement, x: number, y: number): boolean => {
+const isPointOccludedForMarker = (target: HTMLElement, x: number, y: number): boolean => {
   for (const element of getElementsAtPoint(x, y)) {
     if (!(element instanceof HTMLElement)) {
       continue;
@@ -158,7 +172,7 @@ const getMarkerVisibilityScore = (
   };
 
   for (const [x, y] of points) {
-    if (isPointOccludedForThumbnailMarker(target, x, y)) {
+    if (isPointOccludedForMarker(target, x, y)) {
       score.occludedPoints += 1;
       continue;
     }
@@ -190,7 +204,7 @@ const isBetterMarkerVisibilityScore = (
 
 export const chooseMarkerRect = (
   target: HTMLElement,
-  markerVariant: "default" | "thumbnail",
+  _markerVariant: "default" | "thumbnail",
   candidates: Array<Pick<PlacedMarkerRect, "left" | "top">>,
   markerWidth: number,
   markerHeight: number,
@@ -211,10 +225,7 @@ export const chooseMarkerRect = (
       continue;
     }
 
-    const visibilityScore =
-      markerVariant === "thumbnail"
-        ? getMarkerVisibilityScore(target, nextRect)
-        : { clearPoints: 1, occludedPoints: 0 };
+    const visibilityScore = getMarkerVisibilityScore(target, nextRect);
     if (isBetterMarkerVisibilityScore(visibilityScore, bestVisibilityScore)) {
       chosenRect = nextRect;
       bestVisibilityScore = visibilityScore;
@@ -223,6 +234,10 @@ export const chooseMarkerRect = (
         break;
       }
     }
+  }
+
+  if (!chosenRect || !bestVisibilityScore || bestVisibilityScore.occludedPoints > 0) {
+    return null;
   }
 
   return chosenRect;

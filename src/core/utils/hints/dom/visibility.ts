@@ -8,6 +8,16 @@ import {
   isIntrinsicInteractiveElement
 } from "~/src/core/utils/hints/dom/interactive";
 
+const POPUP_OCCLUDER_SELECTOR = [
+  "dialog",
+  "[role='dialog']",
+  "[aria-modal='true']",
+  "[id*='modal' i]",
+  "[class*='modal' i]",
+  "[id*='popup' i]",
+  "[class*='popup' i]"
+].join(",");
+
 const getTopElementAtPoint = (
   x: number,
   y: number,
@@ -87,6 +97,14 @@ const getCornerPoints = (rect: DOMRect): Array<[number, number]> => [
   [rect.right - 0.1, rect.bottom - 0.1]
 ];
 
+const isPopupOccludingElement = (element: Element): element is HTMLElement => {
+  if (!(element instanceof HTMLElement)) {
+    return false;
+  }
+
+  return element.matches(POPUP_OCCLUDER_SELECTOR);
+};
+
 const getAdaptiveHitTestResult = (
   element: HTMLElement,
   rect: DOMRect,
@@ -99,14 +117,23 @@ const getAdaptiveHitTestResult = (
     return true;
   }
 
+  if (centerResult === "popup-occluded") {
+    return false;
+  }
+
   if (!isIntrinsic) {
     const [cornerX, cornerY] = getCornerPoints(rect)[0]!;
-    return getCachedPointHitTestResult(element, cornerX, cornerY) === "reachable";
+    const cornerResult = getCachedPointHitTestResult(element, cornerX, cornerY);
+    return cornerResult === "reachable";
   }
 
   let sawOccludedPoint = centerResult === "occluded";
   for (const [x, y] of getCornerPoints(rect)) {
     const result = getCachedPointHitTestResult(element, x, y);
+    if (result === "popup-occluded") {
+      return false;
+    }
+
     if (result === "reachable") {
       return true;
     }
@@ -172,9 +199,11 @@ export const createHintVisibilityContext = (): HintVisibilityContext => {
       return "missing";
     }
 
-    return isComposedDescendant(element, topElement) || isComposedDescendant(topElement, element)
-      ? "reachable"
-      : "occluded";
+    if (isComposedDescendant(element, topElement) || isComposedDescendant(topElement, element)) {
+      return "reachable";
+    }
+
+    return isPopupOccludingElement(topElement) ? "popup-occluded" : "occluded";
   };
 
   const isVisibleTarget = (element: HTMLElement): boolean => {
