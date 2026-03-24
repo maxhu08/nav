@@ -1,6 +1,9 @@
 import { getAttachCandidateScore } from "~/src/core/utils/hints/directive-recognition";
 import { dedupeEquivalentAttachTargets } from "~/src/core/utils/hints/hint-recognition/attach";
-import { hasEquivalentAncestorTarget } from "~/src/core/utils/hints/hint-recognition/ancestor";
+import {
+  hasEquivalentAncestorTarget,
+  hasEquivalentDescendantTarget
+} from "~/src/core/utils/hints/hint-recognition/ancestor";
 import { createHintCollectionContext } from "~/src/core/utils/hints/hint-recognition/context";
 import { dedupeEquivalentHintTargets } from "~/src/core/utils/hints/hint-recognition/equivalent";
 import { dedupeEquivalentLabelTargets } from "~/src/core/utils/hints/hint-recognition/labels";
@@ -18,12 +21,16 @@ export const dedupeCollectedHintTargets = (
   const withoutEquivalentAncestors = elements.filter(
     (element) => !hasEquivalentAncestorTarget(element, candidateSet, context.getRect)
   );
+  const withoutEquivalentNestedWrappers = withoutEquivalentAncestors.filter(
+    (element) =>
+      !hasEquivalentDescendantTarget(element, candidateSet, context.getRect, context.getPreference)
+  );
 
   return dedupeEquivalentAttachTargets(
     dedupeEquivalentSemanticTargets(
       dedupeEquivalentLabelTargets(
         dedupeEquivalentHintTargets(
-          withoutEquivalentAncestors,
+          withoutEquivalentNestedWrappers,
           context.getRect,
           context.getIdentity,
           context.getPreference
