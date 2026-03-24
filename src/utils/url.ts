@@ -48,6 +48,11 @@ export const getNormalizedUrl = (value: string): string => {
   return `${url.origin}${pathname}${url.search}${url.hash}`;
 };
 
+export const getBaseUrl = (value: string): string => {
+  const url = new URL(value);
+  return url.origin;
+};
+
 export const getCleanUrl = (value: string): string => {
   const url = new URL(value);
 

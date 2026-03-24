@@ -16,6 +16,7 @@ export type ActionName =
   | "tab-go-prev"
   | "tab-go-next"
   | "duplicate-current-tab"
+  | "duplicate-current-tab-origin"
   | "move-current-tab-to-new-window"
   | "yank-link-url"
   | "yank-image"
@@ -54,6 +55,7 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "tab-go-prev",
   "tab-go-next",
   "duplicate-current-tab",
+  "duplicate-current-tab-origin",
   "move-current-tab-to-new-window",
   "yank-link-url",
   "yank-image",
@@ -254,6 +256,7 @@ R reload-current-tab-hard
 J tab-go-prev
 K tab-go-next
 yt duplicate-current-tab
+yo duplicate-current-tab-origin
 W move-current-tab-to-new-window
 
 # clipboard

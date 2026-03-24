@@ -183,6 +183,69 @@ c toggle-captions # requires watch mode`
     }
   },
   {
+    desc: "adds the current tab origin hotkey for configs before v1.1.1",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hotkeys: {
+          mappings: `# scroll
+j scroll-down
+k scroll-up
+h scroll-left
+l scroll-right
+d scroll-half-page-down
+u scroll-half-page-up
+gg scroll-to-top
+G scroll-to-bottom
+
+# hints
+f hint-mode-current-tab
+F hint-mode-new-tab
+
+# tab actions
+t create-new-tab
+x close-current-tab
+r reload-current-tab
+R reload-current-tab-hard
+J tab-go-prev
+K tab-go-next
+yt duplicate-current-tab
+W move-current-tab-to-new-window
+
+# clipboard
+yl yank-link-url
+yi yank-image
+yI yank-image-url
+yy yank-current-tab-url
+yc yank-current-tab-url-clean
+
+# misc
+H history-go-prev
+L history-go-next
+[ follow-prev
+] follow-next
+
+# find
+/ find-mode
+n cycle-match-next # requires find mode
+N cycle-match-prev # requires find mode
+
+# watch
+w watch-mode
+f toggle-fullscreen # requires watch mode
+e toggle-play-pause # requires watch mode
+l toggle-loop # requires watch mode
+m toggle-mute # requires watch mode
+c toggle-captions # requires watch mode`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hotkeys.mappings).toContain("yo duplicate-current-tab-origin");
+    }
+  },
+  {
     desc: "does not duplicate the clean current tab URL hotkey when it already exists",
     test: () => {
       const config = structuredClone(defaultConfig);
@@ -192,6 +255,35 @@ c toggle-captions # requires watch mode`
         migratedConfig.hotkeys.mappings.match(/^yc yank-current-tab-url-clean$/gm) ?? [];
 
       expect(cleanUrlYankMatches).toHaveLength(1);
+    }
+  },
+  {
+    desc: "does not duplicate the current tab origin hotkey when it already exists",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+
+      const migratedConfig = migrateOldConfig(config, defaultConfig);
+      const yoMatches =
+        migratedConfig.hotkeys.mappings.match(/^yo duplicate-current-tab-origin$/gm) ?? [];
+
+      expect(yoMatches).toHaveLength(1);
+    }
+  },
+  {
+    desc: "renames the old current tab origin action during migration",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hotkeys: {
+          mappings: `yb duplicate-current-tab-base`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hotkeys.mappings).toContain("yo duplicate-current-tab-origin");
+      expect(migratedConfig.hotkeys.mappings).not.toContain("yb duplicate-current-tab-origin");
+      expect(migratedConfig.hotkeys.mappings).not.toContain("duplicate-current-tab-base");
     }
   }
 ];

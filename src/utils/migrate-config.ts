@@ -68,6 +68,47 @@ const addHotkeyMappingIfMissing = (mappings: string, sequence: string, action: s
   return `${trimmedMappings}\n${mappingLine}`;
 };
 
+const renameHotkeyActionIfPresent = (
+  mappings: string,
+  targetSequence: string,
+  oldAction: string,
+  newAction: string
+): string => {
+  return mappings
+    .split("\n")
+    .map((line) => {
+      const commentStartIndex = line.indexOf("#");
+      const comment = commentStartIndex === -1 ? "" : line.slice(commentStartIndex);
+      const content = commentStartIndex === -1 ? line : line.slice(0, commentStartIndex);
+      const trimmedContent = content.trim();
+
+      if (!trimmedContent) {
+        return line;
+      }
+
+      const separatorIndex = trimmedContent.search(/\s/);
+      if (separatorIndex === -1) {
+        return line;
+      }
+
+      const sequence = trimmedContent.slice(0, separatorIndex).trim();
+      const action = trimmedContent.slice(separatorIndex).trim();
+
+      if (targetSequence !== "*" && sequence !== targetSequence) {
+        return line;
+      }
+
+      if (action !== oldAction) {
+        return line;
+      }
+
+      const leadingWhitespace = content.match(/^\s*/)?.[0] ?? "";
+      const trailingWhitespace = content.match(/\s*$/)?.[0] ?? "";
+      return `${leadingWhitespace}${sequence} ${newAction}${trailingWhitespace}${comment}`;
+    })
+    .join("\n");
+};
+
 const getHotkeyMappings = (config: unknown): string => {
   if (typeof config !== "object" || config === null) {
     return "";
@@ -143,12 +184,21 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     );
   }
 
-  // if config before v1.10.0
+  // if config before v1.1.0
   if (!hasHotkeyMapping(originalHotkeyMappings, "yc", "yank-current-tab-url-clean")) {
     migratedConfig.hotkeys.mappings = addHotkeyMappingIfMissing(
       migratedConfig.hotkeys.mappings,
       "yc",
       "yank-current-tab-url-clean"
+    );
+  }
+
+  // if config before v1.1.1
+  if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
+    migratedConfig.hotkeys.mappings = addHotkeyMappingIfMissing(
+      migratedConfig.hotkeys.mappings,
+      "yo",
+      "duplicate-current-tab-origin"
     );
   }
 

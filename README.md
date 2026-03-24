@@ -66,6 +66,7 @@ R reload-current-tab-hard
 J tab-go-prev
 K tab-go-next
 yt duplicate-current-tab
+yo duplicate-current-tab-origin
 W move-current-tab-to-new-window
 
 # clipboard
@@ -94,10 +95,6 @@ l toggle-loop # requires watch mode
 m toggle-mute # requires watch mode
 c toggle-captions # requires watch mode
 ```
-
-`yank-current-tab-url-clean` copies the current tab URL after removing common tracking query params like `si`, `utm_*`, and `fbclid`.
-
-These bindings are fully configurable in the options page.
 
 ## star-history
 

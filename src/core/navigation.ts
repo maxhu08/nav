@@ -135,6 +135,7 @@ const ACTIONS: Record<ActionName, ActionHandler> = {
   "tab-go-prev": createTabCommandAction("tab-go-prev"),
   "tab-go-next": createTabCommandAction("tab-go-next"),
   "duplicate-current-tab": createTabCommandAction("duplicate-current-tab"),
+  "duplicate-current-tab-origin": createTabCommandAction("duplicate-current-tab-origin"),
   "move-current-tab-to-new-window": createTabCommandAction("move-current-tab-to-new-window"),
   "close-current-tab": createTabCommandAction("close-current-tab"),
   "create-new-tab": createTabCommandAction("create-new-tab"),

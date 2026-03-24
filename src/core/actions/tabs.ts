@@ -4,6 +4,7 @@ export type TabCommand =
   | "tab-go-prev"
   | "tab-go-next"
   | "duplicate-current-tab"
+  | "duplicate-current-tab-origin"
   | "move-current-tab-to-new-window"
   | "close-current-tab"
   | "create-new-tab"
@@ -58,15 +59,17 @@ const runTabCommand = (command: TabCommand): boolean => {
               ? "go to next tab"
               : command === "duplicate-current-tab"
                 ? "duplicate current tab"
-                : command === "move-current-tab-to-new-window"
-                  ? "move current tab to new window"
-                  : command === "close-current-tab"
-                    ? "close current tab"
-                    : command === "create-new-tab"
-                      ? "create new tab"
-                      : command === "reload-current-tab"
-                        ? "reload current tab"
-                        : "hard reload current tab";
+                : command === "duplicate-current-tab-origin"
+                  ? "duplicate current tab origin"
+                  : command === "move-current-tab-to-new-window"
+                    ? "move current tab to new window"
+                    : command === "close-current-tab"
+                      ? "close current tab"
+                      : command === "create-new-tab"
+                        ? "create new tab"
+                        : command === "reload-current-tab"
+                          ? "reload current tab"
+                          : "hard reload current tab";
 
         toast?.error(`Could not ${actionLabel}`);
       }

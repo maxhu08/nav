@@ -1,7 +1,10 @@
+import { getBaseUrl } from "~/src/utils/url";
+
 type TabCommand =
   | "tab-go-prev"
   | "tab-go-next"
   | "duplicate-current-tab"
+  | "duplicate-current-tab-origin"
   | "move-current-tab-to-new-window"
   | "close-current-tab"
   | "create-new-tab"
@@ -286,6 +289,43 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
 
     chrome.tabs.duplicate(tabId, () => {
       sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
+    });
+
+    return true;
+  }
+
+  if (typedMessage.command === "duplicate-current-tab-origin") {
+    const tabId = typedMessage.tabId ?? sender.tab?.id;
+    const windowId = typedMessage.windowId ?? sender.tab?.windowId;
+    const tabIndex = typedMessage.tabIndex ?? sender.tab?.index;
+
+    if (typeof tabId !== "number") {
+      sendTabCommandResponse(sendResponse, false);
+      return false;
+    }
+
+    chrome.tabs.get(tabId, (tab) => {
+      if (chrome.runtime.lastError || !tab?.url) {
+        sendTabCommandResponse(sendResponse, false);
+        return;
+      }
+
+      const createProperties: chrome.tabs.CreateProperties = {
+        active: true,
+        url: getBaseUrl(tab.url)
+      };
+
+      if (typeof windowId === "number") {
+        createProperties.windowId = windowId;
+      }
+
+      if (typeof tabIndex === "number") {
+        createProperties.index = tabIndex + 1;
+      }
+
+      chrome.tabs.create(createProperties, () => {
+        sendTabCommandResponse(sendResponse, !chrome.runtime.lastError);
+      });
     });
 
     return true;
