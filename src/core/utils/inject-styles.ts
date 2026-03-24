@@ -14,7 +14,11 @@ type InjectStylesParams = {
 
 const getStyleById = (root: ShadowRoot | HTMLElement, styleId: string): HTMLStyleElement | null => {
   const existingStyle =
-    root instanceof ShadowRoot ? root.getElementById(styleId) : root.querySelector(`#${styleId}`);
+    root instanceof ShadowRoot
+      ? root.getElementById(styleId)
+      : (Array.from(root.children).find(
+          (child) => child instanceof HTMLStyleElement && child.id === styleId
+        ) ?? null);
 
   return existingStyle instanceof HTMLStyleElement ? existingStyle : null;
 };

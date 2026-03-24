@@ -41,5 +41,11 @@ export const applyHintStyles = (styleId: string, hintCSS: string): void => {
   const style = document.createElement("style");
   style.id = styleId;
   style.textContent = hintCSS;
-  document.head.appendChild(style);
+
+  const parent = document.head ?? document.documentElement;
+  if (!parent) {
+    return;
+  }
+
+  parent.appendChild(style);
 };

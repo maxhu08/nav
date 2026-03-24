@@ -46,6 +46,17 @@ export const registerRuntimeListeners = ({
   watchController,
   setShouldBypassNextTypingKeyAfterHintSelect
 }: RuntimeListenerDeps): void => {
+  let lastKnownLocationHref = window.location.href;
+  const notifyRouteChangeIfNeeded = (eventName: string): void => {
+    const nextLocationHref = window.location.href;
+    if (nextLocationHref === lastKnownLocationHref) {
+      return;
+    }
+
+    lastKnownLocationHref = nextLocationHref;
+    watchController.handleWatchRouteChange(new Event(eventName));
+  };
+
   focusIndicator.syncStyles();
   focusIndicator.ensureOverlay();
   findMode.ensureFindUI();
@@ -57,25 +68,47 @@ export const registerRuntimeListeners = ({
   window.addEventListener("scroll", focusIndicator.scheduleOverlayPosition, true);
   window.addEventListener("resize", watchController.syncWatchHintsOverlay, true);
   window.addEventListener("scroll", watchController.syncWatchHintsOverlay, true);
-  window.addEventListener("popstate", watchController.handleWatchRouteChange, true);
-  window.addEventListener("hashchange", watchController.handleWatchRouteChange, true);
+  window.addEventListener(
+    "popstate",
+    () => {
+      lastKnownLocationHref = window.location.href;
+      watchController.handleWatchRouteChange(new Event("popstate"));
+    },
+    true
+  );
+  window.addEventListener(
+    "hashchange",
+    () => {
+      lastKnownLocationHref = window.location.href;
+      watchController.handleWatchRouteChange(new Event("hashchange"));
+    },
+    true
+  );
   document.addEventListener("fullscreenchange", watchController.syncWatchHintsOverlay, true);
   document.addEventListener("play", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("pause", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("ended", watchController.handleWatchMediaStateChange, true);
-  const originalPushState = history.pushState;
-  history.pushState = function (...args) {
-    const result = originalPushState.apply(this, args);
-    watchController.handleWatchRouteChange(new Event("pushstate"));
-    return result;
-  };
-  const originalReplaceState = history.replaceState;
-  history.replaceState = function (...args) {
-    const result = originalReplaceState.apply(this, args);
-    watchController.handleWatchRouteChange(new Event("replacestate"));
-    return result;
-  };
+
+  try {
+    const originalPushState = history.pushState;
+    history.pushState = function (...args) {
+      const result = originalPushState.apply(this, args);
+      notifyRouteChangeIfNeeded("pushstate");
+      return result;
+    };
+
+    const originalReplaceState = history.replaceState;
+    history.replaceState = function (...args) {
+      const result = originalReplaceState.apply(this, args);
+      notifyRouteChangeIfNeeded("replacestate");
+      return result;
+    };
+  } catch {
+    // Firefox content scripts can reject overriding page history methods.
+  }
+
   const watchDomObserver = new MutationObserver(() => {
+    notifyRouteChangeIfNeeded("mutationroutechange");
     watchController.handleWatchDomMutation();
   });
   watchDomObserver.observe(document.documentElement, {
