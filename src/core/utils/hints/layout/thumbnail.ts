@@ -158,6 +158,43 @@ type MarkerPlacementInfo = {
   anchorRect: DOMRect;
 };
 
+const COMPOSITE_ROW_SELECTOR = [
+  "a[href]",
+  "[role='link']",
+  "[data-sidebar-item]",
+  "[tabindex]"
+].join(", ");
+
+const getCompositeRowAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMRect | null => {
+  if (hint.directive !== null || hint.labelIcon === null) {
+    return null;
+  }
+
+  if (targetRect.width > 96 || targetRect.height > 64) {
+    return null;
+  }
+
+  const rowContainer = hint.element.parentElement?.closest(COMPOSITE_ROW_SELECTOR);
+  if (!(rowContainer instanceof HTMLElement) || rowContainer === hint.element) {
+    return null;
+  }
+
+  const rowRect = getMarkerRect(rowContainer);
+  if (!rowRect) {
+    return null;
+  }
+
+  if (
+    rowRect.width < targetRect.width + 96 ||
+    rowRect.height > 84 ||
+    rowRect.height < targetRect.height
+  ) {
+    return null;
+  }
+
+  return rowRect;
+};
+
 const getMarkerPlacementInfo = (
   element: HTMLElement,
   targetRect: DOMRect,
@@ -202,6 +239,9 @@ export const prepareMarkerPlacement = (
     mode,
     highlightThumbnails
   );
+  const sharedRowAnchorRect =
+    markerVariant === "default" ? getCompositeRowAnchorRect(hint, targetRect) : null;
+  const placementAnchorRect = sharedRowAnchorRect ?? anchorRect;
 
   const didChangeThumbnailIconVisibility = setThumbnailMarkerIconVisibility(
     hint,
@@ -226,6 +266,6 @@ export const prepareMarkerPlacement = (
     markerWidth: hint.markerWidth,
     markerHeight: hint.markerHeight,
     markerVariant,
-    anchorRect
+    anchorRect: placementAnchorRect
   };
 };

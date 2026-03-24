@@ -1,4 +1,4 @@
-import type { ReservedHintDirective } from "~/src/core/utils/hints/types";
+import type { HintLabelIcon, ReservedHintDirective } from "~/src/core/utils/hints/types";
 import {
   MARKER_ANCHOR_INSET,
   MARKER_SEARCH_RINGS,
@@ -12,10 +12,17 @@ export const getMarkerPlacementCandidates = (
   anchorRect: DOMRect,
   markerVariant: MarkerVariant,
   directive: ReservedHintDirective | null,
+  labelIcon: HintLabelIcon | null,
   markerWidth: number,
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
   const shouldHighlightThumbnail = markerVariant === "thumbnail";
+  const isWideRowLikeTarget =
+    !shouldHighlightThumbnail &&
+    directive === null &&
+    labelIcon === null &&
+    anchorRect.width >= 180 &&
+    anchorRect.height <= 64;
   const candidates: Array<Pick<PlacedMarkerRect, "left" | "top">> = [];
   const seen = new Set<string>();
 
@@ -41,12 +48,38 @@ export const getMarkerPlacementCandidates = (
     pushCandidate(left, centerTop);
   }
 
-  if (directive !== null && !shouldHighlightThumbnail) {
-    pushCandidate(left, top);
-    pushCandidate(right, top);
-    pushCandidate(left, bottom);
-    pushCandidate(right, bottom);
+  if ((directive !== null || labelIcon !== null) && !shouldHighlightThumbnail) {
+    if (labelIcon === "more") {
+      pushCandidate(right, centerTop);
+      pushCandidate(right, top);
+      pushCandidate(right, bottom);
+      pushCandidate(centerLeft, centerTop);
+      pushCandidate(centerLeft, top);
+      pushCandidate(left, centerTop);
+      pushCandidate(left, top);
+    } else if (labelIcon !== null) {
+      pushCandidate(left, centerTop);
+      pushCandidate(left, top);
+      pushCandidate(left, bottom);
+      pushCandidate(centerLeft, centerTop);
+      pushCandidate(centerLeft, top);
+      pushCandidate(right, centerTop);
+      pushCandidate(right, top);
+    } else {
+      pushCandidate(left, centerTop);
+      pushCandidate(right, top);
+      pushCandidate(left, top);
+      pushCandidate(left, bottom);
+      pushCandidate(right, bottom);
+      pushCandidate(centerLeft, top);
+      pushCandidate(left, centerTop);
+    }
+  }
+
+  if (isWideRowLikeTarget) {
+    pushCandidate(centerLeft, centerTop);
     pushCandidate(centerLeft, top);
+    pushCandidate(right, centerTop);
     pushCandidate(left, centerTop);
   }
 

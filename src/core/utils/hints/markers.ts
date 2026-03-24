@@ -5,10 +5,12 @@ import {
   HINT_CANCEL_ICON_PATH,
   HINT_DOWNLOAD_ICON_PATH,
   HINT_DISLIKE_ICON_PATH,
+  HINT_FOCUS_MODE_ICON_PATH,
   HINT_HOME_ICON_PATH,
   HINT_INPUT_ICON_PATH,
   HINT_LOGIN_ICON_PATH,
   HINT_LIKE_ICON_PATH,
+  HINT_MORE_ICON_PATH,
   HINT_NEXT_ICON_PATH,
   HINT_PREV_ICON_PATH,
   HINT_SHARE_ICON_PATH,
@@ -19,6 +21,7 @@ import {
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import type {
   HintMarker,
+  HintLabelIcon,
   MarkerDomAttributes,
   ReservedHintDirective
 } from "~/src/core/utils/hints/types";
@@ -59,24 +62,27 @@ const appendMarkerIcon = (
   marker: HTMLSpanElement,
   path: string,
   options: { hidden?: boolean } = {}
-): SVGSVGElement => {
+): HTMLSpanElement => {
+  const iconSlot = document.createElement("span");
+  iconSlot.className = "nav-hint-marker-icon";
+
   const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   icon.setAttribute("viewBox", "0 0 24 24");
   icon.setAttribute("width", "1em");
   icon.setAttribute("height", "1em");
   icon.setAttribute("fill", "currentColor");
   icon.setAttribute("aria-hidden", "true");
-  icon.style.flex = "0 0 auto";
-  icon.style.marginLeft = "0.25em";
+  icon.style.display = "block";
   if (options.hidden) {
-    icon.style.display = "none";
+    iconSlot.style.display = "none";
   }
 
   const iconPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
   iconPath.setAttribute("d", path);
   icon.append(iconPath);
-  marker.append(icon);
-  return icon;
+  iconSlot.append(icon);
+  marker.append(iconSlot);
+  return iconSlot;
 };
 
 export const setThumbnailMarkerIconVisibility = (
@@ -104,6 +110,7 @@ export const setThumbnailMarkerIconVisibility = (
 export const createHintMarker = (
   label: string,
   directive: ReservedHintDirective | null,
+  labelIcon: HintLabelIcon | null,
   mode: LinkMode,
   showCapitalizedLetters: boolean,
   attrs: MarkerDomAttributes
@@ -128,7 +135,12 @@ export const createHintMarker = (
   marker.style.top = "0px";
   marker.style.display = "inline-flex";
   marker.style.alignItems = "center";
-  marker.style.gap = "0";
+  marker.style.gap = "0.25em";
+
+  const labelGroup = document.createElement("span");
+  labelGroup.className = "nav-hint-marker-label";
+  labelGroup.style.display = "inline-flex";
+  labelGroup.style.alignItems = "center";
 
   const displayLabel = showCapitalizedLetters ? label.toUpperCase() : label.toLowerCase();
   const letters: HTMLSpanElement[] = [];
@@ -138,9 +150,11 @@ export const createHintMarker = (
     letter.textContent = char;
     letter.setAttribute(attrs.letterAttribute, "pending");
     letter.setAttribute(attrs.letterStyleAttribute, "pending");
-    marker.appendChild(letter);
+    labelGroup.appendChild(letter);
     letters.push(letter);
   }
+
+  marker.appendChild(labelGroup);
 
   if (directive === "input") {
     appendMarkerIcon(marker, HINT_INPUT_ICON_PATH);
@@ -168,6 +182,12 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_LIKE_ICON_PATH);
   } else if (directive === "dislike") {
     appendMarkerIcon(marker, HINT_DISLIKE_ICON_PATH);
+  } else if (labelIcon === "collapse") {
+    appendMarkerIcon(marker, HINT_FOCUS_MODE_ICON_PATH);
+  } else if (labelIcon === "expand") {
+    appendMarkerIcon(marker, HINT_FOCUS_MODE_ICON_PATH);
+  } else if (labelIcon === "more") {
+    appendMarkerIcon(marker, HINT_MORE_ICON_PATH);
   }
 
   if (mode === "copy-image") {

@@ -265,6 +265,7 @@ export const createHintsController = (): HintsController => {
       const markerModel = createHintMarker(
         target.label,
         target.directive,
+        target.labelIcon,
         mode,
         showCapitalizedLetters,
         markerDomAttributes
@@ -274,6 +275,7 @@ export const createHintsController = (): HintsController => {
         element: target.element,
         label: target.label,
         directive: target.directive,
+        labelIcon: target.labelIcon,
         visible: true,
         ...markerModel
       });

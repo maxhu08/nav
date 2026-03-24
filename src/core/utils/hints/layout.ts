@@ -71,6 +71,7 @@ export const primeMarkerPositions = (
       placement.anchorRect,
       placement.markerVariant,
       hint.directive,
+      hint.labelIcon,
       placement.markerWidth,
       placement.markerHeight
     );
@@ -106,6 +107,7 @@ export const updateMarkerPositions = (
       placement.anchorRect,
       placement.markerVariant,
       hint.directive,
+      hint.labelIcon,
       placement.markerWidth,
       placement.markerHeight
     );

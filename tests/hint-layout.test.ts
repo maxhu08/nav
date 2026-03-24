@@ -88,6 +88,7 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
           thumbnailIcon: null,
           label: "ab",
           directive: null,
+          labelIcon: null,
           letters: [],
           visible: true,
           renderedTyped: "",
@@ -138,6 +139,7 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
           thumbnailIcon: null,
           label: "ab",
           directive: null,
+          labelIcon: null,
           letters: [],
           visible: true,
           renderedTyped: "",
@@ -188,6 +190,7 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
           thumbnailIcon: null,
           label: "ab",
           directive: null,
+          labelIcon: null,
           letters: [],
           visible: true,
           renderedTyped: "",
@@ -286,6 +289,7 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
           thumbnailIcon: null,
           label: "ab",
           directive: null,
+          labelIcon: null,
           letters: [],
           visible: true,
           renderedTyped: "",
@@ -299,6 +303,219 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
         expect(marker.getAttribute("data-nav-hint-marker-variant")).toBe("thumbnail");
         expect(marker.style.top).not.toBe("70px");
         expect(marker.style.top).toBe("4px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
+    desc: "places row menu hints on the right and row click hints near the middle",
+    test: () => {
+      const fixture = createDomFixture([
+        "<a id='item-row' href='/item-a'>Item A</a>",
+        "<button id='item-row-menu' type='button' aria-haspopup='menu' aria-expanded='false'>Actions</button>"
+      ]);
+
+      try {
+        const row = document.querySelector("#item-row");
+        const menu = document.querySelector("#item-row-menu");
+        expect(row instanceof HTMLElement).toBe(true);
+        expect(menu instanceof HTMLElement).toBe(true);
+
+        if (!(row instanceof HTMLElement) || !(menu instanceof HTMLElement)) {
+          return;
+        }
+
+        const rowRect = new DOMRect(20, 40, 260, 36);
+        const menuRect = new DOMRect(20, 40, 260, 36);
+        row.getBoundingClientRect = (): DOMRect => rowRect;
+        row.getClientRects = (): DOMRectList => {
+          const list = [rowRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        menu.getBoundingClientRect = (): DOMRect => menuRect;
+        menu.getClientRects = (): DOMRectList => {
+          const list = [menuRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const rowMarker = document.createElement("span");
+        rowMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(rowMarker);
+
+        const menuMarker = document.createElement("span");
+        menuMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(42, 20);
+        document.body.append(menuMarker);
+
+        const rowHint: HintMarker = {
+          element: row,
+          marker: rowMarker,
+          thumbnailIcon: null,
+          label: "ab",
+          directive: null,
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        const menuHint: HintMarker = {
+          element: menu,
+          marker: menuMarker,
+          thumbnailIcon: null,
+          label: "cd",
+          directive: null,
+          labelIcon: "more",
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions(
+          [rowHint, menuHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(menuMarker.style.left).toBe("236px");
+        expect(menuMarker.style.top).toBe("48px");
+        expect(rowMarker.style.left).toBe("126px");
+        expect(rowMarker.style.top).toBe("48px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
+    desc: "anchors leading expand hints within the row instead of spilling outside",
+    test: () => {
+      const fixture = createDomFixture([
+        "<a id='item-row' href='/item-b'><button id='item-row-toggle' type='button' data-state='closed'><svg aria-label='Item Icon'></svg></button><span>Item B</span><button id='item-row-menu' type='button' aria-haspopup='menu' aria-expanded='false'>Actions</button></a>"
+      ]);
+
+      try {
+        const row = document.querySelector("#item-row");
+        const toggle = document.querySelector("#item-row-toggle");
+        const menu = document.querySelector("#item-row-menu");
+        expect(row instanceof HTMLElement).toBe(true);
+        expect(toggle instanceof HTMLElement).toBe(true);
+        expect(menu instanceof HTMLElement).toBe(true);
+
+        if (
+          !(row instanceof HTMLElement) ||
+          !(toggle instanceof HTMLElement) ||
+          !(menu instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const rowRect = new DOMRect(20, 40, 260, 36);
+        const toggleRect = new DOMRect(28, 46, 24, 24);
+        const menuRect = new DOMRect(244, 46, 24, 24);
+        row.getBoundingClientRect = (): DOMRect => rowRect;
+        row.getClientRects = (): DOMRectList => {
+          const list = [rowRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        toggle.getBoundingClientRect = (): DOMRect => toggleRect;
+        toggle.getClientRects = (): DOMRectList => {
+          const list = [toggleRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        menu.getBoundingClientRect = (): DOMRect => menuRect;
+        menu.getClientRects = (): DOMRectList => {
+          const list = [menuRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const toggleMarker = document.createElement("span");
+        toggleMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(42, 20);
+        document.body.append(toggleMarker);
+
+        const rowMarker = document.createElement("span");
+        rowMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(rowMarker);
+
+        const menuMarker = document.createElement("span");
+        menuMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(42, 20);
+        document.body.append(menuMarker);
+
+        const toggleHint: HintMarker = {
+          element: toggle,
+          marker: toggleMarker,
+          thumbnailIcon: null,
+          label: "lf",
+          directive: null,
+          labelIcon: "expand",
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        const rowHint: HintMarker = {
+          element: row,
+          marker: rowMarker,
+          thumbnailIcon: null,
+          label: "ek",
+          directive: null,
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        const menuHint: HintMarker = {
+          element: menu,
+          marker: menuMarker,
+          thumbnailIcon: null,
+          label: "ej",
+          directive: null,
+          labelIcon: "more",
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions(
+          [toggleHint, rowHint, menuHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(toggleMarker.style.left).toBe("22px");
+        expect(rowMarker.style.left).toBe("126px");
+        expect(menuMarker.style.left).toBe("236px");
+        expect(toggleMarker.style.top).toBe("48px");
+        expect(rowMarker.style.top).toBe("48px");
+        expect(menuMarker.style.top).toBe("48px");
+        expect(Number.parseInt(toggleMarker.style.left, 10)).toBeLessThan(
+          Number.parseInt(rowMarker.style.left, 10)
+        );
+        expect(Number.parseInt(rowMarker.style.left, 10)).toBeLessThan(
+          Number.parseInt(menuMarker.style.left, 10)
+        );
       } finally {
         fixture.cleanup();
       }

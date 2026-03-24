@@ -2,6 +2,7 @@ import type {
   ReservedHintDirective,
   ReservedHintLabels
 } from "~/src/utils/hint-reserved-label-directives";
+import type { HintLabelIcon } from "~/src/core/utils/hints/types";
 
 export type TestDefinition<T> = {
   desc: string;
@@ -29,6 +30,7 @@ export type HintScenarioExpectation = {
   assignedTargets?: Array<{
     selector: string;
     directive: ReservedHintDirective | null;
+    labelIcon?: HintLabelIcon | null;
   }>;
 };
 

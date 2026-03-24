@@ -44,8 +44,15 @@ const DIRECTIVE_LAYOUT_PRIORITIES: Partial<Record<ReservedHintDirective, number>
   dislike: 30
 };
 
-export const getMarkerLayoutPriority = (hint: Pick<HintMarker, "directive">): number =>
-  hint.directive ? (DIRECTIVE_LAYOUT_PRIORITIES[hint.directive] ?? 10) : 0;
+export const getMarkerLayoutPriority = (
+  hint: Pick<HintMarker, "directive" | "labelIcon">
+): number => {
+  if (hint.directive) {
+    return DIRECTIVE_LAYOUT_PRIORITIES[hint.directive] ?? 10;
+  }
+
+  return hint.labelIcon ? 12 : 0;
+};
 
 export const clampMarkerPosition = (
   left: number,

@@ -126,6 +126,147 @@ export const hintScenarioCases: HintScenarioCase[] = [
         missingDirectiveTargets: ["attach"]
       }
     }
+  },
+  {
+    desc: "assigns inline expand, collapse, and more icons to matching non-directive hints",
+    test: {
+      fixtures: [
+        "<button id='expand-button' aria-label='Expand filters'></button>",
+        "<button id='collapse-button' aria-label='Collapse filters'></button>",
+        "<button id='more-button' aria-label='More options'></button>"
+      ],
+      expect: {
+        assignedTargets: [
+          {
+            selector: "#expand-button",
+            directive: null,
+            labelIcon: "expand"
+          },
+          {
+            selector: "#collapse-button",
+            directive: null,
+            labelIcon: "collapse"
+          },
+          {
+            selector: "#more-button",
+            directive: null,
+            labelIcon: "more"
+          }
+        ]
+      }
+    }
+  },
+  {
+    desc: "does not add a second icon when the hint is already a directive",
+    test: {
+      fixtures: ["<button id='close-sidebar-button' aria-label='Collapse sidebar'></button>"],
+      reservedLabels: {
+        sidebar: ["sb"]
+      },
+      expect: {
+        assignedTargets: [
+          {
+            selector: "#close-sidebar-button",
+            directive: "sidebar",
+            labelIcon: null
+          }
+        ]
+      }
+    }
+  },
+  {
+    desc: "assigns the more icon to a generic popup-menu options trigger inside a composite row",
+    test: {
+      fixtures: [
+        "<div class='item-row'><a tabindex='0' class='item-link' href='/item-a'><div class='item-title'>Item A</div></a><div class='item-actions'><button data-trailing-button='' class='item-options-button' aria-label='Open item options' type='button' aria-haspopup='menu' aria-expanded='false' data-state='closed'><span aria-hidden='true'>...</span></button></div></div>"
+      ],
+      expect: {
+        assignedTargets: [
+          {
+            selector: ".item-link",
+            directive: null,
+            labelIcon: null
+          },
+          {
+            selector: ".item-options-button",
+            directive: null,
+            labelIcon: "more"
+          }
+        ]
+      }
+    }
+  },
+  {
+    desc: "infers expand and collapse icons from generic aria-expanded controls",
+    test: {
+      fixtures: [
+        "<button id='collapsed-section-button' aria-expanded='false' type='button'><span>Panel A</span></button>",
+        "<button id='expanded-section-button' aria-expanded='true' type='button'><span>Panel B</span></button>"
+      ],
+      expect: {
+        assignedTargets: [
+          {
+            selector: "#collapsed-section-button",
+            directive: null,
+            labelIcon: "expand"
+          },
+          {
+            selector: "#expanded-section-button",
+            directive: null,
+            labelIcon: "collapse"
+          }
+        ]
+      }
+    }
+  },
+  {
+    desc: "infers an expand icon for an icon-only stateful toggle inside a composite row",
+    test: {
+      fixtures: [
+        "<a class='item-row' href='/item-b'><button class='leading-toggle' type='button' data-state='closed'><svg aria-label='Item Icon'></svg></button><span>Item B</span><button class='row-menu' type='button' aria-label='Open item actions' aria-haspopup='menu' aria-expanded='false' data-state='closed'></button></a>"
+      ],
+      expect: {
+        assignedTargets: [
+          {
+            selector: ".item-row",
+            directive: null,
+            labelIcon: null
+          },
+          {
+            selector: ".leading-toggle",
+            directive: null,
+            labelIcon: "expand"
+          },
+          {
+            selector: ".row-menu",
+            directive: null,
+            labelIcon: "more"
+          }
+        ]
+      }
+    }
+  },
+  {
+    desc: "does not misclassify a selected row title containing expand or collapse text as a toggle and keeps its menu trigger as more",
+    test: {
+      fixtures: [
+        "<a class='selected-item-row' aria-label='Expand Collapse Item' href='/item-c'><div class='item-label'>Expand Collapse Item</div><div class='item-actions'><button class='item-options-button' type='button' aria-label='Open item actions' aria-haspopup='menu' aria-expanded='false' data-state='closed'><span aria-hidden='true'>...</span></button></div></a>"
+      ],
+      expect: {
+        assignedTargets: [
+          {
+            selector: ".selected-item-row",
+            directive: null,
+            labelIcon: null
+          },
+          {
+            selector: ".item-options-button",
+            directive: null,
+            labelIcon: "more"
+          }
+        ]
+      }
+    }
   }
 ];
 

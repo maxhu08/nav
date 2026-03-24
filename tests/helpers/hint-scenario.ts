@@ -113,6 +113,7 @@ export const runHintScenarioCase = (scenario: HintScenarioTestType): void => {
 
         expect(targets[index]?.element).toBe(expectedElement);
         expect(targets[index]?.directive ?? null).toBe(expectedTarget.directive);
+        expect(targets[index]?.labelIcon ?? null).toBe(expectedTarget.labelIcon ?? null);
       });
     }
   } finally {

@@ -13,9 +13,10 @@ export type AdjacentHintPairs = Partial<Record<string, Partial<Record<string, tr
 export type HintMarker = {
   element: HTMLElement;
   marker: HTMLSpanElement;
-  thumbnailIcon: SVGSVGElement | null;
+  thumbnailIcon: HTMLSpanElement | null;
   label: string;
   directive: ReservedHintDirective | null;
+  labelIcon: HintLabelIcon | null;
   letters: HTMLSpanElement[];
   visible: boolean;
   renderedTyped: string;
@@ -23,6 +24,8 @@ export type HintMarker = {
   markerHeight: number;
   sizeDirty: boolean;
 };
+
+export type HintLabelIcon = "collapse" | "expand" | "more";
 
 export type HintLabelIndex = {
   getByPrefix: (prefix: string) => HintMarker[];

@@ -2,10 +2,18 @@ import {
   getSuppressedAttachRelatedHintIndexes,
   getHintableElements
 } from "~/src/core/utils/hints/hint-recognition";
+import {
+  getJoinedAttributeText,
+  getSemanticControlText,
+  isButtonLikeControl,
+  isLikelyShortControlText,
+  textMatchesAnyPattern
+} from "~/src/core/utils/hints/directive-recognition/shared";
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import { buildHintLabels } from "~/src/core/utils/hints/labels";
 import { assignHintSemantics } from "~/src/core/utils/hints/semantics";
 import type {
+  HintLabelIcon,
   HintLabelPlanSettings,
   ReservedHintDirective,
   ReservedHintLabels
@@ -15,6 +23,148 @@ export type HintPipelineTarget = {
   element: HTMLElement;
   label: string;
   directive: ReservedHintDirective | null;
+  labelIcon: HintLabelIcon | null;
+};
+
+const EXPAND_LABEL_PATTERNS = [/\bexpand\b/i, /\bshow more\b/i];
+const COLLAPSE_LABEL_PATTERNS = [/\bcollapse\b/i, /\bshow less\b/i];
+const MENU_TRIGGER_LABEL_PATTERNS = [
+  /\b(open|show|view|toggle)\b.*\b(options?|actions?|menu)\b/i,
+  /\b(options?|actions?)\b.*\b(open|show|view|toggle)\b/i
+];
+const MORE_LABEL_PATTERNS = [
+  /^more$/i,
+  /\bmore\b.*\b(options?|actions?)\b/i,
+  /\b(options?|actions?)\b.*\bmore\b/i,
+  /\bmore\s+menu\b/i,
+  /\boverflow\b/i,
+  /\bellipsis\b/i
+];
+
+const COMPOSITE_ROW_SELECTOR = [
+  "a[href]",
+  "[role='link']",
+  "[data-sidebar-item]",
+  "[tabindex]"
+].join(", ");
+
+const hasMenuPopupAffordance = (element: HTMLElement): boolean => {
+  const hasPopup = (element.getAttribute("aria-haspopup") ?? "").toLowerCase();
+
+  return (
+    hasPopup === "menu" ||
+    hasPopup === "true" ||
+    element.getAttribute("role")?.toLowerCase() === "menuitem"
+  );
+};
+
+const getExpandedStateIcon = (element: HTMLElement): HintLabelIcon | null => {
+  if (!element.hasAttribute("aria-expanded") || hasMenuPopupAffordance(element)) {
+    return null;
+  }
+
+  return element.getAttribute("aria-expanded") === "true" ? "collapse" : "expand";
+};
+
+const getStateToggleIcon = (
+  element: HTMLElement,
+  semanticControlText: string
+): HintLabelIcon | null => {
+  if (hasMenuPopupAffordance(element) || !isButtonLikeControl(element)) {
+    return null;
+  }
+
+  const dataState = (element.getAttribute("data-state") ?? "").toLowerCase();
+  if (dataState !== "open" && dataState !== "closed") {
+    return null;
+  }
+
+  const hasCompositeRowParent =
+    element.parentElement?.closest(COMPOSITE_ROW_SELECTOR) instanceof HTMLElement;
+  const hasIconOnlyPresentation =
+    semanticControlText.length === 0 &&
+    element.querySelector("svg, img, [role='img']") instanceof Element;
+
+  if (!hasCompositeRowParent || !hasIconOnlyPresentation) {
+    return null;
+  }
+
+  return dataState === "open" ? "collapse" : "expand";
+};
+
+const getHintLabelIcon = (
+  element: HTMLElement,
+  directive: ReservedHintDirective | null
+): HintLabelIcon | null => {
+  if (directive !== null) {
+    return null;
+  }
+
+  const semanticControlText = getSemanticControlText(element);
+  const attributeText = getJoinedAttributeText(
+    element,
+    [
+      "name",
+      "id",
+      "aria-label",
+      "aria-description",
+      "data-testid",
+      "data-test-id",
+      "role",
+      "title",
+      "class",
+      "type",
+      "value"
+    ],
+    [semanticControlText]
+  );
+
+  if (
+    hasMenuPopupAffordance(element) &&
+    textMatchesAnyPattern(attributeText, MENU_TRIGGER_LABEL_PATTERNS)
+  ) {
+    return "more";
+  }
+
+  const canUseExpandCollapseLabelPatterns =
+    isButtonLikeControl(element) ||
+    element.hasAttribute("aria-expanded") ||
+    ((element.getAttribute("data-state") === "open" ||
+      element.getAttribute("data-state") === "closed") &&
+      element.querySelector("svg, img, [role='img']") instanceof Element);
+
+  if (
+    canUseExpandCollapseLabelPatterns &&
+    textMatchesAnyPattern(attributeText, COLLAPSE_LABEL_PATTERNS)
+  ) {
+    return "collapse";
+  }
+
+  if (
+    canUseExpandCollapseLabelPatterns &&
+    textMatchesAnyPattern(attributeText, EXPAND_LABEL_PATTERNS)
+  ) {
+    return "expand";
+  }
+
+  const expandedStateIcon = getExpandedStateIcon(element);
+  if (expandedStateIcon) {
+    return expandedStateIcon;
+  }
+
+  const stateToggleIcon = getStateToggleIcon(element, semanticControlText);
+  if (stateToggleIcon) {
+    return stateToggleIcon;
+  }
+
+  if (
+    textMatchesAnyPattern(attributeText, MORE_LABEL_PATTERNS) &&
+    (!semanticControlText || isLikelyShortControlText(semanticControlText))
+  ) {
+    return "more";
+  }
+
+  return null;
 };
 
 export const collectHintTargets = (mode: LinkMode): HTMLElement[] => {
@@ -75,10 +225,13 @@ export const assignHintLabels = (
       return;
     }
 
+    const directive = reservedDirectivesByIndex.get(index) ?? null;
+
     targets.push({
       element,
       label,
-      directive: reservedDirectivesByIndex.get(index) ?? null
+      directive,
+      labelIcon: getHintLabelIcon(element, directive)
     });
   });
 
