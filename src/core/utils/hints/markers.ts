@@ -1,27 +1,11 @@
 import {
   EXTERNAL_LINK_ICON_PATH,
-  FILE_COPY_ICON_PATH,
-  HINT_ATTACH_ICON_PATH,
-  HINT_CANCEL_ICON_PATH,
-  HINT_DELETE_ICON_PATH,
-  HINT_DOWNLOAD_ICON_PATH,
-  HINT_DISLIKE_ICON_PATH,
   HINT_FOCUS_MODE_ICON_PATH,
-  HINT_HIDE_ICON_PATH,
-  HINT_HOME_ICON_PATH,
-  HINT_INPUT_ICON_PATH,
-  HINT_LOGIN_ICON_PATH,
-  HINT_LIKE_ICON_PATH,
-  HINT_MICROPHONE_ICON_PATH,
   HINT_MORE_ICON_PATH,
-  HINT_NEXT_ICON_PATH,
-  HINT_PREV_ICON_PATH,
-  HINT_SAVE_ICON_PATH,
-  HINT_SHARE_ICON_PATH,
-  HINT_SIDEBAR_ICON_PATH,
-  HINT_SUBMIT_ICON_PATH,
+  FILE_COPY_ICON_PATH,
   WATCH_PLAY_ICON_PATH
 } from "~/src/lib/inline-icons";
+import { HINT_DIRECTIVE_ICON_PATHS } from "~/src/lib/hint-directive-icons";
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import type {
   HintMarker,
@@ -29,6 +13,12 @@ import type {
   MarkerDomAttributes,
   ReservedHintDirective
 } from "~/src/core/utils/hints/types";
+
+const LABEL_ICON_PATHS: Record<Exclude<HintLabelIcon, null>, string> = {
+  collapse: HINT_FOCUS_MODE_ICON_PATH,
+  expand: HINT_FOCUS_MODE_ICON_PATH,
+  more: HINT_MORE_ICON_PATH
+};
 
 export const setMarkerTypedState = (
   hint: HintMarker,
@@ -160,48 +150,10 @@ export const createHintMarker = (
 
   marker.appendChild(labelGroup);
 
-  if (directive === "input") {
-    appendMarkerIcon(marker, HINT_INPUT_ICON_PATH);
-  } else if (directive === "attach") {
-    appendMarkerIcon(marker, HINT_ATTACH_ICON_PATH);
-  } else if (directive === "share") {
-    appendMarkerIcon(marker, HINT_SHARE_ICON_PATH);
-  } else if (directive === "download") {
-    appendMarkerIcon(marker, HINT_DOWNLOAD_ICON_PATH);
-  } else if (directive === "login") {
-    appendMarkerIcon(marker, HINT_LOGIN_ICON_PATH);
-  } else if (directive === "microphone") {
-    appendMarkerIcon(marker, HINT_MICROPHONE_ICON_PATH);
-  } else if (directive === "delete") {
-    appendMarkerIcon(marker, HINT_DELETE_ICON_PATH);
-  } else if (directive === "save") {
-    appendMarkerIcon(marker, HINT_SAVE_ICON_PATH);
-  } else if (directive === "copy") {
-    appendMarkerIcon(marker, FILE_COPY_ICON_PATH);
-  } else if (directive === "hide") {
-    appendMarkerIcon(marker, HINT_HIDE_ICON_PATH);
-  } else if (directive === "home") {
-    appendMarkerIcon(marker, HINT_HOME_ICON_PATH);
-  } else if (directive === "sidebar") {
-    appendMarkerIcon(marker, HINT_SIDEBAR_ICON_PATH);
-  } else if (directive === "next") {
-    appendMarkerIcon(marker, HINT_NEXT_ICON_PATH);
-  } else if (directive === "prev") {
-    appendMarkerIcon(marker, HINT_PREV_ICON_PATH);
-  } else if (directive === "cancel") {
-    appendMarkerIcon(marker, HINT_CANCEL_ICON_PATH);
-  } else if (directive === "submit") {
-    appendMarkerIcon(marker, HINT_SUBMIT_ICON_PATH);
-  } else if (directive === "like") {
-    appendMarkerIcon(marker, HINT_LIKE_ICON_PATH);
-  } else if (directive === "dislike") {
-    appendMarkerIcon(marker, HINT_DISLIKE_ICON_PATH);
-  } else if (labelIcon === "collapse") {
-    appendMarkerIcon(marker, HINT_FOCUS_MODE_ICON_PATH);
-  } else if (labelIcon === "expand") {
-    appendMarkerIcon(marker, HINT_FOCUS_MODE_ICON_PATH);
-  } else if (labelIcon === "more") {
-    appendMarkerIcon(marker, HINT_MORE_ICON_PATH);
+  if (directive !== null) {
+    appendMarkerIcon(marker, HINT_DIRECTIVE_ICON_PATHS[directive]);
+  } else if (labelIcon !== null) {
+    appendMarkerIcon(marker, LABEL_ICON_PATHS[labelIcon]);
   }
 
   if (mode === "copy-image") {

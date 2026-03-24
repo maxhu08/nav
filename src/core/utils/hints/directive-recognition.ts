@@ -1,4 +1,5 @@
 import {
+  type ActionDirectiveOptions,
   DELETE_ATTRIBUTE_PATTERNS,
   DELETE_SHORT_TEXT_PATTERNS,
   DOWNLOAD_ATTRIBUTE_PATTERNS,
@@ -71,6 +72,18 @@ type DirectiveDefinition = {
   ) => number;
 };
 
+const createActionDirectiveDefinition = (
+  directive: HintDirective,
+  patterns: readonly RegExp[],
+  threshold: number,
+  options: ActionDirectiveOptions = {}
+): DirectiveDefinition => ({
+  directive,
+  threshold,
+  getScore: (element, rect, features) =>
+    getActionDirectiveCandidateScore(element, patterns, options, rect, features)
+});
+
 const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
   {
     directive: "input",
@@ -82,91 +95,25 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
     threshold: 220,
     getScore: (element, rect, features) => getAttachCandidateScore(element, rect, features)
   },
-  {
-    directive: "share",
-    threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        SHARE_ATTRIBUTE_PATTERNS,
-        {
-          shortTextPatterns: SHARE_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
-  {
-    directive: "download",
-    threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        DOWNLOAD_ATTRIBUTE_PATTERNS,
-        {
-          shortTextPatterns: DOWNLOAD_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
-  {
-    directive: "login",
-    threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        LOGIN_ATTRIBUTE_PATTERNS,
-        {
-          shortTextPatterns: LOGIN_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
-  {
-    directive: "microphone",
-    threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        MICROPHONE_ATTRIBUTE_PATTERNS,
-        {
-          requireButtonLikeControl: true,
-          shortTextPatterns: MICROPHONE_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
-  {
-    directive: "delete",
-    threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        DELETE_ATTRIBUTE_PATTERNS,
-        {
-          shortTextPatterns: DELETE_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
-  {
-    directive: "save",
-    threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        SAVE_ATTRIBUTE_PATTERNS,
-        {
-          shortTextPatterns: SAVE_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
+  createActionDirectiveDefinition("share", SHARE_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: SHARE_SHORT_TEXT_PATTERNS
+  }),
+  createActionDirectiveDefinition("download", DOWNLOAD_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: DOWNLOAD_SHORT_TEXT_PATTERNS
+  }),
+  createActionDirectiveDefinition("login", LOGIN_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: LOGIN_SHORT_TEXT_PATTERNS
+  }),
+  createActionDirectiveDefinition("microphone", MICROPHONE_ATTRIBUTE_PATTERNS, 220, {
+    requireButtonLikeControl: true,
+    shortTextPatterns: MICROPHONE_SHORT_TEXT_PATTERNS
+  }),
+  createActionDirectiveDefinition("delete", DELETE_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: DELETE_SHORT_TEXT_PATTERNS
+  }),
+  createActionDirectiveDefinition("save", SAVE_ATTRIBUTE_PATTERNS, 220, {
+    shortTextPatterns: SAVE_SHORT_TEXT_PATTERNS
+  }),
   {
     directive: "copy",
     threshold: 220,
@@ -195,41 +142,19 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
         ? getNextCandidateScore(element, rect, features)
         : Number.NEGATIVE_INFINITY
   },
-  {
-    directive: "prev",
-    threshold: 200,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        PREV_ATTRIBUTE_PATTERNS,
-        {
-          relValues: ["prev"],
-          shortTextPatterns: PREV_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
+  createActionDirectiveDefinition("prev", PREV_ATTRIBUTE_PATTERNS, 200, {
+    relValues: ["prev"],
+    shortTextPatterns: PREV_SHORT_TEXT_PATTERNS
+  }),
   {
     directive: "cancel",
     threshold: 220,
     getScore: (element, rect, features) => getCancelCandidateScore(element, rect, features)
   },
-  {
-    directive: "submit",
-    threshold: 220,
-    getScore: (element, rect, features) =>
-      getActionDirectiveCandidateScore(
-        element,
-        SUBMIT_ATTRIBUTE_PATTERNS,
-        {
-          allowFormSignals: true,
-          shortTextPatterns: SUBMIT_SHORT_TEXT_PATTERNS
-        },
-        rect,
-        features
-      )
-  },
+  createActionDirectiveDefinition("submit", SUBMIT_ATTRIBUTE_PATTERNS, 220, {
+    allowFormSignals: true,
+    shortTextPatterns: SUBMIT_SHORT_TEXT_PATTERNS
+  }),
   {
     directive: "like",
     threshold: 220,
@@ -242,26 +167,11 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
   }
 ];
 
-const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
-  input: 180,
-  attach: 220,
-  share: 220,
-  download: 220,
-  login: 220,
-  microphone: 220,
-  delete: 220,
-  save: 220,
-  copy: 220,
-  hide: 240,
-  home: 180,
-  sidebar: 220,
-  next: 200,
-  prev: 200,
-  cancel: 220,
-  submit: 220,
-  like: 220,
-  dislike: 220
-});
+const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => {
+  return Object.fromEntries(
+    DIRECTIVE_DEFINITIONS.map(({ directive, threshold }) => [directive, threshold])
+  ) as Record<HintDirective, number>;
+};
 
 export const getPreferredDirectiveIndexes = (
   elements: HTMLElement[]

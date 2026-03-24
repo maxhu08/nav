@@ -9,38 +9,20 @@ const hasDirective = (reservedLabels: string, directive: string): boolean => {
   return reservedLabels.includes(`@${directive} `);
 };
 
-const addDirectiveIfMissing = (
-  reservedLabels: string,
-  directive: string,
-  label: string
-): string => {
-  if (hasDirective(reservedLabels, directive)) {
-    return reservedLabels;
+const addDirectiveIfMissing = (config: Config, directive: string, labels: string): void => {
+  if (hasDirective(config.hints.reservedLabels, directive)) {
+    return;
   }
 
-  const trimmedReservedLabels = reservedLabels.trim();
-  const directiveLine = `@${directive} ${label}`;
+  const trimmedReservedLabels = config.hints.reservedLabels.trim();
+  const directiveLine = `@${directive} ${labels}`;
 
   if (trimmedReservedLabels.length === 0) {
-    return directiveLine;
+    config.hints.reservedLabels = directiveLine;
+    return;
   }
 
-  return `${trimmedReservedLabels}\n${directiveLine}`;
-};
-
-const getReservedLabels = (config: unknown): string => {
-  if (typeof config !== "object" || config === null) {
-    return "";
-  }
-
-  const hints = (config as { hints?: unknown }).hints;
-  if (typeof hints !== "object" || hints === null) {
-    return "";
-  }
-
-  return typeof (hints as { reservedLabels?: unknown }).reservedLabels === "string"
-    ? (hints as { reservedLabels: string }).reservedLabels
-    : "";
+  config.hints.reservedLabels = `${trimmedReservedLabels}\n${directiveLine}`;
 };
 
 const hasHotkeyMapping = (mappings: string, sequence: string, action: string): boolean => {
@@ -53,19 +35,20 @@ const hasHotkeyMapping = (mappings: string, sequence: string, action: string): b
     .some((line) => line === `${sequence} ${action}`);
 };
 
-const addHotkeyMappingIfMissing = (mappings: string, sequence: string, action: string): string => {
-  if (hasHotkeyMapping(mappings, sequence, action)) {
-    return mappings;
+const addHotkeyMappingIfMissing = (config: Config, mapping: string, action: string): void => {
+  if (hasHotkeyMapping(config.hotkeys.mappings, mapping, action)) {
+    return;
   }
 
-  const trimmedMappings = mappings.trimEnd();
-  const mappingLine = `${sequence} ${action}`;
+  const trimmedMappings = config.hotkeys.mappings.trimEnd();
+  const mappingLine = `${mapping} ${action}`;
 
   if (trimmedMappings.length === 0) {
-    return mappingLine;
+    config.hotkeys.mappings = mappingLine;
+    return;
   }
 
-  return `${trimmedMappings}\n${mappingLine}`;
+  config.hotkeys.mappings = `${trimmedMappings}\n${mappingLine}`;
 };
 
 const renameHotkeyMappingIfPresent = (
@@ -132,107 +115,42 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   }
 
   const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
-  const originalReservedLabels = getReservedLabels(config);
   const originalHotkeyMappings = getHotkeyMappings(config);
 
   // if config before v1.0.6
-  if (!hasDirective(originalReservedLabels, "input")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "input",
-      "kj kjf kjfd"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "input", "kj kjf kjfd");
 
   // if config before v1.0.6
-  if (!hasDirective(originalReservedLabels, "attach")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "attach",
-      "up"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "attach", "up");
 
   // if config before v1.0.8
-  if (!hasDirective(originalReservedLabels, "share")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "share",
-      "sh"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "share", "sh");
 
   // if config before v1.0.9
-  if (!hasDirective(originalReservedLabels, "login")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "login",
-      "si"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "login", "si");
 
   // if config before v1.0.9
-  if (!hasDirective(originalReservedLabels, "download")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "download",
-      "dl"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "download", "dl");
 
   // if config before v1.1.0
   if (!hasHotkeyMapping(originalHotkeyMappings, "yc", "yank-current-tab-url-clean")) {
-    migratedConfig.hotkeys.mappings = addHotkeyMappingIfMissing(
-      migratedConfig.hotkeys.mappings,
-      "yc",
-      "yank-current-tab-url-clean"
-    );
+    addHotkeyMappingIfMissing(migratedConfig, "yc", "yank-current-tab-url-clean");
   }
 
   // if config before v1.1.1
-  if (!hasDirective(originalReservedLabels, "microphone")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "microphone",
-      "mic"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "microphone", "mic");
 
   // if config before v1.1.2
-  if (!hasDirective(originalReservedLabels, "delete")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "delete",
-      "dd"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "delete", "dd");
 
   // if config before v1.1.2
-  if (!hasDirective(originalReservedLabels, "save")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "save",
-      "sv"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "save", "sv");
 
   // if config before v1.1.2
-  if (!hasDirective(originalReservedLabels, "copy")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "copy",
-      "cp"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "copy", "cp");
 
   // if config before v1.1.2
-  if (!hasDirective(originalReservedLabels, "hide")) {
-    migratedConfig.hints.reservedLabels = addDirectiveIfMissing(
-      migratedConfig.hints.reservedLabels,
-      "hide",
-      "hi"
-    );
-  }
+  addDirectiveIfMissing(migratedConfig, "hide", "hi");
 
   // if config before v1.1.1
   migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
@@ -244,11 +162,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   );
 
   if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
-    migratedConfig.hotkeys.mappings = addHotkeyMappingIfMissing(
-      migratedConfig.hotkeys.mappings,
-      "yo",
-      "duplicate-current-tab-origin"
-    );
+    addHotkeyMappingIfMissing(migratedConfig, "yo", "duplicate-current-tab-origin");
   }
 
   return migratedConfig;
