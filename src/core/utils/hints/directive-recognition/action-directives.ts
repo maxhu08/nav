@@ -24,6 +24,8 @@ import {
   NEXT_SHORT_TEXT_PATTERNS,
   NEXT_STRONG_ATTRIBUTE_PATTERNS,
   NOISY_NEXT_CLASS_PATTERNS,
+  NOTIFICATION_ATTRIBUTE_PATTERNS,
+  NOTIFICATION_SHORT_TEXT_PATTERNS,
   PREV_ATTRIBUTE_PATTERNS,
   PREV_SHORT_TEXT_PATTERNS,
   POPUP_DIALOG_SELECTOR,
@@ -61,6 +63,12 @@ const SAVE_NAVIGATION_CONTAINER_SELECTOR = [
   "[class*='guide-entry' i]",
   "[class*='guide' i]"
 ].join(", ");
+const NOTIFICATION_PATH_PATTERNS = [
+  /^\/notifications?(?:\/|$)/i,
+  /^\/inbox(?:\/|$)/i,
+  /^\/updates(?:\/|$)/i,
+  /^\/alerts?(?:\/|$)/i
+];
 
 const isWatchLaterNavigationLink = (
   element: HTMLElement,
@@ -663,6 +671,55 @@ const getMicrophoneCandidateScore = (
     : score;
 };
 
+const getNotificationCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  const score = getActionDirectiveCandidateScore(
+    element,
+    NOTIFICATION_ATTRIBUTE_PATTERNS,
+    {
+      shortTextPatterns: NOTIFICATION_SHORT_TEXT_PATTERNS
+    },
+    rectOverride,
+    features
+  );
+
+  const linkLikeElement =
+    element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement
+      ? element
+      : element.closest("a[href], area[href]");
+
+  if (
+    !(linkLikeElement instanceof HTMLAnchorElement || linkLikeElement instanceof HTMLAreaElement)
+  ) {
+    return score;
+  }
+
+  const href = linkLikeElement.getAttribute("href");
+  const normalizedPath = href ? getNormalizedSameOriginPath(href) : null;
+  if (
+    !normalizedPath ||
+    !NOTIFICATION_PATH_PATTERNS.some((pattern) => pattern.test(normalizedPath))
+  ) {
+    return score;
+  }
+
+  let boostedScore = score === Number.NEGATIVE_INFINITY ? 20 : score;
+  boostedScore += 260;
+
+  if (element instanceof HTMLButtonElement || element instanceof HTMLAnchorElement) {
+    boostedScore += 40;
+  }
+
+  if ((element.getAttribute("aria-haspopup") ?? "").toLowerCase() === "true") {
+    boostedScore += 20;
+  }
+
+  return boostedScore;
+};
+
 const getSaveCandidateScore = (
   element: HTMLElement,
   rectOverride?: DOMRect | null,
@@ -778,6 +835,9 @@ export const getPreferredLoginElementIndex = (elements: HTMLElement[]): number |
 export const getPreferredMicrophoneElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getMicrophoneCandidateScore(element));
 
+export const getPreferredNotificationElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 220, (element) => getNotificationCandidateScore(element));
+
 export const getPreferredSaveElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getSaveCandidateScore(element));
 
@@ -806,5 +866,6 @@ export {
   getLikeCandidateScore,
   getMicrophoneCandidateScore,
   getNextCandidateScore,
+  getNotificationCandidateScore,
   getSaveCandidateScore
 };

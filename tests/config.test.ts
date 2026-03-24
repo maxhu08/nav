@@ -181,6 +181,40 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
     }
   },
   {
+    desc: "adds the notification directive for configs before v1.1.3",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hints: {
+          ...structuredClone(defaultConfig).hints,
+          reservedLabels: `@input kj kjf kjfd
+@attach up
+@share sh
+@download dl
+@login si
+@microphone mic
+@delete dd
+@save sv
+@copy cp
+@hide hi
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.reservedLabels).toContain("@notification nf");
+      expect(migratedConfig.hints.reservedLabels).toContain("@save sv");
+    }
+  },
+  {
     desc: "adds the copy directive for configs before v1.1.2",
     test: () => {
       const oldConfig = {
@@ -386,6 +420,18 @@ c toggle-captions # requires watch mode`
       const saveDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@save /gm) ?? [];
 
       expect(saveDirectiveMatches).toHaveLength(1);
+    }
+  },
+  {
+    desc: "does not duplicate the notification directive when it already exists",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+
+      const migratedConfig = migrateOldConfig(config, defaultConfig);
+      const notificationDirectiveMatches =
+        migratedConfig.hints.reservedLabels.match(/^@notification /gm) ?? [];
+
+      expect(notificationDirectiveMatches).toHaveLength(1);
     }
   },
   {

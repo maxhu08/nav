@@ -5,6 +5,7 @@ export const RESERVED_HINT_DIRECTIVES = [
   "download",
   "login",
   "microphone",
+  "notification",
   "delete",
   "save",
   "copy",
@@ -26,7 +27,8 @@ export const RESERVED_HINT_DIRECTIVE_LINE_PATTERN = /^@([a-z]+) ([a-z]+(?: [a-z]
 
 const RESERVED_HINT_DIRECTIVE_SET = new Set<string>(RESERVED_HINT_DIRECTIVES);
 const RESERVED_HINT_DIRECTIVE_ALIASES: Record<string, ReservedHintDirective> = {
-  upload: "attach"
+  upload: "attach",
+  notifications: "notification"
 };
 const NON_WHITESPACE_PATTERN = /\S+/g;
 

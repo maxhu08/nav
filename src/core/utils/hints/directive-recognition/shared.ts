@@ -28,6 +28,17 @@ export const INPUT_ATTRIBUTE_PATTERNS = [
   /message/i,
   /composer/i
 ];
+export const PRIMARY_INPUT_ATTRIBUTE_PATTERNS = [
+  /\bsearch\s+or\s+jump\s+to\b/i,
+  /\bjump\s+to\b/i,
+  /\bsearch\b.*\ball\b/i,
+  /\bglobal\s+search\b/i,
+  /\bsite\s+search\b/i,
+  /\bcommand\s+palette\b/i,
+  /\bopen\s+search\b/i,
+  /\bsearch\b.*\b(repositories|issues|pull requests|docs|code|projects)\b/i,
+  /\btype\b.*\bto search\b/i
+];
 export const ATTACH_ATTRIBUTE_PATTERNS = [
   /\battach\b/i,
   /\bupload\b/i,
@@ -106,6 +117,15 @@ export const MICROPHONE_SHORT_TEXT_PATTERNS = [
   /^voice$/i,
   /^push[\s-]?to[\s-]?talk$/i
 ];
+export const NOTIFICATION_ATTRIBUTE_PATTERNS = [
+  /\bnotifications?\b/i,
+  /\balerts?\b/i,
+  /\binbox\b/i,
+  /\bbell\b/i,
+  /\bnotification[-_ ]?(button|toggle|menu|panel|center)\b/i,
+  /\balert[-_ ]?(button|toggle|menu|panel|center)\b/i
+];
+export const NOTIFICATION_SHORT_TEXT_PATTERNS = [/^notifications?$/i, /^alerts?$/i, /^inbox$/i];
 export const DELETE_ATTRIBUTE_PATTERNS = [
   /\bdelete\b/i,
   /\btrash\b/i,

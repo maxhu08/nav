@@ -152,6 +152,9 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   // if config before v1.1.2
   addDirectiveIfMissing(migratedConfig, "hide", "hi");
 
+  // if config before v1.1.3
+  addDirectiveIfMissing(migratedConfig, "notification", "nf");
+
   // if config before v1.1.1
   migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
     migratedConfig.hotkeys.mappings,

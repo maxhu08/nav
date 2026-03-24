@@ -36,6 +36,7 @@ import {
   getPreferredLikeElementIndex,
   getPreferredMicrophoneElementIndex,
   getPreferredNextElementIndex,
+  getNotificationCandidateScore,
   getPreferredPrevElementIndex,
   getPreferredShareElementIndex,
   getSaveCandidateScore,
@@ -51,6 +52,7 @@ import {
 import {
   getAttachCandidateScore,
   getAttachEquivalentIndexes,
+  getCombinedInputCandidateScore,
   getInputCandidateScore,
   getPreferredAttachElementIndex,
   getPreferredInputElementIndex,
@@ -87,7 +89,7 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
   {
     directive: "input",
     threshold: 180,
-    getScore: (element, rect, features) => getInputCandidateScore(element, rect, features)
+    getScore: (element, rect, features) => getCombinedInputCandidateScore(element, rect, features)
   },
   {
     directive: "attach",
@@ -107,6 +109,11 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
     requireButtonLikeControl: true,
     shortTextPatterns: MICROPHONE_SHORT_TEXT_PATTERNS
   }),
+  {
+    directive: "notification",
+    threshold: 220,
+    getScore: (element, rect, features) => getNotificationCandidateScore(element, rect, features)
+  },
   createActionDirectiveDefinition("delete", DELETE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: DELETE_SHORT_TEXT_PATTERNS
   }),
@@ -250,6 +257,7 @@ export const getPreferredDirectiveIndexes = (
 export {
   getAttachCandidateScore,
   getAttachEquivalentIndexes,
+  getCombinedInputCandidateScore,
   getPreferredAttachElementIndex,
   getPreferredCancelElementIndex,
   getPreferredCopyElementIndex,

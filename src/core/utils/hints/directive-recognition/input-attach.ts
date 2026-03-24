@@ -3,6 +3,7 @@ import {
   ATTACH_EXACT_CONTROL_PATTERNS,
   ATTACH_FILE_TYPE_PATTERNS,
   INPUT_ATTRIBUTE_PATTERNS,
+  PRIMARY_INPUT_ATTRIBUTE_PATTERNS,
   getActiveSelectableBonus,
   getBestScoringElementIndex,
   getCachedClosest,
@@ -12,8 +13,10 @@ import {
   getHintTargetPreference,
   getMarkerRect,
   isActivatableElement,
+  isButtonLikeControl,
   isIntrinsicInteractiveElement,
   isSelectableElement,
+  getSemanticControlText,
   textMatchesAnyPattern,
   type ElementFeatureVector,
   type HintDirective
@@ -66,6 +69,84 @@ export const getInputCandidateScore = (
   score += Math.min(120, rect.height) / 6;
 
   return score;
+};
+
+const getInputLauncherCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  if (!isActivatableElement(element) || isSelectableElement(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const semanticControlText = getSemanticControlText(element, features);
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    [
+      "type",
+      "name",
+      "id",
+      "placeholder",
+      "aria-label",
+      "aria-description",
+      "title",
+      "data-testid",
+      "role",
+      "class"
+    ],
+    [semanticControlText],
+    features
+  );
+
+  if (!textMatchesAnyPattern(attributeText, INPUT_ATTRIBUTE_PATTERNS)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = 220;
+
+  if (textMatchesAnyPattern(attributeText, PRIMARY_INPUT_ATTRIBUTE_PATTERNS)) {
+    score += 260;
+  }
+
+  if (isButtonLikeControl(element)) {
+    score += 60;
+  }
+
+  if (element.hasAttribute("aria-haspopup")) {
+    score += 40;
+  }
+
+  if (element.querySelector("kbd") instanceof HTMLElement) {
+    score += 30;
+  }
+
+  if (
+    getCachedClosest(element, "search, [role='search'], form, header, [role='banner']", features)
+  ) {
+    score += 20;
+  }
+
+  score += Math.min(320, rect.width) / 10;
+  score += Math.min(120, rect.height) / 12;
+
+  return score;
+};
+
+export const getCombinedInputCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  return Math.max(
+    getInputCandidateScore(element, rectOverride, features),
+    getInputLauncherCandidateScore(element, rectOverride, features)
+  );
 };
 
 const getAttachAttributeText = (element: HTMLElement, features?: ElementFeatureVector): string => {
@@ -350,7 +431,37 @@ export const getPreferredInputElementIndex = (elements: HTMLElement[]): number |
     return onlySelectableIndex;
   }
 
-  return getBestScoringElementIndex(elements, 180, (element) => getInputCandidateScore(element));
+  let bestSelectableIndex: number | null = null;
+  let bestSelectableScore = Number.NEGATIVE_INFINITY;
+
+  elements.forEach((element, index) => {
+    const score = getInputCandidateScore(element);
+    if (score > bestSelectableScore) {
+      bestSelectableScore = score;
+      bestSelectableIndex = index;
+    }
+  });
+
+  let bestLauncherIndex: number | null = null;
+  let bestLauncherScore = Number.NEGATIVE_INFINITY;
+
+  elements.forEach((element, index) => {
+    const score = getInputLauncherCandidateScore(element);
+    if (score > bestLauncherScore) {
+      bestLauncherScore = score;
+      bestLauncherIndex = index;
+    }
+  });
+
+  if (bestLauncherScore >= 220 && bestLauncherScore >= bestSelectableScore + 80) {
+    return bestLauncherIndex;
+  }
+
+  if (bestSelectableScore >= 180) {
+    return bestSelectableIndex;
+  }
+
+  return bestLauncherScore >= 220 ? bestLauncherIndex : null;
 };
 
 export const getPreferredSearchElementIndex = (elements: HTMLElement[]): number | null => {
