@@ -9,6 +9,7 @@ import {
 } from "~/src/core/utils/hints/layout/shared";
 
 export const getMarkerPlacementCandidates = (
+  element: HTMLElement,
   anchorRect: DOMRect,
   markerVariant: MarkerVariant,
   directive: ReservedHintDirective | null,
@@ -17,6 +18,11 @@ export const getMarkerPlacementCandidates = (
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
   const shouldHighlightThumbnail = markerVariant === "thumbnail";
+  const isResponseActionButton =
+    element.matches("button, [role='button']") &&
+    element.closest(
+      "[aria-label='Response actions'], [aria-label*='actions' i][role='group']"
+    ) instanceof HTMLElement;
   const isWideRowLikeTarget =
     !shouldHighlightThumbnail &&
     directive === null &&
@@ -41,6 +47,22 @@ export const getMarkerPlacementCandidates = (
   const bottom = Math.max(anchorRect.top, anchorRect.bottom - markerHeight - MARKER_ANCHOR_INSET);
   const centerLeft = anchorRect.left + (anchorRect.width - markerWidth) / 2;
   const centerTop = anchorRect.top + (anchorRect.height - markerHeight) / 2;
+  const responseActionTop = anchorRect.top - markerHeight - MARKER_ANCHOR_INSET;
+  const responseActionCopyLeft = anchorRect.left - markerWidth + 10;
+
+  if (isResponseActionButton && !shouldHighlightThumbnail) {
+    if (directive === "copy") {
+      pushCandidate(responseActionCopyLeft, responseActionTop);
+      pushCandidate(centerLeft, responseActionTop);
+      pushCandidate(left, responseActionTop);
+      pushCandidate(left, centerTop);
+    } else {
+      pushCandidate(centerLeft, responseActionTop);
+      pushCandidate(left, responseActionTop);
+      pushCandidate(right, responseActionTop);
+      pushCandidate(left, centerTop);
+    }
+  }
 
   if (shouldHighlightThumbnail) {
     pushCandidate(centerLeft, centerTop);

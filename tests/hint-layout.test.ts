@@ -580,6 +580,213 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
         fixture.cleanup();
       }
     }
+  },
+  {
+    desc: "keeps response action markers anchored to each button instead of the whole group",
+    test: () => {
+      const fixture = createDomFixture(
+        "<div id='response-actions' aria-label='Response actions' role='group' tabindex='-1'><button id='copy-response' aria-label='Copy response'>Copy</button><button id='share-response' aria-label='Share'>Share</button></div>"
+      );
+
+      try {
+        const copyButton = document.querySelector("#copy-response");
+        const shareButton = document.querySelector("#share-response");
+        const group = document.querySelector("#response-actions");
+        expect(copyButton instanceof HTMLElement).toBe(true);
+        expect(shareButton instanceof HTMLElement).toBe(true);
+        expect(group instanceof HTMLElement).toBe(true);
+
+        if (
+          !(copyButton instanceof HTMLElement) ||
+          !(shareButton instanceof HTMLElement) ||
+          !(group instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const groupRect = new DOMRect(96, 120, 280, 40);
+        const copyRect = new DOMRect(96, 120, 32, 32);
+        const shareRect = new DOMRect(240, 120, 32, 32);
+        group.getBoundingClientRect = (): DOMRect => groupRect;
+        group.getClientRects = (): DOMRectList => {
+          const list = [groupRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        copyButton.getBoundingClientRect = (): DOMRect => copyRect;
+        copyButton.getClientRects = (): DOMRectList => {
+          const list = [copyRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        shareButton.getBoundingClientRect = (): DOMRect => shareRect;
+        shareButton.getClientRects = (): DOMRectList => {
+          const list = [shareRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const copyMarker = document.createElement("span");
+        copyMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(copyMarker);
+
+        const shareMarker = document.createElement("span");
+        shareMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(shareMarker);
+
+        const copyHint: HintMarker = {
+          element: copyButton,
+          marker: copyMarker,
+          thumbnailIcon: null,
+          label: "cp",
+          directive: "copy",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        const shareHint: HintMarker = {
+          element: shareButton,
+          marker: shareMarker,
+          thumbnailIcon: null,
+          label: "sh",
+          directive: "share",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions(
+          [copyHint, shareHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(copyMarker.style.left).toBe("129px");
+        expect(copyMarker.style.top).toBe("111px");
+        expect(shareMarker.style.left).toBe("183px");
+        expect(shareMarker.style.top).toBe("111px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
+    desc: "aligns response action markers on one row and shifts copy left for space",
+    test: () => {
+      const fixture = createDomFixture(
+        "<div id='response-actions' aria-label='Response actions' role='group' tabindex='-1'><button id='copy-response' aria-label='Copy response'>Copy</button><button id='good-response' aria-label='Good response'>Good</button><button id='bad-response' aria-label='Bad response'>Bad</button><button id='share-response' aria-label='Share'>Share</button><button id='more-response-actions' aria-label='More actions' aria-haspopup='menu'>More</button></div>"
+      );
+
+      try {
+        const copyButton = document.querySelector("#copy-response");
+        const goodButton = document.querySelector("#good-response");
+        const badButton = document.querySelector("#bad-response");
+        const shareButton = document.querySelector("#share-response");
+        const moreButton = document.querySelector("#more-response-actions");
+        expect(copyButton instanceof HTMLElement).toBe(true);
+        expect(goodButton instanceof HTMLElement).toBe(true);
+        expect(badButton instanceof HTMLElement).toBe(true);
+        expect(shareButton instanceof HTMLElement).toBe(true);
+        expect(moreButton instanceof HTMLElement).toBe(true);
+
+        if (
+          !(copyButton instanceof HTMLElement) ||
+          !(goodButton instanceof HTMLElement) ||
+          !(badButton instanceof HTMLElement) ||
+          !(shareButton instanceof HTMLElement) ||
+          !(moreButton instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const copyRect = new DOMRect(96, 120, 32, 32);
+        const goodRect = new DOMRect(144, 120, 32, 32);
+        const badRect = new DOMRect(192, 120, 32, 32);
+        const shareRect = new DOMRect(240, 120, 32, 32);
+        const moreRect = new DOMRect(288, 120, 32, 32);
+        for (const [element, rect] of [
+          [copyButton, copyRect],
+          [goodButton, goodRect],
+          [badButton, badRect],
+          [shareButton, shareRect],
+          [moreButton, moreRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"],
+          labelIcon: HintMarker["labelIcon"] = null
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const copyHint = makeHint(copyButton, "cp", 58, "copy");
+        const goodHint = makeHint(goodButton, "wf", 42, null);
+        const badHint = makeHint(badButton, "wj", 42, null);
+        const shareHint = makeHint(shareButton, "wl", 42, "share");
+        const moreHint = makeHint(moreButton, "wk", 50, null, "more");
+
+        updateMarkerPositions(
+          [copyHint, goodHint, badHint, shareHint, moreHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(copyHint.marker.style.top).toBe("111px");
+        expect(goodHint.marker.style.top).toBe("111px");
+        expect(badHint.marker.style.top).toBe("111px");
+        expect(shareHint.marker.style.top).toBe("111px");
+        expect(moreHint.marker.style.top).toBe("111px");
+        expect(Number.parseInt(copyHint.marker.style.left, 10)).toBe(75);
+        expect(Number.parseInt(goodHint.marker.style.left, 10)).toBe(139);
+        expect(Number.parseInt(badHint.marker.style.left, 10)).toBe(187);
+        expect(Number.parseInt(shareHint.marker.style.left, 10)).toBe(235);
+        expect(Number.parseInt(moreHint.marker.style.left, 10)).toBe(283);
+        expect(Number.parseInt(goodHint.marker.style.left, 10) - (75 + 58)).toBe(6);
+        expect(Number.parseInt(badHint.marker.style.left, 10) - (139 + 42)).toBe(6);
+        expect(Number.parseInt(shareHint.marker.style.left, 10) - (187 + 42)).toBe(6);
+        expect(Number.parseInt(moreHint.marker.style.left, 10) - (235 + 42)).toBe(6);
+      } finally {
+        fixture.cleanup();
+      }
+    }
   }
 ];
 

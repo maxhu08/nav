@@ -106,6 +106,15 @@ export const MICROPHONE_SHORT_TEXT_PATTERNS = [
   /^voice$/i,
   /^push[\s-]?to[\s-]?talk$/i
 ];
+export const COPY_ATTRIBUTE_PATTERNS = [
+  /\bcopy\b/i,
+  /\bclipboard\b/i,
+  /\bduplicate\b/i,
+  /\bclone\b/i,
+  /\bfile-copy\b/i,
+  /\brd-icon-copy\b/i
+];
+export const COPY_SHORT_TEXT_PATTERNS = [/^copy$/i, /^duplicate$/i, /^clone$/i];
 export const HIDE_ATTRIBUTE_PATTERNS = [
   /\bhide\b/i,
   /\bclose\b/i,

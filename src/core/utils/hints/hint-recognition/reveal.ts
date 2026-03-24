@@ -1,9 +1,13 @@
 import { isActivatableElement } from "~/src/core/utils/hints/dom";
 import type { LinkMode, RevealedHintElement } from "~/src/core/utils/hints/model";
 
-const HOVER_HINT_CONTAINER_SELECTOR = ["[data-playbutton='hover']", "[data-actions='hover']"].join(
-  ","
-);
+const HOVER_HINT_CONTAINER_SELECTOR = [
+  "[data-playbutton='hover']",
+  "[data-actions='hover']",
+  "[aria-label='Response actions']",
+  "[aria-label*='actions' i][role='group']",
+  "[class*='turn-messages' i] [aria-label*='actions' i]"
+].join(",");
 const HOVER_HINT_INTERACTIVE_SELECTOR = [
   "a",
   "button",
@@ -13,6 +17,16 @@ const HOVER_HINT_INTERACTIVE_SELECTOR = [
   "[jsaction]"
 ].join(",");
 const HOVER_HINT_PLAY_CONTROL_PATTERNS = [/\bplay\b/i, /\bpause\b/i, /\bresume\b/i, /\bpreview\b/i];
+const HOVER_HINT_ACTION_CONTROL_PATTERNS = [
+  /\bcopy\b/i,
+  /\bgood response\b/i,
+  /\bbad response\b/i,
+  /\bshare\b/i,
+  /\bmore actions\b/i,
+  /\bswitch model\b/i,
+  /\bturn-action\b/i,
+  /\bresponse actions\b/i
+];
 
 const getJoinedAttributeText = (element: HTMLElement, attributeNames: string[]): string =>
   attributeNames
@@ -34,6 +48,19 @@ const hasHoverPlayControlSignal = (element: HTMLElement): boolean => {
   ]);
 
   return textMatchesAnyPattern(attributeText, HOVER_HINT_PLAY_CONTROL_PATTERNS);
+};
+
+const hasHoverActionControlSignal = (element: HTMLElement): boolean => {
+  const attributeText = getJoinedAttributeText(element, [
+    "aria-label",
+    "title",
+    "data-testid",
+    "data-test-id",
+    "class",
+    "name"
+  ]);
+
+  return textMatchesAnyPattern(attributeText, HOVER_HINT_ACTION_CONTROL_PATTERNS);
 };
 
 export const revealElementForHintCollection = (
@@ -77,7 +104,10 @@ export const revealHoverHintControls = (
     for (const candidate of Array.from(
       container.querySelectorAll<HTMLElement>(HOVER_HINT_INTERACTIVE_SELECTOR)
     )) {
-      if (!isActivatableElement(candidate) || !hasHoverPlayControlSignal(candidate)) {
+      if (
+        !isActivatableElement(candidate) ||
+        (!hasHoverPlayControlSignal(candidate) && !hasHoverActionControlSignal(candidate))
+      ) {
         continue;
       }
 

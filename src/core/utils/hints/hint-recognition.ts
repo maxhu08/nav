@@ -5,6 +5,7 @@ export {
   getPreferredAttachElementIndex,
   getPreferredCancelElementIndex,
   getPreferredDirectiveIndexes,
+  getPreferredCopyElementIndex,
   getPreferredDislikeElementIndex,
   getPreferredDownloadElementIndex,
   getPreferredHideElementIndex,

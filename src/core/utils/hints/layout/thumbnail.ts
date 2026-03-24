@@ -163,7 +163,7 @@ const COMPOSITE_ROW_SELECTOR = [
   "a[href]",
   "[role='link']",
   "[data-sidebar-item]",
-  "[tabindex]"
+  "[tabindex]:not([tabindex='-1']):not([role='group'])"
 ].join(", ");
 
 const getCompositeRowAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMRect | null => {

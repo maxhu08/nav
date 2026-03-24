@@ -19,8 +19,10 @@ import {
 import {
   getActionDirectiveCandidateScore,
   getCancelCandidateScore,
+  getCopyCandidateScore,
   getDislikeCandidateScore,
   getLikeCandidateScore,
+  getPreferredCopyElementIndex,
   getHideCandidateScore,
   getNextCandidateScore,
   getPreferredCancelElementIndex,
@@ -134,6 +136,11 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
       )
   },
   {
+    directive: "copy",
+    threshold: 220,
+    getScore: (element, rect, features) => getCopyCandidateScore(element, rect, features)
+  },
+  {
     directive: "hide",
     threshold: 240,
     getScore: (element, rect, features) => getHideCandidateScore(element, rect, features)
@@ -210,6 +217,7 @@ const getDefaultDirectiveThresholds = (): Record<HintDirective, number> => ({
   download: 220,
   login: 220,
   microphone: 220,
+  copy: 220,
   hide: 240,
   home: 180,
   sidebar: 220,
@@ -299,6 +307,7 @@ export {
   getAttachEquivalentIndexes,
   getPreferredAttachElementIndex,
   getPreferredCancelElementIndex,
+  getPreferredCopyElementIndex,
   getPreferredDislikeElementIndex,
   getPreferredDownloadElementIndex,
   getPreferredHideElementIndex,

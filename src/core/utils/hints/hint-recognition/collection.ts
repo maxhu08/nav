@@ -3,7 +3,10 @@ import {
   getElementTabIndex,
   hasInteractiveRole
 } from "~/src/core/utils/hints/dom";
-import { getHideCandidateScore } from "~/src/core/utils/hints/directive-recognition/action-directives";
+import {
+  getCopyCandidateScore,
+  getHideCandidateScore
+} from "~/src/core/utils/hints/directive-recognition/action-directives";
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import {
   createHintCollectionContext,
@@ -43,6 +46,24 @@ const HINT_SELECTORS_HIDE_CANDIDATES = [
   "[class*='scrim' i]",
   "[id*='lightbox' i]",
   "[class*='lightbox' i]"
+].join(",");
+const HINT_SELECTORS_COPY_CANDIDATES = [
+  "button",
+  "a",
+  "[role='button']",
+  "[onclick]",
+  "[jsaction]",
+  "[title*='copy' i]",
+  "[title*='duplicate' i]",
+  "[aria-label*='copy' i]",
+  "[aria-label*='duplicate' i]",
+  "[data-testid*='copy' i]",
+  "[data-testid*='duplicate' i]",
+  "[data-test-id*='copy' i]",
+  "[data-test-id*='duplicate' i]",
+  "[class*='copy' i]",
+  "[id*='copy' i]",
+  "[name*='copy' i]"
 ].join(",");
 
 export const HINT_SELECTORS_DEFAULT = [
@@ -170,6 +191,27 @@ const appendLikelyHideElements = (
   }
 };
 
+const appendLikelyCopyElements = (
+  target: HTMLElement[],
+  seen: Set<HTMLElement>,
+  visibility: ReturnType<typeof createHintVisibilityContext>
+): void => {
+  for (const root of getHintSearchRoots()) {
+    for (const element of root.querySelectorAll<HTMLElement>(HINT_SELECTORS_COPY_CANDIDATES)) {
+      if (seen.has(element) || !visibility.isVisibleHintTarget(element)) {
+        continue;
+      }
+
+      if (getCopyCandidateScore(element) <= 220) {
+        continue;
+      }
+
+      seen.add(element);
+      target.push(element);
+    }
+  }
+};
+
 export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
   const visibility = createHintVisibilityContext();
   const { getRect, getIdentity, getDepth, getPreference } = createHintCollectionContext({
@@ -185,6 +227,7 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     appendEligibleElements(elements, HINT_SELECTORS_DEFAULT_WEAK, mode, seen, visibility, {
       requireWeakSignal: true
     });
+    appendLikelyCopyElements(elements, seen, visibility);
     appendLikelyHideElements(elements, seen, visibility);
   }
 

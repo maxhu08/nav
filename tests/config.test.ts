@@ -150,6 +150,36 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
     }
   },
   {
+    desc: "adds the copy directive for configs before v1.1.2",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hints: {
+          ...structuredClone(defaultConfig).hints,
+          reservedLabels: `@input kj kjf kjfd
+@attach up
+@share sh
+@download dl
+@login si
+@microphone mic
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.reservedLabels).toContain("@copy cp");
+      expect(migratedConfig.hints.reservedLabels).toContain("@microphone mic");
+    }
+  },
+  {
     desc: "adds the hide directive for configs before v1.1.2",
     test: () => {
       const oldConfig = {
@@ -314,6 +344,17 @@ c toggle-captions # requires watch mode`
         migratedConfig.hints.reservedLabels.match(/^@microphone /gm) ?? [];
 
       expect(microphoneDirectiveMatches).toHaveLength(1);
+    }
+  },
+  {
+    desc: "does not duplicate the copy directive when it already exists",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+
+      const migratedConfig = migrateOldConfig(config, defaultConfig);
+      const copyDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@copy /gm) ?? [];
+
+      expect(copyDirectiveMatches).toHaveLength(1);
     }
   },
   {

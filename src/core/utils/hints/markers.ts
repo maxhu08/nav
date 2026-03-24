@@ -170,6 +170,8 @@ export const createHintMarker = (
     appendMarkerIcon(marker, HINT_LOGIN_ICON_PATH);
   } else if (directive === "microphone") {
     appendMarkerIcon(marker, HINT_MICROPHONE_ICON_PATH);
+  } else if (directive === "copy") {
+    appendMarkerIcon(marker, FILE_COPY_ICON_PATH);
   } else if (directive === "hide") {
     appendMarkerIcon(marker, HINT_HIDE_ICON_PATH);
   } else if (directive === "home") {

@@ -1,6 +1,8 @@
 import {
   CANCEL_ATTRIBUTE_PATTERNS,
   CANCEL_SHORT_TEXT_PATTERNS,
+  COPY_ATTRIBUTE_PATTERNS,
+  COPY_SHORT_TEXT_PATTERNS,
   DISLIKE_ATTRIBUTE_PATTERNS,
   DISLIKE_SHORT_TEXT_PATTERNS,
   DISLIKE_STABLE_CONTROL_PATTERNS,
@@ -598,6 +600,54 @@ const getMicrophoneCandidateScore = (
     : score;
 };
 
+const getCopyCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  const score = getActionDirectiveCandidateScore(
+    element,
+    COPY_ATTRIBUTE_PATTERNS,
+    {
+      shortTextPatterns: COPY_SHORT_TEXT_PATTERNS
+    },
+    rectOverride,
+    features
+  );
+
+  if (score === Number.NEGATIVE_INFINITY) {
+    return score;
+  }
+
+  let boostedScore = score;
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    ["aria-label", "title", "data-testid", "data-test-id", "class", "name"],
+    [getSemanticControlText(element, features)],
+    features
+  );
+
+  if (/\bcopy response\b/i.test(attributeText)) {
+    boostedScore += 180;
+  }
+
+  if (/\bcopy[-_ ]?turn[-_ ]?action[-_ ]?button\b/i.test(attributeText)) {
+    boostedScore += 180;
+  }
+
+  if (
+    getCachedClosest(
+      element,
+      "[aria-label='Response actions'], [aria-label*='actions' i][role='group']",
+      features
+    )
+  ) {
+    boostedScore += 140;
+  }
+
+  return boostedScore;
+};
+
 const getPreferredActionDirectiveElementIndex = (
   elements: HTMLElement[],
   patterns: readonly RegExp[],
@@ -645,6 +695,9 @@ export const getPreferredLoginElementIndex = (elements: HTMLElement[]): number |
 export const getPreferredMicrophoneElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getMicrophoneCandidateScore(element));
 
+export const getPreferredCopyElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 220, (element) => getCopyCandidateScore(element));
+
 export const getPreferredHideElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 240, (element) => getHideCandidateScore(element));
 
@@ -660,6 +713,8 @@ export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number
 
 export {
   getCancelCandidateScore,
+  getCopyCandidateScore,
+  getPreferredActionDirectiveElementIndex,
   getDislikeCandidateScore,
   getHideCandidateScore,
   getLikeCandidateScore,
