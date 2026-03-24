@@ -33,6 +33,7 @@ type KeyStateDeps = {
 type KeydownHandlerDeps = {
   actions: Record<ActionName, ActionHandler>;
   findMode: {
+    handleFindUIKeydown: (event: KeyboardEvent) => boolean;
     exitFindMode: () => void;
     isFindModeActive: () => boolean;
     shouldIgnoreKeydownInFindUI: (event: KeyboardEvent) => boolean;
@@ -246,6 +247,11 @@ export const createNavigationKeydownHandler = ({
     }
 
     if (isKeydownFromEditableTarget(event)) {
+      if (findMode.handleFindUIKeydown(event)) {
+        consumeKeyboardEvent(event);
+        return;
+      }
+
       if (handleEscapeModes(event)) {
         return;
       }

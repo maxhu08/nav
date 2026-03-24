@@ -22,6 +22,10 @@ import {
   createFindOverlay,
   createFindStatus
 } from "~/src/core/actions/find-mode/ui";
+import {
+  activateSiteKeybindIgnore,
+  deactivateSiteKeybindIgnore
+} from "~/src/core/utils/ignore-site-keybinds";
 
 type CoreMode = "normal" | "find" | "watch";
 
@@ -275,6 +279,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     getFindBar()?.setAttribute("data-visible", "false");
 
     if (!isFindStatusVisible) {
+      deactivateSiteKeybindIgnore("find");
       deps.setMode("normal");
     }
   };
@@ -310,6 +315,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     findMatches = [];
     currentFindMatchIndex = -1;
     isFindStatusVisible = false;
+    deactivateSiteKeybindIgnore("find");
     clearFindHighlights();
     updateFindUICounts();
     syncFindStatusVisibility();
@@ -394,12 +400,27 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       syncFindStatusVisibility();
     },
     getFindQuery: (): string => findQuery,
-    setFindQuery,
+    setFindQuery: (query: string): void => {
+      activateSiteKeybindIgnore("find");
+      setFindQuery(query);
+    },
     hideFindBar,
     exitFindMode,
     cycleFindMatch,
     isFindModeActive: (): boolean => deps.getMode() === "find",
     isFindInputFocused,
+    handleFindUIKeydown: (event: KeyboardEvent): boolean => {
+      if (!isFindUIElement(event.target) && !isFindInputFocused()) {
+        return false;
+      }
+
+      if (event.key === "Enter") {
+        commitFindQuery();
+        return true;
+      }
+
+      return false;
+    },
     shouldIgnoreKeydownInFindUI: (event: KeyboardEvent): boolean => {
       if (deps.getMode() !== "find" || (!isFindUIElement(event.target) && !isFindInputFocused())) {
         return false;

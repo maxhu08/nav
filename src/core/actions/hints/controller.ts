@@ -7,6 +7,10 @@ import {
 import { createHintActivator } from "~/src/core/actions/hints/activation";
 import { createHintActivationCacheController } from "~/src/core/actions/hints/cache";
 import {
+  activateSiteKeybindIgnore,
+  deactivateSiteKeybindIgnore
+} from "~/src/core/utils/ignore-site-keybinds";
+import {
   restoreRevealedHintControls,
   revealHoverHintControls
 } from "~/src/core/utils/hints/hint-recognition";
@@ -387,6 +391,7 @@ export const createHintsController = (): HintsController => {
       return;
     }
 
+    deactivateSiteKeybindIgnore("hints");
     clearFrameHandle();
     unregisterHintViewportListeners();
     hintActivationCache.withoutInvalidation(() => {
@@ -401,6 +406,7 @@ export const createHintsController = (): HintsController => {
     options: { onActivate?: (element: HTMLElement) => void } = {}
   ): boolean => {
     exitHints();
+    activateSiteKeybindIgnore("hints");
     initializeHintCSS();
     applyHintStyles(STYLE_ID, hintCSS);
     hintActivationCache.ensureObserver();
@@ -427,6 +433,7 @@ export const createHintsController = (): HintsController => {
 
     const activation = createFreshMarkers(mode);
     if (!activation) {
+      deactivateSiteKeybindIgnore("hints");
       cleanupAfterFailedActivation();
       return false;
     }

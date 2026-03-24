@@ -1,4 +1,8 @@
 import { FOCUS_INDICATOR_EVENT } from "~/src/core/utils/get-ui";
+import {
+  activateSiteKeybindIgnore,
+  deactivateSiteKeybindIgnore
+} from "~/src/core/utils/ignore-site-keybinds";
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 import { findSiteToggleControl, getVideoMutedState } from "~/src/core/actions/watch-mode/controls";
 import { createWatchOverlayController } from "~/src/core/actions/watch-mode/overlay";
@@ -70,6 +74,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   const exitWatchMode = (): void => {
     deps.setMode("normal");
     isWaitingForWatchVideoRefresh = false;
+    deactivateSiteKeybindIgnore("watch");
     overlay.hideOverlay();
   };
 
@@ -186,6 +191,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       watchRouteKey = window.location.href;
       isWaitingForWatchVideoRefresh = false;
       deps.setMode("watch");
+      activateSiteKeybindIgnore("watch");
       targetVideo.focus({ preventScroll: true });
       syncWatchHintsOverlay();
       return true;

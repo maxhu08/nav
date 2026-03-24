@@ -165,22 +165,6 @@ export const attachFindUIEventListeners = (
     callbacks.setFindQuery(input.value);
   });
 
-  input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      callbacks.commitFindQuery();
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
-
-    if (event.key === "Escape") {
-      callbacks.exitFindMode();
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-    }
-  });
-
   prevButton.addEventListener("click", () => {
     callbacks.cycleFindMatch(-1);
   });

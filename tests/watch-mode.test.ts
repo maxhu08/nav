@@ -1,4 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import {
+  activateSiteKeybindIgnore,
+  deactivateSiteKeybindIgnore,
+  resetSiteKeybindIgnoreForTests
+} from "~/src/core/utils/ignore-site-keybinds";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 
 const setVideoRect = (video: HTMLVideoElement, top: number): void => {
@@ -7,6 +12,28 @@ const setVideoRect = (video: HTMLVideoElement, top: number): void => {
 };
 
 describe("watch mode", () => {
+  test("shared site keybind ignore suppresses page listeners while active", () => {
+    const fixture = createDomFixture("<input id='field' />");
+
+    try {
+      const receivedKeys: string[] = [];
+      document.addEventListener("keydown", (event) => {
+        receivedKeys.push(event.key);
+      });
+
+      activateSiteKeybindIgnore("watch");
+      document.dispatchEvent(new window.KeyboardEvent("keydown", { bubbles: true, key: "k" }));
+
+      deactivateSiteKeybindIgnore("watch");
+      document.dispatchEvent(new window.KeyboardEvent("keydown", { bubbles: true, key: "j" }));
+
+      expect(receivedKeys).toEqual(["j"]);
+    } finally {
+      resetSiteKeybindIgnoreForTests();
+      fixture.cleanup();
+    }
+  });
+
   test("reacquires a new video after spa navigation", async () => {
     const fixture = createDomFixture("<video id='first-video'></video>");
 
