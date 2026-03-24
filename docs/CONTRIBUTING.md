@@ -35,9 +35,12 @@ Use this page as the fast entry point for contributors.
 ## Hint Feature Workflow
 
 - For hint changes, use `docs/PROJECT_STRUCTURE.md` as the file map before editing.
-- New directive work usually touches three places: `src/utils/hint-reserved-label-directives.ts`, `src/core/utils/hints/directive-recognition.ts` plus one of its helper modules under `src/core/utils/hints/directive-recognition/`, and the matching regression coverage under `tests/directives/` or `tests/hints/`.
+- New directive work usually touches more than the recognition registry: `src/utils/hint-reserved-label-directives.ts`, `src/utils/hotkeys.ts`, `src/utils/migrate-config.ts`, `src/core/utils/hints/directive-recognition.ts` plus one of its helper modules under `src/core/utils/hints/directive-recognition/`, `src/lib/inline-icons.ts`, `src/core/utils/hints/markers.ts`, `src/docs.html`, and the matching regression coverage under `tests/directives/`, `tests/hints/`, or `tests/config.test.ts`.
 - Collection and dedupe behavior belongs under `src/core/utils/hints/hint-recognition/`, while low-level DOM/visibility helpers belong in `src/core/utils/hints/dom/` with `src/core/utils/hints/dom.ts` as the facade.
 - Prefer extending the directive facade/registry in `src/core/utils/hints/directive-recognition.ts` and then putting directive-specific scoring in the closest helper module instead of adding one-off branching elsewhere in the pipeline.
+- If a directive uses an icon, take the SVG path from `src/assets/remixicon-reference/` and store it as an inline path constant in `src/lib/inline-icons.ts`; then wire that constant through `src/core/utils/hints/markers.ts`.
+- If older configs should receive the new reserved label automatically, keep the migration comment in `src/utils/migrate-config.ts` aligned with the current extension version and add a config migration test.
+- When two controls look similar, prefer generic semantic tie-breakers in the scoring helper (for example stronger patterns or score boosts) instead of site-specific selectors.
 
 ## Refactor Conventions
 

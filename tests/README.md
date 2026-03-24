@@ -74,10 +74,12 @@ Use scenario cases for collection, dedupe, geometry, hit-testing, and label-assi
 - `src/core/actions/hints/controller.ts`: hint session lifecycle, filtering, caching, and activation flow.
 - `src/core/utils/hints/hint-recognition.ts`: collection, dedupe, and hover-only reveal behavior.
 - `src/core/utils/hints/directive-recognition.ts`: directive scoring and reserved target selection.
+- `src/core/utils/hints/directive-recognition/action-directives.ts`: shared scoring helpers and tie-breakers for action-like directives.
 - `src/core/utils/hints/semantics.ts`: reserved label assignment once directive targets are known.
 - `src/core/utils/hints/layout.ts`: marker placement and collision behavior.
 
 When a regression is about "wrong element got chosen for `@directive`", start with `src/core/utils/hints/directive-recognition.ts`.
+If the directive is action-like and the wrong nearby button wins, inspect `src/core/utils/hints/directive-recognition/action-directives.ts` for missing strong signals or tie-breakers.
 When it is about "too many / too few hints showed up", start with `src/core/utils/hints/hint-recognition.ts` and `src/core/actions/hints/controller.ts`.
 When it is about label conflicts or reserved labels, start with `src/core/utils/hints/semantics.ts` and `src/core/utils/hints/labels.ts`.
 When it is about marker overlap or placement, start with `src/core/utils/hints/layout.ts`.

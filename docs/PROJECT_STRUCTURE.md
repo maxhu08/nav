@@ -84,8 +84,16 @@ Use this map to decide where new code should go.
 - Shared hints types live in `src/core/utils/hints/types.ts`.
 - When adding a new directive, follow this order:
   1. Add the directive name in `src/utils/hint-reserved-label-directives.ts`
-  2. Add its scoring logic and registry entry in `src/core/utils/hints/directive-recognition.ts`
-  3. Add or extend test coverage in the matching file under `tests/directives/` or `tests/hints/`
+  2. Add its default reserved label in `src/utils/hotkeys.ts`
+  3. Add migration support in `src/utils/migrate-config.ts` when older saved configs should gain the new directive label automatically
+  4. Add its scoring logic and registry entry in `src/core/utils/hints/directive-recognition.ts`
+  5. Add or extend directive-specific patterns in the closest helper under `src/core/utils/hints/directive-recognition/`
+  6. Add its inline marker icon path in `src/lib/inline-icons.ts` and wire it in `src/core/utils/hints/markers.ts`
+  7. Update marker priority in `src/core/utils/hints/layout/shared.ts` if the directive should participate in reserved marker ordering
+  8. Update the user-facing directive list and examples in `src/docs.html`
+  9. Add or extend test coverage in the matching file under `tests/directives/`, `tests/hints/`, and `tests/config.test.ts` when migration behavior changes
+- For icon work, prefer copying the path data from the matching reference SVG under `src/assets/remixicon-reference/` into `src/lib/inline-icons.ts` instead of adding runtime file lookups.
+- For new action-like directives, check `src/core/utils/hints/directive-recognition/action-directives.ts` first; many directives need both broad patterns and a stronger tie-breaker score so nearby generic controls do not win.
 
 ## Config Layers
 
