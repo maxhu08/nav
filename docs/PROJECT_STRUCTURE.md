@@ -6,13 +6,13 @@ Use this map to decide where new code should go.
 
 - `src/core/`: shared navigation runtime, content script entry, and page interaction logic.
 - `src/background.ts`: background service worker for tab commands, frame messaging, and image fetch fallbacks.
-- `src/options/`: options page scripts and helpers.
+- `src/options/`: options page scripts, styles, and helpers.
 - `src/docs/`: docs page scripts.
 - `src/popup/`: extension popup implementation.
 - `src/lib/`: shared inline SVG/icon definitions used by runtime and extension pages.
 - `src/static/`: files copied directly into `dist/` during build.
 - `src/utils/`: shared config and reusable utilities.
-- `src/shared/`: CSS shared across extension pages.
+- `src/shared/`: shared CSS plus cross-context message and runtime-bridge definitions.
 - `src/assets/`: extension icons and bundled assets.
 - `scripts/`: build and packaging tasks.
 
@@ -55,7 +55,7 @@ Use this map to decide where new code should go.
   - Ancestor-link suppression: `src/core/utils/hints/hint-recognition/ancestor.ts`
   - Hint-recognition shared types: `src/core/utils/hints/hint-recognition/shared.ts`
   - Hover-only reveal helpers: `src/core/utils/hints/hint-recognition/reveal.ts`
-  - Directive scoring facade and reserved-target selection (`@input`, `@attach`, `@share`, `@download`, `@login`, `@microphone`, `@home`, `@sidebar`, `@next`, `@prev`, `@cancel`, `@submit`, `@like`, `@dislike`): `src/core/utils/hints/directive-recognition.ts`
+  - Directive scoring facade and reserved-target selection (`@input`, `@attach`, `@share`, `@download`, `@login`, `@microphone`, `@notification`, `@home`, `@sidebar`, `@next`, `@prev`, `@cancel`, `@submit`, `@like`, `@dislike`): `src/core/utils/hints/directive-recognition.ts`
   - Shared directive text/feature helpers and constants: `src/core/utils/hints/directive-recognition/shared.ts`
   - Input and attach scoring plus overlap helpers: `src/core/utils/hints/directive-recognition/input-attach.ts`
   - Home and sidebar scoring: `src/core/utils/hints/directive-recognition/home-sidebar.ts`

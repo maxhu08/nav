@@ -15,11 +15,17 @@ This directory keeps runtime behavior tests grouped by feature so new contributo
 - `tests/directives/*.test.ts`: directive recognition coverage grouped by directive name.
 - `tests/hints/*.test.ts`: hint collection, visibility, and site-specific regressions.
 - `tests/hint-layout.test.ts`: marker placement and collision handling.
+- `tests/hint-markers.test.ts`: marker model creation and reserved-label marker state.
+- `tests/hint-renderer.test.ts`: overlay and marker rendering behavior.
+- `tests/hint-reveal.test.ts`: hover-only reveal behavior.
 - `tests/watch-mode.test.ts`: watch mode route and video reacquisition behavior.
 - `tests/config.test.ts`: config migration coverage.
+- `tests/fast-config.test.ts`: derived runtime config parsing coverage.
+- `tests/editor-highlight.test.ts`: options editor syntax-highlighting coverage.
+- `tests/keyboard-priority.test.ts`: mode-aware keybinding priority coverage.
 - `tests/url.test.ts`: URL normalization and cleanup coverage.
 - `tests/types.ts`: reusable case shapes.
-- `tests/helpers/dom-fixture.ts`: JSDOM and geometry stubs.
+- `tests/helpers/`: JSDOM fixtures and reusable hint test helpers.
 
 ## Standardized formats
 
