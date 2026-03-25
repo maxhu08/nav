@@ -249,6 +249,7 @@ export const SIDEBAR_NON_NAVIGATION_PATTERNS = [
   /\baccount\b/i,
   /\buser\b/i,
   /\bavatar\b/i,
+  /\btrailing\b/i,
   /\bactions?\b/i,
   /\boptions?\b/i,
   /\boverflow\b/i

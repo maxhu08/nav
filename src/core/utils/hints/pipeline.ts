@@ -41,6 +41,13 @@ const MORE_LABEL_PATTERNS = [
   /\boverflow\b/i,
   /\bellipsis\b/i
 ];
+const TRAILING_MENU_BUTTON_PATTERNS = [
+  /\btrailing\b/i,
+  /\bmore\b/i,
+  /\boverflow\b/i,
+  /\bellipsis\b/i,
+  /\bmenu-item-trailing\b/i
+];
 
 const COMPOSITE_ROW_SELECTOR = [
   "a[href]",
@@ -119,6 +126,26 @@ const getHintLabelIcon = (
     ],
     [semanticControlText]
   );
+  const isCompositeRowDescendant =
+    element.parentElement?.closest(COMPOSITE_ROW_SELECTOR) instanceof HTMLElement;
+  const hasIconOnlyPresentation =
+    semanticControlText.length === 0 &&
+    element.querySelector("svg, img, [role='img']") instanceof Element;
+  const trailingAttributeText = getJoinedAttributeText(
+    element,
+    ["data-trailing-button", "class", "id", "data-testid", "data-test-id"],
+    []
+  );
+
+  if (
+    hasMenuPopupAffordance(element) &&
+    isCompositeRowDescendant &&
+    hasIconOnlyPresentation &&
+    (element.hasAttribute("data-trailing-button") ||
+      textMatchesAnyPattern(trailingAttributeText, TRAILING_MENU_BUTTON_PATTERNS))
+  ) {
+    return "more";
+  }
 
   if (
     hasMenuPopupAffordance(element) &&

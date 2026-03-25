@@ -783,6 +783,92 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "keeps trailing more hints at the far right for sidebar module rows",
+    test: () => {
+      const fixture = createDomFixture([
+        "<a id='module-row' tabindex='0' data-sidebar-item='true' href='/g/example'><div class='flex min-w-0 items-center gap-1.5'><div class='icon'><img alt='' src='https://example.com/icon.png' /></div><div class='flex min-w-0 grow items-center gap-2.5'><div class='truncate'>Module Row</div></div></div><div class='trailing'><button id='module-row-menu' tabindex='0' data-trailing-button='true' class='module-row-trailing-btn' type='button' aria-haspopup='menu' aria-expanded='false' data-state='closed'><div><svg aria-hidden='true'></svg></div></button></div></a>"
+      ]);
+
+      try {
+        const row = document.querySelector("#module-row");
+        const menu = document.querySelector("#module-row-menu");
+        expect(row instanceof HTMLElement).toBe(true);
+        expect(menu instanceof HTMLElement).toBe(true);
+
+        if (!(row instanceof HTMLElement) || !(menu instanceof HTMLElement)) {
+          return;
+        }
+
+        const rowRect = new DOMRect(20, 40, 320, 40);
+        const menuRect = new DOMRect(304, 48, 24, 24);
+        row.getBoundingClientRect = (): DOMRect => rowRect;
+        row.getClientRects = (): DOMRectList => {
+          const list = [rowRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        menu.getBoundingClientRect = (): DOMRect => menuRect;
+        menu.getClientRects = (): DOMRectList => {
+          const list = [menuRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const rowMarker = document.createElement("span");
+        rowMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(rowMarker);
+
+        const menuMarker = document.createElement("span");
+        menuMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(42, 20);
+        document.body.append(menuMarker);
+
+        const rowHint: HintMarker = {
+          element: row,
+          marker: rowMarker,
+          thumbnailIcon: null,
+          label: "ab",
+          directive: null,
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        const menuHint: HintMarker = {
+          element: menu,
+          marker: menuMarker,
+          thumbnailIcon: null,
+          label: "cd",
+          directive: null,
+          labelIcon: "more",
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions(
+          [rowHint, menuHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(menuMarker.style.left).toBe("296px");
+        expect(menuMarker.style.top).toBe("50px");
+        expect(rowMarker.style.left).toBe("156px");
+        expect(rowMarker.style.top).toBe("50px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "keeps input directives anchored to the leading edge of a wide search control",
     test: () => {
       const fixture = createDomFixture(

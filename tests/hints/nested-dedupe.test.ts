@@ -36,4 +36,32 @@ describe("nested hint dedupe", () => {
       }
     });
   });
+
+  test("keeps a trailing sidebar module menu button as a distinct more hint", () => {
+    runHintScenarioCase({
+      fixtures: [
+        "<a id='module-row' tabindex='0' data-sidebar-item='true' href='/g/example'><div class='flex min-w-0 items-center gap-1.5'><div class='icon'><img alt='' src='https://example.com/icon.png' /></div><div class='flex min-w-0 grow items-center gap-2.5'><div class='truncate'>Module</div></div></div><div class='trailing'><button id='module-row-menu' tabindex='0' data-trailing-button='true' class='menu-item-trailing-btn' type='button' aria-haspopup='menu' aria-expanded='false' data-state='closed'><div><svg aria-hidden='true'></svg></div></button></div></a>"
+      ],
+      geometry: {
+        "#module-row": { left: 20, top: 20, width: 320, height: 40 },
+        "#module-row-menu": { left: 304, top: 28, width: 24, height: 24 }
+      },
+      elementsFromPointSelectors: ["#module-row-menu"],
+      expect: {
+        hintableSelectors: ["#module-row", "#module-row-menu"],
+        assignedTargets: [
+          {
+            selector: "#module-row",
+            directive: null,
+            labelIcon: null
+          },
+          {
+            selector: "#module-row-menu",
+            directive: null,
+            labelIcon: "more"
+          }
+        ]
+      }
+    });
+  });
 });
