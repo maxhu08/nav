@@ -18,14 +18,14 @@ import type { LinkMode } from "~/src/core/utils/hints/model";
 import type { HintMarker } from "~/src/core/utils/hints/types";
 
 const hideMarker = (hint: HintMarker): void => {
-  if (hint.marker.style.display !== "none") {
-    hint.marker.style.display = "none";
+  if (hint.marker.style.getPropertyValue("display") !== "none") {
+    hint.marker.style.setProperty("display", "none", "important");
   }
 };
 
 const showMarker = (hint: HintMarker): void => {
-  if (hint.marker.style.display === "none") {
-    hint.marker.style.display = "";
+  if (hint.marker.style.getPropertyValue("display") === "none") {
+    hint.marker.style.setProperty("display", "inline-flex", "important");
   }
 };
 
