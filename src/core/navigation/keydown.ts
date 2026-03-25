@@ -13,9 +13,14 @@ import type { ActionName } from "~/src/utils/hotkeys";
 type KeyStateDeps = {
   clearPendingCount: () => void;
   clearPendingState: () => void;
-  getActionName: (keyToken: string) => { actionName: ActionName | null; consumed: boolean };
+  getActionName: (keyToken: string) => {
+    actionName: ActionName | null;
+    claimKeydown: boolean;
+    consumed: boolean;
+  };
   getToggleHintsActionName: (keyToken: string) => {
     actionName: ActionName | null;
+    claimKeydown: boolean;
     consumed: boolean;
   };
   getWatchActionName: (
@@ -24,7 +29,11 @@ type KeyStateDeps = {
       "toggle-fullscreen" | "toggle-play-pause" | "toggle-loop" | "toggle-mute" | "toggle-captions",
       string
     >
-  ) => { actionName: ActionName | null; consumed: boolean };
+  ) => {
+    actionName: ActionName | null;
+    claimKeydown: boolean;
+    consumed: boolean;
+  };
   hasAllowedActionMappings: () => boolean;
   isActionAllowed: (actionName: ActionName) => boolean;
   resolveCount: () => number | undefined;
@@ -43,6 +52,7 @@ type KeydownHandlerDeps = {
   };
   isScrollAction: (actionName: ActionName) => boolean;
   keyState: KeyStateDeps;
+  onConsumeKeydown: (event: KeyboardEvent) => void;
   setShouldBypassNextTypingKeyAfterHintSelect: (value: boolean) => void;
   shouldBypassNextTypingKeyAfterHintSelect: () => boolean;
   watchController: {
@@ -97,10 +107,16 @@ export const createNavigationKeydownHandler = ({
   forceNormalMode,
   isScrollAction,
   keyState,
+  onConsumeKeydown,
   setShouldBypassNextTypingKeyAfterHintSelect,
   shouldBypassNextTypingKeyAfterHintSelect,
   watchController
 }: KeydownHandlerDeps): ((event: KeyboardEvent) => void) => {
+  const consumeKeydownEvent = (event: KeyboardEvent): void => {
+    onConsumeKeydown(event);
+    consumeKeyboardEvent(event);
+  };
+
   const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
     if (!areHintsActive()) {
       return false;
@@ -109,22 +125,24 @@ export const createNavigationKeydownHandler = ({
     if (areHintsPendingSelection()) {
       const keyToken = getKeyToken(event);
       if (keyToken) {
-        const { actionName, consumed } = keyState.getToggleHintsActionName(keyToken);
+        const { actionName, claimKeydown, consumed } = keyState.getToggleHintsActionName(keyToken);
         if (actionName) {
           exitHints();
-          consumeKeyboardEvent(event);
+          consumeKeydownEvent(event);
           return true;
         }
 
         if (consumed) {
-          consumeKeyboardEvent(event);
+          if (claimKeydown) {
+            consumeKeydownEvent(event);
+          }
           return true;
         }
       }
     }
 
     if (handleHintsKeydown(event)) {
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
     }
 
     return true;
@@ -138,19 +156,19 @@ export const createNavigationKeydownHandler = ({
     if (watchController.isWatchModeActive()) {
       watchController.exitWatchMode();
       keyState.clearPendingState();
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
 
     if (findMode.isFindModeActive()) {
       findMode.exitFindMode();
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
 
     if (blurActiveEditableTarget()) {
       keyState.clearPendingState();
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
 
@@ -162,38 +180,40 @@ export const createNavigationKeydownHandler = ({
       return false;
     }
 
-    const { actionName, consumed } = keyState.getWatchActionName(
+    const { actionName, claimKeydown, consumed } = keyState.getWatchActionName(
       keyToken,
       watchController.getWatchActionSequences()
     );
 
-    if (event.repeat && (actionName || consumed)) {
-      consumeKeyboardEvent(event);
+    if (event.repeat && (actionName || claimKeydown)) {
+      consumeKeydownEvent(event);
       return true;
     }
 
     if (actionName === "toggle-fullscreen" && watchController.toggleFullscreen()) {
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
     if (actionName === "toggle-play-pause" && watchController.toggleWatchPlayPause()) {
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
     if (actionName === "toggle-loop" && watchController.toggleWatchLoop()) {
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
     if (actionName === "toggle-mute" && watchController.toggleWatchMute()) {
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
     if (actionName === "toggle-captions" && watchController.toggleWatchCaptions()) {
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return true;
     }
     if (consumed) {
-      consumeKeyboardEvent(event);
+      if (claimKeydown) {
+        consumeKeydownEvent(event);
+      }
       return true;
     }
 
@@ -201,23 +221,23 @@ export const createNavigationKeydownHandler = ({
   };
 
   const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
-    const { actionName, consumed } = keyState.getActionName(keyToken);
+    const { actionName, claimKeydown, consumed } = keyState.getActionName(keyToken);
     if (!actionName) {
-      if (consumed) {
-        consumeKeyboardEvent(event);
+      if (consumed && claimKeydown) {
+        consumeKeydownEvent(event);
       }
       return;
     }
 
     if (!keyState.isActionAllowed(actionName)) {
       keyState.clearPendingCount();
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return;
     }
 
     const didHandle = actions[actionName](keyState.resolveCount());
     if (!didHandle && proxyActionToFrames(actionName)) {
-      consumeKeyboardEvent(event);
+      consumeKeydownEvent(event);
       return;
     }
 
@@ -225,7 +245,7 @@ export const createNavigationKeydownHandler = ({
       return;
     }
 
-    consumeKeyboardEvent(event);
+    consumeKeydownEvent(event);
   };
 
   return (event: KeyboardEvent): void => {
@@ -248,7 +268,7 @@ export const createNavigationKeydownHandler = ({
 
     if (isKeydownFromEditableTarget(event)) {
       if (findMode.handleFindUIKeydown(event)) {
-        consumeKeyboardEvent(event);
+        consumeKeydownEvent(event);
         return;
       }
 

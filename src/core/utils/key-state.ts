@@ -5,6 +5,7 @@ const KEY_SEQUENCE_TIMEOUT_MS = 1000;
 
 export type KeyParseResult = {
   actionName: ActionName | null;
+  claimKeydown: boolean;
   consumed: boolean;
 };
 
@@ -304,7 +305,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     getActionName: (keyToken: string): KeyParseResult => {
       if (isCountKey(keyToken) && hasAllowedActionMappings()) {
         consumeCountKey(keyToken);
-        return { actionName: null, consumed: true };
+        return { actionName: null, claimKeydown: false, consumed: true };
       }
 
       const nextSequence = `${pendingSequence}${keyToken}`;
@@ -312,7 +313,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
       if (directMatch) {
         clearPendingSequence();
-        return { actionName: directMatch, consumed: true };
+        return { actionName: directMatch, claimKeydown: true, consumed: true };
       }
 
       const hasLongerMatch =
@@ -320,7 +321,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
       if (hasLongerMatch) {
         startPendingSequence(nextSequence);
-        return { actionName: null, consumed: true };
+        return { actionName: null, claimKeydown: false, consumed: true };
       }
 
       clearPendingSequence();
@@ -329,10 +330,10 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
       if (!actionName) {
         clearPendingCount();
-        return { actionName: null, consumed: false };
+        return { actionName: null, claimKeydown: false, consumed: false };
       }
 
-      return { actionName, consumed: true };
+      return { actionName, claimKeydown: true, consumed: true };
     },
     getToggleHintsActionName: (keyToken: string): KeyParseResult => {
       const nextSequence = `${pendingSequence}${keyToken}`;
@@ -340,7 +341,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
       if (isToggleHintsAction(directMatch ?? null)) {
         clearPendingSequence();
-        return { actionName: directMatch ?? null, consumed: true };
+        return { actionName: directMatch ?? null, claimKeydown: true, consumed: true };
       }
 
       const hasLongerToggleMatch = hasAllowedActionPrefix(nextSequence, (actionName) =>
@@ -349,11 +350,11 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
       if (hasLongerToggleMatch) {
         startPendingSequence(nextSequence);
-        return { actionName: null, consumed: true };
+        return { actionName: null, claimKeydown: false, consumed: true };
       }
 
       clearPendingSequence();
-      return { actionName: null, consumed: false };
+      return { actionName: null, claimKeydown: false, consumed: false };
     },
     getWatchActionName: (
       keyToken: string,
@@ -367,7 +368,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
       if (directMatch) {
         clearPendingSequence();
-        return { actionName: directMatch[0], consumed: true };
+        return { actionName: directMatch[0], claimKeydown: true, consumed: true };
       }
 
       const hasLongerMatch = Object.values(sequences).some((sequence) =>
@@ -376,11 +377,11 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
       if (hasLongerMatch) {
         startPendingSequence(nextSequence);
-        return { actionName: null, consumed: true };
+        return { actionName: null, claimKeydown: false, consumed: true };
       }
 
       clearPendingSequence();
-      return { actionName: null, consumed: false };
+      return { actionName: null, claimKeydown: false, consumed: false };
     }
   };
 };

@@ -12,6 +12,7 @@ import { isFrameActionMessage } from "~/src/core/navigation/frame-actions";
 import { createForceNormalModeController } from "~/src/core/navigation/force-normal-mode";
 import { registerRuntimeListeners } from "~/src/core/navigation/init-listeners";
 import { createNavigationKeydownHandler } from "~/src/core/navigation/keydown";
+import { createKeyboardPriorityController } from "~/src/core/navigation/keyboard-priority";
 import { createModeController } from "~/src/core/navigation/shared";
 import { type FastConfig } from "~/src/utils/fast-config";
 
@@ -26,6 +27,7 @@ const isOptionsPage = (): boolean => {
 };
 
 const modeController = createModeController();
+const keyboardPriority = createKeyboardPriorityController();
 
 const keyState = createKeyState({
   onReservedHintPrefixesChange: setReservedHintPrefixes,
@@ -78,6 +80,7 @@ const handleKeydown = createNavigationKeydownHandler({
   forceNormalMode,
   isScrollAction,
   keyState,
+  onConsumeKeydown: keyboardPriority.handleConsumedKeydown,
   setShouldBypassNextTypingKeyAfterHintSelect: (value) => {
     shouldBypassNextTypingKeyAfterHintSelect = value;
   },
@@ -119,6 +122,7 @@ export const initCoreNavigation = (): void => {
   }
 
   installNavigationScrollTracking();
+  keyboardPriority.install();
 
   if (!isOptionsPage()) {
     registerRuntimeListeners({
