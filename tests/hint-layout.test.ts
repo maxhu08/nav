@@ -1314,6 +1314,229 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "aligns shorts player controls to the top left of each control",
+    test: () => {
+      const fixture = createDomFixture([
+        "<div id='shorts-shell'><div id='shorts-controls' class='generic-shorts-player-controls'><div id='controls-left'><button id='shorts-play' type='button' aria-label='Play'></button></div><div id='controls-right'><button id='shorts-cc' type='button' aria-label='Captions off'></button><button id='shorts-more' type='button' aria-label='More actions' aria-haspopup='menu'></button><button id='shorts-fullscreen' type='button' aria-label='Fullscreen'></button></div></div></div>"
+      ]);
+
+      try {
+        const play = document.querySelector("#shorts-play");
+        const captions = document.querySelector("#shorts-cc");
+        const more = document.querySelector("#shorts-more");
+        const fullscreen = document.querySelector("#shorts-fullscreen");
+        const controls = document.querySelector("#shorts-controls");
+        expect(play instanceof HTMLElement).toBe(true);
+        expect(captions instanceof HTMLElement).toBe(true);
+        expect(more instanceof HTMLElement).toBe(true);
+        expect(fullscreen instanceof HTMLElement).toBe(true);
+        expect(controls instanceof HTMLElement).toBe(true);
+
+        if (
+          !(play instanceof HTMLElement) ||
+          !(captions instanceof HTMLElement) ||
+          !(more instanceof HTMLElement) ||
+          !(fullscreen instanceof HTMLElement) ||
+          !(controls instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const controlsRect = new DOMRect(0, 0, 360, 72);
+        const playRect = new DOMRect(24, 18, 44, 44);
+        const captionsRect = new DOMRect(86, 18, 44, 44);
+        const moreRect = new DOMRect(176, 18, 44, 44);
+        const fullscreenRect = new DOMRect(272, 18, 44, 44);
+
+        controls.getBoundingClientRect = (): DOMRect => controlsRect;
+        controls.getClientRects = (): DOMRectList => {
+          const list = [controlsRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        for (const [element, rect] of [
+          [play, playRect],
+          [captions, captionsRect],
+          [more, moreRect],
+          [fullscreen, fullscreenRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"] = null,
+          labelIcon: HintMarker["labelIcon"] = null
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const playHint = makeHint(play, "af", 42);
+        const captionsHint = makeHint(captions, "cc", 42);
+        const moreHint = makeHint(more, "aj", 50, null, "more");
+        const fullscreenHint = makeHint(fullscreen, "ds", 42);
+
+        updateMarkerPositions(
+          [playHint, captionsHint, moreHint, fullscreenHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(playHint.marker.style.left).toBe("26px");
+        expect(captionsHint.marker.style.left).toBe("88px");
+        expect(moreHint.marker.style.left).toBe("178px");
+        expect(fullscreenHint.marker.style.left).toBe("274px");
+        expect(playHint.marker.style.top).toBe("20px");
+        expect(captionsHint.marker.style.top).toBe("20px");
+        expect(moreHint.marker.style.top).toBe("20px");
+        expect(fullscreenHint.marker.style.top).toBe("20px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
+    desc: "aligns reel action bar hints to the top left for each action including directives",
+    test: () => {
+      const fixture = createDomFixture([
+        "<div id='button-bar'><div class='generic-reel-action-bar'><button id='reel-like' type='button' aria-label='Like'></button><button id='reel-dislike' type='button' aria-label='Dislike'></button><button id='reel-comments' type='button' aria-label='Comments'></button><button id='reel-share' type='button' aria-label='Share'></button><button id='reel-remix' type='button' aria-label='Remix'></button></div></div>"
+      ]);
+
+      try {
+        const like = document.querySelector("#reel-like");
+        const dislike = document.querySelector("#reel-dislike");
+        const comments = document.querySelector("#reel-comments");
+        const share = document.querySelector("#reel-share");
+        const remix = document.querySelector("#reel-remix");
+        const buttonBar = document.querySelector("#button-bar");
+        expect(like instanceof HTMLElement).toBe(true);
+        expect(dislike instanceof HTMLElement).toBe(true);
+        expect(comments instanceof HTMLElement).toBe(true);
+        expect(share instanceof HTMLElement).toBe(true);
+        expect(remix instanceof HTMLElement).toBe(true);
+        expect(buttonBar instanceof HTMLElement).toBe(true);
+
+        if (
+          !(like instanceof HTMLElement) ||
+          !(dislike instanceof HTMLElement) ||
+          !(comments instanceof HTMLElement) ||
+          !(share instanceof HTMLElement) ||
+          !(remix instanceof HTMLElement) ||
+          !(buttonBar instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const barRect = new DOMRect(0, 0, 140, 360);
+        const likeRect = new DOMRect(80, 24, 44, 60);
+        const dislikeRect = new DOMRect(80, 96, 44, 60);
+        const commentsRect = new DOMRect(80, 168, 44, 60);
+        const shareRect = new DOMRect(80, 240, 44, 60);
+        const remixRect = new DOMRect(80, 312, 44, 60);
+
+        buttonBar.getBoundingClientRect = (): DOMRect => barRect;
+        buttonBar.getClientRects = (): DOMRectList => {
+          const list = [barRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        for (const [element, rect] of [
+          [like, likeRect],
+          [dislike, dislikeRect],
+          [comments, commentsRect],
+          [share, shareRect],
+          [remix, remixRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"] = null
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const likeHint = makeHint(like, "iu", 42, "like");
+        const dislikeHint = makeHint(dislike, "id", 42, "dislike");
+        const commentsHint = makeHint(comments, "aj", 42);
+        const shareHint = makeHint(share, "sv", 42, "share");
+        const remixHint = makeHint(remix, "rx", 42);
+
+        updateMarkerPositions(
+          [likeHint, dislikeHint, commentsHint, shareHint, remixHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(likeHint.marker.style.left).toBe("82px");
+        expect(dislikeHint.marker.style.left).toBe("82px");
+        expect(commentsHint.marker.style.left).toBe("82px");
+        expect(shareHint.marker.style.left).toBe("82px");
+        expect(remixHint.marker.style.left).toBe("82px");
+        expect(likeHint.marker.style.top).toBe("26px");
+        expect(dislikeHint.marker.style.top).toBe("98px");
+        expect(commentsHint.marker.style.top).toBe("170px");
+        expect(shareHint.marker.style.top).toBe("242px");
+        expect(remixHint.marker.style.top).toBe("314px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "aligns response action markers on one row and shifts copy left for space",
     test: () => {
       const fixture = createDomFixture(
