@@ -1,6 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { revealHoverHintControls } from "~/src/core/utils/hints/hint-recognition";
+import {
+  getHintableElements,
+  revealHoverHintControls
+} from "~/src/core/utils/hints/hint-recognition";
+import { assignHintLabels } from "~/src/core/utils/hints/pipeline";
+import { createEmptyReservedHintLabels } from "~/src/utils/hint-reserved-label-directives";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
+
+const createRectList = (rect: DOMRect): DOMRectList => {
+  const list = [rect] as unknown as DOMRectList & DOMRect[];
+  list.item = (index: number): DOMRect | null => list[index] ?? null;
+  return list;
+};
 
 describe("revealHoverHintControls", () => {
   test("reveals response action groups so copy controls become hintable", () => {
@@ -26,6 +37,92 @@ describe("revealHoverHintControls", () => {
       expect(group.style.visibility).toBe("visible");
       expect(revealedElements.some((entry) => entry.element === group)).toBe(true);
       expect(revealedElements.some((entry) => entry.element === button)).toBe(true);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("reveals sanitized trailing menu buttons in composite rows so they receive the more icon", () => {
+    const fixture = createDomFixture([
+      "<a id='conversation-row' tabindex='0' class='row-link' draggable='true' aria-label='Placeholder conversation' href='/c/placeholder-conversation'><div class='row-main'><div class='truncate'><span dir='auto'>Placeholder conversation</span></div></div><div id='conversation-actions' class='trailing-actions' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><button id='conversation-more-button' tabindex='0' data-trailing-button='' aria-label='Open conversation options for Placeholder conversation' type='button' aria-haspopup='menu' aria-expanded='false' data-state='closed' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><span aria-hidden='true'>...</span></button></div></a>",
+      "<a id='project-row' tabindex='0' class='row-link' href='/g/placeholder/workspace/project'><div class='row-main'><div class='row-icon'><button id='project-icon-button' type='button' aria-label='Open project icon picker'><span aria-hidden='true'>icon</span></button></div><div class='truncate'>Placeholder project</div></div><div id='project-actions' class='trailing-actions' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><button id='project-more-button' tabindex='0' data-trailing-button='' aria-label='Open project options for Placeholder project' type='button' aria-haspopup='menu' aria-expanded='false' data-state='closed' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><span aria-hidden='true'>...</span></button></div></a>"
+    ]);
+
+    try {
+      const rects = new Map<string, DOMRect>([
+        ["#conversation-row", new DOMRect(24, 24, 320, 40)],
+        ["#conversation-more-button", new DOMRect(312, 28, 24, 24)],
+        ["#conversation-actions", new DOMRect(304, 24, 36, 32)],
+        ["#project-row", new DOMRect(24, 80, 320, 40)],
+        ["#project-icon-button", new DOMRect(36, 84, 24, 24)],
+        ["#project-more-button", new DOMRect(312, 84, 24, 24)],
+        ["#project-actions", new DOMRect(304, 80, 36, 32)]
+      ]);
+
+      for (const [selector, rect] of rects.entries()) {
+        const element = document.querySelector(selector);
+        expect(element instanceof HTMLElement).toBe(true);
+        if (!(element instanceof HTMLElement)) {
+          continue;
+        }
+
+        element.getBoundingClientRect = (): DOMRect => rect;
+        element.getClientRects = (): DOMRectList => createRectList(rect);
+      }
+
+      document.elementsFromPoint = (x: number, y: number): Element[] => {
+        const orderedSelectors = [
+          "#conversation-more-button",
+          "#conversation-actions",
+          "#conversation-row",
+          "#project-more-button",
+          "#project-actions",
+          "#project-icon-button",
+          "#project-row"
+        ].filter((selector) => {
+          const rect = rects.get(selector);
+          return !!rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+        });
+
+        return orderedSelectors
+          .map((selector) => document.querySelector(selector))
+          .filter((element): element is Element => element instanceof Element);
+      };
+
+      expect(getHintableElements("current-tab").map((element) => element.id)).not.toContain(
+        "conversation-more-button"
+      );
+      expect(getHintableElements("current-tab").map((element) => element.id)).not.toContain(
+        "project-more-button"
+      );
+
+      const revealedElements: Array<{ element: HTMLElement; inlineStyle: string | null }> = [];
+      revealHoverHintControls("current-tab", revealedElements);
+
+      expect((document.querySelector("#conversation-actions") as HTMLElement).style.width).toBe(
+        "max-content"
+      );
+      expect((document.querySelector("#project-actions") as HTMLElement).style.width).toBe(
+        "max-content"
+      );
+
+      const elements = getHintableElements("current-tab");
+      expect(elements.map((element) => element.id)).toContain("conversation-more-button");
+      expect(elements.map((element) => element.id)).toContain("project-more-button");
+
+      const targets = assignHintLabels(elements, createEmptyReservedHintLabels(), {
+        minHintLabelLength: 2,
+        hintAlphabet: "asdfjkl",
+        reservedHintPrefixes: new Set(),
+        avoidedAdjacentHintPairs: {}
+      });
+
+      expect(
+        targets.find((target) => target.element.id === "conversation-more-button")?.labelIcon
+      ).toBe("more");
+      expect(targets.find((target) => target.element.id === "project-more-button")?.labelIcon).toBe(
+        "more"
+      );
     } finally {
       fixture.cleanup();
     }

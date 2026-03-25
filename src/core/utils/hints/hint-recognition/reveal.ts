@@ -27,6 +27,25 @@ const HOVER_HINT_ACTION_CONTROL_PATTERNS = [
   /\bturn-action\b/i,
   /\bresponse actions\b/i
 ];
+const TRAILING_MENU_CONTROL_SELECTOR = [
+  "button[aria-haspopup='menu']",
+  "[role='button'][aria-haspopup='menu']",
+  "button[data-trailing-button]",
+  "[role='button'][data-trailing-button]"
+].join(",");
+const TRAILING_MENU_CONTROL_PATTERNS = [
+  /\b(open|show|view|toggle)\b.*\b(options?|actions?|menu)\b/i,
+  /\b(options?|actions?)\b.*\b(open|show|view|toggle)\b/i,
+  /\bmore\b/i,
+  /\boverflow\b/i,
+  /\bellipsis\b/i,
+  /\btrailing\b/i
+];
+const COMPOSITE_ROW_ANCESTOR_SELECTOR = [
+  "a[href]",
+  "[role='link']",
+  "[tabindex]:not([tabindex='-1']):not([role='group'])"
+].join(",");
 
 const getJoinedAttributeText = (element: HTMLElement, attributeNames: string[]): string =>
   attributeNames
@@ -63,6 +82,28 @@ const hasHoverActionControlSignal = (element: HTMLElement): boolean => {
   return textMatchesAnyPattern(attributeText, HOVER_HINT_ACTION_CONTROL_PATTERNS);
 };
 
+const hasTrailingMenuControlSignal = (element: HTMLElement): boolean => {
+  const attributeText = getJoinedAttributeText(element, [
+    "aria-label",
+    "title",
+    "data-testid",
+    "data-test-id",
+    "class",
+    "name",
+    "id"
+  ]);
+
+  return (
+    element.hasAttribute("data-trailing-button") ||
+    textMatchesAnyPattern(attributeText, TRAILING_MENU_CONTROL_PATTERNS)
+  );
+};
+
+const getCompositeRowAncestor = (element: HTMLElement): HTMLElement | null => {
+  const ancestor = element.parentElement?.closest(COMPOSITE_ROW_ANCESTOR_SELECTOR);
+  return ancestor instanceof HTMLElement && ancestor !== element ? ancestor : null;
+};
+
 export const revealElementForHintCollection = (
   element: HTMLElement,
   seen: Set<HTMLElement>,
@@ -86,6 +127,20 @@ export const revealElementForHintCollection = (
   element.style.setProperty("opacity", "1", "important");
   element.style.setProperty("visibility", "visible", "important");
   element.style.setProperty("pointer-events", "auto", "important");
+  element.style.setProperty("overflow", "visible", "important");
+  element.style.setProperty("max-width", "none", "important");
+  element.style.setProperty("max-height", "none", "important");
+  element.style.setProperty("clip-path", "none", "important");
+
+  if (computedStyle.width === "0px") {
+    element.style.setProperty("width", "max-content", "important");
+    element.style.setProperty("min-width", "max-content", "important");
+  }
+
+  if (computedStyle.height === "0px") {
+    element.style.setProperty("height", "max-content", "important");
+    element.style.setProperty("min-height", "max-content", "important");
+  }
 };
 
 export const revealHoverHintControls = (
@@ -122,6 +177,31 @@ export const revealHoverHintControls = (
 
         current = current.parentElement;
       }
+    }
+  }
+
+  for (const candidate of Array.from(
+    document.querySelectorAll<HTMLElement>(TRAILING_MENU_CONTROL_SELECTOR)
+  )) {
+    if (!isActivatableElement(candidate) || !hasTrailingMenuControlSignal(candidate)) {
+      continue;
+    }
+
+    const rowAncestor = getCompositeRowAncestor(candidate);
+    if (!rowAncestor) {
+      continue;
+    }
+
+    let current: HTMLElement | null = candidate;
+
+    while (current) {
+      revealElementForHintCollection(current, seen, revealedElements);
+
+      if (current === rowAncestor) {
+        break;
+      }
+
+      current = current.parentElement;
     }
   }
 };
