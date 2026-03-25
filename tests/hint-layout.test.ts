@@ -920,6 +920,400 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "aligns navbar hints to a shared top edge while keeping input inside the field",
+    test: () => {
+      const fixture = createDomFixture([
+        "<header id='topbar'><button id='nav-home' type='button' aria-label='Home'></button><button id='nav-search' type='button' aria-label='Search or jump to'></button><button id='nav-mic' type='button' aria-label='Microphone'></button><button id='nav-notification' type='button' aria-label='Notifications'></button></header>"
+      ]);
+
+      try {
+        const home = document.querySelector("#nav-home");
+        const search = document.querySelector("#nav-search");
+        const mic = document.querySelector("#nav-mic");
+        const notification = document.querySelector("#nav-notification");
+        const topbar = document.querySelector("#topbar");
+        expect(home instanceof HTMLElement).toBe(true);
+        expect(search instanceof HTMLElement).toBe(true);
+        expect(mic instanceof HTMLElement).toBe(true);
+        expect(notification instanceof HTMLElement).toBe(true);
+        expect(topbar instanceof HTMLElement).toBe(true);
+
+        if (
+          !(home instanceof HTMLElement) ||
+          !(search instanceof HTMLElement) ||
+          !(mic instanceof HTMLElement) ||
+          !(notification instanceof HTMLElement) ||
+          !(topbar instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const topbarRect = new DOMRect(0, 0, 1024, 56);
+        const homeRect = new DOMRect(20, 10, 44, 36);
+        const searchRect = new DOMRect(260, 8, 420, 40);
+        const micRect = new DOMRect(720, 12, 40, 32);
+        const notificationRect = new DOMRect(860, 14, 40, 28);
+
+        topbar.getBoundingClientRect = (): DOMRect => topbarRect;
+        topbar.getClientRects = (): DOMRectList => {
+          const list = [topbarRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        for (const [element, rect] of [
+          [home, homeRect],
+          [search, searchRect],
+          [mic, micRect],
+          [notification, notificationRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"]
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const homeHint = makeHint(home, "we", 48, "home");
+        const searchHint = makeHint(search, "kj", 58, "input");
+        const micHint = makeHint(mic, "mi", 50, "microphone");
+        const notificationHint = makeHint(notification, "nf", 48, "notification");
+
+        updateMarkerPositions(
+          [homeHint, searchHint, micHint, notificationHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(homeHint.marker.style.left).toBe("22px");
+        expect(micHint.marker.style.left).toBe("722px");
+        expect(notificationHint.marker.style.left).toBe("862px");
+        expect(homeHint.marker.style.top).toBe("12px");
+        expect(micHint.marker.style.top).toBe("12px");
+        expect(notificationHint.marker.style.top).toBe("12px");
+        expect(searchHint.marker.style.left).toBe("262px");
+        expect(searchHint.marker.style.top).toBe("18px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
+    desc: "aligns nested masthead navbar hints across start center and end sections",
+    test: () => {
+      const fixture = createDomFixture([
+        "<div id='masthead-shell' class='app-shell generic-masthead'><div id='masthead-start' class='section generic-masthead'><button id='masthead-back' type='button' aria-label='Back'></button><button id='masthead-guide' type='button' aria-label='Guide'></button><a id='masthead-home' href='/' title='App Home'>Home</a></div><div id='masthead-center' class='section generic-masthead'><button id='masthead-search-launcher' type='button' aria-label='Search'></button><button id='masthead-mic' type='button' aria-label='Voice search'></button></div><div id='masthead-end' class='section generic-masthead'><button id='masthead-create' type='button' aria-label='Create'></button><button id='masthead-notifications' type='button' aria-label='Notifications'></button><button id='masthead-account' type='button' aria-label='Account menu'></button></div></div>"
+      ]);
+
+      try {
+        const back = document.querySelector("#masthead-back");
+        const guide = document.querySelector("#masthead-guide");
+        const searchLauncher = document.querySelector("#masthead-search-launcher");
+        const mic = document.querySelector("#masthead-mic");
+        const create = document.querySelector("#masthead-create");
+        const notifications = document.querySelector("#masthead-notifications");
+        const account = document.querySelector("#masthead-account");
+        const shell = document.querySelector("#masthead-shell");
+        expect(back instanceof HTMLElement).toBe(true);
+        expect(guide instanceof HTMLElement).toBe(true);
+        expect(searchLauncher instanceof HTMLElement).toBe(true);
+        expect(mic instanceof HTMLElement).toBe(true);
+        expect(create instanceof HTMLElement).toBe(true);
+        expect(notifications instanceof HTMLElement).toBe(true);
+        expect(account instanceof HTMLElement).toBe(true);
+        expect(shell instanceof HTMLElement).toBe(true);
+
+        if (
+          !(back instanceof HTMLElement) ||
+          !(guide instanceof HTMLElement) ||
+          !(searchLauncher instanceof HTMLElement) ||
+          !(mic instanceof HTMLElement) ||
+          !(create instanceof HTMLElement) ||
+          !(notifications instanceof HTMLElement) ||
+          !(account instanceof HTMLElement) ||
+          !(shell instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const shellRect = new DOMRect(0, 0, 980, 56);
+        const backRect = new DOMRect(16, 12, 36, 32);
+        const guideRect = new DOMRect(68, 12, 36, 32);
+        const searchRect = new DOMRect(320, 8, 440, 40);
+        const micRect = new DOMRect(720, 12, 36, 32);
+        const createRect = new DOMRect(780, 12, 64, 32);
+        const notificationsRect = new DOMRect(860, 12, 36, 32);
+        const accountRect = new DOMRect(916, 12, 36, 32);
+
+        shell.getBoundingClientRect = (): DOMRect => shellRect;
+        shell.getClientRects = (): DOMRectList => {
+          const list = [shellRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        for (const [element, rect] of [
+          [back, backRect],
+          [guide, guideRect],
+          [searchLauncher, searchRect],
+          [mic, micRect],
+          [create, createRect],
+          [notifications, notificationsRect],
+          [account, accountRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"]
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const backHint = makeHint(back, "bk", 48, null);
+        const guideHint = makeHint(guide, "sd", 54, "sidebar");
+        const searchHint = makeHint(searchLauncher, "kj", 58, "input");
+        const micHint = makeHint(mic, "mi", 50, "microphone");
+        const createHint = makeHint(create, "sj", 48, null);
+        const notificationsHint = makeHint(notifications, "nf", 48, "notification");
+        const accountHint = makeHint(account, "sk", 42, null);
+
+        updateMarkerPositions(
+          [backHint, guideHint, searchHint, micHint, createHint, notificationsHint, accountHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(backHint.marker.style.left).toBe("18px");
+        expect(guideHint.marker.style.left).toBe("70px");
+        expect(micHint.marker.style.left).toBe("722px");
+        expect(createHint.marker.style.left).toBe("782px");
+        expect(notificationsHint.marker.style.left).toBe("862px");
+        expect(accountHint.marker.style.left).toBe("918px");
+        expect(backHint.marker.style.top).toBe("14px");
+        expect(guideHint.marker.style.top).toBe("14px");
+        expect(micHint.marker.style.top).toBe("14px");
+        expect(createHint.marker.style.top).toBe("14px");
+        expect(notificationsHint.marker.style.top).toBe("14px");
+        expect(accountHint.marker.style.top).toBe("14px");
+        expect(searchHint.marker.style.left).toBe("322px");
+        expect(searchHint.marker.style.top).toBe("18px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
+    desc: "keeps stacked header rows aligned independently instead of collapsing to one level",
+    test: () => {
+      const fixture = createDomFixture([
+        "<header id='stacked-header' role='banner' aria-label='Global navigation'><div id='header-top-row'><button id='top-menu' type='button' aria-label='Open menu'></button><a id='top-home' href='/' title='Homepage'>Home</a><button id='top-search' type='button' aria-label='Search or jump to'></button><button id='top-create' type='button' aria-label='Create new'></button><button id='top-alerts' type='button' aria-label='Notifications'></button></div><nav id='header-second-row' aria-label='Section navigation'><a id='tab-overview' href='/overview'>Overview</a><a id='tab-repos' href='/repos'>Repositories</a><a id='tab-projects' href='/projects'>Projects</a><a id='tab-packages' href='/packages'>Packages</a><a id='tab-stars' href='/stars'>Stars</a></nav></header>"
+      ]);
+
+      try {
+        const topMenu = document.querySelector("#top-menu");
+        const topHome = document.querySelector("#top-home");
+        const topSearch = document.querySelector("#top-search");
+        const topCreate = document.querySelector("#top-create");
+        const topAlerts = document.querySelector("#top-alerts");
+        const tabOverview = document.querySelector("#tab-overview");
+        const tabRepos = document.querySelector("#tab-repos");
+        const tabProjects = document.querySelector("#tab-projects");
+        const tabPackages = document.querySelector("#tab-packages");
+        const tabStars = document.querySelector("#tab-stars");
+        const header = document.querySelector("#stacked-header");
+        expect(topMenu instanceof HTMLElement).toBe(true);
+        expect(topHome instanceof HTMLElement).toBe(true);
+        expect(topSearch instanceof HTMLElement).toBe(true);
+        expect(topCreate instanceof HTMLElement).toBe(true);
+        expect(topAlerts instanceof HTMLElement).toBe(true);
+        expect(tabOverview instanceof HTMLElement).toBe(true);
+        expect(tabRepos instanceof HTMLElement).toBe(true);
+        expect(tabProjects instanceof HTMLElement).toBe(true);
+        expect(tabPackages instanceof HTMLElement).toBe(true);
+        expect(tabStars instanceof HTMLElement).toBe(true);
+        expect(header instanceof HTMLElement).toBe(true);
+
+        if (
+          !(topMenu instanceof HTMLElement) ||
+          !(topHome instanceof HTMLElement) ||
+          !(topSearch instanceof HTMLElement) ||
+          !(topCreate instanceof HTMLElement) ||
+          !(topAlerts instanceof HTMLElement) ||
+          !(tabOverview instanceof HTMLElement) ||
+          !(tabRepos instanceof HTMLElement) ||
+          !(tabProjects instanceof HTMLElement) ||
+          !(tabPackages instanceof HTMLElement) ||
+          !(tabStars instanceof HTMLElement) ||
+          !(header instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const headerRect = new DOMRect(0, 0, 980, 96);
+        const topMenuRect = new DOMRect(24, 10, 40, 32);
+        const topHomeRect = new DOMRect(88, 10, 120, 32);
+        const topSearchRect = new DOMRect(520, 10, 56, 32);
+        const topCreateRect = new DOMRect(720, 10, 56, 32);
+        const topAlertsRect = new DOMRect(900, 10, 40, 32);
+        const tabOverviewRect = new DOMRect(48, 64, 120, 32);
+        const tabReposRect = new DOMRect(260, 64, 160, 32);
+        const tabProjectsRect = new DOMRect(500, 64, 120, 32);
+        const tabPackagesRect = new DOMRect(680, 64, 140, 32);
+        const tabStarsRect = new DOMRect(860, 64, 100, 32);
+
+        header.getBoundingClientRect = (): DOMRect => headerRect;
+        header.getClientRects = (): DOMRectList => {
+          const list = [headerRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        for (const [element, rect] of [
+          [topMenu, topMenuRect],
+          [topHome, topHomeRect],
+          [topSearch, topSearchRect],
+          [topCreate, topCreateRect],
+          [topAlerts, topAlertsRect],
+          [tabOverview, tabOverviewRect],
+          [tabRepos, tabReposRect],
+          [tabProjects, tabProjectsRect],
+          [tabPackages, tabPackagesRect],
+          [tabStars, tabStarsRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"] = null
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const topMenuHint = makeHint(topMenu, "sf", 42);
+        const topHomeHint = makeHint(topHome, "sd", 54, "home");
+        const topSearchHint = makeHint(topSearch, "kj", 46, "input");
+        const topCreateHint = makeHint(topCreate, "da", 42);
+        const topAlertsHint = makeHint(topAlerts, "df", 42, "notification");
+        const tabOverviewHint = makeHint(tabOverview, "aj", 42);
+        const tabReposHint = makeHint(tabRepos, "sj", 42);
+        const tabProjectsHint = makeHint(tabProjects, "ds", 42);
+        const tabPackagesHint = makeHint(tabPackages, "dk", 42);
+        const tabStarsHint = makeHint(tabStars, "dl", 42);
+
+        updateMarkerPositions(
+          [
+            topMenuHint,
+            topHomeHint,
+            topSearchHint,
+            topCreateHint,
+            topAlertsHint,
+            tabOverviewHint,
+            tabReposHint,
+            tabProjectsHint,
+            tabPackagesHint,
+            tabStarsHint
+          ],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(topMenuHint.marker.style.top).toBe("12px");
+        expect(topHomeHint.marker.style.top).toBe("12px");
+        expect(topCreateHint.marker.style.top).toBe("12px");
+        expect(topAlertsHint.marker.style.top).toBe("12px");
+        expect(topSearchHint.marker.style.top).toBe("16px");
+        expect(tabOverviewHint.marker.style.top).toBe("66px");
+        expect(tabReposHint.marker.style.top).toBe("66px");
+        expect(tabProjectsHint.marker.style.top).toBe("66px");
+        expect(tabPackagesHint.marker.style.top).toBe("66px");
+        expect(tabStarsHint.marker.style.top).toBe("66px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "aligns response action markers on one row and shifts copy left for space",
     test: () => {
       const fixture = createDomFixture(
