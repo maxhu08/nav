@@ -15,6 +15,7 @@ import {
   buildHintLabels,
   doesLabelConflictWithReservedLabels
 } from "~/src/core/utils/hints/labels";
+import type { HintPipelineTarget } from "~/src/core/utils/hints/pipeline-types";
 import { assignHintSemantics } from "~/src/core/utils/hints/semantics";
 import type {
   HintLabelIcon,
@@ -22,13 +23,6 @@ import type {
   ReservedHintDirective,
   ReservedHintLabels
 } from "~/src/core/utils/hints/types";
-
-export type HintPipelineTarget = {
-  element: HTMLElement;
-  label: string;
-  directive: ReservedHintDirective | null;
-  labelIcon: HintLabelIcon | null;
-};
 
 const EXPAND_LABEL_PATTERNS = [/\bexpand\b/i, /\bshow more\b/i];
 const COLLAPSE_LABEL_PATTERNS = [/\bcollapse\b/i, /\bshow less\b/i];
@@ -268,7 +262,8 @@ export const assignHintLabels = (
   );
   const { reservedLabelsByIndex, reservedDirectivesByIndex, reservedLabels } = assignHintSemantics(
     elements,
-    reservedHintLabels
+    reservedHintLabels,
+    preferredDirectiveIndexes
   );
   const suppressedIndexes = getSuppressedHintIndexes(elements, reservedDirectivesByIndex);
   const duplicateReservedLabels = duplicateDirectiveTargets

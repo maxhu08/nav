@@ -33,11 +33,11 @@ Default hotkeys come from `src/utils/hotkeys.ts` in `DEFAULT_HOTKEY_MAPPINGS`.
 Before editing migration logic, check the current release version in `EXTENSION_VERSION.txt`.
 
 - Use that version to decide the migration comment in `src/utils/migrate-config.ts`
-- Add migration logic for the new hotkey if older saved configs would otherwise miss it
 - If you renamed an existing action, migrate the old action name to the new one too
+- If the config shape changed, add the smallest migration needed to preserve compatibility
 - Keep the migration comment in the existing style, such as `// if config before vX.X.X`
 
-The goal is that a user with an older saved config still gets the new action or renamed action after loading the updated extension.
+Do not add migrations that silently re-add a mapping a user removed on purpose.
 
 ## 4. Update the Docs Page
 

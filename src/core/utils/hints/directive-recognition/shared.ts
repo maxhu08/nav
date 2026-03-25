@@ -1,4 +1,9 @@
 import { getDeepActiveElement, isSelectableElement } from "~/src/core/utils/is-editable-target";
+import type {
+  ActionDirectiveOptions,
+  ElementFeatureVector,
+  HintDirective
+} from "~/src/core/utils/hints/directive-recognition/types";
 import {
   getHintTargetPreference,
   getMarkerRect,
@@ -6,7 +11,6 @@ import {
   isActivatableElement,
   isIntrinsicInteractiveElement
 } from "~/src/core/utils/hints/dom";
-import type { ReservedHintDirective as HintDirective } from "~/src/utils/hint-reserved-label-directives";
 
 export {
   getHintTargetPreference,
@@ -16,7 +20,7 @@ export {
   isIntrinsicInteractiveElement,
   isSelectableElement
 };
-export type { HintDirective };
+export type { ActionDirectiveOptions, ElementFeatureVector, HintDirective };
 
 export const INPUT_ATTRIBUTE_PATTERNS = [
   /search/i,
@@ -390,22 +394,6 @@ export const POPUP_DIALOG_SELECTOR = [
   "[id*='lightbox' i]",
   "[class*='lightbox' i]"
 ].join(", ");
-
-export type ElementFeatureVector = {
-  rect: DOMRect | null;
-  isSelectable: boolean;
-  textContent?: string;
-  joinedAttributeTextCache: Map<string, string>;
-  closestCache: Map<string, Element | null>;
-};
-
-export type ActionDirectiveOptions = {
-  allowFormSignals?: boolean;
-  relValues?: string[];
-  boostDialogContext?: boolean;
-  shortTextPatterns?: readonly RegExp[];
-  requireButtonLikeControl?: boolean;
-};
 
 export const getBestScoringElementIndex = (
   elements: HTMLElement[],

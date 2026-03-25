@@ -13,6 +13,10 @@ import {
   type CollisionGrid
 } from "~/src/core/utils/hints/layout/shared";
 import { prepareMarkerPlacement } from "~/src/core/utils/hints/layout/thumbnail";
+import type {
+  AlignedMarkerPlacement,
+  VisibleMarkerPlacement
+} from "~/src/core/utils/hints/layout/types";
 export { revealVideoHintControls } from "~/src/core/utils/hints/layout/video";
 import type { LinkMode } from "~/src/core/utils/hints/model";
 import type { HintMarker } from "~/src/core/utils/hints/types";
@@ -69,34 +73,38 @@ const getResponseActionGroup = (element: HTMLElement): HTMLElement | null => {
   return element.closest(RESPONSE_ACTION_GROUP_SELECTOR);
 };
 
-const getNavbarContainer = (element: HTMLElement): HTMLElement | null => {
-  let bestMatch: HTMLElement | null = null;
+const getAncestorMatches = (
+  element: HTMLElement,
+  predicate: (candidate: HTMLElement) => boolean,
+  stopAtBody = true
+): HTMLElement[] => {
+  const matches: HTMLElement[] = [];
   let current = element.parentElement;
 
-  while (current) {
-    if (current.matches(NAVBAR_CONTAINER_SELECTOR)) {
-      bestMatch = current;
+  while (current && (!stopAtBody || current !== document.body)) {
+    if (predicate(current)) {
+      matches.push(current);
     }
 
     current = current.parentElement;
   }
 
-  return bestMatch;
+  return matches;
+};
+
+const getOutermostMatchingAncestor = (
+  element: HTMLElement,
+  selector: string
+): HTMLElement | null => {
+  return getAncestorMatches(element, (candidate) => candidate.matches(selector)).at(-1) ?? null;
+};
+
+const getNavbarContainer = (element: HTMLElement): HTMLElement | null => {
+  return getOutermostMatchingAncestor(element, NAVBAR_CONTAINER_SELECTOR);
 };
 
 const getTopLeftAlignedContainer = (element: HTMLElement): HTMLElement | null => {
-  let bestMatch: HTMLElement | null = null;
-  let current = element.parentElement;
-
-  while (current) {
-    if (current.matches(TOP_LEFT_ALIGNED_CONTROL_CONTAINER_SELECTOR)) {
-      bestMatch = current;
-    }
-
-    current = current.parentElement;
-  }
-
-  return bestMatch;
+  return getOutermostMatchingAncestor(element, TOP_LEFT_ALIGNED_CONTROL_CONTAINER_SELECTOR);
 };
 
 const getHorizontalBarContainerCandidates = (element: HTMLElement): HTMLElement[] => {
@@ -105,30 +113,23 @@ const getHorizontalBarContainerCandidates = (element: HTMLElement): HTMLElement[
     return [];
   }
 
-  const candidates: HTMLElement[] = [];
-  let current = element.parentElement;
-
-  while (current && current !== document.body) {
+  return getAncestorMatches(element, (candidate) => {
     if (
-      !current.matches(NAVBAR_CONTAINER_SELECTOR) &&
-      !current.matches(TOP_LEFT_ALIGNED_CONTROL_CONTAINER_SELECTOR) &&
-      !current.matches(RESPONSE_ACTION_GROUP_SELECTOR)
+      candidate.matches(NAVBAR_CONTAINER_SELECTOR) ||
+      candidate.matches(TOP_LEFT_ALIGNED_CONTROL_CONTAINER_SELECTOR) ||
+      candidate.matches(RESPONSE_ACTION_GROUP_SELECTOR)
     ) {
-      const rect = getMarkerRect(current);
-      if (
-        rect &&
-        rect.height >= 24 &&
-        rect.height <= 96 &&
-        rect.width >= Math.max(180, rect.height * 1.75)
-      ) {
-        candidates.push(current);
-      }
+      return false;
     }
 
-    current = current.parentElement;
-  }
-
-  return candidates;
+    const rect = getMarkerRect(candidate);
+    return (
+      !!rect &&
+      rect.height >= 24 &&
+      rect.height <= 96 &&
+      rect.width >= Math.max(180, rect.height * 1.75)
+    );
+  });
 };
 
 const doRectsShareNavbarRow = (left: DOMRect, right: DOMRect): boolean => {
@@ -139,6 +140,98 @@ const doRectsShareNavbarRow = (left: DOMRect, right: DOMRect): boolean => {
   const centerDelta = Math.abs(left.top + left.height / 2 - (right.top + right.height / 2));
 
   return overlapHeight / minHeight >= 0.45 || centerDelta <= Math.max(18, minHeight * 0.6);
+};
+
+const collectAlignedPlacements = (
+  hints: HintMarker[],
+  mode: LinkMode,
+  highlightThumbnails: boolean,
+  markerVariantStyleAttribute: string
+): AlignedMarkerPlacement[] => {
+  return hints
+    .map((hint) => {
+      const placement = prepareVisibleMarker(
+        hint,
+        mode,
+        highlightThumbnails,
+        markerVariantStyleAttribute
+      );
+      if (!placement) {
+        return null;
+      }
+
+      return {
+        hint,
+        markerHeight: placement.markerHeight,
+        markerWidth: placement.markerWidth,
+        targetRect: placement.targetRect
+      };
+    })
+    .filter((value): value is AlignedMarkerPlacement => value !== null)
+    .sort((left, right) => {
+      if (left.targetRect.top !== right.targetRect.top) {
+        return left.targetRect.top - right.targetRect.top;
+      }
+
+      return left.targetRect.left - right.targetRect.left;
+    });
+};
+
+const splitPlacementsIntoRows = (
+  placements: readonly AlignedMarkerPlacement[]
+): AlignedMarkerPlacement[][] => {
+  const rows: AlignedMarkerPlacement[][] = [];
+
+  for (const placement of placements) {
+    const lastRow = rows.at(-1);
+    if (!lastRow || !doRectsShareNavbarRow(lastRow[0].targetRect, placement.targetRect)) {
+      rows.push([placement]);
+      continue;
+    }
+
+    lastRow.push(placement);
+  }
+
+  return rows;
+};
+
+const placeAlignedRows = (
+  rows: readonly AlignedMarkerPlacement[][],
+  processed: Set<HintMarker>,
+  collisionGrid?: CollisionGrid,
+  minimumRowSize = 1
+): void => {
+  for (const rowPlacements of rows) {
+    if (rowPlacements.length < minimumRowSize) {
+      continue;
+    }
+
+    const alignedTop = Math.max(
+      MARKER_VIEWPORT_PADDING,
+      Math.round(Math.min(...rowPlacements.map(({ targetRect }) => targetRect.top)) + 2)
+    );
+
+    rowPlacements.sort((left, right) => left.targetRect.left - right.targetRect.left);
+
+    for (const { hint, markerHeight, markerWidth, targetRect } of rowPlacements) {
+      let left = Math.round(targetRect.left + 2);
+      const top = alignedTop;
+
+      if (collisionGrid) {
+        let nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
+        while (hasCollision(collisionGrid, nextRect) && left < Math.round(targetRect.right)) {
+          left += 1;
+          nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
+        }
+
+        addToCollisionGrid(collisionGrid, nextRect);
+      }
+
+      hint.marker.style.left = `${left}px`;
+      hint.marker.style.top = `${top}px`;
+      processed.add(hint);
+    }
+  }
 };
 
 const placeResponseActionGroupMarkers = (
@@ -266,94 +359,18 @@ const placeNavbarMarkers = (
       continue;
     }
 
-    const placements = navbarHints
-      .map((hint) => {
-        const placement = prepareVisibleMarker(
-          hint,
-          mode,
-          highlightThumbnails,
-          markerVariantStyleAttribute
-        );
-        if (!placement) {
-          return null;
-        }
-
-        const targetRect = getMarkerRect(hint.element);
-        if (!targetRect || !isRectWithinViewport(targetRect)) {
-          return null;
-        }
-
-        return {
-          hint,
-          markerHeight: placement.markerHeight,
-          markerWidth: placement.markerWidth,
-          targetRect
-        };
-      })
-      .filter(
-        (
-          value
-        ): value is {
-          hint: HintMarker;
-          markerHeight: number;
-          markerWidth: number;
-          targetRect: DOMRect;
-        } => value !== null
-      )
-      .sort((left, right) => {
-        if (left.targetRect.top !== right.targetRect.top) {
-          return left.targetRect.top - right.targetRect.top;
-        }
-
-        return left.targetRect.left - right.targetRect.left;
-      });
+    const placements = collectAlignedPlacements(
+      navbarHints,
+      mode,
+      highlightThumbnails,
+      markerVariantStyleAttribute
+    );
 
     if (placements.length < 2) {
       continue;
     }
 
-    const placementRows: Array<typeof placements> = [];
-    for (const placement of placements) {
-      const lastRow = placementRows.at(-1);
-      if (!lastRow || !doRectsShareNavbarRow(lastRow[0].targetRect, placement.targetRect)) {
-        placementRows.push([placement]);
-        continue;
-      }
-
-      lastRow.push(placement);
-    }
-
-    for (const rowPlacements of placementRows) {
-      if (rowPlacements.length === 0) {
-        continue;
-      }
-
-      const alignedTop = Math.max(
-        MARKER_VIEWPORT_PADDING,
-        Math.round(Math.min(...rowPlacements.map(({ targetRect }) => targetRect.top)) + 2)
-      );
-
-      rowPlacements.sort((left, right) => left.targetRect.left - right.targetRect.left);
-
-      for (const { hint, markerHeight, markerWidth, targetRect } of rowPlacements) {
-        let left = Math.round(targetRect.left + 2);
-        const top = alignedTop;
-
-        if (collisionGrid) {
-          let nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
-          while (hasCollision(collisionGrid, nextRect) && left < Math.round(targetRect.right)) {
-            left += 1;
-            nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
-          }
-
-          addToCollisionGrid(collisionGrid, nextRect);
-        }
-
-        hint.marker.style.left = `${left}px`;
-        hint.marker.style.top = `${top}px`;
-        processed.add(hint);
-      }
-    }
+    placeAlignedRows(splitPlacementsIntoRows(placements), processed, collisionGrid);
   }
 
   return processed;
@@ -388,94 +405,18 @@ const placeTopLeftAlignedGroupMarkers = (
       continue;
     }
 
-    const placements = groupHints
-      .map((hint) => {
-        const placement = prepareVisibleMarker(
-          hint,
-          mode,
-          highlightThumbnails,
-          markerVariantStyleAttribute
-        );
-        if (!placement) {
-          return null;
-        }
-
-        const targetRect = getMarkerRect(hint.element);
-        if (!targetRect || !isRectWithinViewport(targetRect)) {
-          return null;
-        }
-
-        return {
-          hint,
-          markerHeight: placement.markerHeight,
-          markerWidth: placement.markerWidth,
-          targetRect
-        };
-      })
-      .filter(
-        (
-          value
-        ): value is {
-          hint: HintMarker;
-          markerHeight: number;
-          markerWidth: number;
-          targetRect: DOMRect;
-        } => value !== null
-      )
-      .sort((left, right) => {
-        if (left.targetRect.top !== right.targetRect.top) {
-          return left.targetRect.top - right.targetRect.top;
-        }
-
-        return left.targetRect.left - right.targetRect.left;
-      });
+    const placements = collectAlignedPlacements(
+      groupHints,
+      mode,
+      highlightThumbnails,
+      markerVariantStyleAttribute
+    );
 
     if (placements.length < 2) {
       continue;
     }
 
-    const placementRows: Array<typeof placements> = [];
-    for (const placement of placements) {
-      const lastRow = placementRows.at(-1);
-      if (!lastRow || !doRectsShareNavbarRow(lastRow[0].targetRect, placement.targetRect)) {
-        placementRows.push([placement]);
-        continue;
-      }
-
-      lastRow.push(placement);
-    }
-
-    for (const rowPlacements of placementRows) {
-      if (rowPlacements.length === 0) {
-        continue;
-      }
-
-      const alignedTop = Math.max(
-        MARKER_VIEWPORT_PADDING,
-        Math.round(Math.min(...rowPlacements.map(({ targetRect }) => targetRect.top)) + 2)
-      );
-
-      rowPlacements.sort((left, right) => left.targetRect.left - right.targetRect.left);
-
-      for (const { hint, markerHeight, markerWidth, targetRect } of rowPlacements) {
-        let left = Math.round(targetRect.left + 2);
-        const top = alignedTop;
-
-        if (collisionGrid) {
-          let nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
-          while (hasCollision(collisionGrid, nextRect) && left < Math.round(targetRect.right)) {
-            left += 1;
-            nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
-          }
-
-          addToCollisionGrid(collisionGrid, nextRect);
-        }
-
-        hint.marker.style.left = `${left}px`;
-        hint.marker.style.top = `${top}px`;
-        processed.add(hint);
-      }
-    }
+    placeAlignedRows(splitPlacementsIntoRows(placements), processed, collisionGrid);
   }
 
   return processed;
@@ -518,94 +459,18 @@ const placeHorizontalBarMarkers = (
       continue;
     }
 
-    const placements = availableHints
-      .map((hint) => {
-        const placement = prepareVisibleMarker(
-          hint,
-          mode,
-          highlightThumbnails,
-          markerVariantStyleAttribute
-        );
-        if (!placement) {
-          return null;
-        }
-
-        const targetRect = getMarkerRect(hint.element);
-        if (!targetRect || !isRectWithinViewport(targetRect)) {
-          return null;
-        }
-
-        return {
-          hint,
-          markerHeight: placement.markerHeight,
-          markerWidth: placement.markerWidth,
-          targetRect
-        };
-      })
-      .filter(
-        (
-          value
-        ): value is {
-          hint: HintMarker;
-          markerHeight: number;
-          markerWidth: number;
-          targetRect: DOMRect;
-        } => value !== null
-      )
-      .sort((left, right) => {
-        if (left.targetRect.top !== right.targetRect.top) {
-          return left.targetRect.top - right.targetRect.top;
-        }
-
-        return left.targetRect.left - right.targetRect.left;
-      });
+    const placements = collectAlignedPlacements(
+      availableHints,
+      mode,
+      highlightThumbnails,
+      markerVariantStyleAttribute
+    );
 
     if (placements.length < 2) {
       continue;
     }
 
-    const placementRows: Array<typeof placements> = [];
-    for (const placement of placements) {
-      const lastRow = placementRows.at(-1);
-      if (!lastRow || !doRectsShareNavbarRow(lastRow[0].targetRect, placement.targetRect)) {
-        placementRows.push([placement]);
-        continue;
-      }
-
-      lastRow.push(placement);
-    }
-
-    for (const rowPlacements of placementRows) {
-      if (rowPlacements.length < 2) {
-        continue;
-      }
-
-      const alignedTop = Math.max(
-        MARKER_VIEWPORT_PADDING,
-        Math.round(Math.min(...rowPlacements.map(({ targetRect }) => targetRect.top)) + 2)
-      );
-
-      rowPlacements.sort((left, right) => left.targetRect.left - right.targetRect.left);
-
-      for (const { hint, markerHeight, markerWidth, targetRect } of rowPlacements) {
-        let left = Math.round(targetRect.left + 2);
-        const top = alignedTop;
-
-        if (collisionGrid) {
-          let nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
-          while (hasCollision(collisionGrid, nextRect) && left < Math.round(targetRect.right)) {
-            left += 1;
-            nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
-          }
-
-          addToCollisionGrid(collisionGrid, nextRect);
-        }
-
-        hint.marker.style.left = `${left}px`;
-        hint.marker.style.top = `${top}px`;
-        processed.add(hint);
-      }
-    }
+    placeAlignedRows(splitPlacementsIntoRows(placements), processed, collisionGrid, 2);
   }
 
   return processed;
@@ -616,7 +481,7 @@ const prepareVisibleMarker = (
   mode: LinkMode,
   highlightThumbnails: boolean,
   markerVariantStyleAttribute: string
-) => {
+): VisibleMarkerPlacement | null => {
   const targetRect = getMarkerRect(hint.element);
 
   if (!targetRect || !isRectWithinViewport(targetRect)) {
@@ -635,7 +500,10 @@ const prepareVisibleMarker = (
   );
 
   hint.marker.style.zIndex = `${1000 + getMarkerLayoutPriority(hint)}`;
-  return placement;
+  return {
+    ...placement,
+    targetRect
+  };
 };
 
 export const primeMarkerPositions = (
@@ -644,67 +512,7 @@ export const primeMarkerPositions = (
   highlightThumbnails: boolean,
   markerVariantStyleAttribute: string
 ): void => {
-  const processed = placeResponseActionGroupMarkers(
-    markers,
-    mode,
-    highlightThumbnails,
-    markerVariantStyleAttribute
-  );
-  const navbarProcessed = placeNavbarMarkers(
-    markers,
-    mode,
-    highlightThumbnails,
-    markerVariantStyleAttribute
-  );
-  const topLeftAlignedProcessed = placeTopLeftAlignedGroupMarkers(
-    markers,
-    mode,
-    highlightThumbnails,
-    markerVariantStyleAttribute
-  );
-  const horizontalBarProcessed = placeHorizontalBarMarkers(
-    markers.filter(
-      (hint) =>
-        !processed.has(hint) && !navbarProcessed.has(hint) && !topLeftAlignedProcessed.has(hint)
-    ),
-    mode,
-    highlightThumbnails,
-    markerVariantStyleAttribute
-  );
-
-  for (const hint of markers) {
-    if (
-      processed.has(hint) ||
-      navbarProcessed.has(hint) ||
-      topLeftAlignedProcessed.has(hint) ||
-      horizontalBarProcessed.has(hint)
-    ) {
-      continue;
-    }
-
-    const placement = prepareVisibleMarker(
-      hint,
-      mode,
-      highlightThumbnails,
-      markerVariantStyleAttribute
-    );
-    if (!placement) {
-      continue;
-    }
-
-    const [firstCandidate] = getMarkerPlacementCandidates(
-      hint.element,
-      placement.anchorRect,
-      placement.markerVariant,
-      hint.directive,
-      hint.labelIcon,
-      placement.markerWidth,
-      placement.markerHeight
-    );
-
-    hint.marker.style.left = `${Math.round(firstCandidate.left)}px`;
-    hint.marker.style.top = `${Math.round(firstCandidate.top)}px`;
-  }
+  updateMarkersInternal(markers, mode, highlightThumbnails, markerVariantStyleAttribute, false);
 };
 
 export const updateMarkerPositions = (
@@ -713,10 +521,22 @@ export const updateMarkerPositions = (
   highlightThumbnails: boolean,
   markerVariantStyleAttribute: string
 ): void => {
-  const collisionGrid: CollisionGrid = new Map();
-  const markersByPlacementPriority = [...markers].sort(
-    (left, right) => getMarkerLayoutPriority(right) - getMarkerLayoutPriority(left)
-  );
+  updateMarkersInternal(markers, mode, highlightThumbnails, markerVariantStyleAttribute, true);
+};
+
+const updateMarkersInternal = (
+  markers: HintMarker[],
+  mode: LinkMode,
+  highlightThumbnails: boolean,
+  markerVariantStyleAttribute: string,
+  collisionAware: boolean
+): void => {
+  const collisionGrid: CollisionGrid | undefined = collisionAware ? new Map() : undefined;
+  const markersByPlacementPriority = collisionAware
+    ? [...markers].sort(
+        (left, right) => getMarkerLayoutPriority(right) - getMarkerLayoutPriority(left)
+      )
+    : markers;
   const processed = placeResponseActionGroupMarkers(
     markersByPlacementPriority,
     mode,
@@ -778,14 +598,23 @@ export const updateMarkerPositions = (
       placement.markerWidth,
       placement.markerHeight
     );
-    const chosenRect = chooseMarkerRect(
-      hint.element,
-      placement.markerVariant,
-      candidates,
-      placement.markerWidth,
-      placement.markerHeight,
-      collisionGrid
-    );
+    const chosenRect = collisionGrid
+      ? chooseMarkerRect(
+          hint.element,
+          placement.markerVariant,
+          candidates,
+          placement.markerWidth,
+          placement.markerHeight,
+          collisionGrid
+        )
+      : candidates[0]
+        ? createPlacedMarkerRect(
+            candidates[0].left,
+            candidates[0].top,
+            placement.markerWidth,
+            placement.markerHeight
+          )
+        : null;
 
     if (!chosenRect) {
       hideMarker(hint);
@@ -794,6 +623,8 @@ export const updateMarkerPositions = (
 
     hint.marker.style.left = `${Math.round(chosenRect.left)}px`;
     hint.marker.style.top = `${Math.round(chosenRect.top)}px`;
-    addToCollisionGrid(collisionGrid, chosenRect);
+    if (collisionGrid) {
+      addToCollisionGrid(collisionGrid, chosenRect);
+    }
   }
 };

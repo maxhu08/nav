@@ -17,10 +17,23 @@ import {
   isIntrinsicInteractiveElement,
   isSelectableElement,
   getSemanticControlText,
-  textMatchesAnyPattern,
-  type ElementFeatureVector,
-  type HintDirective
+  textMatchesAnyPattern
 } from "~/src/core/utils/hints/directive-recognition/shared";
+import type {
+  ElementFeatureVector,
+  HintDirective
+} from "~/src/core/utils/hints/directive-recognition/types";
+import {
+  getRectGapDistance,
+  getRectOverlapRatio,
+  isRectCenterNearTarget
+} from "~/src/core/utils/hints/directive-recognition/geometry";
+import {
+  addAreaPenalty,
+  addCappedHeightBonus,
+  addCappedWidthBonus,
+  createScoreAccumulator
+} from "~/src/core/utils/hints/directive-recognition/scoring";
 
 export const getInputCandidateScore = (
   element: HTMLElement,
@@ -36,7 +49,7 @@ export const getInputCandidateScore = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = 100;
+  const score = createScoreAccumulator(100);
   const attributeText = getCachedJoinedAttributeText(
     element,
     ["type", "name", "id", "placeholder", "aria-label", "data-testid", "role"],
@@ -45,30 +58,30 @@ export const getInputCandidateScore = (
   );
 
   if (textMatchesAnyPattern(attributeText, INPUT_ATTRIBUTE_PATTERNS)) {
-    score += 120;
+    score.add(120);
   }
 
-  score += getActiveSelectableBonus(element);
+  score.add(getActiveSelectableBonus(element));
 
   if (
     element instanceof HTMLInputElement &&
     ["search", "text", "email", "url", "tel"].includes(element.type)
   ) {
-    score += 40;
+    score.add(40);
   }
 
   if (element instanceof HTMLTextAreaElement || element.isContentEditable) {
-    score += 60;
+    score.add(60);
   }
 
   if (getCachedClosest(element, "search, [role='search'], form", features)) {
-    score += 30;
+    score.add(30);
   }
 
-  score += Math.min(400, rect.width) / 4;
-  score += Math.min(120, rect.height) / 6;
+  addCappedWidthBonus(score, rect, 400, 4);
+  addCappedHeightBonus(score, rect, 120, 6);
 
-  return score;
+  return score.finish();
 };
 
 const getInputLauncherCandidateScore = (
@@ -108,34 +121,34 @@ const getInputLauncherCandidateScore = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = 220;
+  const score = createScoreAccumulator(220);
 
   if (textMatchesAnyPattern(attributeText, PRIMARY_INPUT_ATTRIBUTE_PATTERNS)) {
-    score += 260;
+    score.add(260);
   }
 
   if (isButtonLikeControl(element)) {
-    score += 60;
+    score.add(60);
   }
 
   if (element.hasAttribute("aria-haspopup")) {
-    score += 40;
+    score.add(40);
   }
 
   if (element.querySelector("kbd") instanceof HTMLElement) {
-    score += 30;
+    score.add(30);
   }
 
   if (
     getCachedClosest(element, "search, [role='search'], form, header, [role='banner']", features)
   ) {
-    score += 20;
+    score.add(20);
   }
 
-  score += Math.min(320, rect.width) / 10;
-  score += Math.min(120, rect.height) / 12;
+  addCappedWidthBonus(score, rect, 320, 10);
+  addCappedHeightBonus(score, rect, 120, 12);
 
-  return score;
+  return score.finish();
 };
 
 export const getCombinedInputCandidateScore = (
@@ -181,31 +194,31 @@ const getAttachPresentationPreference = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = getHintTargetPreference(element);
+  const score = createScoreAccumulator(getHintTargetPreference(element));
   const attributeText = getAttachAttributeText(element, features);
 
   if (textMatchesAnyPattern(attributeText, ATTACH_EXACT_CONTROL_PATTERNS)) {
-    score += 400;
+    score.add(400);
   }
 
   if (element instanceof HTMLButtonElement) {
-    score += 220;
+    score.add(220);
   }
 
   if (isIntrinsicInteractiveElement(element)) {
-    score += 140;
+    score.add(140);
   }
 
   if (element.hasAttribute("aria-haspopup")) {
-    score += 80;
+    score.add(80);
   }
 
   if (element.hasAttribute("aria-label") || element.hasAttribute("title")) {
-    score += 60;
+    score.add(60);
   }
 
-  score -= Math.min(400, rect.width * rect.height) / 20;
-  return score;
+  addAreaPenalty(score, rect, 400, 20);
+  return score.finish();
 };
 
 export const getAttachCandidateScore = (
@@ -229,30 +242,26 @@ export const getAttachCandidateScore = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = 0;
-  let hasStrongSignal = false;
+  const score = createScoreAccumulator();
   const attributeText = getAttachAttributeText(element, features);
 
   if (textMatchesAnyPattern(attributeText, ATTACH_ATTRIBUTE_PATTERNS)) {
-    score += 260;
-    hasStrongSignal = true;
+    score.addStrong(260);
   }
 
   if (textMatchesAnyPattern(attributeText, ATTACH_EXACT_CONTROL_PATTERNS)) {
-    score += 240;
-    hasStrongSignal = true;
+    score.addStrong(240);
   }
 
   if (textMatchesAnyPattern(attributeText, ATTACH_FILE_TYPE_PATTERNS)) {
-    score += 60;
+    score.add(60);
   }
 
   if (element instanceof HTMLInputElement && element.type.toLowerCase() === "file") {
-    score += 320;
-    hasStrongSignal = true;
+    score.addStrong(320);
 
     if (element.accept) {
-      score += 120;
+      score.add(120);
     }
   }
 
@@ -261,12 +270,11 @@ export const getAttachCandidateScore = (
     element.control instanceof HTMLInputElement &&
     element.control.type.toLowerCase() === "file"
   ) {
-    score += 340;
-    hasStrongSignal = true;
+    score.addStrong(340);
   }
 
   if (getCachedClosest(element, "form", features)) {
-    score += 60;
+    score.add(60);
   }
 
   if (
@@ -275,50 +283,17 @@ export const getAttachCandidateScore = (
     element instanceof HTMLAreaElement ||
     element.getAttribute("role")?.toLowerCase() === "button"
   ) {
-    score += 40;
+    score.add(40);
   }
 
   if (element.hasAttribute("aria-haspopup")) {
-    score += 40;
+    score.add(40);
   }
 
-  if (!hasStrongSignal) {
-    return Number.NEGATIVE_INFINITY;
-  }
+  addCappedWidthBonus(score, rect, 220, 10);
+  addCappedHeightBonus(score, rect, 120, 12);
 
-  score += Math.min(220, rect.width) / 10;
-  score += Math.min(120, rect.height) / 12;
-
-  return score;
-};
-
-export const getRectOverlapRatio = (leftRect: DOMRect, rightRect: DOMRect): number => {
-  const intersectionWidth = Math.max(
-    0,
-    Math.min(leftRect.right, rightRect.right) - Math.max(leftRect.left, rightRect.left)
-  );
-  const intersectionHeight = Math.max(
-    0,
-    Math.min(leftRect.bottom, rightRect.bottom) - Math.max(leftRect.top, rightRect.top)
-  );
-  const intersectionArea = intersectionWidth * intersectionHeight;
-  const smallerArea = Math.max(
-    1,
-    Math.min(leftRect.width * leftRect.height, rightRect.width * rightRect.height)
-  );
-
-  return intersectionArea / smallerArea;
-};
-
-const getRectGapDistance = (leftRect: DOMRect, rightRect: DOMRect): number => {
-  const horizontalGap = Math.max(
-    0,
-    leftRect.left - rightRect.right,
-    rightRect.left - leftRect.right
-  );
-  const verticalGap = Math.max(0, leftRect.top - rightRect.bottom, rightRect.top - leftRect.bottom);
-
-  return Math.hypot(horizontalGap, verticalGap);
+  return score.finish({ requireStrongSignal: true });
 };
 
 const isLikelyHiddenFileInputControl = (
@@ -343,22 +318,6 @@ const isLikelyHiddenFileInputControl = (
     style.opacity === "0" ||
     style.clipPath !== "none" ||
     /\bsr-only\b|\bvisually-hidden\b|\bscreen-reader\b/i.test(hiddenClassText)
-  );
-};
-
-export const isRectCenterNearTarget = (
-  targetRect: DOMRect,
-  candidateRect: DOMRect,
-  padding = 12
-): boolean => {
-  const centerX = candidateRect.left + candidateRect.width / 2;
-  const centerY = candidateRect.top + candidateRect.height / 2;
-
-  return (
-    centerX >= targetRect.left - padding &&
-    centerX <= targetRect.right + padding &&
-    centerY >= targetRect.top - padding &&
-    centerY <= targetRect.bottom + padding
   );
 };
 

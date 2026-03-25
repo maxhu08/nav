@@ -18,14 +18,20 @@ import {
   hasInteractiveRole,
   isActivatableElement,
   isSelectableElement,
-  textMatchesAnyPattern,
-  type ElementFeatureVector
+  textMatchesAnyPattern
 } from "~/src/core/utils/hints/directive-recognition/shared";
 import { getNormalizedSameOriginPath } from "~/src/core/utils/hints/directive-recognition/shared";
 import {
   getRectOverlapRatio,
   isRectCenterNearTarget
-} from "~/src/core/utils/hints/directive-recognition/input-attach";
+} from "~/src/core/utils/hints/directive-recognition/geometry";
+import {
+  addAreaPenalty,
+  addCappedHeightBonus,
+  addCappedWidthBonus,
+  createScoreAccumulator
+} from "~/src/core/utils/hints/directive-recognition/scoring";
+import type { ElementFeatureVector } from "~/src/core/utils/hints/directive-recognition/types";
 
 const SIDEBAR_ANCESTOR_ATTRIBUTE_NAMES = [
   "name",
@@ -81,8 +87,7 @@ const getHomeCandidateScore = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = 0;
-  let hasStrongSignal = false;
+  const score = createScoreAccumulator();
   const textContent = getCachedElementTextContent(element, features);
   const logoText = getCachedJoinedAttributeText(
     element,
@@ -98,46 +103,37 @@ const getHomeCandidateScore = (
     features
   );
 
-  if (textMatchesAnyPattern(attributeText, HOME_ATTRIBUTE_PATTERNS)) {
-    score += 220;
-    hasStrongSignal = true;
-  }
+  score.addMatch(attributeText, HOME_ATTRIBUTE_PATTERNS, 220, true);
 
   const href = element.getAttribute("href");
   if (href) {
     const normalizedPath = getNormalizedSameOriginPath(href);
     if (normalizedPath && HOME_PATHS.has(normalizedPath)) {
-      score += 220;
-      hasStrongSignal = true;
+      score.addStrong(220);
 
       if (normalizedPath === "/" && hasLogoSignal) {
-        score += 260;
+        score.add(260);
       }
     }
   }
 
   const relValue = element.getAttribute("rel")?.toLowerCase() ?? "";
   if (relValue.split(/\s+/).includes("home")) {
-    score += 180;
-    hasStrongSignal = true;
-  }
-
-  if (!hasStrongSignal) {
-    return Number.NEGATIVE_INFINITY;
+    score.addStrong(180);
   }
 
   if (element.getAttribute("aria-current")?.toLowerCase() === "page") {
-    score += 40;
+    score.add(40);
   }
 
   if (getCachedClosest(element, "nav, header, [role='navigation']", features)) {
-    score += 40;
+    score.add(40);
   }
 
-  score += Math.min(220, rect.width) / 8;
-  score += Math.min(120, rect.height) / 12;
+  addCappedWidthBonus(score, rect, 220, 8);
+  addCappedHeightBonus(score, rect, 120, 12);
 
-  return score;
+  return score.finish({ requireStrongSignal: true });
 };
 
 export const getPreferredHomeElementIndex = (elements: HTMLElement[]): number | null => {
@@ -207,8 +203,7 @@ const getSidebarCandidateScore = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = 40;
-  let hasStrongSignal = false;
+  const score = createScoreAccumulator(40);
   const tagName = element.tagName.toLowerCase();
   const role = element.getAttribute("role")?.toLowerCase();
   const textContent = getCachedElementTextContent(element, features);
@@ -256,51 +251,45 @@ const getSidebarCandidateScore = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  score += controlsSignalScore;
+  score.add(controlsSignalScore);
   if (controlsSignalScore > 0) {
-    hasStrongSignal = true;
+    score.addStrong(0);
   }
 
   if (element instanceof HTMLButtonElement || role === "button") {
-    score += 60;
+    score.add(60);
   }
 
   if (element instanceof HTMLAnchorElement && element.hasAttribute("href")) {
-    score += 30;
+    score.add(30);
   }
 
   if (tagName === "summary") {
-    score += 20;
+    score.add(20);
   }
 
   if (hasSidebarAttributeSignal) {
-    score += 220;
-    hasStrongSignal = true;
+    score.addStrong(220);
   }
 
   if (hasAncestorSidebarSignal) {
-    score += 180;
-    hasStrongSignal = true;
+    score.addStrong(180);
   }
 
   if (textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)) {
-    score += 320;
-    hasStrongSignal = true;
+    score.addStrong(320);
   }
 
   if (element.id === "guide-button" || !!getCachedClosest(element, "#guide-button", features)) {
-    score += 700;
-    hasStrongSignal = true;
+    score.addStrong(700);
   }
 
   if (hasSidebarToggleSignal) {
-    score += 260;
-    hasStrongSignal = true;
+    score.addStrong(260);
   }
 
   if (hasAncestorSidebarToggleSignal) {
-    score += 220;
-    hasStrongSignal = true;
+    score.addStrong(220);
   }
 
   if (
@@ -310,45 +299,41 @@ const getSidebarCandidateScore = (
       features
     )
   ) {
-    score += 120;
+    score.add(120);
   }
 
   if (element.hasAttribute("aria-expanded")) {
-    score += 70;
+    score.add(70);
 
     if (element.getAttribute("aria-expanded") === "true" && controlsSignalScore > 0) {
-      score += 180;
+      score.add(180);
     }
   }
 
   if (element.hasAttribute("aria-haspopup")) {
-    score += 30;
+    score.add(30);
   }
 
   if (getCachedClosest(element, "header, [role='banner'], [role='navigation']", features)) {
-    score += 40;
+    score.add(40);
   }
 
-  if (!hasStrongSignal) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
-  score += Math.min(120, rect.height) / 8;
-  score += Math.min(120, rect.width) / 8;
+  addCappedHeightBonus(score, rect, 120, 8);
+  addCappedWidthBonus(score, rect, 120, 8);
 
   if (rect.width <= 96 && rect.height <= 96) {
-    score += 30;
+    score.add(30);
   }
 
   if (rect.left < window.innerWidth * 0.35 && rect.top < window.innerHeight * 0.3) {
-    score += 60;
+    score.add(60);
   }
 
   if (rect.width > window.innerWidth * 0.6) {
-    score -= 80;
+    score.add(-80);
   }
 
-  return score;
+  return score.finish({ requireStrongSignal: true });
 };
 
 export const getPreferredSidebarElementIndex = (elements: HTMLElement[]): number | null => {
@@ -365,7 +350,7 @@ const getSidebarPresentationPreference = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = getHintTargetPreference(element);
+  const score = createScoreAccumulator(getHintTargetPreference(element));
   const attributeText = getCachedJoinedAttributeText(
     element,
     ["id", "class", "aria-label", "title", "data-testid", "role", "type"],
@@ -377,23 +362,23 @@ const getSidebarPresentationPreference = (
     element instanceof HTMLButtonElement ||
     element.getAttribute("role")?.toLowerCase() === "button"
   ) {
-    score += 220;
+    score.add(220);
   }
 
   if (element.hasAttribute("aria-label") || element.hasAttribute("title")) {
-    score += 120;
+    score.add(120);
   }
 
   if (textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)) {
-    score += 160;
+    score.add(160);
   }
 
   if (textMatchesAnyPattern(attributeText, SIDEBAR_TOGGLE_PATTERNS)) {
-    score += 120;
+    score.add(120);
   }
 
-  score -= Math.min(600, rect.width * rect.height) / 18;
-  return score;
+  addAreaPenalty(score, rect, 600, 18);
+  return score.finish();
 };
 
 export const remapSidebarDirectiveIndex = (

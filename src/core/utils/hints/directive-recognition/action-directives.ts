@@ -52,11 +52,18 @@ import {
   isButtonLikeControl,
   isLikelyShortControlText,
   isSelectableElement,
-  textMatchesAnyPattern,
-  type ActionDirectiveOptions,
-  type ElementFeatureVector
+  textMatchesAnyPattern
 } from "~/src/core/utils/hints/directive-recognition/shared";
 import { getSidebarControlsSignalScore } from "~/src/core/utils/hints/directive-recognition/home-sidebar";
+import {
+  addCappedHeightBonus,
+  addCappedWidthBonus,
+  createScoreAccumulator
+} from "~/src/core/utils/hints/directive-recognition/scoring";
+import type {
+  ActionDirectiveOptions,
+  ElementFeatureVector
+} from "~/src/core/utils/hints/directive-recognition/types";
 
 const SAVE_NAVIGATION_CONTAINER_SELECTOR = [
   "nav",
@@ -208,8 +215,7 @@ export const getActionDirectiveCandidateScore = (
     return Number.NEGATIVE_INFINITY;
   }
 
-  let score = 20;
-  let hasStrongSignal = false;
+  const score = createScoreAccumulator(20);
   const tagName = element.tagName.toLowerCase();
   const role = element.getAttribute("role")?.toLowerCase();
 
@@ -225,14 +231,10 @@ export const getActionDirectiveCandidateScore = (
     features
   );
 
-  if (textMatchesAnyPattern(structuralAttributeText, patterns)) {
-    score += 240;
-    hasStrongSignal = true;
-  }
+  score.addMatch(structuralAttributeText, patterns, 240, true);
 
   if (hasShortMatchingActionSemanticAttribute(element, patterns)) {
-    score += 220;
-    hasStrongSignal = true;
+    score.addStrong(220);
   }
 
   if (
@@ -241,8 +243,7 @@ export const getActionDirectiveCandidateScore = (
     isLikelyShortControlText(semanticControlText) &&
     textMatchesAnyPattern(semanticControlText, options.shortTextPatterns)
   ) {
-    score += 220;
-    hasStrongSignal = true;
+    score.addStrong(220);
   }
 
   if (
@@ -253,37 +254,35 @@ export const getActionDirectiveCandidateScore = (
     const relParts = relValue.split(/\s+/);
 
     if (options.relValues.some((value) => relParts.includes(value))) {
-      score += 260;
-      hasStrongSignal = true;
+      score.addStrong(260);
     }
   }
 
   if (element instanceof HTMLButtonElement || role === "button") {
-    score += 50;
+    score.add(50);
   }
 
   if (element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement) {
-    score += 40;
+    score.add(40);
   }
 
   if (tagName === "summary") {
-    score += 20;
+    score.add(20);
   }
 
   if (options.allowFormSignals) {
     if (element instanceof HTMLInputElement && element.type.toLowerCase() === "submit") {
-      score += 320;
-      hasStrongSignal = true;
+      score.addStrong(320);
     }
 
     if (getCachedClosest(element, "form", features)) {
-      score += 70;
+      score.add(70);
     }
   }
 
   if (options.boostDialogContext) {
     if (getCachedClosest(element, "dialog, [role='dialog'], [aria-modal='true']", features)) {
-      score += 90;
+      score.add(90);
     }
 
     if (
@@ -293,7 +292,7 @@ export const getActionDirectiveCandidateScore = (
         features
       )
     ) {
-      score += 70;
+      score.add(70);
     }
   }
 
@@ -304,17 +303,13 @@ export const getActionDirectiveCandidateScore = (
       features
     )
   ) {
-    score += 60;
+    score.add(60);
   }
 
-  if (!hasStrongSignal) {
-    return Number.NEGATIVE_INFINITY;
-  }
+  addCappedHeightBonus(score, rect, 120, 10);
+  addCappedWidthBonus(score, rect, 220, 12);
 
-  score += Math.min(120, rect.height) / 10;
-  score += Math.min(220, rect.width) / 12;
-
-  return score;
+  return score.finish({ requireStrongSignal: true });
 };
 
 const getLargestContainedPopup = (

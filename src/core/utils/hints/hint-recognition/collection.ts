@@ -143,6 +143,7 @@ const getHintSearchRoots = (): Array<Document | ShadowRoot> => {
 
 const appendEligibleElements = (
   target: HTMLElement[],
+  roots: ReadonlyArray<Document | ShadowRoot>,
   selector: string,
   mode: LinkMode,
   seen: Set<HTMLElement>,
@@ -151,7 +152,7 @@ const appendEligibleElements = (
     requireWeakSignal?: boolean;
   } = {}
 ): void => {
-  for (const root of getHintSearchRoots()) {
+  for (const root of roots) {
     for (const element of root.querySelectorAll<HTMLElement>(selector)) {
       if (seen.has(element)) {
         continue;
@@ -172,37 +173,54 @@ const appendEligibleElements = (
 
 const appendLikelyHideElements = (
   target: HTMLElement[],
+  roots: ReadonlyArray<Document | ShadowRoot>,
   seen: Set<HTMLElement>,
   visibility: ReturnType<typeof createHintVisibilityContext>
 ): void => {
-  for (const root of getHintSearchRoots()) {
-    for (const element of root.querySelectorAll<HTMLElement>(HINT_SELECTORS_HIDE_CANDIDATES)) {
-      if (seen.has(element) || !visibility.isVisibleHintTarget(element)) {
-        continue;
-      }
-
-      if (getHideCandidateScore(element) <= 240) {
-        continue;
-      }
-
-      seen.add(element);
-      target.push(element);
-    }
-  }
+  appendScoredElements(
+    target,
+    roots,
+    HINT_SELECTORS_HIDE_CANDIDATES,
+    seen,
+    visibility,
+    getHideCandidateScore,
+    240
+  );
 };
 
 const appendLikelyCopyElements = (
   target: HTMLElement[],
+  roots: ReadonlyArray<Document | ShadowRoot>,
   seen: Set<HTMLElement>,
   visibility: ReturnType<typeof createHintVisibilityContext>
 ): void => {
-  for (const root of getHintSearchRoots()) {
-    for (const element of root.querySelectorAll<HTMLElement>(HINT_SELECTORS_COPY_CANDIDATES)) {
+  appendScoredElements(
+    target,
+    roots,
+    HINT_SELECTORS_COPY_CANDIDATES,
+    seen,
+    visibility,
+    getCopyCandidateScore,
+    220
+  );
+};
+
+const appendScoredElements = (
+  target: HTMLElement[],
+  roots: ReadonlyArray<Document | ShadowRoot>,
+  selector: string,
+  seen: Set<HTMLElement>,
+  visibility: ReturnType<typeof createHintVisibilityContext>,
+  getScore: (element: HTMLElement) => number,
+  minimumScore: number
+): void => {
+  for (const root of roots) {
+    for (const element of root.querySelectorAll<HTMLElement>(selector)) {
       if (seen.has(element) || !visibility.isVisibleHintTarget(element)) {
         continue;
       }
 
-      if (getCopyCandidateScore(element) <= 220) {
+      if (getScore(element) <= minimumScore) {
         continue;
       }
 
@@ -217,18 +235,19 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
   const { getRect, getIdentity, getDepth, getPreference } = createHintCollectionContext({
     getRect: visibility.getRect
   });
+  const roots = getHintSearchRoots();
   const elements: HTMLElement[] = [];
   const seen = new Set<HTMLElement>();
 
   if (mode === "copy-link" || mode === "new-tab" || mode === "copy-image") {
-    appendEligibleElements(elements, getHintSelector(mode), mode, seen, visibility);
+    appendEligibleElements(elements, roots, getHintSelector(mode), mode, seen, visibility);
   } else {
-    appendEligibleElements(elements, HINT_SELECTORS_DEFAULT_STRONG, mode, seen, visibility);
-    appendEligibleElements(elements, HINT_SELECTORS_DEFAULT_WEAK, mode, seen, visibility, {
+    appendEligibleElements(elements, roots, HINT_SELECTORS_DEFAULT_STRONG, mode, seen, visibility);
+    appendEligibleElements(elements, roots, HINT_SELECTORS_DEFAULT_WEAK, mode, seen, visibility, {
       requireWeakSignal: true
     });
-    appendLikelyCopyElements(elements, seen, visibility);
-    appendLikelyHideElements(elements, seen, visibility);
+    appendLikelyCopyElements(elements, roots, seen, visibility);
+    appendLikelyHideElements(elements, roots, seen, visibility);
   }
 
   const uniqueElements = dedupeCollectedHintTargets(elements, {

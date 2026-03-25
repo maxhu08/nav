@@ -1,5 +1,6 @@
 import { getPreferredDirectiveIndexes } from "~/src/core/utils/hints/hint-recognition";
 import { doesLabelConflictWithReservedLabels } from "~/src/core/utils/hints/labels";
+import type { HintDirective } from "~/src/core/utils/hints/directive-recognition/types";
 import type { ReservedHintDirective, ReservedHintLabels } from "~/src/core/utils/hints/types";
 import { RESERVED_HINT_DIRECTIVES } from "~/src/utils/hint-reserved-label-directives";
 
@@ -21,13 +22,13 @@ const getPreferredReservedLabel = (labels: string[]): string | null => {
 
 export const assignHintSemantics = (
   elements: HTMLElement[],
-  reservedHintLabels: ReservedHintLabels
+  reservedHintLabels: ReservedHintLabels,
+  preferredIndexes: Partial<Record<HintDirective, number>> = getPreferredDirectiveIndexes(elements)
 ): {
   reservedLabelsByIndex: Map<number, string>;
   reservedDirectivesByIndex: Map<number, ReservedHintDirective>;
   reservedLabels: string[];
 } => {
-  const preferredIndexes = getPreferredDirectiveIndexes(elements);
   const reservedLabelsByIndex = new Map<number, string>();
   const reservedDirectivesByIndex = new Map<number, ReservedHintDirective>();
   const reservedLabels: string[] = [];

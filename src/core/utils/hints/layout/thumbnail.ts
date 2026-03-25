@@ -12,9 +12,12 @@ import {
   MIN_THUMBNAIL_HEIGHT,
   MIN_THUMBNAIL_MEDIA_AREA_RATIO,
   MIN_THUMBNAIL_RECTANGULAR_RATIO,
-  MIN_THUMBNAIL_WIDTH,
-  type MarkerVariant
+  MIN_THUMBNAIL_WIDTH
 } from "~/src/core/utils/hints/layout/shared";
+import type {
+  MarkerPlacementInfo,
+  PreparedMarkerPlacement
+} from "~/src/core/utils/hints/layout/types";
 
 const getRectArea = (rect: Pick<DOMRect, "width" | "height">): number =>
   Math.max(0, rect.width) * Math.max(0, rect.height);
@@ -154,11 +157,6 @@ const isThumbnailLikeTarget = (
   return getRectangularRatio(preferredThumbnailRect) >= MIN_THUMBNAIL_RECTANGULAR_RATIO;
 };
 
-type MarkerPlacementInfo = {
-  variant: MarkerVariant;
-  anchorRect: DOMRect;
-};
-
 const COMPOSITE_ROW_SELECTOR = [
   "a[href]",
   "[role='link']",
@@ -251,13 +249,6 @@ const getMarkerPlacementInfo = (
     variant: useThumbnail ? "thumbnail" : "default",
     anchorRect: useThumbnail ? (preferredThumbnailRect ?? targetRect) : targetRect
   };
-};
-
-type PreparedMarkerPlacement = {
-  markerWidth: number;
-  markerHeight: number;
-  markerVariant: MarkerVariant;
-  anchorRect: DOMRect;
 };
 
 export const prepareMarkerPlacement = (
