@@ -146,6 +146,10 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     "duplicate-current-tab-origin"
   );
 
+  if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
+    addHotkeyMappingIfMissing(migratedConfig, "yo", "duplicate-current-tab-origin");
+  }
+
   // if config before v1.1.1
   addDirectiveIfMissing(migratedConfig, "microphone", "mic");
 
@@ -163,10 +167,6 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
 
   // if config before v1.1.3
   addDirectiveIfMissing(migratedConfig, "notification", "nf");
-
-  if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
-    addHotkeyMappingIfMissing(migratedConfig, "yo", "duplicate-current-tab-origin");
-  }
 
   return migratedConfig;
 };
