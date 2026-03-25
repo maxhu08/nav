@@ -1,6 +1,7 @@
 import {
   type HintVisibilityContext,
-  type PointHitTestResult
+  type PointHitTestResult,
+  type RectLike
 } from "~/src/core/utils/hints/dom/shared";
 import { getMarkerRect } from "~/src/core/utils/hints/dom/geometry";
 import {
@@ -73,6 +74,31 @@ const isRectInViewport = (rect: DOMRect): boolean => {
     rect.top > window.innerHeight ||
     rect.left > window.innerWidth
   );
+};
+
+const isRectFullyInside = (rect: RectLike, container: RectLike, tolerance = 1): boolean => {
+  return (
+    rect.top >= container.top - tolerance &&
+    rect.left >= container.left - tolerance &&
+    rect.bottom <= container.bottom + tolerance &&
+    rect.right <= container.right + tolerance
+  );
+};
+
+const clipsDescendants = (style: CSSStyleDeclaration): boolean => {
+  return [style.overflow, style.overflowX, style.overflowY].some((value) => {
+    return value === "hidden" || value === "clip" || value === "scroll" || value === "auto";
+  });
+};
+
+const getComposedParentElement = (element: HTMLElement): HTMLElement | null => {
+  const parent = element.parentElement;
+  if (parent) {
+    return parent;
+  }
+
+  const root = element.getRootNode();
+  return root instanceof ShadowRoot && root.host instanceof HTMLElement ? root.host : null;
 };
 
 const isStyleVisibleAndClickable = (style: CSSStyleDeclaration): boolean => {
@@ -206,6 +232,27 @@ export const createHintVisibilityContext = (): HintVisibilityContext => {
     return isPopupOccludingElement(topElement) ? "popup-occluded" : "occluded";
   };
 
+  const isClippedByAncestor = (element: HTMLElement, rect: DOMRect): boolean => {
+    let current = getComposedParentElement(element);
+
+    while (current) {
+      if (!isStyleVisibleAndClickable(getStyle(current))) {
+        return true;
+      }
+
+      if (clipsDescendants(getStyle(current))) {
+        const ancestorRect = getRect(current);
+        if (ancestorRect && !isRectFullyInside(rect, ancestorRect)) {
+          return true;
+        }
+      }
+
+      current = getComposedParentElement(current);
+    }
+
+    return false;
+  };
+
   const isVisibleTarget = (element: HTMLElement): boolean => {
     const cachedVisibility = visibleTargetCache.get(element);
     if (cachedVisibility !== undefined) {
@@ -216,6 +263,7 @@ export const createHintVisibilityContext = (): HintVisibilityContext => {
     const isVisible =
       !!rect &&
       isRectInViewport(rect) &&
+      !isClippedByAncestor(element, rect) &&
       isStyleVisibleAndClickable(getStyle(element)) &&
       getAdaptiveHitTestResult(
         element,

@@ -91,4 +91,74 @@ describe("visibility hint scenarios", () => {
       fixture.cleanup();
     }
   });
+
+  test("skips links clipped by a scroll container viewport", () => {
+    const fixture = createDomFixture(`
+      <section id="carousel-shell">
+        <button id="prev-control" type="button" aria-label="Previous items">Previous</button>
+        <div id="scroll-outer-container">
+          <div id="scroll-container" style="overflow-x: auto; overflow-y: hidden;">
+            <div id="items" style="transform: translateX(-60px);">
+              <article class="card"><a id="card-1" href="/item-1">Placeholder item one</a></article>
+              <article class="card"><a id="card-2" href="/item-2">Placeholder item two</a></article>
+              <article class="card"><a id="card-3" href="/item-3">Placeholder item three</a></article>
+            </div>
+          </div>
+        </div>
+        <button id="next-control" type="button" aria-label="Next items">Next</button>
+      </section>
+    `);
+
+    try {
+      const scrollContainer = document.querySelector("#scroll-container");
+      const cardCandidates = ["#card-1", "#card-2", "#card-3"].map((selector) =>
+        document.querySelector(selector)
+      );
+
+      expect(scrollContainer instanceof HTMLElement).toBe(true);
+      expect(cardCandidates.every((card) => card instanceof HTMLElement)).toBe(true);
+
+      if (
+        !(scrollContainer instanceof HTMLElement) ||
+        cardCandidates.some((card) => !(card instanceof HTMLElement))
+      ) {
+        return;
+      }
+
+      const cards = cardCandidates as HTMLElement[];
+
+      const containerRect = new DOMRect(100, 40, 320, 180);
+      const cardRects = [
+        new DOMRect(40, 70, 120, 100),
+        new DOMRect(180, 70, 120, 100),
+        new DOMRect(360, 70, 120, 100)
+      ];
+
+      scrollContainer.getBoundingClientRect = (): DOMRect => containerRect;
+      scrollContainer.getClientRects = (): DOMRectList => createRectList(containerRect);
+
+      cards.forEach((card, index) => {
+        const rect = cardRects[index]!;
+        card.getBoundingClientRect = (): DOMRect => rect;
+        card.getClientRects = (): DOMRectList => createRectList(rect);
+      });
+
+      document.elementsFromPoint = (x: number, y: number): Element[] => {
+        const hitCards = cards.filter((card) => {
+          const rect = card.getBoundingClientRect();
+          return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+        });
+
+        return hitCards.length > 0 ? [hitCards[hitCards.length - 1] as Element] : [];
+      };
+
+      const hintableCardIds = getHintableElements("current-tab")
+        .map((element) => element.id)
+        .filter((id) => id.startsWith("card-"));
+
+      expect(hintableCardIds).toEqual(["card-2"]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });
