@@ -1426,6 +1426,114 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "aligns generic horizontal bar hints to a shared top-left edge",
+    test: () => {
+      const fixture = createDomFixture([
+        "<div id='utility-strip'><button id='utility-filter' type='button' aria-label='Filter'></button><button id='utility-sort' type='button' aria-label='Sort'></button><button id='utility-share' type='button' aria-label='Share'></button><button id='utility-more' type='button' aria-label='More actions' aria-haspopup='menu'></button></div>"
+      ]);
+
+      try {
+        const filter = document.querySelector("#utility-filter");
+        const sort = document.querySelector("#utility-sort");
+        const share = document.querySelector("#utility-share");
+        const more = document.querySelector("#utility-more");
+        const strip = document.querySelector("#utility-strip");
+        expect(filter instanceof HTMLElement).toBe(true);
+        expect(sort instanceof HTMLElement).toBe(true);
+        expect(share instanceof HTMLElement).toBe(true);
+        expect(more instanceof HTMLElement).toBe(true);
+        expect(strip instanceof HTMLElement).toBe(true);
+
+        if (
+          !(filter instanceof HTMLElement) ||
+          !(sort instanceof HTMLElement) ||
+          !(share instanceof HTMLElement) ||
+          !(more instanceof HTMLElement) ||
+          !(strip instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const stripRect = new DOMRect(40, 80, 360, 56);
+        const filterRect = new DOMRect(60, 92, 44, 32);
+        const sortRect = new DOMRect(132, 96, 44, 32);
+        const shareRect = new DOMRect(212, 90, 44, 32);
+        const moreRect = new DOMRect(292, 94, 44, 32);
+
+        strip.getBoundingClientRect = (): DOMRect => stripRect;
+        strip.getClientRects = (): DOMRectList => {
+          const list = [stripRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        for (const [element, rect] of [
+          [filter, filterRect],
+          [sort, sortRect],
+          [share, shareRect],
+          [more, moreRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"] = null,
+          labelIcon: HintMarker["labelIcon"] = null
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const filterHint = makeHint(filter, "fi", 42);
+        const sortHint = makeHint(sort, "st", 42);
+        const shareHint = makeHint(share, "sh", 42, "share");
+        const moreHint = makeHint(more, "mr", 50, null, "more");
+
+        updateMarkerPositions(
+          [filterHint, sortHint, shareHint, moreHint],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(filterHint.marker.style.left).toBe("62px");
+        expect(sortHint.marker.style.left).toBe("134px");
+        expect(shareHint.marker.style.left).toBe("214px");
+        expect(moreHint.marker.style.left).toBe("294px");
+        expect(filterHint.marker.style.top).toBe("92px");
+        expect(sortHint.marker.style.top).toBe("92px");
+        expect(shareHint.marker.style.top).toBe("92px");
+        expect(moreHint.marker.style.top).toBe("92px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "aligns shorts player controls to the top left of each control",
     test: () => {
       const fixture = createDomFixture([

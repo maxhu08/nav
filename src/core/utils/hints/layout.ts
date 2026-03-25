@@ -58,6 +58,12 @@ const TOP_LEFT_ALIGNED_CONTROL_CONTAINER_SELECTOR = [
   "[class*='shorts-player-controls' i]",
   "[role='tablist']"
 ].join(", ");
+const COMPOSITE_ROW_SELECTOR = [
+  "a[href]",
+  "[role='link']",
+  "[data-sidebar-item]",
+  "[tabindex]:not([tabindex='-1']):not([role='group'])"
+].join(", ");
 
 const getResponseActionGroup = (element: HTMLElement): HTMLElement | null => {
   return element.closest(RESPONSE_ACTION_GROUP_SELECTOR);
@@ -91,6 +97,38 @@ const getTopLeftAlignedContainer = (element: HTMLElement): HTMLElement | null =>
   }
 
   return bestMatch;
+};
+
+const getHorizontalBarContainerCandidates = (element: HTMLElement): HTMLElement[] => {
+  const compositeRow = element.parentElement?.closest(COMPOSITE_ROW_SELECTOR);
+  if (compositeRow instanceof HTMLElement && compositeRow !== element) {
+    return [];
+  }
+
+  const candidates: HTMLElement[] = [];
+  let current = element.parentElement;
+
+  while (current && current !== document.body) {
+    if (
+      !current.matches(NAVBAR_CONTAINER_SELECTOR) &&
+      !current.matches(TOP_LEFT_ALIGNED_CONTROL_CONTAINER_SELECTOR) &&
+      !current.matches(RESPONSE_ACTION_GROUP_SELECTOR)
+    ) {
+      const rect = getMarkerRect(current);
+      if (
+        rect &&
+        rect.height >= 24 &&
+        rect.height <= 96 &&
+        rect.width >= Math.max(180, rect.height * 1.75)
+      ) {
+        candidates.push(current);
+      }
+    }
+
+    current = current.parentElement;
+  }
+
+  return candidates;
 };
 
 const doRectsShareNavbarRow = (left: DOMRect, right: DOMRect): boolean => {
@@ -443,6 +481,136 @@ const placeTopLeftAlignedGroupMarkers = (
   return processed;
 };
 
+const placeHorizontalBarMarkers = (
+  hints: HintMarker[],
+  mode: LinkMode,
+  highlightThumbnails: boolean,
+  markerVariantStyleAttribute: string,
+  collisionGrid?: CollisionGrid
+): Set<HintMarker> => {
+  const processed = new Set<HintMarker>();
+  const hintsByContainer = new Map<HTMLElement, HintMarker[]>();
+  const containerDepth = new Map<HTMLElement, number>();
+
+  for (const hint of hints) {
+    const candidates = getHorizontalBarContainerCandidates(hint.element);
+    for (let index = 0; index < candidates.length; index += 1) {
+      const container = candidates[index];
+      const groupHints = hintsByContainer.get(container);
+      if (groupHints) {
+        groupHints.push(hint);
+      } else {
+        hintsByContainer.set(container, [hint]);
+        containerDepth.set(container, index);
+      }
+    }
+  }
+
+  const eligibleContainers = Array.from(hintsByContainer.entries())
+    .filter(([, groupHints]) => groupHints.length >= 2)
+    .sort(
+      (left, right) => (containerDepth.get(left[0]) ?? 0) - (containerDepth.get(right[0]) ?? 0)
+    );
+
+  for (const [, groupHints] of eligibleContainers) {
+    const availableHints = groupHints.filter((hint) => !processed.has(hint));
+    if (availableHints.length < 2) {
+      continue;
+    }
+
+    const placements = availableHints
+      .map((hint) => {
+        const placement = prepareVisibleMarker(
+          hint,
+          mode,
+          highlightThumbnails,
+          markerVariantStyleAttribute
+        );
+        if (!placement) {
+          return null;
+        }
+
+        const targetRect = getMarkerRect(hint.element);
+        if (!targetRect || !isRectWithinViewport(targetRect)) {
+          return null;
+        }
+
+        return {
+          hint,
+          markerHeight: placement.markerHeight,
+          markerWidth: placement.markerWidth,
+          targetRect
+        };
+      })
+      .filter(
+        (
+          value
+        ): value is {
+          hint: HintMarker;
+          markerHeight: number;
+          markerWidth: number;
+          targetRect: DOMRect;
+        } => value !== null
+      )
+      .sort((left, right) => {
+        if (left.targetRect.top !== right.targetRect.top) {
+          return left.targetRect.top - right.targetRect.top;
+        }
+
+        return left.targetRect.left - right.targetRect.left;
+      });
+
+    if (placements.length < 2) {
+      continue;
+    }
+
+    const placementRows: Array<typeof placements> = [];
+    for (const placement of placements) {
+      const lastRow = placementRows.at(-1);
+      if (!lastRow || !doRectsShareNavbarRow(lastRow[0].targetRect, placement.targetRect)) {
+        placementRows.push([placement]);
+        continue;
+      }
+
+      lastRow.push(placement);
+    }
+
+    for (const rowPlacements of placementRows) {
+      if (rowPlacements.length < 2) {
+        continue;
+      }
+
+      const alignedTop = Math.max(
+        MARKER_VIEWPORT_PADDING,
+        Math.round(Math.min(...rowPlacements.map(({ targetRect }) => targetRect.top)) + 2)
+      );
+
+      rowPlacements.sort((left, right) => left.targetRect.left - right.targetRect.left);
+
+      for (const { hint, markerHeight, markerWidth, targetRect } of rowPlacements) {
+        let left = Math.round(targetRect.left + 2);
+        const top = alignedTop;
+
+        if (collisionGrid) {
+          let nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
+          while (hasCollision(collisionGrid, nextRect) && left < Math.round(targetRect.right)) {
+            left += 1;
+            nextRect = createPlacedMarkerRect(left, top, markerWidth, markerHeight);
+          }
+
+          addToCollisionGrid(collisionGrid, nextRect);
+        }
+
+        hint.marker.style.left = `${left}px`;
+        hint.marker.style.top = `${top}px`;
+        processed.add(hint);
+      }
+    }
+  }
+
+  return processed;
+};
+
 const prepareVisibleMarker = (
   hint: HintMarker,
   mode: LinkMode,
@@ -494,9 +662,23 @@ export const primeMarkerPositions = (
     highlightThumbnails,
     markerVariantStyleAttribute
   );
+  const horizontalBarProcessed = placeHorizontalBarMarkers(
+    markers.filter(
+      (hint) =>
+        !processed.has(hint) && !navbarProcessed.has(hint) && !topLeftAlignedProcessed.has(hint)
+    ),
+    mode,
+    highlightThumbnails,
+    markerVariantStyleAttribute
+  );
 
   for (const hint of markers) {
-    if (processed.has(hint) || navbarProcessed.has(hint) || topLeftAlignedProcessed.has(hint)) {
+    if (
+      processed.has(hint) ||
+      navbarProcessed.has(hint) ||
+      topLeftAlignedProcessed.has(hint) ||
+      horizontalBarProcessed.has(hint)
+    ) {
       continue;
     }
 
@@ -556,9 +738,24 @@ export const updateMarkerPositions = (
     markerVariantStyleAttribute,
     collisionGrid
   );
+  const horizontalBarProcessed = placeHorizontalBarMarkers(
+    markersByPlacementPriority.filter(
+      (hint) =>
+        !processed.has(hint) && !navbarProcessed.has(hint) && !topLeftAlignedProcessed.has(hint)
+    ),
+    mode,
+    highlightThumbnails,
+    markerVariantStyleAttribute,
+    collisionGrid
+  );
 
   for (const hint of markersByPlacementPriority) {
-    if (processed.has(hint) || navbarProcessed.has(hint) || topLeftAlignedProcessed.has(hint)) {
+    if (
+      processed.has(hint) ||
+      navbarProcessed.has(hint) ||
+      topLeftAlignedProcessed.has(hint) ||
+      horizontalBarProcessed.has(hint)
+    ) {
       continue;
     }
 
