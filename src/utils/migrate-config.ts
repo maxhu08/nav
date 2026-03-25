@@ -119,8 +119,6 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
 
   // if config before v1.0.6
   addDirectiveIfMissing(migratedConfig, "input", "kj kjf kjfd");
-
-  // if config before v1.0.6
   addDirectiveIfMissing(migratedConfig, "attach", "up");
 
   // if config before v1.0.8
@@ -128,8 +126,6 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
 
   // if config before v1.0.9
   addDirectiveIfMissing(migratedConfig, "login", "si");
-
-  // if config before v1.0.9
   addDirectiveIfMissing(migratedConfig, "download", "dl");
 
   // if config before v1.1.0
@@ -145,24 +141,15 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     "yo",
     "duplicate-current-tab-origin"
   );
-
   if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
     addHotkeyMappingIfMissing(migratedConfig, "yo", "duplicate-current-tab-origin");
   }
-
-  // if config before v1.1.1
   addDirectiveIfMissing(migratedConfig, "microphone", "mic");
 
   // if config before v1.1.2
   addDirectiveIfMissing(migratedConfig, "delete", "dd");
-
-  // if config before v1.1.2
   addDirectiveIfMissing(migratedConfig, "save", "sv");
-
-  // if config before v1.1.2
   addDirectiveIfMissing(migratedConfig, "copy", "cp");
-
-  // if config before v1.1.2
   addDirectiveIfMissing(migratedConfig, "hide", "hi");
 
   // if config before v1.1.3
