@@ -1,9 +1,9 @@
-# Changes in 1.1.2
+# Changes in 1.1.3
 
 in this release:
 
-- fix extension not working on firefox
-- improve hint rendering behavior
-- add hide, save, copy, delete directives
+- add notification directive
+- improve hint placement behavior
+- improve hint recognition
 - performance improvements
 - bug fixes
