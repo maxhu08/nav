@@ -1,6 +1,8 @@
 import {
   CANCEL_ATTRIBUTE_PATTERNS,
   CANCEL_SHORT_TEXT_PATTERNS,
+  CHAT_ATTRIBUTE_PATTERNS,
+  CHAT_SHORT_TEXT_PATTERNS,
   COPY_ATTRIBUTE_PATTERNS,
   COPY_SHORT_TEXT_PATTERNS,
   DISLIKE_ATTRIBUTE_PATTERNS,
@@ -8,6 +10,7 @@ import {
   DISLIKE_STABLE_CONTROL_PATTERNS,
   DOWNLOAD_ATTRIBUTE_PATTERNS,
   DOWNLOAD_SHORT_TEXT_PATTERNS,
+  ERASE_ATTRIBUTE_PATTERNS,
   HIDE_ATTRIBUTE_PATTERNS,
   HIDE_CLOSE_CONTROL_PATTERNS,
   HIDE_CONTAINER_PATTERNS,
@@ -79,6 +82,54 @@ const NOTIFICATION_PATH_PATTERNS = [
   /^\/updates(?:\/|$)/i,
   /^\/alerts?(?:\/|$)/i
 ];
+const CHAT_CONTAINER_SELECTOR = [
+  "[aria-label*='chat' i]",
+  "[aria-label*='support' i]",
+  "[class*='chat' i]",
+  "[id*='chat' i]",
+  "[data-testid*='chat' i]",
+  "[data-test-id*='chat' i]",
+  "[data-testid*='bot' i]",
+  "[data-test-id*='bot' i]"
+].join(", ");
+const CLEARABLE_INPUT_CONTEXT_SELECTOR = [
+  "search",
+  "[role='search']",
+  "form",
+  "[class*='search' i]",
+  "[class*='input' i]",
+  "[class*='field' i]",
+  "[class*='composer' i]"
+].join(", ");
+
+const hasNearbySelectableField = (
+  element: HTMLElement,
+  features?: ElementFeatureVector
+): boolean => {
+  const context = getCachedClosest(element, CLEARABLE_INPUT_CONTEXT_SELECTOR, features);
+  const roots = [context, element.parentElement, element.closest("label")].filter(
+    (candidate): candidate is HTMLElement => candidate instanceof HTMLElement
+  );
+
+  return roots.some((root) =>
+    Array.from(
+      root.querySelectorAll<HTMLElement>("input, textarea, [contenteditable='true']")
+    ).some((candidate) => candidate !== element && isSelectableElement(candidate))
+  );
+};
+
+const getAriaLabelledByText = (element: HTMLElement): string => {
+  const ariaLabelledBy = element.getAttribute("aria-labelledby")?.trim() ?? "";
+  if (!ariaLabelledBy) {
+    return "";
+  }
+
+  return ariaLabelledBy
+    .split(/\s+/)
+    .map((id) => document.getElementById(id)?.textContent?.replace(/\s+/g, " ").trim() ?? "")
+    .filter((value) => value.length > 0)
+    .join(" ");
+};
 
 const hasShortMatchingActionSemanticAttribute = (
   element: HTMLElement,
@@ -733,6 +784,135 @@ const getNotificationCandidateScore = (
   return boostedScore;
 };
 
+const getChatCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  const baseScore = getActionDirectiveCandidateScore(
+    element,
+    CHAT_ATTRIBUTE_PATTERNS,
+    {
+      shortTextPatterns: CHAT_SHORT_TEXT_PATTERNS
+    },
+    rectOverride,
+    features
+  );
+  const labelledByText = getAriaLabelledByText(element);
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    [
+      "aria-label",
+      "aria-description",
+      "title",
+      "data-testid",
+      "data-test-id",
+      "class",
+      "id",
+      "href"
+    ],
+    [getSemanticControlText(element, features), labelledByText],
+    features
+  );
+
+  const href =
+    element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement
+      ? (element.getAttribute("href") ?? "")
+      : "";
+  const hasCopilotHref = /(?:^|\/)copilot(?:\/|$)/i.test(href);
+  const hasStrongAttributeMatch = textMatchesAnyPattern(attributeText, CHAT_ATTRIBUTE_PATTERNS);
+
+  if (baseScore === Number.NEGATIVE_INFINITY && !hasStrongAttributeMatch && !hasCopilotHref) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let boostedScore = baseScore === Number.NEGATIVE_INFINITY ? 220 : baseScore;
+
+  if (/\b(bot|assistant|support|widget|launcher)\b/i.test(attributeText)) {
+    boostedScore += 140;
+  }
+
+  if (/\bcopilot\b/i.test(attributeText)) {
+    boostedScore += 180;
+  }
+
+  if (hasCopilotHref) {
+    boostedScore += 220;
+  }
+
+  if (element instanceof HTMLAnchorElement || element instanceof HTMLButtonElement) {
+    boostedScore += 40;
+  }
+
+  if (getCachedClosest(element, CHAT_CONTAINER_SELECTOR, features)) {
+    boostedScore += 100;
+  }
+
+  return boostedScore;
+};
+
+const getEraseCandidateScore = (
+  element: HTMLElement,
+  rectOverride?: DOMRect | null,
+  features?: ElementFeatureVector
+): number => {
+  if (!isActivatableElement(element)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const rect = rectOverride === undefined ? getMarkerRect(element) : rectOverride;
+  if (!rect) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const attributeText = getCachedJoinedAttributeText(
+    element,
+    [
+      "type",
+      "name",
+      "id",
+      "aria-label",
+      "aria-description",
+      "title",
+      "data-testid",
+      "data-test-id",
+      "class",
+      "role",
+      "value"
+    ],
+    [getSemanticControlText(element, features)],
+    features
+  );
+  const isResetInput =
+    element instanceof HTMLInputElement && element.type.toLowerCase() === "reset";
+
+  if (!isResetInput && !textMatchesAnyPattern(attributeText, ERASE_ATTRIBUTE_PATTERNS)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = 220;
+
+  if (isResetInput) {
+    score += 180;
+  }
+
+  if (isButtonLikeControl(element)) {
+    score += 60;
+  }
+
+  if (hasNearbySelectableField(element, features)) {
+    score += 180;
+  }
+
+  if (getCachedClosest(element, CLEARABLE_INPUT_CONTEXT_SELECTOR, features)) {
+    score += 60;
+  }
+
+  score += Math.min(120, rect.height) / 10;
+  score += Math.min(180, rect.width) / 14;
+  return score;
+};
+
 const getSaveCandidateScore = (
   element: HTMLElement,
   rectOverride?: DOMRect | null,
@@ -851,6 +1031,12 @@ export const getPreferredMicrophoneElementIndex = (elements: HTMLElement[]): num
 export const getPreferredNotificationElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getNotificationCandidateScore(element));
 
+export const getPreferredChatElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 220, (element) => getChatCandidateScore(element));
+
+export const getPreferredEraseElementIndex = (elements: HTMLElement[]): number | null =>
+  getBestScoringElementIndex(elements, 320, (element) => getEraseCandidateScore(element));
+
 export const getPreferredSaveElementIndex = (elements: HTMLElement[]): number | null =>
   getBestScoringElementIndex(elements, 220, (element) => getSaveCandidateScore(element));
 
@@ -872,9 +1058,11 @@ export const getPreferredDislikeElementIndex = (elements: HTMLElement[]): number
 
 export {
   getCancelCandidateScore,
+  getChatCandidateScore,
   getCopyCandidateScore,
   getPreferredActionDirectiveElementIndex,
   getDislikeCandidateScore,
+  getEraseCandidateScore,
   getHideCandidateScore,
   getLikeCandidateScore,
   getMicrophoneCandidateScore,

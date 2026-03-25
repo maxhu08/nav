@@ -1,6 +1,8 @@
 export const RESERVED_HINT_DIRECTIVES = [
   "input",
+  "erase",
   "attach",
+  "chat",
   "share",
   "download",
   "login",

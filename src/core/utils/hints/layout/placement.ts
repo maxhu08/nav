@@ -123,7 +123,14 @@ export const getMarkerPlacementCandidates = (
       pushCandidate(right, centerTop);
       pushCandidate(right, top);
     } else {
-      if (isCenteredMenuLikeTarget) {
+      if (directive === "erase") {
+        pushCandidate(right, centerTop);
+        pushCandidate(right, top);
+        pushCandidate(right, bottom);
+        pushCandidate(centerLeft, centerTop);
+        pushCandidate(centerLeft, top);
+        pushCandidate(left, centerTop);
+      } else if (isCenteredMenuLikeTarget) {
         pushCandidate(centerLeft, centerTop);
         pushCandidate(centerLeft, top);
         pushCandidate(right, centerTop);

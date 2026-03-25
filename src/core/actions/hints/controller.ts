@@ -10,6 +10,7 @@ import {
   activateSiteKeybindIgnore,
   deactivateSiteKeybindIgnore
 } from "~/src/core/utils/ignore-site-keybinds";
+import { isSelectableElement } from "~/src/core/utils/is-editable-target";
 import {
   restoreRevealedHintControls,
   revealHoverHintControls
@@ -310,6 +311,38 @@ export const createHintsController = (): HintsController => {
     });
   };
 
+  const clearSelectableHintTarget = (element: HTMLElement): boolean => {
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      const prototype =
+        element instanceof HTMLInputElement
+          ? HTMLInputElement.prototype
+          : HTMLTextAreaElement.prototype;
+      const valueSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+
+      if (valueSetter) {
+        valueSetter.call(element, "");
+      } else {
+        element.value = "";
+      }
+
+      dispatchFocusIndicator(element);
+      element.focus({ preventScroll: true });
+      element.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    }
+
+    if (element.isContentEditable) {
+      element.textContent = "";
+      dispatchFocusIndicator(element);
+      element.focus({ preventScroll: true });
+      element.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+      return true;
+    }
+
+    return false;
+  };
+
   const activateHint = (hint: HintState["markers"][number]): void => {
     const mode = hintState.mode;
     const onActivate = hintState.onActivate;
@@ -323,6 +356,11 @@ export const createHintsController = (): HintsController => {
     if (mode === "copy-link" || mode === "copy-image") {
       dispatchFocusIndicator(hint.element);
       onActivate?.(hint.element);
+      return;
+    }
+
+    if (hint.directive === "erase" && isSelectableElement(hint.element)) {
+      clearSelectableHintTarget(hint.element);
       return;
     }
 

@@ -215,6 +215,77 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
     }
   },
   {
+    desc: "adds the erase directive for configs before v1.1.4",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hints: {
+          ...structuredClone(defaultConfig).hints,
+          reservedLabels: `@input kj kjf kjfd
+@attach up
+@share sh
+@download dl
+@login si
+@microphone mic
+@notification nf
+@delete dd
+@save sv
+@copy cp
+@hide hi
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.reservedLabels).toContain("@erase er");
+      expect(migratedConfig.hints.reservedLabels).toContain("@notification nf");
+    }
+  },
+  {
+    desc: "adds the chat directive for configs before v1.1.4",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hints: {
+          ...structuredClone(defaultConfig).hints,
+          reservedLabels: `@input kj kjf kjfd
+@erase er
+@attach up
+@share sh
+@download dl
+@login si
+@microphone mic
+@notification nf
+@delete dd
+@save sv
+@copy cp
+@hide hi
+@home sd sdf sdfj
+@sidebar we wer wert
+@next kl
+@prev lk
+@cancel no
+@submit ok
+@like iu
+@dislike oi`
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.reservedLabels).toContain("@chat ch");
+      expect(migratedConfig.hints.reservedLabels).toContain("@erase er");
+    }
+  },
+  {
     desc: "adds the copy directive for configs before v1.1.2",
     test: () => {
       const oldConfig = {
@@ -454,6 +525,28 @@ c toggle-captions # requires watch mode`
       const hideDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@hide /gm) ?? [];
 
       expect(hideDirectiveMatches).toHaveLength(1);
+    }
+  },
+  {
+    desc: "does not duplicate the erase directive when it already exists",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+
+      const migratedConfig = migrateOldConfig(config, defaultConfig);
+      const eraseDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@erase /gm) ?? [];
+
+      expect(eraseDirectiveMatches).toHaveLength(1);
+    }
+  },
+  {
+    desc: "does not duplicate the chat directive when it already exists",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+
+      const migratedConfig = migrateOldConfig(config, defaultConfig);
+      const chatDirectiveMatches = migratedConfig.hints.reservedLabels.match(/^@chat /gm) ?? [];
+
+      expect(chatDirectiveMatches).toHaveLength(1);
     }
   },
   {

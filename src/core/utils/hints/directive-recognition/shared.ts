@@ -39,6 +39,43 @@ export const PRIMARY_INPUT_ATTRIBUTE_PATTERNS = [
   /\bsearch\b.*\b(repositories|issues|pull requests|docs|code|projects)\b/i,
   /\btype\b.*\bto search\b/i
 ];
+export const ERASE_ATTRIBUTE_PATTERNS = [
+  /\berase\b/i,
+  /\bclear\b/i,
+  /\breset\b/i,
+  /\bclear[-_ ]?(button|input|field|search|text)\b/i,
+  /\breset[-_ ]?(button|input|field|search|text)\b/i,
+  /\bsearch[-_ ]?(clear|cancel|reset)\b/i,
+  /\bremove\b.*\b(text|query|search|input)\b/i,
+  /\bclose\b.*\b(search|input|query)\b/i
+];
+export const CHAT_ATTRIBUTE_PATTERNS = [
+  /\bchat\b/i,
+  /\blive[-_ ]?chat\b/i,
+  /\bcopilot\b/i,
+  /\bopen\b.*\bchat\b/i,
+  /\bchat\b.*\bcopilot\b/i,
+  /\bcopilot\b.*\bchat\b/i,
+  /\bchat[-_ ]?(button|launcher|widget|window|panel)\b/i,
+  /\bbot[-_ ]?launcher\b/i,
+  /\bassistant\b/i,
+  /\bai[-_ ]?chat\b/i,
+  /\bcustomer\b.*\bsupport\b/i,
+  /\bsupport\b.*\bchat\b/i,
+  /\bhelp\b.*\bchat\b/i
+];
+export const CHAT_SHORT_TEXT_PATTERNS = [
+  /^chat$/i,
+  /^open chat$/i,
+  /^live chat$/i,
+  /^copilot$/i,
+  /^open copilot/i,
+  /^chat with copilot$/i,
+  /^support$/i,
+  /^support chat$/i,
+  /^assistant$/i,
+  /^help$/i
+];
 export const ATTACH_ATTRIBUTE_PATTERNS = [
   /\battach\b/i,
   /\bupload\b/i,

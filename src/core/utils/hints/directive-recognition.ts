@@ -22,10 +22,14 @@ import {
 import {
   getActionDirectiveCandidateScore,
   getCancelCandidateScore,
+  getChatCandidateScore,
   getCopyCandidateScore,
   getDislikeCandidateScore,
   getLikeCandidateScore,
+  getEraseCandidateScore,
   getPreferredCopyElementIndex,
+  getPreferredChatElementIndex,
+  getPreferredEraseElementIndex,
   getHideCandidateScore,
   getNextCandidateScore,
   getPreferredCancelElementIndex,
@@ -53,7 +57,6 @@ import {
   getAttachCandidateScore,
   getAttachEquivalentIndexes,
   getCombinedInputCandidateScore,
-  getInputCandidateScore,
   getPreferredAttachElementIndex,
   getPreferredInputElementIndex,
   getPreferredSearchElementIndex,
@@ -92,9 +95,22 @@ const DIRECTIVE_DEFINITIONS: DirectiveDefinition[] = [
     getScore: (element, rect, features) => getCombinedInputCandidateScore(element, rect, features)
   },
   {
+    directive: "erase",
+    threshold: 180,
+    getScore: (element, rect, features) =>
+      features.isSelectable
+        ? getCombinedInputCandidateScore(element, rect, features) - 40
+        : getEraseCandidateScore(element, rect, features)
+  },
+  {
     directive: "attach",
     threshold: 220,
     getScore: (element, rect, features) => getAttachCandidateScore(element, rect, features)
+  },
+  {
+    directive: "chat",
+    threshold: 220,
+    getScore: (element, rect, features) => getChatCandidateScore(element, rect, features)
   },
   createActionDirectiveDefinition("share", SHARE_ATTRIBUTE_PATTERNS, 220, {
     shortTextPatterns: SHARE_SHORT_TEXT_PATTERNS
@@ -260,9 +276,11 @@ export {
   getCombinedInputCandidateScore,
   getPreferredAttachElementIndex,
   getPreferredCancelElementIndex,
+  getPreferredChatElementIndex,
   getPreferredCopyElementIndex,
   getPreferredDislikeElementIndex,
   getPreferredDownloadElementIndex,
+  getPreferredEraseElementIndex,
   getPreferredHideElementIndex,
   getPreferredHomeElementIndex,
   getPreferredInputElementIndex,

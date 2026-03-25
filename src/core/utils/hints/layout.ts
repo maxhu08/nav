@@ -244,7 +244,7 @@ const placeNavbarMarkers = (
   const hintsByNavbar = new Map<HTMLElement, HintMarker[]>();
 
   for (const hint of hints) {
-    if (hint.directive === "input") {
+    if (hint.directive === "input" || hint.directive === "erase") {
       continue;
     }
 

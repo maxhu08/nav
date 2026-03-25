@@ -155,5 +155,9 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   // if config before v1.1.3
   addDirectiveIfMissing(migratedConfig, "notification", "nf");
 
+  // if config before v1.1.4
+  addDirectiveIfMissing(migratedConfig, "erase", "er");
+  addDirectiveIfMissing(migratedConfig, "chat", "ch");
+
   return migratedConfig;
 };

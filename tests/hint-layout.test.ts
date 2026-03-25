@@ -1032,6 +1032,79 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "places erase directives on the trailing edge of the same input as the input directive",
+    test: () => {
+      const fixture = createDomFixture(
+        "<input id='search-box' type='search' aria-label='Search' />"
+      );
+
+      try {
+        const searchBox = document.querySelector("#search-box");
+        expect(searchBox instanceof HTMLElement).toBe(true);
+
+        if (!(searchBox instanceof HTMLElement)) {
+          return;
+        }
+
+        const inputRect = new DOMRect(120, 140, 420, 44);
+        searchBox.getBoundingClientRect = (): DOMRect => inputRect;
+        searchBox.getClientRects = (): DOMRectList => {
+          const list = [inputRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const inputMarker = document.createElement("span");
+        inputMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(58, 20);
+        document.body.append(inputMarker);
+
+        const eraseMarker = document.createElement("span");
+        eraseMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(58, 20);
+        document.body.append(eraseMarker);
+
+        const hints: HintMarker[] = [
+          {
+            element: searchBox,
+            marker: inputMarker,
+            thumbnailIcon: null,
+            label: "kj",
+            directive: "input",
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          },
+          {
+            element: searchBox,
+            marker: eraseMarker,
+            thumbnailIcon: null,
+            label: "er",
+            directive: "erase",
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          }
+        ];
+
+        updateMarkerPositions(hints, "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(inputMarker.style.left).toBe("122px");
+        expect(inputMarker.style.top).toBe("152px");
+        expect(eraseMarker.style.left).toBe("480px");
+        expect(eraseMarker.style.top).toBe("152px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "aligns navbar hints to a shared top edge while keeping input inside the field",
     test: () => {
       const fixture = createDomFixture([

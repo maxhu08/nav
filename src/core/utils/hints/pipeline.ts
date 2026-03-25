@@ -11,7 +11,10 @@ import {
   textMatchesAnyPattern
 } from "~/src/core/utils/hints/directive-recognition/shared";
 import type { LinkMode } from "~/src/core/utils/hints/model";
-import { buildHintLabels } from "~/src/core/utils/hints/labels";
+import {
+  buildHintLabels,
+  doesLabelConflictWithReservedLabels
+} from "~/src/core/utils/hints/labels";
 import { assignHintSemantics } from "~/src/core/utils/hints/semantics";
 import type {
   HintLabelIcon,
@@ -227,12 +230,37 @@ const getSuppressedHintIndexes = (
   return getSuppressedAttachRelatedHintIndexes(elements, attachIndex, reservedDirectivesByIndex);
 };
 
+const getPreferredReservedDirectiveLabel = (
+  reservedHintLabels: ReservedHintLabels,
+  directive: ReservedHintDirective,
+  claimedLabels: string[]
+): string | null => {
+  const label = reservedHintLabels[directive].find(
+    (candidate) =>
+      /^[a-z]+$/.test(candidate) && !doesLabelConflictWithReservedLabels(candidate, claimedLabels)
+  );
+
+  return label ?? null;
+};
+
 export const assignHintLabels = (
   elements: HTMLElement[],
   reservedHintLabels: ReservedHintLabels,
   labelSettings: HintLabelPlanSettings
 ): HintPipelineTarget[] => {
   const preferredDirectiveIndexes = getPreferredDirectiveIndexes(elements);
+  const duplicateDirectiveTargets: Array<{ index: number; directive: ReservedHintDirective }> = [];
+
+  if (
+    typeof preferredDirectiveIndexes.input === "number" &&
+    preferredDirectiveIndexes.erase === preferredDirectiveIndexes.input
+  ) {
+    duplicateDirectiveTargets.push({
+      index: preferredDirectiveIndexes.input,
+      directive: "erase"
+    });
+  }
+
   const directiveCandidateIndexes = new Set<number>(
     Object.values(preferredDirectiveIndexes).filter(
       (index): index is number => typeof index === "number"
@@ -243,8 +271,17 @@ export const assignHintLabels = (
     reservedHintLabels
   );
   const suppressedIndexes = getSuppressedHintIndexes(elements, reservedDirectivesByIndex);
-  const visibleCount = elements.length - suppressedIndexes.size;
-  const { labels } = buildHintLabels(visibleCount, reservedLabels, labelSettings);
+  const duplicateReservedLabels = duplicateDirectiveTargets
+    .map(({ directive }) =>
+      getPreferredReservedDirectiveLabel(reservedHintLabels, directive, reservedLabels)
+    )
+    .filter((label): label is string => label !== null);
+  const visibleCount = elements.length - suppressedIndexes.size + duplicateDirectiveTargets.length;
+  const { labels } = buildHintLabels(
+    visibleCount,
+    [...reservedLabels, ...duplicateReservedLabels],
+    labelSettings
+  );
 
   const targets: HintPipelineTarget[] = [];
   let labelIndex = 0;
@@ -269,6 +306,35 @@ export const assignHintLabels = (
       labelIcon: directiveCandidateIndexes.has(index) ? null : getHintLabelIcon(element, directive)
     });
   });
+
+  for (const duplicateTarget of duplicateDirectiveTargets) {
+    if (suppressedIndexes.has(duplicateTarget.index)) {
+      continue;
+    }
+
+    const element = elements[duplicateTarget.index];
+    if (!element) {
+      continue;
+    }
+
+    const label =
+      getPreferredReservedDirectiveLabel(
+        reservedHintLabels,
+        duplicateTarget.directive,
+        reservedLabels
+      ) ?? labels[labelIndex++];
+
+    if (!label) {
+      continue;
+    }
+
+    targets.push({
+      element,
+      label,
+      directive: duplicateTarget.directive,
+      labelIcon: null
+    });
+  }
 
   return targets;
 };
