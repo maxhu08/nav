@@ -1537,6 +1537,162 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "aligns long watch metadata control bars to the top left of each element",
+    test: () => {
+      const fixture = createDomFixture([
+        "<div id='top-row' class='generic-watch-metadata'><div id='owner-group'><a id='owner-link' href='/creator'>Creator</a><button id='join-button' type='button' aria-label='Join creator'>Join</button><button id='subscribed-button' type='button' aria-label='Subscribed'></button><button id='notify-button' type='button' aria-label='Notification settings'></button></div><div id='actions'><div id='actions-inner'><button id='like-button' type='button' aria-label='Like'></button><button id='dislike-button' type='button' aria-label='Dislike'></button><button id='share-button' type='button' aria-label='Share'></button><button id='ask-button' type='button' aria-label='Ask'></button><button id='save-button' type='button' aria-label='Save to list'></button><button id='more-button' type='button' aria-label='More actions'></button></div></div></div>"
+      ]);
+
+      try {
+        const ownerLink = document.querySelector("#owner-link");
+        const joinButton = document.querySelector("#join-button");
+        const subscribedButton = document.querySelector("#subscribed-button");
+        const notifyButton = document.querySelector("#notify-button");
+        const likeButton = document.querySelector("#like-button");
+        const dislikeButton = document.querySelector("#dislike-button");
+        const shareButton = document.querySelector("#share-button");
+        const askButton = document.querySelector("#ask-button");
+        const saveButton = document.querySelector("#save-button");
+        const moreButton = document.querySelector("#more-button");
+        const topRow = document.querySelector("#top-row");
+        expect(ownerLink instanceof HTMLElement).toBe(true);
+        expect(joinButton instanceof HTMLElement).toBe(true);
+        expect(subscribedButton instanceof HTMLElement).toBe(true);
+        expect(notifyButton instanceof HTMLElement).toBe(true);
+        expect(likeButton instanceof HTMLElement).toBe(true);
+        expect(dislikeButton instanceof HTMLElement).toBe(true);
+        expect(shareButton instanceof HTMLElement).toBe(true);
+        expect(askButton instanceof HTMLElement).toBe(true);
+        expect(saveButton instanceof HTMLElement).toBe(true);
+        expect(moreButton instanceof HTMLElement).toBe(true);
+        expect(topRow instanceof HTMLElement).toBe(true);
+
+        if (
+          !(ownerLink instanceof HTMLElement) ||
+          !(joinButton instanceof HTMLElement) ||
+          !(subscribedButton instanceof HTMLElement) ||
+          !(notifyButton instanceof HTMLElement) ||
+          !(likeButton instanceof HTMLElement) ||
+          !(dislikeButton instanceof HTMLElement) ||
+          !(shareButton instanceof HTMLElement) ||
+          !(askButton instanceof HTMLElement) ||
+          !(saveButton instanceof HTMLElement) ||
+          !(moreButton instanceof HTMLElement) ||
+          !(topRow instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const topRowRect = new DOMRect(0, 0, 1024, 72);
+        topRow.getBoundingClientRect = (): DOMRect => topRowRect;
+        topRow.getClientRects = (): DOMRectList => {
+          const list = [topRowRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        for (const [element, rect] of [
+          [ownerLink, new DOMRect(20, 18, 140, 40)],
+          [joinButton, new DOMRect(220, 20, 68, 36)],
+          [subscribedButton, new DOMRect(304, 20, 120, 36)],
+          [notifyButton, new DOMRect(436, 20, 52, 36)],
+          [likeButton, new DOMRect(720, 20, 76, 36)],
+          [dislikeButton, new DOMRect(800, 20, 44, 36)],
+          [shareButton, new DOMRect(760, 20, 92, 36)],
+          [askButton, new DOMRect(860, 20, 76, 36)],
+          [saveButton, new DOMRect(930, 20, 68, 36)],
+          [moreButton, new DOMRect(980, 20, 40, 36)]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const makeHint = (
+          element: HTMLElement,
+          label: string,
+          width: number,
+          directive: HintMarker["directive"] = null,
+          labelIcon: HintMarker["labelIcon"] = null
+        ): HintMarker => {
+          const marker = document.createElement("span");
+          marker.getBoundingClientRect = (): DOMRect => createMarkerRect(width, 20);
+          document.body.append(marker);
+
+          return {
+            element,
+            marker,
+            thumbnailIcon: null,
+            label,
+            directive,
+            labelIcon,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          };
+        };
+
+        const ownerHint = makeHint(ownerLink, "ow", 42);
+        const joinHint = makeHint(joinButton, "jn", 42);
+        const subscribedHint = makeHint(subscribedButton, "sb", 42);
+        const notifyHint = makeHint(notifyButton, "nt", 42, "notification");
+        const likeHint = makeHint(likeButton, "lk", 42, "like");
+        const dislikeHint = makeHint(dislikeButton, "dk", 42, "dislike");
+        const shareHint = makeHint(shareButton, "sh", 42, "share");
+        const askHint = makeHint(askButton, "ak", 42);
+        const saveHint = makeHint(saveButton, "sv", 42, "save");
+        const moreHint = makeHint(moreButton, "mr", 50, null, "more");
+
+        updateMarkerPositions(
+          [
+            ownerHint,
+            joinHint,
+            subscribedHint,
+            notifyHint,
+            likeHint,
+            dislikeHint,
+            shareHint,
+            askHint,
+            saveHint,
+            moreHint
+          ],
+          "current-tab",
+          false,
+          "data-nav-hint-marker-variant"
+        );
+
+        expect(ownerHint.marker.style.left).toBe("22px");
+        expect(joinHint.marker.style.left).toBe("222px");
+        expect(subscribedHint.marker.style.left).toBe("306px");
+        expect(notifyHint.marker.style.left).toBe("438px");
+        expect(likeHint.marker.style.left).toBe("722px");
+        expect(dislikeHint.marker.style.left).toBe("810px");
+        expect(shareHint.marker.style.left).toBe("766px");
+        expect(askHint.marker.style.left).toBe("862px");
+        expect(saveHint.marker.style.left).toBe("932px");
+        expect(moreHint.marker.style.left).toBe("982px");
+        expect(ownerHint.marker.style.top).toBe("20px");
+        expect(joinHint.marker.style.top).toBe("20px");
+        expect(subscribedHint.marker.style.top).toBe("20px");
+        expect(notifyHint.marker.style.top).toBe("20px");
+        expect(likeHint.marker.style.top).toBe("20px");
+        expect(dislikeHint.marker.style.top).toBe("20px");
+        expect(shareHint.marker.style.top).toBe("20px");
+        expect(askHint.marker.style.top).toBe("20px");
+        expect(saveHint.marker.style.top).toBe("20px");
+        expect(moreHint.marker.style.top).toBe("20px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "aligns response action markers on one row and shifts copy left for space",
     test: () => {
       const fixture = createDomFixture(

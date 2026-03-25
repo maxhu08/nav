@@ -44,13 +44,19 @@ const NAVBAR_CONTAINER_SELECTOR = [
 ].join(", ");
 const TOP_LEFT_ALIGNED_CONTROL_CONTAINER_SELECTOR = [
   "ytd-shorts-player-controls",
+  "[id='top-row']",
+  "[id='actions']",
+  "[id='actions-inner']",
   "[id='button-bar']",
   "[id*='action-bar' i]",
+  "[class*='control-bar' i]",
   "[class*='action-bar' i]",
+  "[class*='watch-metadata' i]",
   "[class*='reel-action-bar' i]",
   "[id*='player-controls' i]",
   "[class*='player-controls' i]",
-  "[class*='shorts-player-controls' i]"
+  "[class*='shorts-player-controls' i]",
+  "[role='tablist']"
 ].join(", ");
 
 const getResponseActionGroup = (element: HTMLElement): HTMLElement | null => {
