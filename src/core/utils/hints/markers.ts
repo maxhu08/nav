@@ -83,7 +83,7 @@ export const setThumbnailMarkerIconVisibility = (
   hint: Pick<HintMarker, "directive" | "thumbnailIcon">,
   isVisible: boolean
 ): boolean => {
-  if (hint.directive === "attach") {
+  if (hint.directive !== null) {
     isVisible = false;
   }
 
@@ -131,6 +131,8 @@ export const createHintMarker = (
   marker.style.alignItems = "center";
   marker.style.gap = "0.25em";
 
+  const shouldRenderDirectiveIconOnly = directive !== null;
+
   const labelGroup = document.createElement("span");
   labelGroup.className = "nav-hint-marker-label";
   labelGroup.style.display = "inline-flex";
@@ -156,19 +158,19 @@ export const createHintMarker = (
     appendMarkerIcon(marker, LABEL_ICON_PATHS[labelIcon]);
   }
 
-  if (mode === "copy-image") {
+  if (mode === "copy-image" && !shouldRenderDirectiveIconOnly) {
     appendMarkerIcon(marker, FILE_COPY_ICON_PATH);
   }
 
   const thumbnailIcon =
-    mode === "new-tab"
+    shouldRenderDirectiveIconOnly || mode === "new-tab"
       ? null
       : appendMarkerIcon(marker, WATCH_PLAY_ICON_PATH, {
           hidden: true
         });
 
   // Keep the new-tab affordance pinned to the far right.
-  if (mode === "new-tab") {
+  if (mode === "new-tab" && !shouldRenderDirectiveIconOnly) {
     appendMarkerIcon(marker, EXTERNAL_LINK_ICON_PATH);
   }
 

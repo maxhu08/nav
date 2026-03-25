@@ -210,6 +210,67 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "keeps directive markers at default size even on thumbnail targets",
+    test: () => {
+      const fixture = createDomFixture([
+        "<button id='target'><img id='video-thumb' alt='thumbnail' /></button>"
+      ]);
+
+      try {
+        const target = document.querySelector("#target");
+        const thumbnail = document.querySelector("#video-thumb");
+        expect(target instanceof HTMLElement).toBe(true);
+        expect(thumbnail instanceof HTMLElement).toBe(true);
+
+        if (!(target instanceof HTMLElement) || !(thumbnail instanceof HTMLElement)) {
+          return;
+        }
+
+        const targetRect = new DOMRect(24, 24, 220, 132);
+        const thumbnailRect = new DOMRect(24, 24, 220, 132);
+        target.getBoundingClientRect = (): DOMRect => targetRect;
+        target.getClientRects = (): DOMRectList => {
+          const list = [targetRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        thumbnail.getBoundingClientRect = (): DOMRect => thumbnailRect;
+        thumbnail.getClientRects = (): DOMRectList => {
+          const list = [thumbnailRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const marker = document.createElement("span");
+        marker.getBoundingClientRect = (): DOMRect => createMarkerRect(58, 20);
+        document.body.append(marker);
+
+        const hint: HintMarker = {
+          element: target,
+          marker,
+          thumbnailIcon: null,
+          label: "kj",
+          directive: "input",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions([hint], "current-tab", true, "data-nav-hint-marker-variant");
+
+        expect(marker.getAttribute("data-nav-hint-marker-variant")).toBe("default");
+        expect(marker.style.left).toBe("26px");
+        expect(marker.style.top).toBe("80px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "avoids thumbnail marker placements covered by a fixed popup",
     test: () => {
       const fixture = createDomFixture([

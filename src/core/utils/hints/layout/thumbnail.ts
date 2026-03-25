@@ -230,19 +230,19 @@ const getHideDirectiveAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMR
 };
 
 const getMarkerPlacementInfo = (
-  element: HTMLElement,
+  hint: Pick<HintMarker, "element" | "directive">,
   targetRect: DOMRect,
   mode: LinkMode,
   highlightThumbnails: boolean
 ): MarkerPlacementInfo => {
-  if (!highlightThumbnails) {
+  if (!highlightThumbnails || hint.directive !== null) {
     return { variant: "default", anchorRect: targetRect };
   }
 
-  const thumbnailElements = collectUniqueThumbnailElements(element);
+  const thumbnailElements = collectUniqueThumbnailElements(hint.element);
   const preferredThumbnailRect = getPreferredThumbnailRect(targetRect, thumbnailElements);
   const useThumbnail =
-    mode === "copy-image" && element instanceof HTMLImageElement
+    mode === "copy-image" && hint.element instanceof HTMLImageElement
       ? targetRect.width >= MIN_COPY_IMAGE_THUMBNAIL_WIDTH &&
         targetRect.height >= MIN_COPY_IMAGE_THUMBNAIL_HEIGHT
       : isThumbnailLikeTarget(targetRect, thumbnailElements, preferredThumbnailRect);
@@ -268,7 +268,7 @@ export const prepareMarkerPlacement = (
   markerVariantStyleAttribute: string
 ): PreparedMarkerPlacement => {
   const { variant: markerVariant, anchorRect } = getMarkerPlacementInfo(
-    hint.element,
+    hint,
     targetRect,
     mode,
     highlightThumbnails
