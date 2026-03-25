@@ -920,6 +920,57 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "keeps input directives at the leading edge inside centered nav rows",
+    test: () => {
+      const fixture = createDomFixture(
+        "<nav id='command-bar'><button id='command-search' type='button' aria-label='Search or jump to'><span>Search</span></button></nav>"
+      );
+
+      try {
+        const commandSearch = document.querySelector("#command-search");
+        expect(commandSearch instanceof HTMLElement).toBe(true);
+
+        if (!(commandSearch instanceof HTMLElement)) {
+          return;
+        }
+
+        const searchRect = new DOMRect(180, 100, 280, 40);
+        commandSearch.getBoundingClientRect = (): DOMRect => searchRect;
+        commandSearch.getClientRects = (): DOMRectList => {
+          const list = [searchRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const marker = document.createElement("span");
+        marker.getBoundingClientRect = (): DOMRect => createMarkerRect(58, 20);
+        document.body.append(marker);
+
+        const hint: HintMarker = {
+          element: commandSearch,
+          marker,
+          thumbnailIcon: null,
+          label: "kj",
+          directive: "input",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions([hint], "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(marker.style.left).toBe("182px");
+        expect(marker.style.top).toBe("110px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "aligns navbar hints to a shared top edge while keeping input inside the field",
     test: () => {
       const fixture = createDomFixture([

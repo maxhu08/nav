@@ -42,6 +42,7 @@ export const getMarkerPlacementCandidates = (
   const isCenteredMenuLikeTarget =
     !shouldHighlightThumbnail &&
     !isResponseActionButton &&
+    directive !== "input" &&
     anchorRect.width >= 180 &&
     anchorRect.height <= 64 &&
     (role === "menuitem" ||
