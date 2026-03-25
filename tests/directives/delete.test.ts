@@ -9,6 +9,8 @@ export const directiveTestCase: DirectiveTestCase = {
       "<div role='menuitem' tabindex='0' aria-label='Delete chat'><div class='icon'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true'><use href='/cdn/assets/sprites-core.svg#delete'></use></svg></div>Delete</div>"
     ],
     ignores: [
+      "<button type='button'>Remove people in the background</button>",
+      "<button type='button' aria-label='Remove people in the background' class='prompt-card'><img alt='Street portrait preview' src='https://example.com/portrait.png' /><span>Remove people in the background</span></button>",
       "<div role='menuitem' tabindex='0'><div class='icon'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' aria-hidden='true'><use href='/cdn/assets/sprites-core.svg#share'></use></svg></div>Share</div>",
       "<div role='menuitem' tabindex='0'>Rename</div>",
       "<div role='menuitem' tabindex='0'>Archive</div>",

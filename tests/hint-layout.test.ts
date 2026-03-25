@@ -783,6 +783,57 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "keeps input directives anchored to the leading edge of a wide search control",
+    test: () => {
+      const fixture = createDomFixture(
+        "<button id='search-launcher' type='button' aria-label='Search or jump to'><span>Type / to search</span></button>"
+      );
+
+      try {
+        const searchLauncher = document.querySelector("#search-launcher");
+        expect(searchLauncher instanceof HTMLElement).toBe(true);
+
+        if (!(searchLauncher instanceof HTMLElement)) {
+          return;
+        }
+
+        const launcherRect = new DOMRect(120, 140, 420, 44);
+        searchLauncher.getBoundingClientRect = (): DOMRect => launcherRect;
+        searchLauncher.getClientRects = (): DOMRectList => {
+          const list = [launcherRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const marker = document.createElement("span");
+        marker.getBoundingClientRect = (): DOMRect => createMarkerRect(58, 20);
+        document.body.append(marker);
+
+        const hint: HintMarker = {
+          element: searchLauncher,
+          marker,
+          thumbnailIcon: null,
+          label: "kj",
+          directive: "input",
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions([hint], "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(marker.style.left).toBe("122px");
+        expect(marker.style.top).toBe("152px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "aligns response action markers on one row and shifts copy left for space",
     test: () => {
       const fixture = createDomFixture(

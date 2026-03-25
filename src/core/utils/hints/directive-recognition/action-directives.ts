@@ -63,12 +63,32 @@ const SAVE_NAVIGATION_CONTAINER_SELECTOR = [
   "[class*='guide-entry' i]",
   "[class*='guide' i]"
 ].join(", ");
+const ACTION_STRUCTURAL_ATTRIBUTE_NAMES = [
+  "name",
+  "id",
+  "data-testid",
+  "data-test-id",
+  "role",
+  "class",
+  "type"
+];
+const ACTION_SEMANTIC_ATTRIBUTE_NAMES = ["aria-label", "aria-description", "title", "value"];
 const NOTIFICATION_PATH_PATTERNS = [
   /^\/notifications?(?:\/|$)/i,
   /^\/inbox(?:\/|$)/i,
   /^\/updates(?:\/|$)/i,
   /^\/alerts?(?:\/|$)/i
 ];
+
+const hasShortMatchingActionSemanticAttribute = (
+  element: HTMLElement,
+  patterns: readonly RegExp[]
+): boolean => {
+  return ACTION_SEMANTIC_ATTRIBUTE_NAMES.some((attributeName) => {
+    const value = element.getAttribute(attributeName)?.replace(/\s+/g, " ").trim() ?? "";
+    return isLikelyShortControlText(value) && textMatchesAnyPattern(value, patterns);
+  });
+};
 
 const isWatchLaterNavigationLink = (
   element: HTMLElement,
@@ -147,27 +167,20 @@ export const getActionDirectiveCandidateScore = (
   }
 
   const semanticControlText = getSemanticControlText(element, features);
-  const attributeText = getCachedJoinedAttributeText(
+  const structuralAttributeText = getCachedJoinedAttributeText(
     element,
-    [
-      "name",
-      "id",
-      "aria-label",
-      "aria-description",
-      "data-testid",
-      "data-test-id",
-      "role",
-      "title",
-      "class",
-      "type",
-      "value"
-    ],
-    [semanticControlText],
+    ACTION_STRUCTURAL_ATTRIBUTE_NAMES,
+    [],
     features
   );
 
-  if (textMatchesAnyPattern(attributeText, patterns)) {
+  if (textMatchesAnyPattern(structuralAttributeText, patterns)) {
     score += 240;
+    hasStrongSignal = true;
+  }
+
+  if (hasShortMatchingActionSemanticAttribute(element, patterns)) {
+    score += 220;
     hasStrongSignal = true;
   }
 

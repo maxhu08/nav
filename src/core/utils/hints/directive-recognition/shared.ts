@@ -146,11 +146,10 @@ export const SAVE_ATTRIBUTE_PATTERNS = [
   /\bbookmark\b/i,
   /\bfavorite\b/i,
   /\bfavourite\b/i,
+  /\bsave\b.*\b(library|playlist|collection)\b/i,
   /\bwatch[-_ ]?later\b/i,
   /\bread[-_ ]?later\b/i,
   /\bplaylist\b/i,
-  /\bcollection\b/i,
-  /\blibrary\b/i,
   /\bstar\b/i
 ];
 export const SAVE_SHORT_TEXT_PATTERNS = [
@@ -298,7 +297,18 @@ export const SUBMIT_ATTRIBUTE_PATTERNS = [
   /\brepl(?:y|ies)\b/i,
   /\bpublish\b/i
 ];
-export const SUBMIT_SHORT_TEXT_PATTERNS = [/^ok$/i, /^done$/i, /^yes$/i, /^submit$/i, /^reply$/i];
+export const SUBMIT_SHORT_TEXT_PATTERNS = [
+  /^ok$/i,
+  /^done$/i,
+  /^yes$/i,
+  /^send$/i,
+  /^post$/i,
+  /^apply$/i,
+  /^confirm$/i,
+  /^submit$/i,
+  /^reply$/i,
+  /^publish$/i
+];
 export const LIKE_ATTRIBUTE_PATTERNS = [/\blike\b/i, /\bupvote\b/i, /\bthumb[-_ ]?up\b/i];
 export const LIKE_SHORT_TEXT_PATTERNS = [/^like$/i];
 export const DISLIKE_ATTRIBUTE_PATTERNS = [/\bdislike\b/i, /\bdownvote\b/i, /\bthumb[-_ ]?down\b/i];

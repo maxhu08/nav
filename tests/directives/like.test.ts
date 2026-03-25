@@ -13,6 +13,8 @@ export const directiveTestCase: DirectiveTestCase = {
     ],
     ignores: [
       "<button>Other</button>",
+      "<button type='button'>What would I look like as a K-Pop star?</button>",
+      "<button type='button' aria-label='What would I look like as a K-Pop star?' class='prompt-card'><img alt='K-Pop star preview' src='https://example.com/kpop.png' /><span>What would I look like as a K-Pop star?</span></button>",
       "<a href='/watch?v=123' id='video-title' title='Videos I like to rewatch'>Videos I like to rewatch</a>"
     ]
   }
