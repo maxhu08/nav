@@ -7,8 +7,6 @@ import {
 import {
   type ActionName,
   DEFAULT_HINT_CHARSET,
-  DEFAULT_HINT_RESERVED_LABELS,
-  DEFAULT_HOTKEY_MAPPINGS,
   type HotkeyActionMode,
   type HotkeyMappings,
   isActionName,
@@ -187,9 +185,7 @@ const parseAvoidAdjacentPairsValue = (
 };
 
 const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedLabels"] => {
-  const result = parseReservedHintDirectives(value);
-  const fallbackResult = parseReservedHintDirectives(DEFAULT_HINT_RESERVED_LABELS);
-  return normalizeReservedHintLabels(result, fallbackResult);
+  return normalizeReservedHintLabels(parseReservedHintDirectives(value));
 };
 
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
@@ -258,9 +254,7 @@ const parseRulesUrlsValue = (value: string): FastRule[] => {
 
 export const buildFastConfig = (config: Config): FastConfig => {
   const parsedMappings = parseHotkeyMappingsValue(config.hotkeys.mappings);
-  const hasMappings = Object.keys(parsedMappings.mappings).length > 0;
-  const fallbackMappings = parseHotkeyMappingsValue(DEFAULT_HOTKEY_MAPPINGS).mappings;
-  const mappings = hasMappings ? parsedMappings.mappings : fallbackMappings;
+  const mappings = parsedMappings.mappings;
 
   return {
     rules: {
