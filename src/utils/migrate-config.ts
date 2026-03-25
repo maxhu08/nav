@@ -117,47 +117,47 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
   const originalHotkeyMappings = getHotkeyMappings(config);
 
-  // if config before v1.0.6
-  addDirectiveIfMissing(migratedConfig, "input", "kj kjf kjfd");
-  addDirectiveIfMissing(migratedConfig, "attach", "up");
+  // // if config before v1.0.6
+  // addDirectiveIfMissing(migratedConfig, "input", "kj kjf kjfd");
+  // addDirectiveIfMissing(migratedConfig, "attach", "up");
 
-  // if config before v1.0.8
-  addDirectiveIfMissing(migratedConfig, "share", "sh");
+  // // if config before v1.0.8
+  // addDirectiveIfMissing(migratedConfig, "share", "sh");
 
-  // if config before v1.0.9
-  addDirectiveIfMissing(migratedConfig, "login", "si");
-  addDirectiveIfMissing(migratedConfig, "download", "dl");
+  // // if config before v1.0.9
+  // addDirectiveIfMissing(migratedConfig, "login", "si");
+  // addDirectiveIfMissing(migratedConfig, "download", "dl");
 
-  // if config before v1.1.0
-  if (!hasHotkeyMapping(originalHotkeyMappings, "yc", "yank-current-tab-url-clean")) {
-    addHotkeyMappingIfMissing(migratedConfig, "yc", "yank-current-tab-url-clean");
-  }
+  // // if config before v1.1.0
+  // if (!hasHotkeyMapping(originalHotkeyMappings, "yc", "yank-current-tab-url-clean")) {
+  //   addHotkeyMappingIfMissing(migratedConfig, "yc", "yank-current-tab-url-clean");
+  // }
 
-  // if config before v1.1.1
-  migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
-    migratedConfig.hotkeys.mappings,
-    "yb",
-    "duplicate-current-tab-base",
-    "yo",
-    "duplicate-current-tab-origin"
-  );
-  if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
-    addHotkeyMappingIfMissing(migratedConfig, "yo", "duplicate-current-tab-origin");
-  }
-  addDirectiveIfMissing(migratedConfig, "microphone", "mic");
+  // // if config before v1.1.1
+  // migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
+  //   migratedConfig.hotkeys.mappings,
+  //   "yb",
+  //   "duplicate-current-tab-base",
+  //   "yo",
+  //   "duplicate-current-tab-origin"
+  // );
+  // if (!hasHotkeyMapping(originalHotkeyMappings, "yo", "duplicate-current-tab-origin")) {
+  //   addHotkeyMappingIfMissing(migratedConfig, "yo", "duplicate-current-tab-origin");
+  // }
+  // addDirectiveIfMissing(migratedConfig, "microphone", "mic");
 
-  // if config before v1.1.2
-  addDirectiveIfMissing(migratedConfig, "delete", "dd");
-  addDirectiveIfMissing(migratedConfig, "save", "sv");
-  addDirectiveIfMissing(migratedConfig, "copy", "cp");
-  addDirectiveIfMissing(migratedConfig, "hide", "hi");
+  // // if config before v1.1.2
+  // addDirectiveIfMissing(migratedConfig, "delete", "dd");
+  // addDirectiveIfMissing(migratedConfig, "save", "sv");
+  // addDirectiveIfMissing(migratedConfig, "copy", "cp");
+  // addDirectiveIfMissing(migratedConfig, "hide", "hi");
 
-  // if config before v1.1.3
-  addDirectiveIfMissing(migratedConfig, "notification", "nf");
+  // // if config before v1.1.3
+  // addDirectiveIfMissing(migratedConfig, "notification", "nf");
 
-  // if config before v1.1.4
-  addDirectiveIfMissing(migratedConfig, "erase", "er");
-  addDirectiveIfMissing(migratedConfig, "chat", "ch");
+  // // if config before v1.1.4
+  // addDirectiveIfMissing(migratedConfig, "erase", "er");
+  // addDirectiveIfMissing(migratedConfig, "chat", "ch");
 
   return migratedConfig;
 };
