@@ -32,8 +32,16 @@ export const assignHintSemantics = (
   const reservedDirectivesByIndex = new Map<number, ReservedHintDirective>();
   const reservedLabels: string[] = [];
   const claimedIndexes = new Set<number>();
+  const directiveOrder: ReservedHintDirective[] = [
+    "attach",
+    "input",
+    ...RESERVED_HINT_DIRECTIVES.filter(
+      (directive): directive is Exclude<ReservedHintDirective, "attach" | "input"> =>
+        directive !== "attach" && directive !== "input"
+    )
+  ];
 
-  for (const directive of RESERVED_HINT_DIRECTIVES) {
+  for (const directive of directiveOrder) {
     const index = preferredIndexes[directive];
     if (index === undefined || claimedIndexes.has(index)) {
       continue;

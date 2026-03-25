@@ -37,6 +37,7 @@ const MORE_LABEL_PATTERNS = [
   /^more$/i,
   /\bmore\b.*\b(options?|actions?)\b/i,
   /\b(options?|actions?)\b.*\bmore\b/i,
+  /\bactions?\s+menu\b/i,
   /\bmore\s+menu\b/i,
   /\boverflow\b/i,
   /\bellipsis\b/i

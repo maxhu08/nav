@@ -78,6 +78,23 @@ export const hintScenarioCases: HintScenarioCase[] = [
         ]
       }
     }
+  },
+  {
+    desc: "assigns the more icon to a sanitized YouTube comment action menu button",
+    test: {
+      fixtures: [
+        "<div id='action-menu' class='style-scope ytd-comment-view-model'><ytd-menu-renderer class='style-scope ytd-comment-view-model' safe-area='' menu-active=''><div id='top-level-buttons-computed' class='top-level-buttons style-scope ytd-menu-renderer'></div><div id='flexible-item-buttons' class='style-scope ytd-menu-renderer'></div><yt-icon-button id='button' class='dropdown-trigger style-scope ytd-menu-renderer' style-target='button'><button id='comment-action-menu-button' class='style-scope yt-icon-button' aria-label='Action menu'><yt-icon class='style-scope ytd-menu-renderer'><span class='yt-icon-shape style-scope yt-icon ytSpecIconShapeHost'><div style='width:100%;height:100%;display:block;fill:currentcolor;'><svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' focusable='false' aria-hidden='true'><path d='M12 4a2 2 0 100 4 2 2 0 000-4Zm0 6a2 2 0 100 4 2 2 0 000-4Zm0 6a2 2 0 100 4 2 2 0 000-4Z'></path></svg></div></span></yt-icon></button></yt-icon-button><yt-button-shape id='button-shape' class='style-scope ytd-menu-renderer' hidden=''></yt-button-shape></ytd-menu-renderer></div>"
+      ],
+      expect: {
+        assignedTargets: [
+          {
+            selector: "#comment-action-menu-button",
+            directive: null,
+            labelIcon: "more"
+          }
+        ]
+      }
+    }
   }
 ];
 
