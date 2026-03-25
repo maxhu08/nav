@@ -6,6 +6,7 @@ import {
   rulesUrlsWhitelistStatusEl,
   rulesUrlsWhitelistTextareaEl
 } from "~/src/options/scripts/ui";
+import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { isActionName } from "~/src/utils/hotkeys";
 
@@ -285,7 +286,7 @@ const syncRulesUrlsEditorHighlight = (
 ): void => {
   const renderedValue = renderRulesUrlsValue(textareaEl.value);
 
-  highlightEl.innerHTML = renderedValue.html;
+  highlightEl.innerHTML = getTextareaOverlayHTML(textareaEl.value, renderedValue.html);
   setEditorStatus(statusEl, renderedValue.errors);
 };
 

@@ -3,6 +3,7 @@ import {
   hintsAvoidAdjacentPairsStatusEl,
   hintsAvoidAdjacentPairsTextareaEl
 } from "~/src/options/scripts/ui";
+import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 
 const escapeHtml = (value: string): string =>
@@ -90,7 +91,7 @@ export const syncHintsAvoidAdjacentPairsHighlight = (): void => {
   const seenPairs = new Set<string>();
   const errors: EditorStatusError[] = [];
 
-  hintsAvoidAdjacentPairsHighlightEl.innerHTML = hintsAvoidAdjacentPairsTextareaEl.value
+  const html = hintsAvoidAdjacentPairsTextareaEl.value
     .split("\n")
     .map((line, index) => {
       const result = renderLine(line, index + 1, seenPairs);
@@ -98,6 +99,11 @@ export const syncHintsAvoidAdjacentPairsHighlight = (): void => {
       return result.html;
     })
     .join("\n");
+
+  hintsAvoidAdjacentPairsHighlightEl.innerHTML = getTextareaOverlayHTML(
+    hintsAvoidAdjacentPairsTextareaEl.value,
+    html
+  );
 
   setEditorStatus(hintsAvoidAdjacentPairsStatusEl, errors);
 };

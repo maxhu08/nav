@@ -6,6 +6,7 @@ import {
   hintsReservedLabelsStatusEl,
   hintsReservedLabelsTextareaEl
 } from "~/src/options/scripts/ui";
+import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import {
   normalizeReservedHintDirective,
@@ -202,7 +203,10 @@ export const syncHintsCharsetHighlightScroll = (): void => {
 
 export const syncHintsReservedLabelsHighlight = (): void => {
   const { html, errors } = renderReservedLabelsHighlight(hintsReservedLabelsTextareaEl.value);
-  hintsReservedLabelsHighlightEl.innerHTML = html;
+  hintsReservedLabelsHighlightEl.innerHTML = getTextareaOverlayHTML(
+    hintsReservedLabelsTextareaEl.value,
+    html
+  );
   setEditorStatus(hintsReservedLabelsStatusEl, errors);
 };
 

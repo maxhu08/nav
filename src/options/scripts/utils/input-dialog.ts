@@ -1,4 +1,5 @@
 import { renderRulesUrlsValue } from "~/src/options/scripts/utils/rules-highlight";
+import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 
 type InputDialogOptions = {
   placeholder?: string;
@@ -342,7 +343,7 @@ export const showTextareaDialog = (
 
   const syncHighlight = () => {
     const renderedValue = renderRulesUrlsValue(textareaEl.value);
-    highlightEl.innerHTML = renderedValue.html;
+    highlightEl.innerHTML = getTextareaOverlayHTML(textareaEl.value, renderedValue.html);
     highlightEl.scrollTop = textareaEl.scrollTop;
     highlightEl.scrollLeft = textareaEl.scrollLeft;
   };

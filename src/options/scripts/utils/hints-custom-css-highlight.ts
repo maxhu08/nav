@@ -1,4 +1,5 @@
 import { hintsCustomCSSHighlightEl, hintsCustomCSSTextareaEl } from "~/src/options/scripts/ui";
+import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 
 const escapeHtml = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -456,7 +457,10 @@ const syncCustomCSSMetrics = (): void => {
 
 const syncCustomCSSHighlight = (): void => {
   const value = hintsCustomCSSTextareaEl.value;
-  hintsCustomCSSHighlightEl.innerHTML = renderCustomCSSValue(value.length > 0 ? value : " ");
+  hintsCustomCSSHighlightEl.innerHTML = getTextareaOverlayHTML(
+    value,
+    renderCustomCSSValue(value.length > 0 ? value : " ")
+  );
 };
 
 export const syncHintsCustomCSSHighlightScroll = (): void => {

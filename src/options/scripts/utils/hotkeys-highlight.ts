@@ -3,6 +3,7 @@ import {
   hotkeysMappingsStatusEl,
   hotkeysMappingsTextareaEl
 } from "~/src/options/scripts/ui";
+import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { getActionMode, isActionName, parseHotkeyMappingsValue } from "~/src/utils/hotkeys";
 
@@ -96,7 +97,7 @@ export const syncHotkeysMappingsHighlight = (): void => {
     errorsByLine.set(error.lineNumber, errors);
   }
 
-  hotkeysMappingsHighlightEl.innerHTML = hotkeysMappingsTextareaEl.value
+  const html = hotkeysMappingsTextareaEl.value
     .split("\n")
     .map((line, index) => {
       const lineNumber = index + 1;
@@ -104,6 +105,11 @@ export const syncHotkeysMappingsHighlight = (): void => {
       return renderLine(line, lineHasError).html;
     })
     .join("\n");
+
+  hotkeysMappingsHighlightEl.innerHTML = getTextareaOverlayHTML(
+    hotkeysMappingsTextareaEl.value,
+    html
+  );
 
   setEditorStatus(
     hotkeysMappingsStatusEl,

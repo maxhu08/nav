@@ -5,88 +5,88 @@ import {
   hasReservedLabelsOption
 } from "~/src/utils/migrate/config-helpers";
 
-const hasDirective = (reservedLabels: string, directive: string): boolean => {
-  return reservedLabels.includes(`@${directive} `);
-};
+// const hasDirective = (reservedLabels: string, directive: string): boolean => {
+//   return reservedLabels.includes(`@${directive} `);
+// };
 
-const addDirectiveIfMissing = (config: Config, directive: string, labels: string): void => {
-  if (hasDirective(config.hints.reservedLabels, directive)) {
-    return;
-  }
+// const addDirectiveIfMissing = (config: Config, directive: string, labels: string): void => {
+//   if (hasDirective(config.hints.reservedLabels, directive)) {
+//     return;
+//   }
 
-  const trimmedReservedLabels = config.hints.reservedLabels.trim();
-  const directiveLine = `@${directive} ${labels}`;
+//   const trimmedReservedLabels = config.hints.reservedLabels.trim();
+//   const directiveLine = `@${directive} ${labels}`;
 
-  if (trimmedReservedLabels.length === 0) {
-    config.hints.reservedLabels = directiveLine;
-    return;
-  }
+//   if (trimmedReservedLabels.length === 0) {
+//     config.hints.reservedLabels = directiveLine;
+//     return;
+//   }
 
-  config.hints.reservedLabels = `${trimmedReservedLabels}\n${directiveLine}`;
-};
+//   config.hints.reservedLabels = `${trimmedReservedLabels}\n${directiveLine}`;
+// };
 
-const hasHotkeyMapping = (mappings: string, sequence: string, action: string): boolean => {
-  return mappings
-    .split("\n")
-    .map((line) => {
-      const commentStartIndex = line.indexOf("#");
-      return commentStartIndex === -1 ? line.trim() : line.slice(0, commentStartIndex).trim();
-    })
-    .some((line) => line === `${sequence} ${action}`);
-};
+// const hasHotkeyMapping = (mappings: string, sequence: string, action: string): boolean => {
+//   return mappings
+//     .split("\n")
+//     .map((line) => {
+//       const commentStartIndex = line.indexOf("#");
+//       return commentStartIndex === -1 ? line.trim() : line.slice(0, commentStartIndex).trim();
+//     })
+//     .some((line) => line === `${sequence} ${action}`);
+// };
 
-const addHotkeyMappingIfMissing = (config: Config, mapping: string, action: string): void => {
-  if (hasHotkeyMapping(config.hotkeys.mappings, mapping, action)) {
-    return;
-  }
+// const addHotkeyMappingIfMissing = (config: Config, mapping: string, action: string): void => {
+//   if (hasHotkeyMapping(config.hotkeys.mappings, mapping, action)) {
+//     return;
+//   }
 
-  const trimmedMappings = config.hotkeys.mappings.trimEnd();
-  const mappingLine = `${mapping} ${action}`;
+//   const trimmedMappings = config.hotkeys.mappings.trimEnd();
+//   const mappingLine = `${mapping} ${action}`;
 
-  if (trimmedMappings.length === 0) {
-    config.hotkeys.mappings = mappingLine;
-    return;
-  }
+//   if (trimmedMappings.length === 0) {
+//     config.hotkeys.mappings = mappingLine;
+//     return;
+//   }
 
-  config.hotkeys.mappings = `${trimmedMappings}\n${mappingLine}`;
-};
+//   config.hotkeys.mappings = `${trimmedMappings}\n${mappingLine}`;
+// };
 
-const renameHotkeyMappingIfPresent = (
-  mappings: string,
-  oldSequence: string,
-  oldAction: string,
-  newSequence: string,
-  newAction: string
-): string => {
-  return mappings
-    .split("\n")
-    .map((line) => {
-      const commentStartIndex = line.indexOf("#");
-      const comment = commentStartIndex === -1 ? "" : line.slice(commentStartIndex);
-      const content = commentStartIndex === -1 ? line : line.slice(0, commentStartIndex);
-      const trimmedContent = content.trim();
+// const renameHotkeyMappingIfPresent = (
+//   mappings: string,
+//   oldSequence: string,
+//   oldAction: string,
+//   newSequence: string,
+//   newAction: string
+// ): string => {
+//   return mappings
+//     .split("\n")
+//     .map((line) => {
+//       const commentStartIndex = line.indexOf("#");
+//       const comment = commentStartIndex === -1 ? "" : line.slice(commentStartIndex);
+//       const content = commentStartIndex === -1 ? line : line.slice(0, commentStartIndex);
+//       const trimmedContent = content.trim();
 
-      if (!trimmedContent) {
-        return line;
-      }
+//       if (!trimmedContent) {
+//         return line;
+//       }
 
-      const separatorIndex = trimmedContent.search(/\s/);
-      if (separatorIndex === -1) {
-        return line;
-      }
+//       const separatorIndex = trimmedContent.search(/\s/);
+//       if (separatorIndex === -1) {
+//         return line;
+//       }
 
-      const sequence = trimmedContent.slice(0, separatorIndex).trim();
-      const action = trimmedContent.slice(separatorIndex).trim();
-      if (sequence !== oldSequence || action !== oldAction) {
-        return line;
-      }
+//       const sequence = trimmedContent.slice(0, separatorIndex).trim();
+//       const action = trimmedContent.slice(separatorIndex).trim();
+//       if (sequence !== oldSequence || action !== oldAction) {
+//         return line;
+//       }
 
-      const leadingWhitespace = content.match(/^\s*/)?.[0] ?? "";
-      const trailingWhitespace = content.match(/\s*$/)?.[0] ?? "";
-      return `${leadingWhitespace}${newSequence} ${newAction}${trailingWhitespace}${comment}`;
-    })
-    .join("\n");
-};
+//       const leadingWhitespace = content.match(/^\s*/)?.[0] ?? "";
+//       const trailingWhitespace = content.match(/\s*$/)?.[0] ?? "";
+//       return `${leadingWhitespace}${newSequence} ${newAction}${trailingWhitespace}${comment}`;
+//     })
+//     .join("\n");
+// };
 
 const getHotkeyMappings = (config: unknown): string => {
   if (typeof config !== "object" || config === null) {
