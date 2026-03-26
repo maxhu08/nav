@@ -65,6 +65,12 @@ const HINT_SELECTORS_COPY_CANDIDATES = [
   "[id*='copy' i]",
   "[name*='copy' i]"
 ].join(",");
+const HINT_SELECTORS_TRAILING_MENU_CANDIDATES = "[data-trailing-button][aria-haspopup='menu']";
+const COMPOSITE_ROW_ANCESTOR_SELECTOR = [
+  "a[href]",
+  "[role='link']",
+  "[tabindex]:not([tabindex='-1']):not([role='group'])"
+].join(",");
 
 export const HINT_SELECTORS_DEFAULT = [
   HINT_SELECTORS_DEFAULT_STRONG,
@@ -205,6 +211,36 @@ const appendLikelyCopyElements = (
   );
 };
 
+const appendLikelyTrailingMenuElements = (
+  target: HTMLElement[],
+  roots: ReadonlyArray<Document | ShadowRoot>,
+  seen: Set<HTMLElement>,
+  visibility: ReturnType<typeof createHintVisibilityContext>
+): void => {
+  for (const root of roots) {
+    for (const element of root.querySelectorAll<HTMLElement>(
+      HINT_SELECTORS_TRAILING_MENU_CANDIDATES
+    )) {
+      if (target.includes(element)) {
+        continue;
+      }
+
+      const rowAncestor = element.parentElement?.closest(COMPOSITE_ROW_ANCESTOR_SELECTOR);
+      const rect = visibility.getRect(element);
+      if (
+        !(rowAncestor instanceof HTMLElement) ||
+        !rect ||
+        !visibility.isVisibleHintTarget(rowAncestor)
+      ) {
+        continue;
+      }
+
+      seen.add(element);
+      target.push(element);
+    }
+  }
+};
+
 const appendScoredElements = (
   target: HTMLElement[],
   roots: ReadonlyArray<Document | ShadowRoot>,
@@ -246,6 +282,7 @@ export const getHintableElements = (mode: LinkMode): HTMLElement[] => {
     appendEligibleElements(elements, roots, HINT_SELECTORS_DEFAULT_WEAK, mode, seen, visibility, {
       requireWeakSignal: true
     });
+    appendLikelyTrailingMenuElements(elements, roots, seen, visibility);
     appendLikelyCopyElements(elements, roots, seen, visibility);
     appendLikelyHideElements(elements, roots, seen, visibility);
   }

@@ -1,8 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   getHintableElements,
-  getPreferredDirectiveIndexes,
-  revealHoverHintControls
+  getPreferredDirectiveIndexes
 } from "~/src/core/utils/hints/hint-recognition";
 import { assignHintLabels } from "~/src/core/utils/hints/pipeline";
 import { createEmptyReservedHintLabels } from "~/src/utils/hint-reserved-label-directives";
@@ -61,9 +60,6 @@ describe("response action hints", () => {
           .map((selector) => document.querySelector(selector))
           .filter((element): element is Element => element instanceof Element);
       };
-
-      const revealedElements: Array<{ element: HTMLElement; inlineStyle: string | null }> = [];
-      revealHoverHintControls("current-tab", revealedElements);
 
       const elements = getHintableElements("current-tab");
       expect(elements.map((element) => element.id)).toEqual([

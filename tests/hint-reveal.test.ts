@@ -14,7 +14,7 @@ const createRectList = (rect: DOMRect): DOMRectList => {
 };
 
 describe("revealHoverHintControls", () => {
-  test("reveals response action groups so copy controls become hintable", () => {
+  test("keeps hidden response action groups hidden", () => {
     const fixture = createDomFixture(
       "<div aria-label='Response actions' role='group' style='pointer-events:none; opacity:0.4; visibility:hidden;'><button aria-label='Copy response' data-testid='copy-turn-action-button'>Copy</button><button aria-label='Share'>Share</button></div>"
     );
@@ -32,17 +32,17 @@ describe("revealHoverHintControls", () => {
       const revealedElements: Array<{ element: HTMLElement; inlineStyle: string | null }> = [];
       revealHoverHintControls("current-tab", revealedElements);
 
-      expect(group.style.pointerEvents).toBe("auto");
-      expect(group.style.opacity).toBe("1");
-      expect(group.style.visibility).toBe("visible");
-      expect(revealedElements.some((entry) => entry.element === group)).toBe(true);
-      expect(revealedElements.some((entry) => entry.element === button)).toBe(true);
+      expect(group.style.pointerEvents).toBe("none");
+      expect(group.style.opacity).toBe("0.4");
+      expect(group.style.visibility).toBe("hidden");
+      expect(revealedElements).toHaveLength(0);
+      expect(getHintableElements("current-tab")).not.toContain(button);
     } finally {
       fixture.cleanup();
     }
   });
 
-  test("reveals sanitized trailing menu buttons in composite rows so they receive the more icon", () => {
+  test("keeps hidden trailing menu buttons hintable without revealing them", () => {
     const fixture = createDomFixture([
       "<a id='conversation-row' tabindex='0' class='row-link' draggable='true' aria-label='Placeholder conversation' href='/c/placeholder-conversation'><div class='row-main'><div class='truncate'><span dir='auto'>Placeholder conversation</span></div></div><div id='conversation-actions' class='trailing-actions' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><button id='conversation-more-button' tabindex='0' data-trailing-button='' aria-label='Open conversation options for Placeholder conversation' type='button' aria-haspopup='menu' aria-expanded='false' data-state='closed' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><span aria-hidden='true'>...</span></button></div></a>",
       "<a id='project-row' tabindex='0' class='row-link' href='/g/placeholder/workspace/project'><div class='row-main'><div class='row-icon'><button id='project-icon-button' type='button' aria-label='Open project icon picker'><span aria-hidden='true'>icon</span></button></div><div class='truncate'>Placeholder project</div></div><div id='project-actions' class='trailing-actions' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><button id='project-more-button' tabindex='0' data-trailing-button='' aria-label='Open project options for Placeholder project' type='button' aria-haspopup='menu' aria-expanded='false' data-state='closed' style='opacity:0; visibility:hidden; pointer-events:none; width:0; min-width:0; max-width:0; overflow:hidden;'><span aria-hidden='true'>...</span></button></div></a>"
@@ -89,24 +89,18 @@ describe("revealHoverHintControls", () => {
           .filter((element): element is Element => element instanceof Element);
       };
 
-      expect(getHintableElements("current-tab").map((element) => element.id)).not.toContain(
+      expect(getHintableElements("current-tab").map((element) => element.id)).toContain(
         "conversation-more-button"
       );
-      expect(getHintableElements("current-tab").map((element) => element.id)).not.toContain(
+      expect(getHintableElements("current-tab").map((element) => element.id)).toContain(
         "project-more-button"
       );
 
       const revealedElements: Array<{ element: HTMLElement; inlineStyle: string | null }> = [];
       revealHoverHintControls("current-tab", revealedElements);
 
-      expect((document.querySelector("#conversation-actions") as HTMLElement).style.width).toBe(
-        "max-content"
-      );
-      expect((document.querySelector("#project-actions") as HTMLElement).style.width).toBe(
-        "max-content"
-      );
-
       const elements = getHintableElements("current-tab");
+      expect(revealedElements).toHaveLength(0);
       expect(elements.map((element) => element.id)).toContain("conversation-more-button");
       expect(elements.map((element) => element.id)).toContain("project-more-button");
 
