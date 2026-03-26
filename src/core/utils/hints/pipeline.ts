@@ -24,6 +24,8 @@ import type {
   ReservedHintLabels
 } from "~/src/core/utils/hints/types";
 
+const STABLE_FOCUS_HINT_LABEL_ICONS = new Set<HintLabelIcon>(["expand", "collapse"]);
+
 const EXPAND_LABEL_PATTERNS = [/\bexpand\b/i, /\bshow more\b/i];
 const COLLAPSE_LABEL_PATTERNS = [/\bcollapse\b/i, /\bshow less\b/i];
 const MENU_TRIGGER_LABEL_PATTERNS = [
@@ -255,6 +257,137 @@ const getHintLabelIcon = (
   return null;
 };
 
+const normalizeStableFocusHintText = (value: string | null | undefined): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  const normalizedValue = value.replace(/\s+/g, " ").trim().toLowerCase();
+  if (!normalizedValue) {
+    return null;
+  }
+
+  return normalizedValue.slice(0, 80);
+};
+
+const getStableFocusHintElementToken = (
+  element: HTMLElement,
+  options: { includeFallbackText?: boolean } = {}
+): string | null => {
+  const attributeCandidates: Array<[string, string | null]> = [
+    ["id", element.id || null],
+    ["controls", element.getAttribute("aria-controls")],
+    ["testid", element.getAttribute("data-testid")],
+    ["testid", element.getAttribute("data-test-id")],
+    ["name", element.getAttribute("name")]
+  ];
+
+  if (options.includeFallbackText) {
+    attributeCandidates.push(
+      ["label", element.getAttribute("aria-label")],
+      ["title", element.getAttribute("title")],
+      ["text", element.textContent]
+    );
+  }
+
+  for (const [prefix, candidate] of attributeCandidates) {
+    const normalizedCandidate = normalizeStableFocusHintText(candidate);
+    if (normalizedCandidate) {
+      return `${prefix}:${normalizedCandidate}`;
+    }
+  }
+
+  return null;
+};
+
+const getStableFocusHintPathSegment = (element: HTMLElement): string => {
+  const parent = element.parentElement;
+  if (!parent) {
+    return `${element.tagName.toLowerCase()}:0`;
+  }
+
+  let siblingIndex = 0;
+
+  for (const sibling of parent.children) {
+    if (!(sibling instanceof HTMLElement)) {
+      continue;
+    }
+
+    if (sibling === element) {
+      return `${element.tagName.toLowerCase()}:${siblingIndex}`;
+    }
+
+    if (sibling.tagName === element.tagName) {
+      siblingIndex += 1;
+    }
+  }
+
+  return `${element.tagName.toLowerCase()}:${siblingIndex}`;
+};
+
+const getStableFocusHintSiblingIndex = (element: HTMLElement): number => {
+  const parent = element.parentElement;
+  if (!parent) {
+    return 0;
+  }
+
+  let siblingIndex = 0;
+
+  for (const sibling of parent.children) {
+    if (!(sibling instanceof HTMLElement)) {
+      continue;
+    }
+
+    if (sibling === element) {
+      return siblingIndex;
+    }
+
+    if (sibling.tagName === element.tagName) {
+      siblingIndex += 1;
+    }
+  }
+
+  return siblingIndex;
+};
+
+const getStableFocusHintIdentity = (
+  element: HTMLElement,
+  labelIcon: HintLabelIcon | null
+): string | null => {
+  if (labelIcon === null || !STABLE_FOCUS_HINT_LABEL_ICONS.has(labelIcon)) {
+    return null;
+  }
+
+  const tokens = ["kind:focus-toggle"];
+  const ownToken = getStableFocusHintElementToken(element);
+  if (ownToken) {
+    tokens.push(`self:${ownToken}`);
+  }
+  tokens.push(`self-path:${getStableFocusHintPathSegment(element)}`);
+
+  let current = element.parentElement;
+  let depth = 0;
+
+  while (current && depth < 4) {
+    const ancestorToken = getStableFocusHintElementToken(current, {
+      includeFallbackText: depth > 0
+    });
+    if (ancestorToken) {
+      tokens.push(`ancestor${depth}:${ancestorToken}`);
+    }
+
+    tokens.push(`ancestor${depth}-path:${getStableFocusHintPathSegment(current)}`);
+
+    current = current.parentElement;
+    depth += 1;
+  }
+
+  tokens.push(`tag:${element.tagName.toLowerCase()}`);
+  tokens.push(`sibling:${getStableFocusHintSiblingIndex(element)}`);
+
+  return tokens.join("|");
+};
+
 export const collectHintTargets = (mode: LinkMode): HTMLElement[] => {
   return getHintableElements(mode);
 };
@@ -302,7 +435,8 @@ const getPreferredReservedDirectiveLabel = (
 export const assignHintLabels = (
   elements: HTMLElement[],
   reservedHintLabels: ReservedHintLabels,
-  labelSettings: HintLabelPlanSettings
+  labelSettings: HintLabelPlanSettings,
+  stableFocusHintLabels: Map<string, string> | null = null
 ): HintPipelineTarget[] => {
   const preferredDirectiveIndexes = getPreferredDirectiveIndexes(elements);
   const duplicateDirectiveTargets: Array<{ index: number; directive: ReservedHintDirective }> = [];
@@ -328,17 +462,47 @@ export const assignHintLabels = (
     preferredDirectiveIndexes
   );
   const suppressedIndexes = getSuppressedHintIndexes(elements, reservedDirectivesByIndex);
+  const focusHintIconsByIndex = new Map<number, HintLabelIcon>();
+  const stableFocusHintLabelsByIndex = new Map<number, string>();
   const duplicateReservedLabels = duplicateDirectiveTargets
     .map(({ directive }) =>
       getPreferredReservedDirectiveLabel(reservedHintLabels, directive, reservedLabels)
     )
     .filter((label): label is string => label !== null);
+  const stableClaimedLabels = [...reservedLabels, ...duplicateReservedLabels];
+
+  elements.forEach((element, index) => {
+    if (suppressedIndexes.has(index)) {
+      return;
+    }
+
+    const directive = reservedDirectivesByIndex.get(index) ?? null;
+    const labelIcon = directive === null ? getHintLabelIcon(element, directive) : null;
+
+    if (labelIcon !== null) {
+      focusHintIconsByIndex.set(index, labelIcon);
+    }
+
+    if (!stableFocusHintLabels || directive !== null) {
+      return;
+    }
+
+    const identity = getStableFocusHintIdentity(element, labelIcon);
+    const cachedLabel = identity ? stableFocusHintLabels.get(identity) : undefined;
+    if (!cachedLabel || !/^[a-z]+$/.test(cachedLabel)) {
+      return;
+    }
+
+    if (doesLabelConflictWithReservedLabels(cachedLabel, stableClaimedLabels)) {
+      return;
+    }
+
+    stableClaimedLabels.push(cachedLabel);
+    stableFocusHintLabelsByIndex.set(index, cachedLabel);
+  });
+
   const visibleCount = elements.length - suppressedIndexes.size + duplicateDirectiveTargets.length;
-  const { labels } = buildHintLabels(
-    visibleCount,
-    [...reservedLabels, ...duplicateReservedLabels],
-    labelSettings
-  );
+  const { labels } = buildHintLabels(visibleCount, [...stableClaimedLabels], labelSettings);
 
   const targets: HintPipelineTarget[] = [];
   let labelIndex = 0;
@@ -348,19 +512,32 @@ export const assignHintLabels = (
       return;
     }
 
-    const label = reservedLabelsByIndex.get(index) ?? labels[labelIndex++];
+    const label =
+      reservedLabelsByIndex.get(index) ??
+      stableFocusHintLabelsByIndex.get(index) ??
+      labels[labelIndex++];
 
     if (!label) {
       return;
     }
 
     const directive = reservedDirectivesByIndex.get(index) ?? null;
+    const labelIcon = directiveCandidateIndexes.has(index)
+      ? null
+      : (focusHintIconsByIndex.get(index) ?? getHintLabelIcon(element, directive));
+
+    if (stableFocusHintLabels && directive === null) {
+      const identity = getStableFocusHintIdentity(element, labelIcon);
+      if (identity) {
+        stableFocusHintLabels.set(identity, label);
+      }
+    }
 
     targets.push({
       element,
       label,
       directive,
-      labelIcon: directiveCandidateIndexes.has(index) ? null : getHintLabelIcon(element, directive)
+      labelIcon
     });
   });
 

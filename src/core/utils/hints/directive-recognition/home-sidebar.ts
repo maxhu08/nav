@@ -1,5 +1,7 @@
 import {
   HOME_ATTRIBUTE_PATTERNS,
+  NEXT_STRONG_ATTRIBUTE_PATTERNS,
+  PREV_ATTRIBUTE_PATTERNS,
   HOME_LOGO_PATTERNS,
   HOME_PATHS,
   SIDEBAR_ATTRIBUTE_PATTERNS,
@@ -236,6 +238,9 @@ const getSidebarCandidateScore = (
     ancestorSignalText,
     SIDEBAR_TOGGLE_PATTERNS
   );
+  const hasPrevNextSignal =
+    textMatchesAnyPattern(attributeText, NEXT_STRONG_ATTRIBUTE_PATTERNS) ||
+    textMatchesAnyPattern(attributeText, PREV_ATTRIBUTE_PATTERNS);
   const hasNonNavigationMenuSignal = textMatchesAnyPattern(
     attributeText,
     SIDEBAR_NON_NAVIGATION_PATTERNS
@@ -246,6 +251,16 @@ const getSidebarCandidateScore = (
     controlsSignalScore === 0 &&
     !hasStrongSidebarAttributeSignal &&
     !hasAncestorStrongSidebarSignal &&
+    !textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  if (
+    hasPrevNextSignal &&
+    controlsSignalScore === 0 &&
+    !hasStrongSidebarAttributeSignal &&
+    !hasSidebarToggleSignal &&
     !textMatchesAnyPattern(attributeText, SIDEBAR_OPEN_CLOSE_PATTERNS)
   ) {
     return Number.NEGATIVE_INFINITY;

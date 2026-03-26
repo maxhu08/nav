@@ -79,6 +79,8 @@ export const createHintsController = (): HintsController => {
   let reservedHintPrefixes = new Set<string>();
   let avoidedAdjacentHintPairs: AdjacentHintPairs = {};
   let reservedHintLabels: ReservedHintLabels = createEmptyReservedHintLabels();
+  let stableFocusHintLabels = new Map<string, string>();
+  let stableFocusHintLabelsPageKey = window.location.href;
   let minHintLabelLength = 2;
   let showCapitalizedLetters = true;
   let highlightThumbnails = false;
@@ -143,6 +145,16 @@ export const createHintsController = (): HintsController => {
       MARKER_VARIANT_STYLE_ATTRIBUTE,
       LETTER_STYLE_ATTRIBUTE
     );
+  };
+
+  const syncStableFocusHintLabelsPage = (): void => {
+    const nextPageKey = window.location.href;
+    if (stableFocusHintLabelsPageKey === nextPageKey) {
+      return;
+    }
+
+    stableFocusHintLabelsPageKey = nextPageKey;
+    stableFocusHintLabels = new Map<string, string>();
   };
 
   const registerHintViewportListeners = (): void => {
@@ -261,12 +273,19 @@ export const createHintsController = (): HintsController => {
   const createFreshMarkers = (
     mode: LinkMode
   ): { markers: HintState["markers"]; overlay: HTMLDivElement } | null => {
+    syncStableFocusHintLabelsPage();
+
     const elements = collectHintTargets(mode);
     if (elements.length === 0) {
       return null;
     }
 
-    const labeledTargets = assignHintLabels(elements, reservedHintLabels, getLabelPlanSettings());
+    const labeledTargets = assignHintLabels(
+      elements,
+      reservedHintLabels,
+      getLabelPlanSettings(),
+      stableFocusHintLabels
+    );
     const overlay = createHintOverlay(OVERLAY_ID, MARKER_ATTRIBUTE);
     const markers: HintState["markers"] = [];
 
@@ -387,6 +406,9 @@ export const createHintsController = (): HintsController => {
   };
 
   const resetHintsAfterConfigChange = (clearLabelPlan = false): void => {
+    stableFocusHintLabels = new Map<string, string>();
+    stableFocusHintLabelsPageKey = window.location.href;
+
     if (clearLabelPlan) {
       clearHintLabelPlanCache();
     }
@@ -455,6 +477,7 @@ export const createHintsController = (): HintsController => {
     mode: LinkMode,
     options: { onActivate?: (element: HTMLElement) => void } = {}
   ): boolean => {
+    syncStableFocusHintLabelsPage();
     exitHints();
     activateSiteKeybindIgnore("hints");
     initializeHintCSS();

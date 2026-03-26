@@ -47,8 +47,10 @@ Keeping those stages separate makes it possible to cache aggressively inside a s
 ## Key Design Decisions
 
 - `hint-recognition/collection.ts` computes search roots once per pass so shadow DOM traversal is not repeated unnecessarily.
+- `dom/visibility.ts` treats ancestor visual visibility separately from target clickability so overlay containers with `pointer-events: none` do not hide interactive descendants that still receive events.
 - `directive-recognition/` uses a shared feature cache so text joins, closest lookups, and rect reads can be reused across many directives.
 - `pipeline.ts` and `semantics.ts` share directive results instead of rescanning the same targets.
+- `controller.ts` and `pipeline.ts` cooperate on a per-page stable-label cache for expand/collapse focus hints so the same toggle can keep the same key sequence across repeated hint activations.
 - `layout.ts` keeps special aligned-row placement as a separate concept because pages often present controls in bars, menus, or nav rows where generic placement looks worse.
 
 ## Why The Heuristics Are Not Fully Declarative

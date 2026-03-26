@@ -40,9 +40,9 @@ Use this map to decide where new code should go.
   - DOM facade re-exporting shared hint DOM helpers: `src/core/utils/hints/dom.ts`
   - DOM geometry helpers: `src/core/utils/hints/dom/geometry.ts`
   - DOM interactivity and target-preference scoring: `src/core/utils/hints/dom/interactive.ts`
-  - DOM visibility and hit-testing helpers: `src/core/utils/hints/dom/visibility.ts`
+  - DOM visibility and hit-testing helpers, including overlay-aware pointer-event handling: `src/core/utils/hints/dom/visibility.ts`
   - DOM shared hint types/constants: `src/core/utils/hints/dom/shared.ts`
-  - Hint session lifecycle and activation entrypoint: `src/core/actions/hints/controller.ts`
+  - Hint session lifecycle and activation entrypoint, including per-page stable focus-hint label caching: `src/core/actions/hints/controller.ts`
   - Hint activation behavior (focus, click simulation, tab-open behavior): `src/core/actions/hints/activation.ts`
   - Target collection facade and public compatibility exports: `src/core/utils/hints/hint-recognition.ts`
   - Hint collection and ordering: `src/core/utils/hints/hint-recognition/collection.ts`
@@ -69,6 +69,7 @@ Use this map to decide where new code should go.
   - Action-like directive scoring (`next`, `prev`, `cancel`, `submit`, `share`, `download`, `login`, `microphone`, reactions): `src/core/utils/hints/directive-recognition/action-directives.ts`
   - Reserved-label assignment: `src/core/utils/hints/semantics.ts`
   - Label generation: `src/core/utils/hints/labels.ts`
+  - Pipeline orchestration and stable focus-toggle identity mapping: `src/core/utils/hints/pipeline.ts`
   - Hint pipeline target types: `src/core/utils/hints/pipeline-types.ts`
   - Marker DOM creation and updates: `src/core/utils/hints/markers.ts`
   - Marker layout facade: `src/core/utils/hints/layout.ts`

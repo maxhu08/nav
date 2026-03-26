@@ -101,14 +101,17 @@ const getComposedParentElement = (element: HTMLElement): HTMLElement | null => {
   return root instanceof ShadowRoot && root.host instanceof HTMLElement ? root.host : null;
 };
 
-const isStyleVisibleAndClickable = (style: CSSStyleDeclaration): boolean => {
+const isStyleVisible = (style: CSSStyleDeclaration): boolean => {
   return !(
     style.display === "none" ||
     style.visibility === "hidden" ||
     style.visibility === "collapse" ||
-    Number.parseFloat(style.opacity) === 0 ||
-    style.pointerEvents === "none"
+    Number.parseFloat(style.opacity) === 0
   );
+};
+
+const isStyleClickable = (style: CSSStyleDeclaration): boolean => {
+  return style.pointerEvents !== "none";
 };
 
 const getCenterPoint = (rect: DOMRect): [number, number] => [
@@ -236,7 +239,7 @@ export const createHintVisibilityContext = (): HintVisibilityContext => {
     let current = getComposedParentElement(element);
 
     while (current) {
-      if (!isStyleVisibleAndClickable(getStyle(current))) {
+      if (!isStyleVisible(getStyle(current))) {
         return true;
       }
 
@@ -264,7 +267,8 @@ export const createHintVisibilityContext = (): HintVisibilityContext => {
       !!rect &&
       isRectInViewport(rect) &&
       !isClippedByAncestor(element, rect) &&
-      isStyleVisibleAndClickable(getStyle(element)) &&
+      isStyleVisible(getStyle(element)) &&
+      isStyleClickable(getStyle(element)) &&
       getAdaptiveHitTestResult(
         element,
         rect,

@@ -9,6 +9,7 @@ This directory keeps runtime behavior tests grouped by feature so new contributo
 - Put shared JSDOM fixtures, geometry stubs, and reusable helpers in `tests/helpers/`.
 - Prefer small focused files over one large catch-all runner.
 - Keep new test cases in a standardized shape so helpers can be reused across regressions.
+- When adding site-specific regressions, sanitize copied markup and replace user/content-specific URLs, labels, counts, and media sources with generic placeholders before committing fixtures.
 
 ## Layout
 
