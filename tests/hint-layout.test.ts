@@ -930,6 +930,213 @@ export const hintLayoutTestCases: HintLayoutTestCase[] = [
     }
   },
   {
+    desc: "keeps heading link hints anchored to the title top-left even when metadata height varies",
+    test: () => {
+      const fixture = createDomFixture([
+        "<section id='compact-card' tabindex='0'><div class='card-media'><img alt='' src='https://example.com/a.png' /></div><div class='card-copy'><h3><a id='compact-title' href='/item-a'>Primary item</a></h3><div class='card-meta'><span>Source A</span><span>10 views</span></div></div><div class='card-actions'><button id='compact-menu' type='button' aria-haspopup='menu' data-trailing-button='true'>Actions</button></div></section>",
+        "<section id='extended-card' tabindex='0'><div class='card-media'><img alt='' src='https://example.com/b.png' /></div><div class='card-copy'><h3><a id='extended-title' href='/item-b'>Secondary item with extra details</a></h3><div class='card-meta'><span>Source B</span><span>22 views</span></div><div class='card-badge-row'><span>New</span></div></div><div class='card-actions'><button id='extended-menu' type='button' aria-haspopup='menu' data-trailing-button='true'>Actions</button></div></section>"
+      ]);
+
+      try {
+        const compactCard = document.querySelector("#compact-card");
+        const compactTitle = document.querySelector("#compact-title");
+        const compactMenu = document.querySelector("#compact-menu");
+        const extendedCard = document.querySelector("#extended-card");
+        const extendedTitle = document.querySelector("#extended-title");
+        const extendedMenu = document.querySelector("#extended-menu");
+
+        expect(compactCard instanceof HTMLElement).toBe(true);
+        expect(compactTitle instanceof HTMLElement).toBe(true);
+        expect(compactMenu instanceof HTMLElement).toBe(true);
+        expect(extendedCard instanceof HTMLElement).toBe(true);
+        expect(extendedTitle instanceof HTMLElement).toBe(true);
+        expect(extendedMenu instanceof HTMLElement).toBe(true);
+
+        if (
+          !(compactCard instanceof HTMLElement) ||
+          !(compactTitle instanceof HTMLElement) ||
+          !(compactMenu instanceof HTMLElement) ||
+          !(extendedCard instanceof HTMLElement) ||
+          !(extendedTitle instanceof HTMLElement) ||
+          !(extendedMenu instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const compactCardRect = new DOMRect(20, 40, 360, 72);
+        const compactTitleRect = new DOMRect(116, 48, 220, 20);
+        const compactMenuRect = new DOMRect(344, 64, 24, 24);
+        const extendedCardRect = new DOMRect(20, 140, 360, 96);
+        const extendedTitleRect = new DOMRect(116, 148, 236, 20);
+        const extendedMenuRect = new DOMRect(344, 176, 24, 24);
+
+        for (const [element, rect] of [
+          [compactCard, compactCardRect],
+          [compactTitle, compactTitleRect],
+          [compactMenu, compactMenuRect],
+          [extendedCard, extendedCardRect],
+          [extendedTitle, extendedTitleRect],
+          [extendedMenu, extendedMenuRect]
+        ] as const) {
+          element.getBoundingClientRect = (): DOMRect => rect;
+          element.getClientRects = (): DOMRectList => {
+            const list = [rect] as unknown as DOMRectList & DOMRect[];
+            list.item = (index: number): DOMRect | null => list[index] ?? null;
+            return list;
+          };
+        }
+
+        const compactTitleMarker = document.createElement("span");
+        compactTitleMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(compactTitleMarker);
+
+        const compactMenuMarker = document.createElement("span");
+        compactMenuMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(42, 20);
+        document.body.append(compactMenuMarker);
+
+        const extendedTitleMarker = document.createElement("span");
+        extendedTitleMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(extendedTitleMarker);
+
+        const extendedMenuMarker = document.createElement("span");
+        extendedMenuMarker.getBoundingClientRect = (): DOMRect => createMarkerRect(42, 20);
+        document.body.append(extendedMenuMarker);
+
+        const hints: HintMarker[] = [
+          {
+            element: compactTitle,
+            marker: compactTitleMarker,
+            thumbnailIcon: null,
+            label: "ct",
+            directive: null,
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          },
+          {
+            element: compactMenu,
+            marker: compactMenuMarker,
+            thumbnailIcon: null,
+            label: "cm",
+            directive: null,
+            labelIcon: "more",
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          },
+          {
+            element: extendedTitle,
+            marker: extendedTitleMarker,
+            thumbnailIcon: null,
+            label: "et",
+            directive: null,
+            labelIcon: null,
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          },
+          {
+            element: extendedMenu,
+            marker: extendedMenuMarker,
+            thumbnailIcon: null,
+            label: "em",
+            directive: null,
+            labelIcon: "more",
+            letters: [],
+            visible: true,
+            renderedTyped: "",
+            markerWidth: 0,
+            markerHeight: 0,
+            sizeDirty: true
+          }
+        ];
+
+        updateMarkerPositions(hints, "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(compactTitleMarker.style.left).toBe("118px");
+        expect(compactTitleMarker.style.top).toBe("50px");
+        expect(extendedTitleMarker.style.left).toBe("118px");
+        expect(extendedTitleMarker.style.top).toBe("150px");
+        expect(compactMenuMarker.style.left).toBe("336px");
+        expect(compactMenuMarker.style.top).toBe("66px");
+        expect(extendedMenuMarker.style.left).toBe("344px");
+        expect(extendedMenuMarker.style.top).toBe("178px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
+    desc: "centers nested non-heading row hints within a wide navigation row",
+    test: () => {
+      const fixture = createDomFixture(
+        "<nav><a id='nav-row' href='/item-a'><div class='row-icon'><svg aria-hidden='true'></svg></div><div class='row-label' id='nav-row-label'>Section item</div></a></nav>"
+      );
+
+      try {
+        const row = document.querySelector("#nav-row");
+        const label = document.querySelector("#nav-row-label");
+        expect(row instanceof HTMLElement).toBe(true);
+        expect(label instanceof HTMLElement).toBe(true);
+
+        if (!(row instanceof HTMLElement) || !(label instanceof HTMLElement)) {
+          return;
+        }
+
+        const rowRect = new DOMRect(20, 40, 260, 36);
+        const labelRect = new DOMRect(68, 48, 96, 20);
+        row.getBoundingClientRect = (): DOMRect => rowRect;
+        row.getClientRects = (): DOMRectList => {
+          const list = [rowRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+        label.getBoundingClientRect = (): DOMRect => labelRect;
+        label.getClientRects = (): DOMRectList => {
+          const list = [labelRect] as unknown as DOMRectList & DOMRect[];
+          list.item = (index: number): DOMRect | null => list[index] ?? null;
+          return list;
+        };
+
+        const marker = document.createElement("span");
+        marker.getBoundingClientRect = (): DOMRect => createMarkerRect(48, 20);
+        document.body.append(marker);
+
+        const hint: HintMarker = {
+          element: label,
+          marker,
+          thumbnailIcon: null,
+          label: "ab",
+          directive: null,
+          labelIcon: null,
+          letters: [],
+          visible: true,
+          renderedTyped: "",
+          markerWidth: 0,
+          markerHeight: 0,
+          sizeDirty: true
+        };
+
+        updateMarkerPositions([hint], "current-tab", false, "data-nav-hint-marker-variant");
+
+        expect(marker.style.left).toBe("126px");
+        expect(marker.style.top).toBe("48px");
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  },
+  {
     desc: "keeps input directives anchored to the leading edge of a wide search control",
     test: () => {
       const fixture = createDomFixture(

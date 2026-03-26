@@ -282,6 +282,23 @@ button inline-flex " id="flex-nav-collapse-button">
     }
   },
   {
+    desc: "inherits an expand icon from an expandable ancestor control when the hintable target is a nested row body",
+    test: {
+      fixtures: [
+        "<div class='list-section'><div class='list-expander' role='button'><div class='list-item' id='expandable-row' role='link' tabindex='0' title='Show more'><span>Show more</span></div></div></div>"
+      ],
+      expect: {
+        assignedTargets: [
+          {
+            selector: "#expandable-row",
+            directive: null,
+            labelIcon: "expand"
+          }
+        ]
+      }
+    }
+  },
+  {
     desc: "does not misclassify a selected row title containing expand or collapse text as a toggle and keeps its menu trigger as more",
     test: {
       fixtures: [

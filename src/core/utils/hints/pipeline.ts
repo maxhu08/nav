@@ -98,6 +98,70 @@ const getStateToggleIcon = (
   return dataState === "open" ? "collapse" : "expand";
 };
 
+const getLabelPatternIcon = (text: string): HintLabelIcon | null => {
+  if (textMatchesAnyPattern(text, COLLAPSE_LABEL_PATTERNS)) {
+    return "collapse";
+  }
+
+  if (textMatchesAnyPattern(text, EXPAND_LABEL_PATTERNS)) {
+    return "expand";
+  }
+
+  return null;
+};
+
+const getAncestorStateToggleIcon = (element: HTMLElement): HintLabelIcon | null => {
+  const elementSemanticControlText = getSemanticControlText(element);
+  const elementAttributeText = getJoinedAttributeText(
+    element,
+    ["aria-label", "aria-description", "title", "data-testid", "data-test-id", "class", "id"],
+    [elementSemanticControlText]
+  );
+  let current = element.parentElement;
+  let depth = 0;
+
+  while (current && depth < 4) {
+    const expandedStateIcon = getExpandedStateIcon(current);
+    if (expandedStateIcon) {
+      return expandedStateIcon;
+    }
+
+    const semanticControlText = getSemanticControlText(current);
+    const stateToggleIcon = getStateToggleIcon(current, semanticControlText);
+    if (stateToggleIcon) {
+      return stateToggleIcon;
+    }
+
+    const isRelevantAncestor =
+      isButtonLikeControl(current) || current.matches(COMPOSITE_ROW_SELECTOR);
+
+    if (isRelevantAncestor) {
+      const attributeText = getJoinedAttributeText(
+        current,
+        ["aria-label", "aria-description", "title", "data-testid", "data-test-id", "class", "id"],
+        [semanticControlText, elementAttributeText]
+      );
+      const labelPatternIcon = getLabelPatternIcon(attributeText);
+      if (labelPatternIcon) {
+        return labelPatternIcon;
+      }
+    }
+
+    if (
+      current.matches(COMPOSITE_ROW_SELECTOR) ||
+      current instanceof HTMLButtonElement ||
+      current.getAttribute("role")?.toLowerCase() === "button"
+    ) {
+      break;
+    }
+
+    depth += 1;
+    current = current.parentElement;
+  }
+
+  return null;
+};
+
 const getHintLabelIcon = (
   element: HTMLElement,
   directive: ReservedHintDirective | null
@@ -159,18 +223,11 @@ const getHintLabelIcon = (
       element.getAttribute("data-state") === "closed") &&
       element.querySelector("svg, img, [role='img']") instanceof Element);
 
-  if (
-    canUseExpandCollapseLabelPatterns &&
-    textMatchesAnyPattern(attributeText, COLLAPSE_LABEL_PATTERNS)
-  ) {
-    return "collapse";
-  }
-
-  if (
-    canUseExpandCollapseLabelPatterns &&
-    textMatchesAnyPattern(attributeText, EXPAND_LABEL_PATTERNS)
-  ) {
-    return "expand";
+  if (canUseExpandCollapseLabelPatterns) {
+    const labelPatternIcon = getLabelPatternIcon(attributeText);
+    if (labelPatternIcon) {
+      return labelPatternIcon;
+    }
   }
 
   const expandedStateIcon = getExpandedStateIcon(element);
@@ -181,6 +238,11 @@ const getHintLabelIcon = (
   const stateToggleIcon = getStateToggleIcon(element, semanticControlText);
   if (stateToggleIcon) {
     return stateToggleIcon;
+  }
+
+  const ancestorStateToggleIcon = getAncestorStateToggleIcon(element);
+  if (ancestorStateToggleIcon) {
+    return ancestorStateToggleIcon;
   }
 
   if (

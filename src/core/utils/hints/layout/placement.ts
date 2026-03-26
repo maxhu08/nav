@@ -17,6 +17,18 @@ export const getMarkerPlacementCandidates = (
   markerWidth: number,
   markerHeight: number
 ): Array<Pick<PlacedMarkerRect, "left" | "top">> => {
+  const compositeRowAncestor = element.parentElement?.closest(
+    [
+      "a[href]",
+      "[role='link']",
+      "[data-sidebar-item]",
+      "[tabindex]:not([tabindex='-1']):not([role='group'])"
+    ].join(", ")
+  );
+  const isNestedCompositeRowTarget =
+    compositeRowAncestor instanceof HTMLElement && compositeRowAncestor !== element;
+  const isHeadingContentTarget =
+    element.closest("h1, h2, h3, h4, h5, h6, [role='heading']") instanceof HTMLElement;
   const centeredRowContainer = element.closest(
     [
       "[role='menu']",
@@ -54,6 +66,16 @@ export const getMarkerPlacementCandidates = (
     !shouldHighlightThumbnail &&
     directive === null &&
     labelIcon === null &&
+    !isNestedCompositeRowTarget &&
+    !isHeadingContentTarget &&
+    anchorRect.width >= 180 &&
+    anchorRect.height <= 64;
+  const isCenteredNestedCompositeRowTarget =
+    !shouldHighlightThumbnail &&
+    directive === null &&
+    labelIcon === null &&
+    isNestedCompositeRowTarget &&
+    !isHeadingContentTarget &&
     anchorRect.width >= 180 &&
     anchorRect.height <= 64;
   const candidates: Array<Pick<PlacedMarkerRect, "left" | "top">> = [];
@@ -146,7 +168,7 @@ export const getMarkerPlacementCandidates = (
     }
   }
 
-  if (isWideRowLikeTarget) {
+  if (isWideRowLikeTarget || isCenteredNestedCompositeRowTarget) {
     pushCandidate(centerLeft, centerTop);
     pushCandidate(centerLeft, top);
     pushCandidate(right, centerTop);

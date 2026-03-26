@@ -164,12 +164,11 @@ const COMPOSITE_ROW_SELECTOR = [
   "[tabindex]:not([tabindex='-1']):not([role='group'])"
 ].join(", ");
 
-const getCompositeRowAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMRect | null => {
-  if (hint.directive !== null || hint.labelIcon === null) {
-    return null;
-  }
+const isHeadingTarget = (element: HTMLElement): boolean =>
+  element.closest("h1, h2, h3, h4, h5, h6, [role='heading']") instanceof HTMLElement;
 
-  if (targetRect.width > 96 || targetRect.height > 64) {
+const getCompositeRowAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMRect | null => {
+  if (hint.directive !== null) {
     return null;
   }
 
@@ -188,6 +187,18 @@ const getCompositeRowAnchorRect = (hint: HintMarker, targetRect: DOMRect): DOMRe
     rowRect.height > 84 ||
     rowRect.height < targetRect.height
   ) {
+    return null;
+  }
+
+  if (hint.labelIcon !== null) {
+    return targetRect.width <= 96 && targetRect.height <= 64 ? rowRect : null;
+  }
+
+  if (isHeadingTarget(hint.element)) {
+    return null;
+  }
+
+  if (targetRect.width >= rowRect.width * 0.75) {
     return null;
   }
 
