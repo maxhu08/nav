@@ -1,7 +1,7 @@
 import type { ActionName } from "~/src/utils/hotkeys";
 
 export type ActionHandler = (count?: number) => boolean;
-export type CoreMode = "normal" | "find" | "watch";
+export type CoreMode = "normal" | "find" | "hint" | "watch";
 
 export const createModeController = () => {
   let currentMode: CoreMode = "normal";

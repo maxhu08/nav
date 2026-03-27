@@ -1,6 +1,6 @@
 import type { isEditableTarget as isEditableTargetType } from "~/src/core/utils/is-editable-target";
 
-type CoreMode = "normal" | "find" | "watch";
+type CoreMode = "normal" | "find" | "hint" | "watch";
 
 type ForceNormalModeDeps = {
   isOptionsPage: () => boolean;

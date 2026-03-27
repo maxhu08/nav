@@ -6,6 +6,7 @@ import {
   type SvgNodeDefinition
 } from "~/src/lib/inline-icons";
 import {
+  ensureOverlayRoot,
   FIND_BAR_ID,
   FIND_CLEAR_BUTTON_ID,
   FIND_INPUT_ID,
@@ -47,14 +48,13 @@ export const createFindOverlay = (
   const existingOverlay = getFindOverlay();
   const overlay = existingOverlay ?? document.createElement("div");
   overlay.id = FIND_OVERLAY_ID;
-  overlay.style.all = "initial";
-  overlay.style.position = "fixed";
-  overlay.style.inset = "0";
-  overlay.style.pointerEvents = "none";
-  overlay.style.zIndex = "2147483647";
 
   const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
   injectFindUIStyles(root);
+
+  if (!existingOverlay) {
+    ensureOverlayRoot().append(overlay);
+  }
 
   return { overlay, existed: !!existingOverlay };
 };
@@ -98,7 +98,7 @@ export const createFindBar = (): {
 
   const clearButton = document.createElement("button");
   clearButton.id = FIND_CLEAR_BUTTON_ID;
-  clearButton.className = "nav-find-clear";
+  clearButton.className = "nav-find-nav nav-find-clear";
   clearButton.type = "button";
   clearButton.setAttribute("aria-label", "Clear find input");
   clearButton.setAttribute("aria-controls", FIND_INPUT_ID);

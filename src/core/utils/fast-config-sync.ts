@@ -5,20 +5,32 @@ type FastConfigSyncDeps = {
   applyHotkeyMappings: (mappings: HotkeyMappings, prefixes: Partial<Record<string, true>>) => void;
   applyUrlRules: (rules: FastConfig["rules"]["urls"]) => void;
   setForceNormalMode: (value: boolean) => void;
+  setHintShowCapitalizedLetters: (value: boolean) => void;
+  setHintCharset: (value: string) => void;
+  setHintCss: (value: string) => void;
+  setHintMinLabelLength: (value: number) => void;
   setWatchShowCapitalizedLetters: (value: boolean) => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
   syncFocusStyles: () => void;
+  syncHintStyles: () => void;
+  syncHintMarkers: () => void;
   syncWatchHintsOverlay: () => void;
 };
 
 const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void => {
   deps.setForceNormalMode(fastConfig.rules.forceNormalMode);
   deps.applyUrlRules(fastConfig.rules.urls);
+  deps.setHintShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
+  deps.setHintCharset(fastConfig.hints.charset);
+  deps.setHintCss(fastConfig.hints.css);
+  deps.setHintMinLabelLength(fastConfig.hints.minLabelLength);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setShowActivationIndicator(fastConfig.hints.showActivationIndicator);
   deps.setActivationIndicatorColor(fastConfig.hints.showActivationIndicatorColor);
   deps.syncFocusStyles();
+  deps.syncHintStyles();
+  deps.syncHintMarkers();
   deps.syncWatchHintsOverlay();
   deps.applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
 };

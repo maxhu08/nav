@@ -12,7 +12,10 @@ type InjectStylesParams = {
   findRoot?: ShadowRoot | null;
 };
 
-const getStyleById = (root: ShadowRoot | HTMLElement, styleId: string): HTMLStyleElement | null => {
+export const getStyleById = (
+  root: ShadowRoot | HTMLElement,
+  styleId: string
+): HTMLStyleElement | null => {
   const existingStyle =
     root instanceof ShadowRoot
       ? root.getElementById(styleId)
@@ -23,7 +26,7 @@ const getStyleById = (root: ShadowRoot | HTMLElement, styleId: string): HTMLStyl
   return existingStyle instanceof HTMLStyleElement ? existingStyle : null;
 };
 
-const upsertStyle = (root: ShadowRoot | HTMLElement, styleId: string, css: string): void => {
+export const upsertStyle = (root: ShadowRoot | HTMLElement, styleId: string, css: string): void => {
   const existingStyle = getStyleById(root, styleId);
   if (existingStyle) {
     existingStyle.textContent = css;
@@ -36,7 +39,7 @@ const upsertStyle = (root: ShadowRoot | HTMLElement, styleId: string, css: strin
   root.append(style);
 };
 
-const getDocumentStyleRoot = (): HTMLElement => {
+export const getDocumentStyleRoot = (): HTMLElement => {
   return document.head ?? document.documentElement;
 };
 

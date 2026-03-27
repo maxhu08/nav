@@ -21,13 +21,13 @@ import {
   createFindBar,
   createFindOverlay,
   createFindStatus
-} from "~/src/core/actions/find-mode/ui";
+} from "./ui";
 import {
   activateSiteKeybindIgnore,
   deactivateSiteKeybindIgnore
 } from "~/src/core/utils/ignore-site-keybinds";
 
-type CoreMode = "normal" | "find" | "watch";
+type CoreMode = "normal" | "find" | "hint" | "watch";
 
 type FindMatch = {
   range: Range;
@@ -368,7 +368,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
         return;
       }
 
-      const { overlay, existed } = createFindOverlay(deps.injectFindUIStyles);
+      const { overlay } = createFindOverlay(deps.injectFindUIStyles);
       const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
       const { bar, actions, input, matchCount, clearButton } = createFindBar();
       const { status, statusText, prevButton, nextButton } = createFindStatus();
@@ -383,10 +383,6 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
         nextButton,
         clearButton
       };
-
-      if (!existed) {
-        document.documentElement.append(overlay);
-      }
 
       attachFindUIEventListeners(input, prevButton, nextButton, clearButton, {
         setFindQuery,

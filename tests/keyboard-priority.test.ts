@@ -95,7 +95,14 @@ describe("keyboard priority", () => {
           isFindModeActive: () => false,
           shouldIgnoreKeydownInFindUI: () => false
         },
+        hintController: {
+          activateMode: () => false,
+          exitHintMode: () => {},
+          handleHintKeydown: () => false,
+          isHintModeActive: () => false
+        },
         forceNormalMode: {
+          isEnabled: () => false,
           handleKeydownCapture: () => {}
         },
         isScrollAction: (actionName) => actionName === "scroll-down",
@@ -130,6 +137,78 @@ describe("keyboard priority", () => {
 
       expect(navActionCount).toBe(0);
       expect(receivedKeys).toEqual(["g", "n"]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("claims shared prefixes when multiple nav actions depend on them", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      const keyState = createKeyState({
+        getMode: () => "normal"
+      });
+
+      keyState.applyHotkeyMappings(
+        {
+          yy: { normal: "yank-current-tab-url" },
+          yl: { normal: "yank-link-url" }
+        },
+        { y: true }
+      );
+
+      const receivedKeys: string[] = [];
+      const handleKeydown = createNavigationKeydownHandler({
+        actions: {
+          "yank-current-tab-url": () => true,
+          "yank-link-url": () => true
+        } as never,
+        findMode: {
+          handleFindUIKeydown: () => false,
+          exitFindMode: () => {},
+          isFindModeActive: () => false,
+          shouldIgnoreKeydownInFindUI: () => false
+        },
+        hintController: {
+          activateMode: () => false,
+          exitHintMode: () => {},
+          handleHintKeydown: () => false,
+          isHintModeActive: () => false
+        },
+        forceNormalMode: {
+          isEnabled: () => false,
+          handleKeydownCapture: () => {}
+        },
+        isScrollAction: () => false,
+        keyState,
+        onConsumeKeydown: () => {},
+        watchController: {
+          exitWatchMode: () => {},
+          getWatchActionSequences: () => ({
+            "toggle-fullscreen": "f",
+            "toggle-play-pause": "e",
+            "toggle-loop": "l",
+            "toggle-mute": "m",
+            "toggle-captions": "c"
+          }),
+          isWatchModeActive: () => false,
+          toggleFullscreen: () => false,
+          toggleWatchCaptions: () => false,
+          toggleWatchLoop: () => false,
+          toggleWatchMute: () => false,
+          toggleWatchPlayPause: () => false
+        }
+      });
+
+      window.addEventListener("keydown", handleKeydown, true);
+      document.addEventListener("keydown", (event) => {
+        receivedKeys.push(event.key);
+      });
+
+      document.dispatchEvent(new window.KeyboardEvent("keydown", { bubbles: true, key: "y" }));
+
+      expect(receivedKeys).toEqual([]);
     } finally {
       fixture.cleanup();
     }
