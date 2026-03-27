@@ -1,12 +1,3 @@
-import {
-  setAvoidedAdjacentHintPairs,
-  setHighlightThumbnails,
-  setHintCSS,
-  setHintCharset,
-  setReservedHintLabels,
-  setMinHintLabelLength,
-  setShowCapitalizedLetters
-} from "~/src/core/actions/hints";
 import { type FastConfig, getFastConfig } from "~/src/utils/fast-config";
 import { type HotkeyMappings } from "~/src/utils/hotkeys";
 
@@ -24,14 +15,7 @@ type FastConfigSyncDeps = {
 const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void => {
   deps.setForceNormalMode(fastConfig.rules.forceNormalMode);
   deps.applyUrlRules(fastConfig.rules.urls);
-  setHintCharset(fastConfig.hints.charset);
-  setAvoidedAdjacentHintPairs(fastConfig.hints.avoidAdjacentPairs);
-  setReservedHintLabels(fastConfig.hints.reservedLabels);
-  setMinHintLabelLength(fastConfig.hints.minLabelLength);
-  setShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
-  setHighlightThumbnails(fastConfig.hints.improveThumbnailMarkers);
-  setHintCSS(fastConfig.hints.css);
   deps.setShowActivationIndicator(fastConfig.hints.showActivationIndicator);
   deps.setActivationIndicatorColor(fastConfig.hints.showActivationIndicatorColor);
   deps.syncFocusStyles();

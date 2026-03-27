@@ -1,6 +1,6 @@
 # Issue Reporting
 
-Use this page when reporting hint, directive, or target-selection bugs.
+Use this page when reporting hint or target-selection bugs.
 
 ## Keep It Simple
 
@@ -24,7 +24,6 @@ Short description of the issue.
 
 ## Action
 
-- Directive (if any):
 - Action triggered:
 - Typed keys (if any):
 
@@ -59,7 +58,7 @@ Paste any config that might affect the issue.
 ````md
 ## Summary
 
-`@attach` picks the wrong target on the composer page.
+Hint mode misses the visible composer button.
 
 ## Environment
 
@@ -69,30 +68,28 @@ Paste any config that might affect the issue.
 
 ## Action
 
-- Directive: `@attach`
 - Action triggered: `hint-mode-current-tab`
-- Typed keys: `up`
+- Typed keys: `as`
 
 ## Expected
 
-- nav should target the visible attach button in the composer toolbar.
+- nav should target the visible composer button in the toolbar.
 
 ## Actual
 
-- nav targets a hidden file input outside the visible toolbar.
+- nav skips the visible toolbar button and highlights a different control.
 
 ## Reproduction Steps
 
 1. Open the page.
 2. Focus the message composer.
 3. Trigger hint mode.
-4. Type `up`.
+4. Type the displayed hint label.
 
 ## Config (if relevant)
 
 ```txt
-hints.reservedLabels:
-@attach up
+hints.charset: asdfjkl
 ```
 
 ## Extra Context

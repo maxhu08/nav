@@ -18,29 +18,7 @@ type WatchActionName =
 type KeyStateMode = "normal" | "find" | "watch";
 
 type CreateKeyStateDeps = {
-  onReservedHintPrefixesChange: (prefixes: Set<string>) => void;
   getMode: () => KeyStateMode;
-};
-
-const getReservedHintPrefixes = (mappings: HotkeyMappings): Set<string> => {
-  const reservedPrefixes = new Set<string>();
-
-  for (const [sequence, bindings] of Object.entries(mappings)) {
-    const hasHintsBinding = Object.values(bindings ?? {}).some(
-      (actionName) => actionName === "hint-mode-current-tab" || actionName === "hint-mode-new-tab"
-    );
-
-    if (!hasHintsBinding) {
-      continue;
-    }
-
-    const firstCharacter = sequence[0]?.toLowerCase();
-    if (firstCharacter && /[a-z]/.test(firstCharacter)) {
-      reservedPrefixes.add(firstCharacter);
-    }
-  }
-
-  return reservedPrefixes;
 };
 
 const normalizeBaseKey = (key: string): string | null => {
@@ -267,11 +245,6 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     return count;
   };
 
-  const isToggleHintsAction = (
-    actionName: ActionName | null
-  ): actionName is "hint-mode-current-tab" | "hint-mode-new-tab" =>
-    actionName === "hint-mode-current-tab" || actionName === "hint-mode-new-tab";
-
   return {
     applyHotkeyMappings: (
       mappings: HotkeyMappings,
@@ -279,7 +252,6 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     ): void => {
       keyActions = mappings;
       keyActionPrefixes = prefixes;
-      deps.onReservedHintPrefixesChange(getReservedHintPrefixes(mappings));
       clearPendingState();
     },
     applyUrlRules: (rules: FastConfig["rules"]["urls"]): void => {
@@ -334,27 +306,6 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
       }
 
       return { actionName, claimKeydown: true, consumed: true };
-    },
-    getToggleHintsActionName: (keyToken: string): KeyParseResult => {
-      const nextSequence = `${pendingSequence}${keyToken}`;
-      const directMatch = getAllowedActionForSequence(nextSequence);
-
-      if (isToggleHintsAction(directMatch ?? null)) {
-        clearPendingSequence();
-        return { actionName: directMatch ?? null, claimKeydown: true, consumed: true };
-      }
-
-      const hasLongerToggleMatch = hasAllowedActionPrefix(nextSequence, (actionName) =>
-        isToggleHintsAction(actionName)
-      );
-
-      if (hasLongerToggleMatch) {
-        startPendingSequence(nextSequence);
-        return { actionName: null, claimKeydown: false, consumed: true };
-      }
-
-      clearPendingSequence();
-      return { actionName: null, claimKeydown: false, consumed: false };
     },
     getWatchActionName: (
       keyToken: string,

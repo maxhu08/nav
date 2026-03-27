@@ -23,92 +23,54 @@ export const RESERVED_HINT_DIRECTIVES = [
 ] as const;
 
 export type ReservedHintDirective = (typeof RESERVED_HINT_DIRECTIVES)[number];
+
 export type ReservedHintLabels = Record<ReservedHintDirective, string[]>;
 
-export const RESERVED_HINT_DIRECTIVE_LINE_PATTERN = /^@([a-z]+) ([a-z]+(?: [a-z]+)*)$/i;
+export const RESERVED_HINT_DIRECTIVE_LINE_PATTERN = /^@([a-z-]+)\s+([a-z]+(?:\s+[a-z]+)*)$/;
 
-const RESERVED_HINT_DIRECTIVE_SET = new Set<string>(RESERVED_HINT_DIRECTIVES);
-const RESERVED_HINT_DIRECTIVE_ALIASES: Record<string, ReservedHintDirective> = {
-  upload: "attach",
-  notifications: "notification"
-};
-const NON_WHITESPACE_PATTERN = /\S+/g;
-
-const isAsciiLowercaseWord = (value: string): boolean => {
-  if (value.length === 0) {
-    return false;
-  }
-
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index);
-    if (code < 97 || code > 122) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-export const isReservedHintDirective = (value: string): value is ReservedHintDirective => {
-  return RESERVED_HINT_DIRECTIVE_SET.has(value);
-};
+export const createEmptyReservedHintLabels = (): ReservedHintLabels => ({
+  input: [],
+  erase: [],
+  attach: [],
+  chat: [],
+  share: [],
+  download: [],
+  login: [],
+  microphone: [],
+  notification: [],
+  delete: [],
+  save: [],
+  copy: [],
+  hide: [],
+  home: [],
+  sidebar: [],
+  next: [],
+  prev: [],
+  cancel: [],
+  submit: [],
+  like: [],
+  dislike: []
+});
 
 export const normalizeReservedHintDirective = (value: string): ReservedHintDirective | null => {
-  const normalized = value.toLowerCase();
-
-  if (isReservedHintDirective(normalized)) {
-    return normalized;
-  }
-
-  return RESERVED_HINT_DIRECTIVE_ALIASES[normalized] ?? null;
-};
-
-export const parsePreferredLabelsValue = (value: string): string[] => {
-  const normalizedLabels: string[] = [];
-  const seenLabels = new Set<string>();
-  let previousLabelLength: number | null = null;
-
-  for (const match of value.matchAll(NON_WHITESPACE_PATTERN)) {
-    const segment = (match[0] ?? "").toLowerCase();
-    const hasExpectedLength =
-      previousLabelLength === null || segment.length === previousLabelLength + 1;
-
-    if (!isAsciiLowercaseWord(segment) || seenLabels.has(segment) || !hasExpectedLength) {
-      continue;
-    }
-
-    seenLabels.add(segment);
-    normalizedLabels.push(segment);
-    previousLabelLength = segment.length;
-  }
-
-  return normalizedLabels;
-};
-
-export const createEmptyReservedHintLabels = (): ReservedHintLabels => {
-  const reservedHintLabels = {} as ReservedHintLabels;
-
-  for (const directive of RESERVED_HINT_DIRECTIVES) {
-    reservedHintLabels[directive] = [];
-  }
-
-  return reservedHintLabels;
+  const normalized = value.trim().toLowerCase();
+  return RESERVED_HINT_DIRECTIVES.includes(normalized as ReservedHintDirective)
+    ? (normalized as ReservedHintDirective)
+    : null;
 };
 
 export const normalizeReservedHintLabels = (
-  value: Partial<Record<ReservedHintDirective, string[]>>,
-  fallback: Partial<Record<ReservedHintDirective, string[]>> = {}
+  value: Partial<ReservedHintLabels>
 ): ReservedHintLabels => {
-  const reservedHintLabels = createEmptyReservedHintLabels();
+  const normalized = createEmptyReservedHintLabels();
 
   for (const directive of RESERVED_HINT_DIRECTIVES) {
-    reservedHintLabels[directive] =
-      value[directive] !== undefined
-        ? [...(value[directive] ?? [])]
-        : [...(fallback[directive] ?? [])];
+    normalized[directive] = Array.isArray(value[directive])
+      ? value[directive].filter((label): label is string => typeof label === "string")
+      : [];
   }
 
-  return reservedHintLabels;
+  return normalized;
 };
 
 export const isReservedHintLabelsShapeValid = (value: unknown): value is ReservedHintLabels => {
@@ -117,31 +79,19 @@ export const isReservedHintLabelsShapeValid = (value: unknown): value is Reserve
   }
 
   const record = value as Record<string, unknown>;
-  for (const directive of RESERVED_HINT_DIRECTIVES) {
-    if (!Array.isArray(record[directive])) {
-      return false;
-    }
-  }
-
-  return true;
+  return RESERVED_HINT_DIRECTIVES.every(
+    (directive) =>
+      Array.isArray(record[directive]) &&
+      record[directive].every((label) => typeof label === "string")
+  );
 };
 
-export const parseReservedHintDirectives = (
-  value: string
-): Partial<Record<ReservedHintDirective, string[]>> => {
-  const result: Partial<Record<ReservedHintDirective, string[]>> = {};
+export const parseReservedHintDirectives = (value: string): ReservedHintLabels => {
+  const parsed = createEmptyReservedHintLabels();
 
-  for (const line of value.split("\n")) {
-    const trimmedLine = line.trim();
-    if (!trimmedLine || trimmedLine.startsWith("#")) {
-      continue;
-    }
-
-    if (line !== trimmedLine) {
-      continue;
-    }
-
-    if (line.charCodeAt(0) !== 64) {
+  for (const rawLine of value.split("\n")) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) {
       continue;
     }
 
@@ -150,19 +100,16 @@ export const parseReservedHintDirectives = (
       continue;
     }
 
-    const directive = normalizeReservedHintDirective((match[1] ?? "").toLowerCase());
+    const directive = normalizeReservedHintDirective(match[1] ?? "");
     if (!directive) {
       continue;
     }
 
-    const labelsText = match[2] ?? "";
-    const parsedLabels = parsePreferredLabelsValue(labelsText);
-    if (parsedLabels.length === 0) {
-      continue;
-    }
-
-    result[directive] = parsedLabels;
+    parsed[directive] = (match[2] ?? "")
+      .split(/\s+/)
+      .map((label) => label.trim().toLowerCase())
+      .filter((label) => /^[a-z]+$/.test(label));
   }
 
-  return result;
+  return parsed;
 };

@@ -35,7 +35,7 @@ Example:
 - Example: `config.hotkeys.mappings`, `config.rules.urls.blacklist`, `config.rules.urls.whitelist`, and `config.hints.reservedLabels` are stored as raw strings.
 - `fastConfig` is the derived runtime shape from `src/utils/fast-config.ts`.
 - Keep `fastConfig` values ready for the content script to consume without reparsing on every keydown.
-- Example: parsed URL rules, parsed hotkey mappings, hotkey prefixes, and parsed `hints.reservedLabels` directives belong in `fastConfig`.
+- Example: parsed URL rules, parsed hotkey mappings, hotkey prefixes, and other derived hint settings belong in `fastConfig`.
 
 ## Required Wiring When Adding a New Interaction
 

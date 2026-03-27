@@ -76,7 +76,6 @@ describe("keyboard priority", () => {
 
     try {
       const keyState = createKeyState({
-        onReservedHintPrefixesChange: () => {},
         getMode: () => "normal"
       });
 
@@ -102,8 +101,6 @@ describe("keyboard priority", () => {
         isScrollAction: (actionName) => actionName === "scroll-down",
         keyState,
         onConsumeKeydown: () => {},
-        setShouldBypassNextTypingKeyAfterHintSelect: () => {},
-        shouldBypassNextTypingKeyAfterHintSelect: () => false,
         watchController: {
           exitWatchMode: () => {},
           getWatchActionSequences: () => ({

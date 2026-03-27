@@ -1,4 +1,3 @@
-import { activateHints, areHintsPendingSelection, exitHints } from "~/src/core/actions/hints";
 import {
   installScrollTracking,
   scrollHalfPageDown,
@@ -71,17 +70,6 @@ export const createNavigationActions = ({
     }
   });
 
-  const createToggleHintsAction = (mode: "current-tab" | "new-tab"): ActionHandler => {
-    return () => {
-      if (areHintsPendingSelection()) {
-        exitHints();
-        return true;
-      }
-
-      return activateHints(mode);
-    };
-  };
-
   const scrollActions = createScrollActionSet();
   const actions: Record<ActionName, ActionHandler> = {
     "watch-mode": watchController.toggleVideoControls,
@@ -106,8 +94,8 @@ export const createNavigationActions = ({
     "create-new-tab": createTabCommandAction("create-new-tab"),
     "reload-current-tab": createTabCommandAction("reload-current-tab"),
     "reload-current-tab-hard": createTabCommandAction("reload-current-tab-hard"),
-    "hint-mode-current-tab": createToggleHintsAction("current-tab"),
-    "hint-mode-new-tab": createToggleHintsAction("new-tab"),
+    "hint-mode-current-tab": () => false,
+    "hint-mode-new-tab": () => false,
     "yank-link-url": yankLinkUrl,
     "yank-image": yankImage,
     "yank-image-url": yankImageUrl,

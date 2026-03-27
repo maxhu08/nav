@@ -1,23 +1,4 @@
-import { HINT_SELECTABLE_ACTIVATED_EVENT } from "~/src/core/actions/hints";
 import { FOCUS_INDICATOR_EVENT, isFindUIElement } from "~/src/core/utils/get-ui";
-import { isEditableTarget } from "~/src/core/utils/is-editable-target";
-
-export const getHintSelectableActivationDetail = (
-  event: Event
-): { didFocusImmediately: boolean } | null => {
-  if (!(event instanceof CustomEvent) || !event.detail || typeof event.detail !== "object") {
-    return null;
-  }
-
-  const detail = event.detail as Partial<{ didFocusImmediately: unknown }>;
-  if (typeof detail.didFocusImmediately !== "boolean") {
-    return null;
-  }
-
-  return {
-    didFocusImmediately: detail.didFocusImmediately
-  };
-};
 
 type RuntimeListenerDeps = {
   focusIndicator: {
@@ -37,14 +18,12 @@ type RuntimeListenerDeps = {
     handleWatchRouteChange: EventListener;
     handleWatchDomMutation: () => void;
   };
-  setShouldBypassNextTypingKeyAfterHintSelect: (value: boolean) => void;
 };
 
 export const registerRuntimeListeners = ({
   focusIndicator,
   findMode,
-  watchController,
-  setShouldBypassNextTypingKeyAfterHintSelect
+  watchController
 }: RuntimeListenerDeps): void => {
   let lastKnownLocationHref = window.location.href;
   const notifyRouteChangeIfNeeded = (eventName: string): void => {
@@ -118,15 +97,6 @@ export const registerRuntimeListeners = ({
   document.addEventListener("mousedown", (event) => {
     if (!isFindUIElement(event.target)) {
       findMode.hideFindBar();
-    }
-  });
-  window.addEventListener(HINT_SELECTABLE_ACTIVATED_EVENT, (event) => {
-    const detail = getHintSelectableActivationDetail(event);
-    setShouldBypassNextTypingKeyAfterHintSelect(!detail?.didFocusImmediately);
-  });
-  document.addEventListener("focusin", (event) => {
-    if (isEditableTarget(event.target)) {
-      setShouldBypassNextTypingKeyAfterHintSelect(false);
     }
   });
 };
