@@ -35,7 +35,7 @@ export const buildHintTargets = (
 
   return filteredElements.map((element, index) => {
     const rect = element.getBoundingClientRect();
-    const marker = createMarkerElement(rect);
+    const marker = createMarkerElement();
     const target: HintTarget = {
       element,
       label: labels[index] ?? "",

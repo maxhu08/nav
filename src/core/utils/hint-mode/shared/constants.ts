@@ -11,6 +11,7 @@ export const HINT_STYLE_ID = HINT_STYLE_ID_FROM_UI;
 export const MARKER_ATTRIBUTE = "data-nav-hint-marker";
 export const MARKER_VARIANT_ATTRIBUTE = "data-nav-hint-marker-variant";
 export const LETTER_ATTRIBUTE = "data-nav-hint-marker-letter";
+export const HINT_MARKER_EDGE_GAP = 8;
 
 export const CLICKABLE_SELECTOR = [
   "a[href]",
