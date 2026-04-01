@@ -38,8 +38,9 @@ Use these terms consistently when talking about the extension.
 
 - `config`: the user-facing persisted settings shape stored in `chrome.storage.local`.
 - `fastConfig`: the parsed runtime cache derived from `config` for fast lookups during navigation.
-- `hints.directives`: the config field that stores raw directive-related options in the editable config shape.
-- `reserved hint labels`: the parsed directive label map in runtime config, keyed by directive name.
+- `hotkeys.mappings`: the raw editable hotkey declaration list. Every action must appear once or more, and `<unbound>` means declared without a runtime binding.
+- `hints.directives`: the raw editable directive declaration list. Every reserved directive must appear exactly once, and `@directive <unbound>` means declared without any labels.
+- `reserved hint labels`: the parsed directive label map in runtime config, keyed by directive name, with unbound directives represented as empty arrays.
 
 ## Suggested Usage
 

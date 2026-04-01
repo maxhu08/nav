@@ -35,9 +35,10 @@ Before editing migration logic, check the current release version in `EXTENSION_
 - Use that version to decide the migration comment in `src/utils/migrate-config.ts`
 - If you renamed an existing action, migrate the old action name to the new one too
 - If the config shape changed, add the smallest migration needed to preserve compatibility
+- If the new action becomes part of the required hotkey declaration set, make sure migration backfills missing older configs with `<unbound> your-action-name`
 - Keep the migration comment in the existing style, such as `// if config before vX.X.X`
 
-Do not add migrations that silently re-add a mapping a user removed on purpose.
+Do not add migrations that overwrite a user-selected binding, but do keep required declarations present by backfilling missing entries with `<unbound>`.
 
 ## 4. Update the Docs Page
 

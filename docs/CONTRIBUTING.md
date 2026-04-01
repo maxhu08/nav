@@ -36,13 +36,13 @@ Use this page as the fast entry point for contributors.
 ## Hint Feature Workflow
 
 - For hint changes, use `docs/PROJECT_STRUCTURE.md` as the file map before editing.
-- Collection and dedupe behavior belongs under `src/core/utils/hints/hint-recognition/`, while low-level DOM/visibility helpers belong in `src/core/utils/hints/dom/` with `src/core/utils/hints/dom.ts` as the facade.
-- Do not use `src/utils/migrate-config.ts` to re-add removed mappings or settings; only use migrations for config-shape compatibility and renamed values.
-- Keep generic icon heuristics in `src/core/utils/hints/label-icons.ts` and marker-specific rendering in `src/core/utils/hints/markers.ts`.
+- Collection and target discovery behavior belongs under `src/core/utils/hint-mode/collection/`, directive scoring belongs under `src/core/utils/hint-mode/directive-recognition/`, and rendering belongs under `src/core/utils/hint-mode/rendering/`.
+- Use `src/utils/migrate-config.ts` for config-shape compatibility, renamed values, and required backfills such as missing hotkey declarations or missing hint directives.
+- Keep directive icon definitions in `src/lib/hint-directive-icons.ts` and marker-specific rendering in `src/core/utils/hint-mode/rendering/`.
 
 ## Refactor Conventions
 
-- Keep top-level runtime files such as `src/core/navigation.ts`, `src/core/actions/hints.ts`, and `src/core/actions/watch-mode.ts` as facades with stable exports.
+- Keep top-level runtime files such as `src/core/navigation.ts`, `src/core/actions/hint-mode/index.ts`, and `src/core/actions/watch-mode.ts` as facades with stable exports.
 - When a feature grows, prefer adding a nearby helper module directory before expanding one file indefinitely.
 - Source files should stay readable and intentionally scoped; as a rule of thumb, split them before they grow past roughly 500 lines.
 
