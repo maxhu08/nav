@@ -53,6 +53,12 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   if (!hasDirectivesOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
     migratedConfig.hints.directives = fallbackConfig.hints.directives;
+    migratedConfig.hints.styling = fallbackConfig.hints.styling;
+
+    if ((migratedConfig.hints as any).reservedLabels) {
+      delete (migratedConfig.hints as any).reservedLabels;
+    }
+
     return migratedConfig;
   }
 

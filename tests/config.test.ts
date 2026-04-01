@@ -37,6 +37,7 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
       expect(migratedConfig.rules.urls.mode).toBe("whitelist");
       expect(migratedConfig.hotkeys.mappings).toBe("j scroll-down");
       expect(migratedConfig.hints.directives).toBe(defaultConfig.hints.directives);
+      expect(migratedConfig.hints.styling).toBe(defaultConfig.hints.styling);
     }
   },
   {

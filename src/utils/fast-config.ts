@@ -184,8 +184,10 @@ const parseAvoidAdjacentPairsValue = (
   return normalizedPairs;
 };
 
-const parseDirectivesValue = (value: string): FastConfig["hints"]["directives"] => {
-  return normalizeReservedHintLabels(parseReservedHintDirectives(value));
+const parseDirectivesValue = (value: unknown): FastConfig["hints"]["directives"] => {
+  return normalizeReservedHintLabels(
+    parseReservedHintDirectives(typeof value === "string" ? value : "")
+  );
 };
 
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
