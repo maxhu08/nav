@@ -64,6 +64,44 @@ const hasButtonSemantics = (element: HTMLElement): boolean => {
   return role === "button" || element.tagName.toLowerCase() === "button";
 };
 
+const opensPopup = (element: HTMLElement): boolean => {
+  const popupType = element.getAttribute("aria-haspopup")?.toLowerCase();
+  return typeof popupType === "string" && popupType !== "false";
+};
+
+const hasDisclosureState = (element: HTMLElement): boolean => {
+  const state = element.getAttribute("data-state")?.toLowerCase();
+  return state === "open" || state === "closed";
+};
+
+const hasExplicitDisclosureLabel = (element: HTMLElement): boolean => {
+  const values = [
+    element.getAttribute("aria-label"),
+    element.getAttribute("title"),
+    element.textContent
+  ]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  if (!values) {
+    return false;
+  }
+
+  return /\b(expand|collapse|toggle|show more|show less|open section|close section|disclosure)\b/.test(
+    values
+  );
+};
+
+const hasExplicitNonDisclosureLabel = (element: HTMLElement): boolean => {
+  const values = [element.getAttribute("aria-label"), element.getAttribute("title")]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ")
+    .trim();
+
+  return values.length > 0 && !hasExplicitDisclosureLabel(element);
+};
+
 const hasExpandCollapseIndicator = (element: HTMLElement): boolean => {
   const values = [
     element.getAttribute("aria-label"),
@@ -106,6 +144,18 @@ const seemsExpandable = (element: HTMLElement): boolean => {
   }
 
   if (tagName === "details" || tagName === "summary") {
+    return true;
+  }
+
+  if (opensPopup(element)) {
+    return false;
+  }
+
+  if (
+    hasButtonSemantics(element) &&
+    hasDisclosureState(element) &&
+    !hasExplicitNonDisclosureLabel(element)
+  ) {
     return true;
   }
 
@@ -172,8 +222,9 @@ export const buildHintTargets = (
   return filteredElements.map((element, index) => {
     const rect = element.getBoundingClientRect();
     const marker = seemsExpandable(element)
-      ? createHintMarkerWithIcon(createInlineSvgIcon(HINT_FOCUS_MODE_ICON_PATH))
+      ? createHintMarkerWithIcon("focus-action", createInlineSvgIcon(HINT_FOCUS_MODE_ICON_PATH))
       : createHintMarker();
+
     const target: HintTarget = {
       element,
       label: labels[index] ?? "",

@@ -30,6 +30,17 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
   let hintCss = "";
   let avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 
+  const rebuildHintTargets = (mode: HintActionMode): HintTarget[] => {
+    return buildHintTargets(
+      mode,
+      hintCharset,
+      minLabelLength,
+      showCapitalizedLetters,
+      toggleKey ? [toggleKey] : [],
+      avoidAdjacentPairs
+    );
+  };
+
   const exitHintMode = (): void => {
     activeMode = null;
     typedPrefix = "";
@@ -47,14 +58,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       exitHintMode();
       syncHintStyles(hintCss);
       toggleKey = options?.toggleKey?.toLowerCase() ?? null;
-      hintTargets = buildHintTargets(
-        mode,
-        hintCharset,
-        minLabelLength,
-        showCapitalizedLetters,
-        toggleKey ? [toggleKey] : [],
-        avoidAdjacentPairs
-      );
+      hintTargets = rebuildHintTargets(mode);
       if (hintTargets.length === 0) {
         showHintToastError("No hints available");
         return false;
@@ -144,7 +148,14 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
         return;
       }
 
-      exitHintMode();
+      hintTargets = rebuildHintTargets(activeMode);
+      if (hintTargets.length === 0) {
+        exitHintMode();
+        return;
+      }
+
+      renderHintTargets(hintTargets);
+      updateVisibleTargets(hintTargets, typedPrefix, showCapitalizedLetters);
     },
     syncStyles: (): void => {
       syncHintStyles(hintCss);

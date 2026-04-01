@@ -28,8 +28,8 @@ const createMarkerIconElement = (iconSvg: string): HTMLSpanElement => {
 
 export const createHintMarker = (): HTMLDivElement => createMarkerElement();
 
-export const createHintMarkerWithIcon = (iconSvg: string): HTMLDivElement => {
-  const marker = createMarkerElement("with-icon");
+export const createHintMarkerWithIcon = (variant: string, iconSvg: string): HTMLDivElement => {
+  const marker = createMarkerElement(variant);
   marker.append(createMarkerLabelElement(), createMarkerIconElement(iconSvg));
   return marker;
 };
