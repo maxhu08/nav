@@ -15,7 +15,12 @@ import {
   DEFAULT_HINT_CHARSET,
   HINT_CONTAINER_ID
 } from "~/src/core/utils/hint-mode/shared/constants";
-import type { HintActionMode, HintTarget } from "~/src/core/utils/hint-mode/shared/types";
+import type {
+  HintActionMode,
+  HintDirectiveLabelMap,
+  HintTarget
+} from "~/src/core/utils/hint-mode/shared/types";
+import { createEmptyReservedHintLabels } from "~/src/utils/hint-reserved-label-directives";
 
 type HintControllerDeps = {
   setMode: (mode: "find" | "hint" | "normal" | "watch") => void;
@@ -33,6 +38,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
   let minLabelLength = 1;
   let hintCss = "";
   let avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
+  let directiveLabels: HintDirectiveLabelMap = createEmptyReservedHintLabels();
 
   const rebuildHintTargets = (mode: HintActionMode): HintTarget[] => {
     return buildHintTargets(
@@ -40,6 +46,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       hintCharset,
       minLabelLength,
       showCapitalizedLetters,
+      directiveLabels,
       toggleKey ? [toggleKey] : [],
       avoidAdjacentPairs
     );
@@ -111,7 +118,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       }
 
       const nextCharacter = event.key.toLowerCase();
-      if (!hintCharset.includes(nextCharacter)) {
+      if (!hintTargets.some((target) => target.label.includes(nextCharacter))) {
         return true;
       }
 
@@ -148,6 +155,9 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       value: Partial<Record<string, Partial<Record<string, true>>>>
     ): void => {
       avoidAdjacentPairs = value;
+    },
+    setDirectiveLabels: (value: HintDirectiveLabelMap): void => {
+      directiveLabels = value;
     },
     syncHintMarkers: (): void => {
       if (!activeMode) {

@@ -98,3 +98,30 @@ export const positionMarkerElement = (
   marker.style.left = `${left}px`;
   marker.style.top = `${top}px`;
 };
+
+export const positionMarkerElementToRightOf = (
+  marker: HTMLDivElement,
+  referenceMarker: HTMLDivElement,
+  placementState: MarkerPlacementState
+): void => {
+  const width = marker.offsetWidth;
+  const height = marker.offsetHeight;
+  const referenceLeft = Number.parseInt(referenceMarker.style.left, 10) || 0;
+  const referenceTop = Number.parseInt(referenceMarker.style.top, 10) || 0;
+  const left = clampToViewport(
+    referenceLeft + referenceMarker.offsetWidth + HINT_MARKER_MIN_GAP,
+    width,
+    window.innerWidth
+  );
+  const top = clampToViewport(referenceTop, height, window.innerHeight);
+
+  placementState.previousMarkerBounds = {
+    bottom: top + height,
+    left,
+    right: left + width,
+    top
+  };
+
+  marker.style.left = `${left}px`;
+  marker.style.top = `${top}px`;
+};

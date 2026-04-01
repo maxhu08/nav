@@ -70,4 +70,38 @@ describe("activateHintTarget", () => {
       fixture.cleanup();
     }
   });
+
+  test("clears erase directive targets and keeps focus", async () => {
+    const fixture = createDomFixture("<textarea id='composer'>hello world</textarea>");
+
+    try {
+      const { activateHintTarget } =
+        await import("~/src/core/utils/hint-mode/actions/activate-hint-target");
+
+      const composer = document.getElementById("composer") as HTMLTextAreaElement;
+      const receivedEvents: string[] = [];
+
+      composer.addEventListener("input", () => {
+        receivedEvents.push("input");
+      });
+      composer.addEventListener("change", () => {
+        receivedEvents.push("change");
+      });
+
+      expect(
+        activateHintTarget("current-tab", {
+          ...createHintTarget(composer),
+          directiveMatch: {
+            directive: "erase",
+            label: "er"
+          }
+        })
+      ).toBe(true);
+      expect(composer.value).toBe("");
+      expect(document.activeElement).toBe(composer);
+      expect(receivedEvents).toEqual(["input", "change"]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

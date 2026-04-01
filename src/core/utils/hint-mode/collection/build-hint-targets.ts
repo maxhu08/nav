@@ -9,8 +9,15 @@ import {
   createHintMarkerWithIcon
 } from "~/src/core/utils/hint-mode/rendering/create-marker-element";
 import { renderMarkerLabel } from "~/src/core/utils/hint-mode/rendering/render-marker-label";
-import type { HintActionMode, HintTarget } from "~/src/core/utils/hint-mode/shared/types";
-import type { ReservedHintDirective } from "~/src/utils/hint-reserved-label-directives";
+import type {
+  HintActionMode,
+  HintDirectiveLabelMap,
+  HintTarget
+} from "~/src/core/utils/hint-mode/shared/types";
+import {
+  createEmptyReservedHintLabels,
+  type ReservedHintDirective
+} from "~/src/utils/hint-reserved-label-directives";
 
 const createInlineSvgIcon = (pathData: string): string => {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="${pathData}"></path></svg>`;
@@ -27,9 +34,63 @@ type DirectiveScorer = (element: HTMLElement) => number;
 const HOME_TOKEN_PATTERN = /\bhome(?:page)?\b/i;
 const ROOT_PATH_PATTERN = /^\/$/;
 const HOME_PATH_PATTERN = /^\/home\/?$/i;
+const SIDEBAR_TOKEN_PATTERN =
+  /\b(sidebar|side\s*bar|navigation|nav(?:igation)?|drawer|rail|panel)\b/i;
+const SIDEBAR_ACTION_PATTERN = /\b(toggle|open|close|collapse|expand|show|hide)\b/i;
+const GUIDE_TOKEN_PATTERN = /\bguide\b/i;
+const SHELL_CONTEXT_PATTERN = /\b(masthead|topbar|app[-\s]?bar|header|chrome)\b/i;
+const INPUT_TOKEN_PATTERN =
+  /\b(search|chat|message|prompt|query|reply|ask|compose|composer|write|type|input|textbox|searchbox|editor|command)\b/i;
+const CHAT_INPUT_TOKEN_PATTERN =
+  /\b(chat|message|prompt|reply|ask|compose|composer|write|editor|command)\b/i;
+const ATTACH_TOKEN_PATTERN =
+  /\b(attach|upload|paperclip|files?|image|photo|add files?|add attachment|attachments?)\b/i;
+const COMPOSER_PLUS_PATTERN = /\bcomposer[-\s]?plus\b/i;
+const MICROPHONE_TOKEN_PATTERN = /\b(microphone|mic|voice|audio|record|dictate|speech)\b/i;
+const EDITABLE_INPUT_TYPES = new Set([
+  "",
+  "email",
+  "number",
+  "password",
+  "search",
+  "tel",
+  "text",
+  "url"
+]);
+
+const getElementTextValues = (element: HTMLElement, attributes: string[]): string[] => {
+  return attributes
+    .map((attribute) => element.getAttribute(attribute))
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+};
+
+const getJoinedElementText = (values: Array<string | null | undefined>): string => {
+  return values
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ")
+    .trim();
+};
+
+const getAncestorDescriptorText = (element: HTMLElement, depthLimit = 3): string => {
+  const values: string[] = [];
+  let current = element.parentElement;
+  let depth = 0;
+
+  while (current && depth < depthLimit) {
+    values.push(current.tagName.toLowerCase(), current.id, current.className);
+    current = current.parentElement;
+    depth += 1;
+  }
+
+  return getJoinedElementText(values);
+};
+
+const getPatternScore = (value: string | null, pattern: RegExp, weight: number): number => {
+  return typeof value === "string" && pattern.test(value) ? weight : 0;
+};
 
 const getTextContentScore = (value: string | null, weight: number): number => {
-  return typeof value === "string" && HOME_TOKEN_PATTERN.test(value) ? weight : 0;
+  return getPatternScore(value, HOME_TOKEN_PATTERN, weight);
 };
 
 const getHomeLinkScore = (element: HTMLElement): number => {
@@ -75,8 +136,221 @@ const scoreHomeDirectiveCandidate = (element: HTMLElement): number => {
   return homeLabelScore + homeIdentityScore + getHomeLinkScore(element);
 };
 
+const isEditableInputCandidate = (element: HTMLElement): boolean => {
+  if (element instanceof HTMLTextAreaElement) {
+    return !(element.disabled || element.readOnly);
+  }
+
+  if (element instanceof HTMLInputElement) {
+    return (
+      !(element.disabled || element.readOnly) &&
+      EDITABLE_INPUT_TYPES.has(element.type.toLowerCase())
+    );
+  }
+
+  const role = element.getAttribute("role")?.toLowerCase();
+  return (
+    element.isContentEditable || role === "textbox" || role === "searchbox" || role === "combobox"
+  );
+};
+
+const scoreInputDirectiveCandidate = (element: HTMLElement): number => {
+  if (!isEditableInputCandidate(element)) {
+    return 0;
+  }
+
+  const descriptorText = getJoinedElementText([
+    ...getElementTextValues(element, [
+      "aria-label",
+      "title",
+      "placeholder",
+      "aria-placeholder",
+      "data-placeholder",
+      "name",
+      "id",
+      "class",
+      "role",
+      "type"
+    ]),
+    element.textContent
+  ]);
+  const placeholderText = getJoinedElementText(
+    getElementTextValues(element, [
+      "placeholder",
+      "aria-placeholder",
+      "data-placeholder",
+      "aria-label"
+    ])
+  );
+
+  const semanticScore = Math.max(
+    getPatternScore(placeholderText, INPUT_TOKEN_PATTERN, 16),
+    getPatternScore(descriptorText, INPUT_TOKEN_PATTERN, 12)
+  );
+  const chatComposerScore = getPatternScore(descriptorText, CHAT_INPUT_TOKEN_PATTERN, 8);
+  const typeScore =
+    element instanceof HTMLTextAreaElement
+      ? 7
+      : element instanceof HTMLInputElement
+        ? element.type.toLowerCase() === "search"
+          ? 10
+          : 4
+        : element.isContentEditable
+          ? 9
+          : 6;
+
+  const parentContext = getJoinedElementText([
+    element.closest("form,[role='search'],header,main,aside,nav,section")?.getAttribute("class"),
+    element.closest("form,[role='search'],header,main,aside,nav,section")?.getAttribute("id")
+  ]);
+  const contextScore = INPUT_TOKEN_PATTERN.test(parentContext) ? 4 : 0;
+
+  return semanticScore > 0
+    ? semanticScore + chatComposerScore + typeScore + contextScore
+    : typeScore >= 7
+      ? typeScore
+      : 0;
+};
+
+const scoreSidebarDirectiveCandidate = (element: HTMLElement): number => {
+  const tagName = element.tagName.toLowerCase();
+  const role = element.getAttribute("role")?.toLowerCase();
+  const buttonLike = role === "button" || tagName === "button" || tagName === "summary";
+
+  if (!buttonLike) {
+    return 0;
+  }
+
+  const controlTarget = element.getAttribute("aria-controls");
+  const controlledElement = controlTarget ? document.getElementById(controlTarget) : null;
+  const ancestorDescriptorText = getAncestorDescriptorText(element);
+  const descriptorText = getJoinedElementText([
+    ...getElementTextValues(element, [
+      "aria-label",
+      "title",
+      "aria-description",
+      "data-tooltip",
+      "id",
+      "class"
+    ]),
+    element.textContent,
+    controlTarget,
+    controlledElement?.getAttribute("aria-label"),
+    controlledElement?.getAttribute("id"),
+    controlledElement?.getAttribute("class"),
+    ancestorDescriptorText
+  ]);
+
+  if (
+    element.getAttribute("aria-haspopup")?.toLowerCase() === "menu" &&
+    !SIDEBAR_TOKEN_PATTERN.test(descriptorText)
+  ) {
+    return 0;
+  }
+
+  const sidebarScore = Math.max(
+    getPatternScore(descriptorText, SIDEBAR_TOKEN_PATTERN, 14),
+    getPatternScore(controlTarget, SIDEBAR_TOKEN_PATTERN, 8)
+  );
+  const menuScore = /\b(menu|hamburger)\b/i.test(descriptorText) ? 6 : 0;
+  const actionScore = SIDEBAR_ACTION_PATTERN.test(descriptorText) ? 6 : 0;
+  const guideScore =
+    getPatternScore(descriptorText, GUIDE_TOKEN_PATTERN, 10) +
+    (SHELL_CONTEXT_PATTERN.test(ancestorDescriptorText) ? 6 : 0);
+  const controlScore = controlTarget ? 4 : 0;
+  const expandedScore = element.hasAttribute("aria-expanded") ? 3 : 0;
+  const positionScore = (() => {
+    const rect = element.getBoundingClientRect();
+    return rect.top <= 160 && rect.left <= 160 ? 3 : 0;
+  })();
+
+  if (sidebarScore === 0 && menuScore === 0 && guideScore === 0) {
+    return 0;
+  }
+
+  return (
+    sidebarScore +
+    menuScore +
+    guideScore +
+    actionScore +
+    controlScore +
+    expandedScore +
+    positionScore
+  );
+};
+
+const isButtonLikeDirectiveCandidate = (element: HTMLElement): boolean => {
+  const tagName = element.tagName.toLowerCase();
+  const role = element.getAttribute("role")?.toLowerCase();
+
+  if (tagName === "button" || tagName === "label") {
+    return true;
+  }
+
+  if (tagName === "input") {
+    const type = (element.getAttribute("type") ?? "").toLowerCase();
+    return ["button", "submit", "image", "file"].includes(type);
+  }
+
+  return role === "button";
+};
+
+const scoreAttachDirectiveCandidate = (element: HTMLElement): number => {
+  if (!isButtonLikeDirectiveCandidate(element)) {
+    return 0;
+  }
+
+  const descriptorText = getJoinedElementText([
+    ...getElementTextValues(element, [
+      "aria-label",
+      "title",
+      "aria-description",
+      "data-tooltip",
+      "data-testid",
+      "id",
+      "class",
+      "name",
+      "type"
+    ]),
+    element.textContent,
+    getAncestorDescriptorText(element)
+  ]);
+  const fileInputScore =
+    element instanceof HTMLInputElement && element.type.toLowerCase() === "file" ? 12 : 0;
+  const semanticScore = getPatternScore(descriptorText, ATTACH_TOKEN_PATTERN, 16);
+  const composerPlusScore = getPatternScore(descriptorText, COMPOSER_PLUS_PATTERN, 10);
+
+  return semanticScore + composerPlusScore + fileInputScore;
+};
+
+const scoreMicrophoneDirectiveCandidate = (element: HTMLElement): number => {
+  if (!isButtonLikeDirectiveCandidate(element)) {
+    return 0;
+  }
+
+  const descriptorText = getJoinedElementText([
+    ...getElementTextValues(element, [
+      "aria-label",
+      "title",
+      "aria-description",
+      "data-tooltip",
+      "id",
+      "class",
+      "name"
+    ]),
+    element.textContent,
+    getAncestorDescriptorText(element)
+  ]);
+
+  return getPatternScore(descriptorText, MICROPHONE_TOKEN_PATTERN, 18);
+};
+
 const DIRECTIVE_SCORERS: Partial<Record<ReservedHintDirective, DirectiveScorer>> = {
-  home: scoreHomeDirectiveCandidate
+  home: scoreHomeDirectiveCandidate,
+  input: scoreInputDirectiveCandidate,
+  sidebar: scoreSidebarDirectiveCandidate,
+  attach: scoreAttachDirectiveCandidate,
+  microphone: scoreMicrophoneDirectiveCandidate
 };
 
 const applyDirectiveMarker = (
@@ -267,11 +541,62 @@ const seemsExpandable = (element: HTMLElement): boolean => {
   return false;
 };
 
+const generateAvailableLabels = (
+  count: number,
+  charset: string,
+  minLabelLength: number,
+  forbiddenLeadingCharacters: string[],
+  forbiddenAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>,
+  reservedLabels: Set<string>
+): string[] => {
+  if (count <= 0) {
+    return [];
+  }
+
+  let targetCount = count + reservedLabels.size;
+
+  while (true) {
+    const labels = generateHintLabels(
+      targetCount,
+      charset,
+      minLabelLength,
+      forbiddenLeadingCharacters,
+      forbiddenAdjacentPairs
+    ).filter((label) => !reservedLabels.has(label));
+
+    if (labels.length >= count) {
+      return labels.slice(0, count);
+    }
+
+    targetCount += Math.max(count, reservedLabels.size, 1);
+  }
+};
+
+const createDirectiveTarget = (
+  sourceTarget: HintTarget,
+  directive: ReservedHintDirective,
+  label: string
+): HintTarget => {
+  return {
+    element: sourceTarget.element,
+    label,
+    marker: createHintMarker(),
+    rect: sourceTarget.rect,
+    imageUrl: sourceTarget.imageUrl,
+    linkUrl: sourceTarget.linkUrl,
+    directiveMatch: {
+      directive,
+      label
+    }
+  };
+};
+
 export const buildHintTargets = (
   mode: HintActionMode,
   charset: string,
   minLabelLength: number,
   showCapitalizedLetters: boolean,
+  directiveLabels: HintDirectiveLabelMap = createEmptyReservedHintLabels(),
   forbiddenLeadingCharacters: string[] = [],
   forbiddenAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {}
 ): HintTarget[] => {
@@ -288,16 +613,8 @@ export const buildHintTargets = (
     return true;
   });
 
-  const labels = generateHintLabels(
-    filteredElements.length,
-    charset,
-    minLabelLength,
-    forbiddenLeadingCharacters,
-    forbiddenAdjacentPairs
-  );
-
   const directiveMatches = new Map<ReservedHintDirective, DirectiveMatch>();
-  const targets = filteredElements.map((element, index) => {
+  const targets = filteredElements.map((element) => {
     const rect = element.getBoundingClientRect();
     const marker = seemsExpandable(element)
       ? createHintMarkerWithIcon("focus-action", createInlineSvgIcon(HINT_FOCUS_MODE_ICON_PATH))
@@ -305,7 +622,7 @@ export const buildHintTargets = (
 
     const target: HintTarget = {
       element,
-      label: labels[index] ?? "",
+      label: "",
       marker,
       rect,
       imageUrl: getElementImageUrl(element),
@@ -331,15 +648,66 @@ export const buildHintTargets = (
       }
     }
 
-    renderMarkerLabel(marker, target.label, 0, showCapitalizedLetters);
     return target;
   });
 
+  const reservedDirectiveLabels = new Set<string>();
+  const directiveTargets: HintTarget[] = [];
+
   for (const [directive, match] of directiveMatches.entries()) {
-    if (match.element.isConnected) {
-      applyDirectiveMarker(match.target, directive, showCapitalizedLetters);
+    const preferredLabel = directiveLabels[directive].find(
+      (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
+    );
+
+    if (!preferredLabel) {
+      continue;
+    }
+
+    reservedDirectiveLabels.add(preferredLabel);
+    match.target.label = preferredLabel;
+    match.target.directiveMatch = {
+      directive,
+      label: preferredLabel
+    };
+
+    if (directive === "input") {
+      const eraseLabel = directiveLabels.erase.find(
+        (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
+      );
+
+      if (eraseLabel) {
+        reservedDirectiveLabels.add(eraseLabel);
+        directiveTargets.push(createDirectiveTarget(match.target, "erase", eraseLabel));
+      }
     }
   }
 
-  return targets;
+  const allTargets = [...targets, ...directiveTargets];
+
+  const generatedLabels = generateAvailableLabels(
+    allTargets.filter((target) => !target.directiveMatch).length,
+    charset,
+    minLabelLength,
+    forbiddenLeadingCharacters,
+    forbiddenAdjacentPairs,
+    reservedDirectiveLabels
+  );
+  let generatedLabelIndex = 0;
+
+  for (const target of allTargets) {
+    if (!target.directiveMatch) {
+      target.label = generatedLabels[generatedLabelIndex] ?? "";
+      generatedLabelIndex += 1;
+    }
+
+    renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
+  }
+
+  for (const target of allTargets) {
+    if (target.directiveMatch && target.element.isConnected) {
+      applyDirectiveMarker(target, target.directiveMatch.directive, showCapitalizedLetters);
+    }
+  }
+
+  return allTargets;
 };

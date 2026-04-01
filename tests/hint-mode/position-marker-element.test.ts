@@ -6,7 +6,8 @@ import {
 } from "~/src/core/utils/hint-mode/shared/constants";
 import {
   createMarkerPlacementState,
-  positionMarkerElement
+  positionMarkerElement,
+  positionMarkerElementToRightOf
 } from "~/src/core/utils/hint-mode/rendering/position-marker-element";
 import { HINT_MARKER_MIN_GAP } from "~/src/core/utils/hint-mode/shared/constants";
 
@@ -193,6 +194,29 @@ describe("positionMarkerElement", () => {
       expect(Number.parseInt(secondMarker.style.top, 10)).toBe(
         Number.parseInt(firstMarker.style.top, 10) + 20 + HINT_MARKER_MIN_GAP
       );
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("can place a marker to the right of another marker with the minimum gap", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      setViewport(300, 200);
+      const placementState = createMarkerPlacementState();
+      const inputMarker = createMarkerElement(60, 20);
+      const eraseMarker = createMarkerElement(40, 20);
+
+      fixture.document.body.append(inputMarker, eraseMarker);
+
+      inputMarker.style.left = "20px";
+      inputMarker.style.top = "10px";
+
+      positionMarkerElementToRightOf(eraseMarker, inputMarker, placementState);
+
+      expect(eraseMarker.style.left).toBe(`${20 + 60 + HINT_MARKER_MIN_GAP}px`);
+      expect(eraseMarker.style.top).toBe("10px");
     } finally {
       fixture.cleanup();
     }
