@@ -145,7 +145,8 @@ export const buildHintTargets = (
   charset: string,
   minLabelLength: number,
   showCapitalizedLetters: boolean,
-  forbiddenLeadingCharacters: string[] = []
+  forbiddenLeadingCharacters: string[] = [],
+  forbiddenAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {}
 ): HintTarget[] => {
   const elements = getHintableElements(mode);
   const filteredElements = elements.filter((element) => {
@@ -164,7 +165,8 @@ export const buildHintTargets = (
     filteredElements.length,
     charset,
     minLabelLength,
-    forbiddenLeadingCharacters
+    forbiddenLeadingCharacters,
+    forbiddenAdjacentPairs
   );
 
   return filteredElements.map((element, index) => {

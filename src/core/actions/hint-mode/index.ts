@@ -28,6 +28,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
   let hintCharset = DEFAULT_HINT_CHARSET;
   let minLabelLength = 1;
   let hintCss = "";
+  let avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
 
   const exitHintMode = (): void => {
     activeMode = null;
@@ -51,7 +52,8 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
         hintCharset,
         minLabelLength,
         showCapitalizedLetters,
-        toggleKey ? [toggleKey] : []
+        toggleKey ? [toggleKey] : [],
+        avoidAdjacentPairs
       );
       if (hintTargets.length === 0) {
         showHintToastError("No hints available");
@@ -131,6 +133,11 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
     },
     setShowCapitalizedLetters: (value: boolean): void => {
       showCapitalizedLetters = value;
+    },
+    setAvoidAdjacentPairs: (
+      value: Partial<Record<string, Partial<Record<string, true>>>>
+    ): void => {
+      avoidAdjacentPairs = value;
     },
     syncHintMarkers: (): void => {
       if (!activeMode) {

@@ -1,50 +1,47 @@
 import { generateFixedLengthHintStrings } from "~/src/core/utils/hint-mode/generation/generate-fixed-length-hint-strings";
 import { generateSequenceHintStrings } from "~/src/core/utils/hint-mode/generation/generate-sequence-hint-strings";
 
-const generateRestrictedLeadingLabels = (
+type ForbiddenAdjacentPairs = Partial<Record<string, Partial<Record<string, true>>>>;
+
+const generateRestrictedLabels = (
   count: number,
   charset: string,
   minLength: number,
-  forbiddenLeadingCharacters: Set<string>
+  forbiddenLeadingCharacters: Set<string>,
+  forbiddenAdjacentPairs: ForbiddenAdjacentPairs
 ): string[] => {
-  const allowedLeadingCharacters = Array.from(charset).filter(
-    (character) => !forbiddenLeadingCharacters.has(character)
-  );
-
-  if (allowedLeadingCharacters.length === 0) {
-    return minLength <= 1
-      ? generateSequenceHintStrings(count, charset)
-      : generateFixedLengthHintStrings(count, charset, minLength);
-  }
-
   const labels: string[] = [];
-  let width = Math.max(1, minLength);
+  let prefixes = [""];
+  let width = 0;
 
-  const appendWidth = (currentWidth: number): void => {
-    const visit = (prefix: string, depth: number): void => {
-      if (labels.length >= count) {
-        return;
-      }
+  while (labels.length < count && prefixes.length > 0) {
+    const nextPrefixes: string[] = [];
+    const characters =
+      width === 0
+        ? Array.from(charset).filter((character) => !forbiddenLeadingCharacters.has(character))
+        : Array.from(charset);
 
-      if (depth === currentWidth) {
-        labels.push(prefix);
-        return;
-      }
+    for (const prefix of prefixes) {
+      const previousCharacter = prefix.at(-1) ?? null;
 
-      const characters = depth === 0 ? allowedLeadingCharacters : Array.from(charset);
       for (const character of characters) {
-        visit(`${prefix}${character}`, depth + 1);
-        if (labels.length >= count) {
-          return;
+        if (previousCharacter && forbiddenAdjacentPairs[previousCharacter]?.[character]) {
+          continue;
+        }
+
+        const nextPrefix = `${prefix}${character}`;
+        nextPrefixes.push(nextPrefix);
+
+        if (width + 1 >= minLength) {
+          labels.push(nextPrefix);
+          if (labels.length >= count) {
+            return labels;
+          }
         }
       }
-    };
+    }
 
-    visit("", 0);
-  };
-
-  while (labels.length < count) {
-    appendWidth(width);
+    prefixes = nextPrefixes;
     width += 1;
   }
 
@@ -55,14 +52,23 @@ export const generateHintLabels = (
   count: number,
   charset: string,
   minLength = 1,
-  forbiddenLeadingCharacters: string[] = []
+  forbiddenLeadingCharacters: string[] = [],
+  forbiddenAdjacentPairs: ForbiddenAdjacentPairs = {}
 ): string[] => {
   const forbiddenLeadingCharacterSet = new Set(
     forbiddenLeadingCharacters.map((character) => character.toLowerCase())
   );
 
-  if (forbiddenLeadingCharacterSet.size > 0) {
-    return generateRestrictedLeadingLabels(count, charset, minLength, forbiddenLeadingCharacterSet);
+  const hasForbiddenAdjacentPairs = Object.keys(forbiddenAdjacentPairs).length > 0;
+
+  if (forbiddenLeadingCharacterSet.size > 0 || hasForbiddenAdjacentPairs) {
+    return generateRestrictedLabels(
+      count,
+      charset,
+      minLength,
+      forbiddenLeadingCharacterSet,
+      forbiddenAdjacentPairs
+    );
   }
 
   if (minLength <= 1) {

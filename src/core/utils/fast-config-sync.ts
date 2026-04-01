@@ -9,6 +9,7 @@ type FastConfigSyncDeps = {
   setHintCharset: (value: string) => void;
   setHintCss: (value: string) => void;
   setHintMinLabelLength: (value: number) => void;
+  setHintAvoidAdjacentPairs: (value: FastConfig["hints"]["avoidAdjacentPairs"]) => void;
   setWatchShowCapitalizedLetters: (value: boolean) => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
@@ -25,6 +26,7 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setHintCharset(fastConfig.hints.charset);
   deps.setHintCss(fastConfig.hints.css);
   deps.setHintMinLabelLength(fastConfig.hints.minLabelLength);
+  deps.setHintAvoidAdjacentPairs(fastConfig.hints.avoidAdjacentPairs);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setShowActivationIndicator(fastConfig.hints.showActivationIndicator);
   deps.setActivationIndicatorColor(fastConfig.hints.showActivationIndicatorColor);
