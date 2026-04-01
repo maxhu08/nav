@@ -87,7 +87,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
         return true;
       }
 
-      if (toggleKey && event.key.toLowerCase() === toggleKey) {
+      if (toggleKey && typedPrefix.length === 0 && event.key.toLowerCase() === toggleKey) {
         exitHintMode();
         return true;
       }
