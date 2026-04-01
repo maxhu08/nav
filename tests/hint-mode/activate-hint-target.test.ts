@@ -29,6 +29,11 @@ describe("activateHintTarget", () => {
 
       const trigger = document.getElementById("trigger") as HTMLButtonElement;
       const receivedEvents: string[] = [];
+      let focusIndicatorTarget: HTMLElement | null = null;
+
+      window.addEventListener(FOCUS_INDICATOR_EVENT, ((event: Event) => {
+        focusIndicatorTarget = (event as CustomEvent<{ element: HTMLElement }>).detail.element;
+      }) as EventListener);
 
       for (const eventName of ["pointerdown", "mousedown", "pointerup", "mouseup", "click"]) {
         trigger.addEventListener(eventName, () => {
@@ -38,6 +43,7 @@ describe("activateHintTarget", () => {
 
       expect(activateHintTarget("current-tab", createHintTarget(trigger))).toBe(true);
       expect(receivedEvents).toEqual(["pointerdown", "mousedown", "pointerup", "mouseup", "click"]);
+      expect(focusIndicatorTarget === trigger).toBe(true);
     } finally {
       fixture.cleanup();
     }

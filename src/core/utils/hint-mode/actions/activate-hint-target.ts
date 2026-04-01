@@ -76,6 +76,10 @@ const focusTargetElement = (element: HTMLElement): void => {
   }
 
   element.focus({ preventScroll: true });
+  dispatchFocusIndicator(element);
+};
+
+const dispatchFocusIndicator = (element: HTMLElement): void => {
   window.dispatchEvent(
     new CustomEvent(FOCUS_INDICATOR_EVENT, {
       detail: { element }
@@ -167,6 +171,7 @@ export const activateHintTarget = (mode: HintActionMode, target: HintTarget): bo
   }
 
   if (mode === "new-tab" && target.linkUrl) {
+    dispatchFocusIndicator(target.element);
     const newWindow = window.open(target.linkUrl, "_blank", "noopener,noreferrer");
     if (newWindow) {
       return true;
@@ -178,21 +183,18 @@ export const activateHintTarget = (mode: HintActionMode, target: HintTarget): bo
   }
 
   if (typeof target.element.click === "function") {
+    if (!shouldFocusBeforeActivation(target.element)) {
+      dispatchFocusIndicator(target.element);
+    }
+
     dispatchSyntheticPressEvents(target.element);
     target.element.click();
-
-    if (!shouldFocusBeforeActivation(target.element) && document.activeElement === target.element) {
-      window.dispatchEvent(
-        new CustomEvent(FOCUS_INDICATOR_EVENT, {
-          detail: { element: target.element }
-        })
-      );
-    }
 
     return true;
   }
 
   if (target.linkUrl) {
+    dispatchFocusIndicator(target.element);
     window.location.assign(target.linkUrl);
     return true;
   }
