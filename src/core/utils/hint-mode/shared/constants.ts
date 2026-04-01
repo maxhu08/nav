@@ -10,6 +10,8 @@ export const HINT_POSITION_STYLE_ID = HINT_POSITION_STYLE_ID_FROM_UI;
 export const HINT_STYLE_ID = HINT_STYLE_ID_FROM_UI;
 export const MARKER_ATTRIBUTE = "data-nav-hint-marker";
 export const MARKER_VARIANT_ATTRIBUTE = "data-nav-hint-marker-variant";
+export const MARKER_LABEL_ATTRIBUTE = "data-nav-hint-marker-label";
+export const MARKER_ICON_ATTRIBUTE = "data-nav-hint-marker-icon";
 export const LETTER_ATTRIBUTE = "data-nav-hint-marker-letter";
 export const HINT_MARKER_EDGE_GAP = 8;
 

@@ -1,4 +1,7 @@
-import { LETTER_ATTRIBUTE } from "~/src/core/utils/hint-mode/shared/constants";
+import {
+  LETTER_ATTRIBUTE,
+  MARKER_LABEL_ATTRIBUTE
+} from "~/src/core/utils/hint-mode/shared/constants";
 
 export const renderMarkerLabel = (
   marker: HTMLDivElement,
@@ -6,13 +9,15 @@ export const renderMarkerLabel = (
   typedLength: number,
   showCapitalizedLetters: boolean
 ): void => {
-  marker.replaceChildren();
+  const labelContainer = marker.querySelector(`[${MARKER_LABEL_ATTRIBUTE}="true"]`);
+  const target = labelContainer instanceof HTMLSpanElement ? labelContainer : marker;
+  target.replaceChildren();
   const display = showCapitalizedLetters ? label.toUpperCase() : label.toLowerCase();
 
   for (const [index, character] of Array.from(display).entries()) {
     const letter = document.createElement("span");
     letter.textContent = character;
     letter.setAttribute(LETTER_ATTRIBUTE, index < typedLength ? "typed" : "pending");
-    marker.append(letter);
+    target.append(letter);
   }
 };
