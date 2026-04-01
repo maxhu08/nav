@@ -5,6 +5,84 @@ import type { HintActionMode, HintTarget } from "~/src/core/utils/hint-mode/shar
 import { writeClipboardImage } from "~/src/core/utils/hint-mode/actions/write-clipboard-image";
 import { writeClipboardText } from "~/src/core/utils/hint-mode/actions/write-clipboard-text";
 
+const shouldFocusBeforeActivation = (element: HTMLElement): boolean => {
+  const tagName = element.tagName.toLowerCase();
+  return (
+    tagName === "input" ||
+    tagName === "textarea" ||
+    tagName === "select" ||
+    element.isContentEditable
+  );
+};
+
+const dispatchSyntheticPressEvents = (element: HTMLElement): void => {
+  const rect = element.getBoundingClientRect();
+  const clientX = rect.left + rect.width / 2;
+  const clientY = rect.top + rect.height / 2;
+  const sharedMouseInit: MouseEventInit = {
+    bubbles: true,
+    cancelable: true,
+    clientX,
+    clientY,
+    composed: true
+  };
+
+  if (typeof window.PointerEvent === "function") {
+    const sharedPointerInit: PointerEventInit = {
+      ...sharedMouseInit,
+      button: 0,
+      buttons: 1,
+      isPrimary: true,
+      pointerId: 1,
+      pointerType: "mouse"
+    };
+
+    element.dispatchEvent(new window.PointerEvent("pointerdown", sharedPointerInit));
+  }
+
+  element.dispatchEvent(
+    new window.MouseEvent("mousedown", {
+      ...sharedMouseInit,
+      button: 0,
+      buttons: 1
+    })
+  );
+
+  if (typeof window.PointerEvent === "function") {
+    element.dispatchEvent(
+      new window.PointerEvent("pointerup", {
+        ...sharedMouseInit,
+        button: 0,
+        buttons: 0,
+        isPrimary: true,
+        pointerId: 1,
+        pointerType: "mouse"
+      })
+    );
+  }
+
+  element.dispatchEvent(
+    new window.MouseEvent("mouseup", {
+      ...sharedMouseInit,
+      button: 0,
+      buttons: 0
+    })
+  );
+};
+
+const focusTargetElement = (element: HTMLElement): void => {
+  if (typeof element.focus !== "function") {
+    return;
+  }
+
+  element.focus({ preventScroll: true });
+  window.dispatchEvent(
+    new CustomEvent(FOCUS_INDICATOR_EVENT, {
+      detail: { element }
+    })
+  );
+};
+
 export const activateHintTarget = (mode: HintActionMode, target: HintTarget): boolean => {
   if (mode === "yank-link-url") {
     const url = target.linkUrl;
@@ -61,17 +139,22 @@ export const activateHintTarget = (mode: HintActionMode, target: HintTarget): bo
     }
   }
 
-  if (typeof target.element.focus === "function") {
-    target.element.focus({ preventScroll: true });
-    window.dispatchEvent(
-      new CustomEvent(FOCUS_INDICATOR_EVENT, {
-        detail: { element: target.element }
-      })
-    );
+  if (shouldFocusBeforeActivation(target.element)) {
+    focusTargetElement(target.element);
   }
 
   if (typeof target.element.click === "function") {
+    dispatchSyntheticPressEvents(target.element);
     target.element.click();
+
+    if (!shouldFocusBeforeActivation(target.element) && document.activeElement === target.element) {
+      window.dispatchEvent(
+        new CustomEvent(FOCUS_INDICATOR_EVENT, {
+          detail: { element: target.element }
+        })
+      );
+    }
+
     return true;
   }
 
