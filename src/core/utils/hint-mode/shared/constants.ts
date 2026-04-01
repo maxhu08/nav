@@ -14,6 +14,7 @@ export const MARKER_LABEL_ATTRIBUTE = "data-nav-hint-marker-label";
 export const MARKER_ICON_ATTRIBUTE = "data-nav-hint-marker-icon";
 export const LETTER_ATTRIBUTE = "data-nav-hint-marker-letter";
 export const HINT_MARKER_EDGE_GAP = 8;
+export const HINT_MARKER_MIN_GAP = 2;
 
 export const CLICKABLE_SELECTOR = [
   "a[href]",
