@@ -59,7 +59,7 @@ export const fillHintsInputs = (config: Config): void => {
   hintsCharsetInputEl.value = config.hints.charset;
   hintsMinLabelLengthInputEl.value = String(config.hints.minLabelLength);
   hintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
-  hintsReservedLabelsTextareaEl.value = config.hints.reservedLabels;
+  hintsReservedLabelsTextareaEl.value = config.hints.directives;
   setHintsStylingButtonState(config.hints.styling);
   syncHintsActivationIndicatorColorControls(config.hints.showActivationIndicator);
   syncColorInputControl(hintsShowActivationIndicatorColorInputEl);

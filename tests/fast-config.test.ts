@@ -31,9 +31,9 @@ describe("buildFastConfig", () => {
     expect(fastConfig.hotkeys.prefixes).toEqual({});
   });
 
-  test("keeps reserved hint labels empty when the user removes them", async () => {
+  test("keeps hint directives empty when the user removes them", async () => {
     const config = structuredClone(defaultConfig);
-    config.hints.reservedLabels = "";
+    config.hints.directives = "";
     const fixture = createDomFixture("");
     installCanvasStub();
     const { buildFastConfig } = await import("~/src/utils/fast-config");
@@ -43,7 +43,7 @@ describe("buildFastConfig", () => {
     fixture.cleanup();
 
     for (const directive of RESERVED_HINT_DIRECTIVES) {
-      expect(fastConfig.hints.reservedLabels[directive]).toEqual([]);
+      expect(fastConfig.hints.directives[directive]).toEqual([]);
     }
   });
 });

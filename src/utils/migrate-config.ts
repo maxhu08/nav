@@ -1,8 +1,9 @@
 import { deepMerge } from "~/src/utils/deep-merge";
 import type { Config } from "~/src/utils/config";
 import {
+  hasDirectivesOption,
   hasForceNormalModeOption,
-  hasReservedLabelsOption
+  hasLegacyReservedLabelsOption
 } from "~/src/utils/migrate/config-helpers";
 
 const renameHotkeyMappingIfPresent = (
@@ -44,8 +45,15 @@ const renameHotkeyMappingIfPresent = (
 
 export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Config => {
   // if config before v1.0.3
-  if (!hasReservedLabelsOption(config)) {
+  if (!hasDirectivesOption(config) && !hasLegacyReservedLabelsOption(config)) {
     return structuredClone(fallbackConfig);
+  }
+
+  // if config before v1.1.4
+  if (!hasDirectivesOption(config)) {
+    const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+    migratedConfig.hints.directives = fallbackConfig.hints.directives;
+    return migratedConfig;
   }
 
   // if config before v1.0.4

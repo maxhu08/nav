@@ -86,12 +86,12 @@ Use this map to decide where new code should go.
 
 - `src/utils/config.ts`: defines the persisted `config` object stored in `chrome.storage.local`.
 - `config` keeps option values in the same shape the options UI edits them.
-- Example: `config.rules.urls.mode` stores the active list, while `config.rules.urls.blacklist`, `config.rules.urls.whitelist`, and `config.hints.reservedLabels` store raw textarea strings.
+- Example: `config.rules.urls.mode` stores the active list, while `config.rules.urls.blacklist`, `config.rules.urls.whitelist`, and `config.hints.directives` store raw textarea strings.
 - `src/utils/fast-config.ts`: defines `fastConfig`, a derived runtime cache built from `config`.
 - `fastConfig.rules.urls` stores the active mode plus parsed blacklist and whitelist rule arrays.
 - `fastConfig.hotkeys.mappings` is a parsed key-to-action map.
 - `fastConfig.hotkeys.prefixes` is a derived lookup used for multi-key sequence matching.
-- `fastConfig.hints.reservedLabels` stores parsed reserved-label config for compatibility with the existing options and docs pages.
+- `fastConfig.hints.directives` stores parsed directives config for compatibility with the existing options and docs pages.
 - `src/options/scripts/utils/save-config.ts` writes both `config` and a rebuilt `fastConfig` together.
 - In runtime, URL rule patterns are compiled to `RegExp` once on config apply (`src/core/utils/key-state.ts`) and reused for key matching.
 

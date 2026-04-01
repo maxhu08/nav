@@ -5,7 +5,7 @@ import type { ConfigMigrationTestCase } from "~/tests/types";
 
 export const configMigrationTestCases: ConfigMigrationTestCase[] = [
   {
-    desc: "returns fallback config when reserved labels are missing",
+    desc: "returns fallback config when directives are missing",
     test: () => {
       const migratedConfig = migrateOldConfig({}, defaultConfig);
 
@@ -36,7 +36,7 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
       expect(migratedConfig.rules.forceNormalMode).toBe(defaultConfig.rules.forceNormalMode);
       expect(migratedConfig.rules.urls.mode).toBe("whitelist");
       expect(migratedConfig.hotkeys.mappings).toBe("j scroll-down");
-      expect(migratedConfig.hints.reservedLabels).toBe("@input kj");
+      expect(migratedConfig.hints.directives).toBe(defaultConfig.hints.directives);
     }
   },
   {
@@ -46,7 +46,7 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
         ...structuredClone(defaultConfig),
         hints: {
           ...structuredClone(defaultConfig).hints,
-          reservedLabels: `@input kj kjf kjfd
+          directives: `@input kj kjf kjfd
 @attach up
 @home sd sdf sdfj`
         }
@@ -54,9 +54,9 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
 
       const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
 
-      expect(migratedConfig.hints.reservedLabels).toBe(oldConfig.hints.reservedLabels);
-      expect(migratedConfig.hints.reservedLabels).not.toContain("@share sh");
-      expect(migratedConfig.hints.reservedLabels).not.toContain("@notification nf");
+      expect(migratedConfig.hints.directives).toBe(oldConfig.hints.directives);
+      expect(migratedConfig.hints.directives).not.toContain("@share sh");
+      expect(migratedConfig.hints.directives).not.toContain("@notification nf");
     }
   },
   {
