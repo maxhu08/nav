@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { HINT_FOCUS_MODE_ICON_PATH } from "~/src/lib/inline-icons";
+import { HINT_FOCUS_MODE_ICON_PATH, HINT_HOME_ICON_PATH } from "~/src/lib/inline-icons";
 import { buildHintTargets } from "~/src/core/utils/hint-mode/collection/build-hint-targets";
 import {
   MARKER_ICON_ATTRIBUTE,
@@ -172,6 +172,28 @@ describe("buildHintTargets expandable markers", () => {
         expect(target.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
         expect(target.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)).toBeNull();
       }
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("marks the strongest home candidate with the home directive icon", () => {
+    const fixture = createDomFixture(`
+      <a id="root-link" href="/">Dashboard</a>
+      <button id="secondary-home" type="button" class="nav-home">Open panel</button>
+      <button id="primary-home" type="button" aria-label="Home">Go</button>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false);
+      const primaryHomeTarget = targets.find((target) => target.element.id === "primary-home");
+      const rootLinkTarget = targets.find((target) => target.element.id === "root-link");
+
+      expect(primaryHomeTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("directive");
+      expect(
+        primaryHomeTarget?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)?.innerHTML
+      ).toContain(HINT_HOME_ICON_PATH);
+      expect(rootLinkTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
     } finally {
       fixture.cleanup();
     }

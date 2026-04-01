@@ -213,4 +213,86 @@ describe("keyboard priority", () => {
       fixture.cleanup();
     }
   });
+
+  test("ignores action mappings while hint mode is active", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      let clearPendingStateCount = 0;
+      let getActionNameCount = 0;
+      const handledKeys: string[] = [];
+      const handleKeydown = createNavigationKeydownHandler({
+        actions: {} as never,
+        findMode: {
+          handleFindUIKeydown: () => false,
+          exitFindMode: () => {},
+          isFindModeActive: () => false,
+          shouldIgnoreKeydownInFindUI: () => false
+        },
+        hintController: {
+          activateMode: () => false,
+          exitHintMode: () => {},
+          handleHintKeydown: (event) => {
+            handledKeys.push(event.key);
+            return true;
+          },
+          isHintModeActive: () => true
+        },
+        forceNormalMode: {
+          isEnabled: () => false,
+          handleKeydownCapture: () => {}
+        },
+        isScrollAction: () => false,
+        keyState: {
+          clearPendingCount: () => {},
+          clearPendingState: () => {
+            clearPendingStateCount += 1;
+          },
+          getActionName: () => {
+            getActionNameCount += 1;
+            return {
+              actionName: null,
+              claimKeydown: false,
+              consumed: false,
+              matchedSequence: null
+            };
+          },
+          getWatchActionName: () => ({
+            actionName: null,
+            claimKeydown: false,
+            consumed: false,
+            matchedSequence: null
+          }),
+          hasAllowedActionMappings: () => true,
+          isActionAllowed: () => true,
+          resolveCount: () => 1
+        },
+        onConsumeKeydown: () => {},
+        watchController: {
+          exitWatchMode: () => {},
+          getWatchActionSequences: () => ({
+            "toggle-fullscreen": "f",
+            "toggle-play-pause": "e",
+            "toggle-loop": "l",
+            "toggle-mute": "m",
+            "toggle-captions": "c"
+          }),
+          isWatchModeActive: () => false,
+          toggleFullscreen: () => false,
+          toggleWatchCaptions: () => false,
+          toggleWatchLoop: () => false,
+          toggleWatchMute: () => false,
+          toggleWatchPlayPause: () => false
+        }
+      });
+
+      handleKeydown(new window.KeyboardEvent("keydown", { key: "d" }));
+
+      expect(handledKeys).toEqual(["d"]);
+      expect(clearPendingStateCount).toBe(1);
+      expect(getActionNameCount).toBe(0);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

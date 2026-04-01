@@ -49,19 +49,6 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     return structuredClone(fallbackConfig);
   }
 
-  // if config before v1.1.4
-  if (!hasDirectivesOption(config)) {
-    const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
-    migratedConfig.hints.directives = fallbackConfig.hints.directives;
-    migratedConfig.hints.styling = fallbackConfig.hints.styling;
-
-    if ((migratedConfig.hints as any).reservedLabels) {
-      delete (migratedConfig.hints as any).reservedLabels;
-    }
-
-    return migratedConfig;
-  }
-
   // if config before v1.0.4
   if (!hasForceNormalModeOption(config)) {
     return deepMerge(structuredClone(fallbackConfig), config);
@@ -77,6 +64,19 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     "yo",
     "duplicate-current-tab-origin"
   );
+
+  // if config before v1.1.4
+  if (!hasDirectivesOption(config)) {
+    const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+    migratedConfig.hints.directives = fallbackConfig.hints.directives;
+    migratedConfig.hints.styling = fallbackConfig.hints.styling;
+
+    if ((migratedConfig.hints as any).reservedLabels) {
+      delete (migratedConfig.hints as any).reservedLabels;
+    }
+
+    return migratedConfig;
+  }
 
   return migratedConfig;
 };

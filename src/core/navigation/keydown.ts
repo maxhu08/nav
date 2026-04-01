@@ -252,6 +252,8 @@ export const createNavigationKeydownHandler = ({
     forceNormalMode.handleKeydownCapture(event);
 
     if (hintController.isHintModeActive()) {
+      keyState.clearPendingState();
+
       if (hintController.handleHintKeydown(event)) {
         consumeKeydownEvent(event);
       }

@@ -1,3 +1,4 @@
+import { HINT_DIRECTIVE_ICON_PATHS } from "~/src/lib/hint-directive-icons";
 import { HINT_FOCUS_MODE_ICON_PATH } from "~/src/lib/inline-icons";
 import { getClosestLinkUrl } from "~/src/core/utils/hint-mode/collection/get-closest-link-url";
 import { getElementImageUrl } from "~/src/core/utils/hint-mode/collection/get-element-image-url";
@@ -9,9 +10,85 @@ import {
 } from "~/src/core/utils/hint-mode/rendering/create-marker-element";
 import { renderMarkerLabel } from "~/src/core/utils/hint-mode/rendering/render-marker-label";
 import type { HintActionMode, HintTarget } from "~/src/core/utils/hint-mode/shared/types";
+import type { ReservedHintDirective } from "~/src/utils/hint-reserved-label-directives";
 
 const createInlineSvgIcon = (pathData: string): string => {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="${pathData}"></path></svg>`;
+};
+
+type DirectiveMatch = {
+  element: HTMLElement;
+  score: number;
+  target: HintTarget;
+};
+
+type DirectiveScorer = (element: HTMLElement) => number;
+
+const HOME_TOKEN_PATTERN = /\bhome(?:page)?\b/i;
+const ROOT_PATH_PATTERN = /^\/$/;
+const HOME_PATH_PATTERN = /^\/home\/?$/i;
+
+const getTextContentScore = (value: string | null, weight: number): number => {
+  return typeof value === "string" && HOME_TOKEN_PATTERN.test(value) ? weight : 0;
+};
+
+const getHomeLinkScore = (element: HTMLElement): number => {
+  if (!(element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement)) {
+    return 0;
+  }
+
+  try {
+    const url = new URL(element.href, window.location.href);
+
+    if (url.origin !== window.location.origin) {
+      return 0;
+    }
+
+    if (ROOT_PATH_PATTERN.test(url.pathname)) {
+      return 8;
+    }
+
+    if (HOME_PATH_PATTERN.test(url.pathname)) {
+      return 6;
+    }
+  } catch {
+    return 0;
+  }
+
+  return 0;
+};
+
+const scoreHomeDirectiveCandidate = (element: HTMLElement): number => {
+  const homeLabelScore = Math.max(
+    getTextContentScore(element.getAttribute("aria-label"), 12),
+    getTextContentScore(element.getAttribute("title"), 10),
+    getTextContentScore(element.getAttribute("aria-description"), 8),
+    getTextContentScore(element.getAttribute("data-tooltip"), 8),
+    getTextContentScore(element.getAttribute("alt"), 8),
+    getTextContentScore(element.textContent, 9)
+  );
+  const homeIdentityScore = Math.max(
+    getTextContentScore(element.id, 4),
+    getTextContentScore(element.className, 3)
+  );
+
+  return homeLabelScore + homeIdentityScore + getHomeLinkScore(element);
+};
+
+const DIRECTIVE_SCORERS: Partial<Record<ReservedHintDirective, DirectiveScorer>> = {
+  home: scoreHomeDirectiveCandidate
+};
+
+const applyDirectiveMarker = (
+  target: HintTarget,
+  directive: ReservedHintDirective,
+  showCapitalizedLetters: boolean
+): void => {
+  target.marker = createHintMarkerWithIcon(
+    "directive",
+    createInlineSvgIcon(HINT_DIRECTIVE_ICON_PATHS[directive])
+  );
+  renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
 };
 
 const isFormControl = (element: HTMLElement): boolean => {
@@ -219,7 +296,8 @@ export const buildHintTargets = (
     forbiddenAdjacentPairs
   );
 
-  return filteredElements.map((element, index) => {
+  const directiveMatches = new Map<ReservedHintDirective, DirectiveMatch>();
+  const targets = filteredElements.map((element, index) => {
     const rect = element.getBoundingClientRect();
     const marker = seemsExpandable(element)
       ? createHintMarkerWithIcon("focus-action", createInlineSvgIcon(HINT_FOCUS_MODE_ICON_PATH))
@@ -234,7 +312,34 @@ export const buildHintTargets = (
       linkUrl: getClosestLinkUrl(element)
     };
 
+    for (const [directive, scorer] of Object.entries(DIRECTIVE_SCORERS) as Array<
+      [ReservedHintDirective, DirectiveScorer | undefined]
+    >) {
+      if (!scorer) {
+        continue;
+      }
+
+      const score = scorer(element);
+      const currentMatch = directiveMatches.get(directive);
+
+      if (score > 0 && (!currentMatch || score > currentMatch.score)) {
+        directiveMatches.set(directive, {
+          element,
+          score,
+          target
+        });
+      }
+    }
+
     renderMarkerLabel(marker, target.label, 0, showCapitalizedLetters);
     return target;
   });
+
+  for (const [directive, match] of directiveMatches.entries()) {
+    if (match.element.isConnected) {
+      applyDirectiveMarker(match.target, directive, showCapitalizedLetters);
+    }
+  }
+
+  return targets;
 };
