@@ -41,6 +41,11 @@ Example:
 - `<unbound>` hotkey declarations are validated and preserved in `config`, but they are omitted from `fastConfig.hotkeys.mappings` because they do not create runtime bindings.
 - `<unbound>` directive lines are validated and preserved in `config`, but they are normalized to empty label arrays in `fastConfig.hints.directives`.
 
+## Directive Names
+
+- Valid reserved directives are: `input`, `erase`, `attach`, `chat`, `share`, `download`, `login`, `microphone`, `notification`, `delete`, `save`, `copy`, `hide`, `home`, `sidebar`, `next`, `prev`, `cancel`, `submit`, `like`, and `dislike`.
+- Each directive line must use the form `@directive label1 label2 ...` or `@directive <unbound>`.
+
 ## Required Wiring When Adding a New Interaction
 
 1. Add the control element to `src/options.html`.

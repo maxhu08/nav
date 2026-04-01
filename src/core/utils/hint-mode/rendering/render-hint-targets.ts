@@ -10,14 +10,20 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
   const container = getHintContainer();
   const placementState = createMarkerPlacementState();
   const inputTargetsByElement = new Map<HTMLElement, HintTarget>();
+  const fragment = document.createDocumentFragment();
 
-  container.replaceChildren(...targets.map((target) => target.marker));
-  targets.forEach((target) => {
+  for (const target of targets) {
+    fragment.append(target.marker);
+  }
+
+  container.replaceChildren(fragment);
+
+  for (const target of targets) {
     if (target.directiveMatch?.directive === "erase") {
       const inputTarget = inputTargetsByElement.get(target.element);
       if (inputTarget) {
         positionMarkerElementToRightOf(target.marker, inputTarget.marker, placementState);
-        return;
+        continue;
       }
     }
 
@@ -26,5 +32,5 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
     if (target.directiveMatch?.directive === "input") {
       inputTargetsByElement.set(target.element, target);
     }
-  });
+  }
 };

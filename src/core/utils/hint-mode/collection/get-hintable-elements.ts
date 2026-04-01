@@ -35,7 +35,7 @@ const READONLY_SELECTABLE_INPUT_TYPES = new Set([
 ]);
 
 const getAllElements = (root: ParentNode, results: HTMLElement[] = []): HTMLElement[] => {
-  for (const element of Array.from(root.querySelectorAll("*"))) {
+  for (const element of root.querySelectorAll("*")) {
     if (!(element instanceof HTMLElement)) {
       continue;
     }
@@ -245,22 +245,29 @@ export const getHintableElements = (mode: HintActionMode): HTMLElement[] => {
   }
 
   const seen = new Set<HTMLElement>();
-  const candidates = getAllElements(document.documentElement)
-    .filter((element) => {
-      if (seen.has(element) || !isElementVisible(element)) {
-        return false;
-      }
+  const candidates: HintableElementState[] = [];
 
-      seen.add(element);
-      return true;
-    })
-    .map((element) => {
-      return {
-        element,
-        ...getHintableElementState(element)
-      };
-    })
-    .filter((candidate) => candidate.isClickable && !candidate.secondClassCitizen);
+  for (const element of getAllElements(document.documentElement)) {
+    if (seen.has(element)) {
+      continue;
+    }
+
+    seen.add(element);
+    const state = getHintableElementState(element);
+    if (!state.isClickable || state.secondClassCitizen) {
+      continue;
+    }
+
+    if (!isElementVisible(element)) {
+      continue;
+    }
+
+    candidates.push({
+      element,
+      possibleFalsePositive: state.possibleFalsePositive,
+      secondClassCitizen: state.secondClassCitizen
+    });
+  }
 
   return filterFalsePositives(candidates).map((candidate) => candidate.element);
 };

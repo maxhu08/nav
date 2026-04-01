@@ -75,3 +75,46 @@ export const isButtonLikeDirectiveCandidate = (element: HTMLElement): boolean =>
 
   return role === "button";
 };
+
+export const isActionableDirectiveCandidate = (element: HTMLElement): boolean => {
+  return (
+    isButtonLikeDirectiveCandidate(element) ||
+    element instanceof HTMLAnchorElement ||
+    element instanceof HTMLAreaElement
+  );
+};
+
+export const getActionDescriptorText = (element: HTMLElement): string => {
+  return getJoinedElementText([
+    ...getElementTextValues(element, [
+      "aria-label",
+      "title",
+      "aria-description",
+      "data-tooltip",
+      "data-testid",
+      "id",
+      "class",
+      "name",
+      "href"
+    ]),
+    element.textContent,
+    getAncestorDescriptorText(element)
+  ]);
+};
+
+export const getAnchorPathScore = (
+  element: HTMLElement,
+  pattern: RegExp,
+  weight: number
+): number => {
+  if (!(element instanceof HTMLAnchorElement || element instanceof HTMLAreaElement)) {
+    return 0;
+  }
+
+  try {
+    const url = new URL(element.href, window.location.href);
+    return pattern.test(url.pathname) ? weight : 0;
+  } catch {
+    return 0;
+  }
+};

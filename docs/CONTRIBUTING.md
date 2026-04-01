@@ -37,6 +37,7 @@ Use this page as the fast entry point for contributors.
 
 - For hint changes, use `docs/PROJECT_STRUCTURE.md` as the file map before editing.
 - Collection and target discovery behavior belongs under `src/core/utils/hint-mode/collection/`, directive scoring belongs under `src/core/utils/hint-mode/directive-recognition/`, and rendering belongs under `src/core/utils/hint-mode/rendering/`.
+- Follow the existing directive style: keep each directive scorer in its own file under `src/core/utils/hint-mode/directive-recognition/` and keep shared scoring helpers in `shared.ts`.
 - Use `src/utils/migrate-config.ts` for config-shape compatibility, renamed values, and required backfills such as missing hotkey declarations or missing hint directives.
 - Keep directive icon definitions in `src/lib/hint-directive-icons.ts` and marker-specific rendering in `src/core/utils/hint-mode/rendering/`.
 

@@ -27,4 +27,31 @@ describe("microphone directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("recognizes dictation controls", () => {
+    const fixture = createDomFixture(`
+      <main>
+        <button
+          id="dictation-button"
+          type="button"
+          class="composer-btn"
+          aria-label="Start dictation"
+        ></button>
+      </main>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const microphoneTarget = targets.find(
+        (target) =>
+          target.element.id === "dictation-button" &&
+          target.directiveMatch?.directive === "microphone"
+      );
+
+      expectDirectiveIconMarker(microphoneTarget, HINT_MICROPHONE_ICON_PATH);
+      expect(microphoneTarget?.label).toBe("mic");
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

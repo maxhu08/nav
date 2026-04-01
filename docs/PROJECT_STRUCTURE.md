@@ -51,6 +51,7 @@ Use this map to decide where new code should go.
   6. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hint-mode/index.ts` plus `actions/activate-hint-target.ts`
 - Shared hint-mode types live in `src/core/utils/hint-mode/shared/types.ts`.
 - `src/utils/migrate-config.ts` preserves backward compatibility for config shape, renamed values, and required backfills for missing hotkey or directive declarations.
+- Keep directive scorers split one file per directive under `src/core/utils/hint-mode/directive-recognition/`; use `shared.ts` only for reusable scoring helpers.
 - For icon work, prefer copying the path data from the matching reference SVG under `src/assets/remixicon-reference/` into `src/lib/inline-icons.ts` instead of adding runtime file lookups.
 
 ## Config Layers

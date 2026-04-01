@@ -38,4 +38,31 @@ describe("attach directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("does not treat generic more actions menus as attach", () => {
+    const fixture = createDomFixture(`
+      <main>
+        <div class="shorts-overlay image-overlay-text">
+          <button
+            id="more-actions"
+            type="button"
+            class="icon-button"
+            aria-label="More actions"
+          ></button>
+        </div>
+      </main>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const attachTarget = targets.find(
+        (target) =>
+          target.element.id === "more-actions" && target.directiveMatch?.directive === "attach"
+      );
+
+      expect(attachTarget).toBeUndefined();
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

@@ -3,7 +3,7 @@ export const collectElements = (
   selector: string,
   results: HTMLElement[]
 ): void => {
-  for (const element of Array.from(root.querySelectorAll(selector))) {
+  for (const element of root.querySelectorAll(selector)) {
     if (element instanceof HTMLElement) {
       results.push(element);
     }

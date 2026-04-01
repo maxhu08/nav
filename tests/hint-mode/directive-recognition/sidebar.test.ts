@@ -63,4 +63,36 @@ describe("sidebar directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("recognizes an explicit close sidebar control", () => {
+    const fixture = createDomFixture(`
+      <main>
+        <button
+          id="close-sidebar-button"
+          type="button"
+          class="sidebar-resize-button"
+          aria-expanded="true"
+          aria-controls="app-slideover-sidebar"
+          aria-label="Close sidebar"
+          data-testid="close-sidebar-button"
+          data-state="closed"
+        ></button>
+        <aside id="app-slideover-sidebar"></aside>
+      </main>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const sidebarTarget = targets.find(
+        (target) =>
+          target.element.id === "close-sidebar-button" &&
+          target.directiveMatch?.directive === "sidebar"
+      );
+
+      expectDirectiveIconMarker(sidebarTarget, HINT_SIDEBAR_ICON_PATH);
+      expect(sidebarTarget?.label).toBe("we");
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

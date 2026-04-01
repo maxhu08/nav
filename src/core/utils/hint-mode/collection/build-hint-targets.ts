@@ -5,6 +5,7 @@ import type { DirectiveScorer } from "~/src/core/utils/hint-mode/directive-recog
 import { getClosestLinkUrl } from "~/src/core/utils/hint-mode/collection/get-closest-link-url";
 import { getElementImageUrl } from "~/src/core/utils/hint-mode/collection/get-element-image-url";
 import { getHintableElements } from "~/src/core/utils/hint-mode/collection/get-hintable-elements";
+import { resolveFollowDirectionTarget } from "~/src/core/utils/follow-page-target";
 import { generateHintLabels } from "~/src/core/utils/hint-mode/generation/generate-hint-labels";
 import {
   createHintMarker,
@@ -25,6 +26,18 @@ const createInlineSvgIcon = (pathData: string): string => {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="${pathData}"></path></svg>`;
 };
 
+const DIRECTIVE_SCORER_ENTRIES = Object.entries(DIRECTIVE_SCORERS) as Array<
+  [ReservedHintDirective, DirectiveScorer | undefined]
+>;
+
+const DIRECTIVE_ICON_SVGS = Object.fromEntries(
+  Object.entries(HINT_DIRECTIVE_ICON_PATHS).map(([directive, pathData]) => [
+    directive,
+    createInlineSvgIcon(pathData)
+  ])
+) as Record<ReservedHintDirective, string>;
+const MAX_DIRECTIVE_SCORE = 9999;
+
 type DirectiveMatch = {
   element: HTMLElement;
   score: number;
@@ -36,10 +49,7 @@ const applyDirectiveMarker = (
   directive: ReservedHintDirective,
   showCapitalizedLetters: boolean
 ): void => {
-  target.marker = createHintMarkerWithIcon(
-    "directive",
-    createInlineSvgIcon(HINT_DIRECTIVE_ICON_PATHS[directive])
-  );
+  target.marker = createHintMarkerWithIcon("directive", DIRECTIVE_ICON_SVGS[directive]);
   renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
 };
 
@@ -269,6 +279,30 @@ const createDirectiveTarget = (
   };
 };
 
+const assignDirectiveLabel = (
+  target: HintTarget,
+  directive: ReservedHintDirective,
+  label: string,
+  directiveTargets: HintTarget[]
+): HintTarget => {
+  const directiveTarget =
+    target.directiveMatch && target.directiveMatch.directive !== directive
+      ? createDirectiveTarget(target, directive, label)
+      : target;
+
+  directiveTarget.label = label;
+  directiveTarget.directiveMatch = {
+    directive,
+    label
+  };
+
+  if (directiveTarget !== target) {
+    directiveTargets.push(directiveTarget);
+  }
+
+  return directiveTarget;
+};
+
 export const buildHintTargets = (
   mode: HintActionMode,
   charset: string,
@@ -292,6 +326,7 @@ export const buildHintTargets = (
   });
 
   const directiveMatches = new Map<ReservedHintDirective, DirectiveMatch>();
+  const targetsByElement = new Map<HTMLElement, HintTarget>();
   const targets = filteredElements.map((element) => {
     const rect = element.getBoundingClientRect();
     const marker = seemsExpandable(element)
@@ -307,15 +342,19 @@ export const buildHintTargets = (
       linkUrl: getClosestLinkUrl(element)
     };
 
-    for (const [directive, scorer] of Object.entries(DIRECTIVE_SCORERS) as Array<
-      [ReservedHintDirective, DirectiveScorer | undefined]
-    >) {
+    targetsByElement.set(element, target);
+
+    for (const [directive, scorer] of DIRECTIVE_SCORER_ENTRIES) {
       if (!scorer) {
         continue;
       }
 
-      const score = scorer(element);
       const currentMatch = directiveMatches.get(directive);
+      if (currentMatch?.score === MAX_DIRECTIVE_SCORE) {
+        continue;
+      }
+
+      const score = scorer(element);
 
       if (score > 0 && (!currentMatch || score > currentMatch.score)) {
         directiveMatches.set(directive, {
@@ -342,11 +381,7 @@ export const buildHintTargets = (
     }
 
     reservedDirectiveLabels.add(preferredLabel);
-    match.target.label = preferredLabel;
-    match.target.directiveMatch = {
-      directive,
-      label: preferredLabel
-    };
+    assignDirectiveLabel(match.target, directive, preferredLabel, directiveTargets);
 
     if (directive === "input") {
       const eraseLabel = directiveLabels.erase.find(
@@ -358,6 +393,29 @@ export const buildHintTargets = (
         directiveTargets.push(createDirectiveTarget(match.target, "erase", eraseLabel));
       }
     }
+  }
+
+  for (const directive of ["prev", "next"] as const) {
+    const preferredLabel = directiveLabels[directive].find(
+      (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
+    );
+
+    if (!preferredLabel) {
+      continue;
+    }
+
+    const matchedElement = resolveFollowDirectionTarget(directive === "prev" ? "prev" : "next");
+    if (!(matchedElement instanceof HTMLElement)) {
+      continue;
+    }
+
+    const matchedTarget = targetsByElement.get(matchedElement);
+    if (!matchedTarget || matchedTarget.directiveMatch) {
+      continue;
+    }
+
+    reservedDirectiveLabels.add(preferredLabel);
+    assignDirectiveLabel(matchedTarget, directive, preferredLabel, directiveTargets);
   }
 
   const allTargets = [...targets, ...directiveTargets];

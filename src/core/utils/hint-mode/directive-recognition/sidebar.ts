@@ -10,6 +10,7 @@ const SIDEBAR_TOKEN_PATTERN =
 const SIDEBAR_ACTION_PATTERN = /\b(toggle|open|close|collapse|expand|show|hide)\b/i;
 const GUIDE_TOKEN_PATTERN = /\bguide\b/i;
 const SHELL_CONTEXT_PATTERN = /\b(masthead|topbar|app[-\s]?bar|header|chrome)\b/i;
+const MAX_DIRECTIVE_SCORE = 9999;
 
 export const scoreSidebarDirectiveCandidate = (element: HTMLElement): number => {
   const tagName = element.tagName.toLowerCase();
@@ -39,6 +40,14 @@ export const scoreSidebarDirectiveCandidate = (element: HTMLElement): number => 
     controlledElement?.getAttribute("class"),
     ancestorDescriptorText
   ]);
+
+  if (
+    controlTarget &&
+    SIDEBAR_TOKEN_PATTERN.test(getJoinedElementText([controlTarget, controlledElement?.id])) &&
+    SIDEBAR_ACTION_PATTERN.test(descriptorText)
+  ) {
+    return MAX_DIRECTIVE_SCORE;
+  }
 
   if (
     element.getAttribute("aria-haspopup")?.toLowerCase() === "menu" &&
