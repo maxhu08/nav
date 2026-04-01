@@ -1,6 +1,8 @@
 import {
   HINT_MARKER_EDGE_GAP,
-  HINT_MARKER_MIN_GAP
+  HINT_MARKER_MIN_GAP,
+  MARKER_ICON_ATTRIBUTE,
+  MARKER_LABEL_ATTRIBUTE
 } from "~/src/core/utils/hint-mode/shared/constants";
 
 type MarkerPlacementState = {
@@ -20,6 +22,20 @@ const clampToViewport = (position: number, size: number, viewportSize: number): 
   const min = HINT_MARKER_EDGE_GAP;
   const max = Math.max(min, viewportSize - HINT_MARKER_EDGE_GAP - size);
   return clamp(Math.round(position), min, max);
+};
+
+const getMarkerLabelWidth = (marker: HTMLDivElement, width: number): number => {
+  if (!marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)) {
+    return width;
+  }
+
+  const label = marker.querySelector(`[${MARKER_LABEL_ATTRIBUTE}="true"]`);
+
+  if (!(label instanceof HTMLElement)) {
+    return width;
+  }
+
+  return label.offsetWidth;
 };
 
 const boundsOverlap = (
@@ -53,11 +69,18 @@ export const positionMarkerElement = (
 ): void => {
   const width = marker.offsetWidth;
   const height = marker.offsetHeight;
-  const left = clampToViewport(rect.left, width, window.innerWidth);
+  const anchorWidth = getMarkerLabelWidth(marker, width);
+  const visualLeft = clampToViewport(
+    rect.left - width * 0.2 + (width - anchorWidth) * 0.2,
+    width,
+    window.innerWidth
+  );
+  const left = visualLeft + width * 0.2;
   const preferredTop = clampToViewport(rect.top, height, window.innerHeight);
   const previousMarkerBounds = placementState.previousMarkerBounds;
   const top =
-    previousMarkerBounds && boundsOverlap(left, preferredTop, width, height, previousMarkerBounds)
+    previousMarkerBounds &&
+    boundsOverlap(visualLeft, preferredTop, width, height, previousMarkerBounds)
       ? clampToViewport(
           previousMarkerBounds.bottom + HINT_MARKER_MIN_GAP,
           height,
@@ -67,8 +90,8 @@ export const positionMarkerElement = (
 
   placementState.previousMarkerBounds = {
     bottom: top + height,
-    left,
-    right: left + width,
+    left: visualLeft,
+    right: visualLeft + width,
     top
   };
 

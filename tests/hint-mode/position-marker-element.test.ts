@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 import {
+  MARKER_ICON_ATTRIBUTE,
+  MARKER_LABEL_ATTRIBUTE
+} from "~/src/core/utils/hint-mode/shared/constants";
+import {
   createMarkerPlacementState,
   positionMarkerElement
 } from "~/src/core/utils/hint-mode/rendering/position-marker-element";
@@ -96,6 +100,99 @@ describe("positionMarkerElement", () => {
 
       expect(secondMarker.style.left).toBe(firstMarker.style.left);
       expect(secondMarker.style.top).toBe("32px");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("keeps icon markers aligned with the same left edge as label-only markers", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      setViewport(300, 200);
+      const placementState = createMarkerPlacementState();
+      const marker = createMarkerElement(60, 20);
+      const label = document.createElement("span");
+      const icon = document.createElement("span");
+
+      label.setAttribute(MARKER_LABEL_ATTRIBUTE, "true");
+      icon.setAttribute(MARKER_ICON_ATTRIBUTE, "true");
+      Object.defineProperty(label, "offsetWidth", {
+        configurable: true,
+        get: () => 40
+      });
+
+      marker.append(label, icon);
+      fixture.document.body.append(marker);
+
+      positionMarkerElement(marker, new DOMRect(10, 10, 20, 20), placementState);
+
+      expect(marker.style.left).toBe("20px");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("keeps icon markers inside the viewport edge gap", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      setViewport(300, 200);
+      const placementState = createMarkerPlacementState();
+      const marker = createMarkerElement(60, 20);
+      const label = document.createElement("span");
+      const icon = document.createElement("span");
+
+      label.setAttribute(MARKER_LABEL_ATTRIBUTE, "true");
+      icon.setAttribute(MARKER_ICON_ATTRIBUTE, "true");
+      Object.defineProperty(label, "offsetWidth", {
+        configurable: true,
+        get: () => 40
+      });
+
+      marker.append(label, icon);
+      fixture.document.body.append(marker);
+
+      positionMarkerElement(marker, new DOMRect(0, 10, 20, 20), placementState);
+
+      expect(marker.style.left).toBe("20px");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("treats icon markers as overlapping based on their visual bounds", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      setViewport(300, 200);
+      const placementState = createMarkerPlacementState();
+      const firstMarker = createMarkerElement(60, 20);
+      const secondMarker = createMarkerElement(60, 20);
+
+      for (const marker of [firstMarker, secondMarker]) {
+        const label = document.createElement("span");
+        const icon = document.createElement("span");
+
+        label.setAttribute(MARKER_LABEL_ATTRIBUTE, "true");
+        icon.setAttribute(MARKER_ICON_ATTRIBUTE, "true");
+        Object.defineProperty(label, "offsetWidth", {
+          configurable: true,
+          get: () => 40
+        });
+
+        marker.append(label, icon);
+      }
+
+      fixture.document.body.append(firstMarker, secondMarker);
+
+      positionMarkerElement(firstMarker, new DOMRect(10, 10, 20, 20), placementState);
+      positionMarkerElement(secondMarker, new DOMRect(10, 10, 20, 20), placementState);
+
+      expect(secondMarker.style.left).toBe(firstMarker.style.left);
+      expect(Number.parseInt(secondMarker.style.top, 10)).toBe(
+        Number.parseInt(firstMarker.style.top, 10) + 20 + HINT_MARKER_MIN_GAP
+      );
     } finally {
       fixture.cleanup();
     }
