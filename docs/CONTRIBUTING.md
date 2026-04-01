@@ -2,6 +2,18 @@
 
 Use this page as the fast entry point for contributors.
 
+## Documentation Map
+
+- [Setup](./SETUP.md): install dependencies and run the project locally.
+- [Coding Style](./CODING_STYLE.md): project-specific code style and implementation conventions.
+- [Testing](./TESTING.md): test workflow and expectations.
+- [Adding Actions](./ADDING_ACTIONS.md): how to add, rename, and wire up actions.
+- [Options Page](./OPTIONS_PAGE.md): guidance for options UI and persisted config changes.
+- [Project Structure](./PROJECT_STRUCTURE.md): where major parts of the codebase live.
+- [Terminology](./TERMINOLOGY.md): shared terms used throughout the project.
+- [Issue Reporting](./ISSUE_REPORTING.md): bug report guidance and template.
+- [Committing](./COMMITTING.md): commit message and pre-commit expectations.
+
 ## Quick Start
 
 1. Read [Setup](./SETUP.md) and run the project locally.
