@@ -1,4 +1,5 @@
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
+import { resetSiteKeybindIgnoreForTests } from "~/src/core/utils/ignore-site-keybinds";
 
 type HintModeModule = typeof import("~/src/core/actions/hint-mode");
 type HintController = ReturnType<HintModeModule["createHintController"]>;
@@ -14,6 +15,7 @@ export const withHintModeModule = async <T>(
     const { generateHintLabels } = await import("~/src/core/actions/hint-mode");
     return await run({ generateHintLabels });
   } finally {
+    resetSiteKeybindIgnoreForTests();
     fixture.cleanup();
   }
 };
@@ -35,6 +37,7 @@ export const withHintController = async <T>(
 
     return await run({ controller, getMode: () => mode });
   } finally {
+    resetSiteKeybindIgnoreForTests();
     fixture.cleanup();
   }
 };

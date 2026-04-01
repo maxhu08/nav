@@ -8,6 +8,10 @@ import { renderHintTargets } from "~/src/core/utils/hint-mode/rendering/render-h
 import { syncHintStyles } from "~/src/core/utils/hint-mode/rendering/sync-hint-styles";
 import { updateVisibleTargets } from "~/src/core/utils/hint-mode/rendering/update-visible-targets";
 import {
+  activateSiteKeybindIgnore,
+  deactivateSiteKeybindIgnore
+} from "~/src/core/utils/ignore-site-keybinds";
+import {
   DEFAULT_HINT_CHARSET,
   HINT_CONTAINER_ID
 } from "~/src/core/utils/hint-mode/shared/constants";
@@ -46,6 +50,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
     typedPrefix = "";
     toggleKey = null;
     hintTargets = [];
+    deactivateSiteKeybindIgnore("hints");
     setMode("normal");
     const container = document.getElementById(HINT_CONTAINER_ID);
     if (container instanceof HTMLDivElement) {
@@ -66,6 +71,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
 
       activeMode = mode;
       typedPrefix = "";
+      activateSiteKeybindIgnore("hints");
       setMode("hint");
       renderHintTargets(hintTargets);
       return true;
