@@ -79,6 +79,23 @@ const hasClickableJsAction = (element: HTMLElement): boolean => {
   return false;
 };
 
+const hasFalsePositiveButtonSignal = (element: HTMLElement): boolean => {
+  const values = [
+    element.getAttribute("aria-label"),
+    element.getAttribute("title"),
+    element.getAttribute("role"),
+    element.textContent?.trim()
+  ].filter((value): value is string => typeof value === "string" && value.length > 0);
+
+  if (values.length > 0) {
+    return true;
+  }
+
+  const tabIndexValue = element.getAttribute("tabindex");
+  const tabIndex = tabIndexValue ? Number.parseInt(tabIndexValue, 10) : Number.NaN;
+  return Number.isFinite(tabIndex) && tabIndex >= 0;
+};
+
 const isSelectableReadOnlyInput = (element: HTMLElement): boolean => {
   if (!(element instanceof HTMLInputElement)) {
     return false;
@@ -180,7 +197,10 @@ const getHintableElementState = (
 
   if (!isClickable) {
     const className = element.getAttribute("class")?.toLowerCase();
-    if (className?.includes("button") || className?.includes("btn")) {
+    if (
+      (className?.includes("button") || className?.includes("btn")) &&
+      hasFalsePositiveButtonSignal(element)
+    ) {
       isClickable = true;
       possibleFalsePositive = true;
     }
@@ -295,6 +315,10 @@ const shouldSuppressAncestorCandidate = (
   const ancestorTagName = ancestor.element.tagName.toLowerCase();
   if (PREFERRED_NATIVE_INTERACTIVE_TAGS.has(ancestorTagName)) {
     return false;
+  }
+
+  if (ancestor.possibleFalsePositive && hasLinkOrButtonSemantics(descendant.element)) {
+    return true;
   }
 
   if (
