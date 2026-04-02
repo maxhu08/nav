@@ -1,5 +1,5 @@
 import { HINT_DIRECTIVE_ICON_PATHS } from "~/src/lib/hint-directive-icons";
-import { HINT_FOCUS_MODE_ICON_PATH } from "~/src/lib/inline-icons";
+import { EXTERNAL_LINK_ICON_PATH, HINT_FOCUS_MODE_ICON_PATH } from "~/src/lib/inline-icons";
 import { DIRECTIVE_SCORERS } from "~/src/core/utils/hint-mode/directive-recognition";
 import type { DirectiveScorer } from "~/src/core/utils/hint-mode/directive-recognition/shared";
 import { getClosestLinkUrl } from "~/src/core/utils/hint-mode/collection/get-closest-link-url";
@@ -50,6 +50,15 @@ const applyDirectiveMarker = (
   showCapitalizedLetters: boolean
 ): void => {
   target.marker = createHintMarkerWithIcon("directive", DIRECTIVE_ICON_SVGS[directive]);
+  renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
+};
+
+const applyForcedIconMarker = (
+  target: HintTarget,
+  iconPath: string,
+  showCapitalizedLetters: boolean
+): void => {
+  target.marker = createHintMarkerWithIcon("directive", createInlineSvgIcon(iconPath));
   renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
 };
 
@@ -304,6 +313,10 @@ const assignDirectiveLabel = (
 };
 
 const createModeMarker = (mode: HintActionMode, element: HTMLElement): HTMLDivElement => {
+  if (mode === "new-tab") {
+    return createHintMarkerWithIcon("directive", createInlineSvgIcon(EXTERNAL_LINK_ICON_PATH));
+  }
+
   if (mode === "yank-link-url" || mode === "yank-image" || mode === "yank-image-url") {
     return createHintMarkerWithIcon("directive", DIRECTIVE_ICON_SVGS.copy);
   }
@@ -323,6 +336,18 @@ const getForcedDirectiveForMode = (mode: HintActionMode): ReservedHintDirective 
   return null;
 };
 
+const getForcedIconForMode = (mode: HintActionMode): string | null => {
+  if (mode === "new-tab") {
+    return EXTERNAL_LINK_ICON_PATH;
+  }
+
+  if (mode === "yank-link-url" || mode === "yank-image" || mode === "yank-image-url") {
+    return HINT_DIRECTIVE_ICON_PATHS.copy;
+  }
+
+  return null;
+};
+
 export const buildHintTargets = (
   mode: HintActionMode,
   charset: string,
@@ -334,6 +359,10 @@ export const buildHintTargets = (
 ): HintTarget[] => {
   const elements = getHintableElements(mode);
   const filteredElements = elements.filter((element) => {
+    if (mode === "new-tab") {
+      return !!getClosestLinkUrl(element);
+    }
+
     if (mode === "yank-link-url") {
       return !!getClosestLinkUrl(element);
     }
@@ -458,8 +487,14 @@ export const buildHintTargets = (
   }
 
   const forcedDirective = getForcedDirectiveForMode(mode);
+  const forcedIcon = getForcedIconForMode(mode);
 
   for (const target of allTargets) {
+    if (forcedIcon && target.element.isConnected) {
+      applyForcedIconMarker(target, forcedIcon, showCapitalizedLetters);
+      continue;
+    }
+
     if (forcedDirective && target.element.isConnected) {
       applyDirectiveMarker(target, forcedDirective, showCapitalizedLetters);
       continue;
