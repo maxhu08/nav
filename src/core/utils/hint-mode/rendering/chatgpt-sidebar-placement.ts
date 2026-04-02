@@ -16,6 +16,16 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
   const { element } = target;
 
   if (
+    element.matches("[role='menuitem'], [role='menuitemcheckbox'], [role='menuitemradio']") &&
+    element.closest("[role='menu']")
+  ) {
+    return {
+      rect: element.getBoundingClientRect(),
+      strategy: "top-right"
+    };
+  }
+
+  if (
     element.matches("button.icon[data-state='open'], button.icon[data-state='closed']") &&
     element.closest("[data-sidebar-item='true']") &&
     (element.querySelector("[data-testid='project-folder-icon']") ||

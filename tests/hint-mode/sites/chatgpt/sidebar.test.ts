@@ -245,6 +245,53 @@ describe("ChatGPT sidebar hint marker placement", () => {
     }
   });
 
+  test("keeps popup action menu item markers at the row corner", () => {
+    const fixture = createDomFixture(`
+      <div role="menu" aria-label="Conversation options">
+        <button
+          id="rename-action"
+          role="menuitem"
+          type="button"
+          aria-label="Rename"
+        >
+          Rename
+        </button>
+        <button
+          id="delete-action"
+          role="menuitem"
+          type="button"
+          aria-label="Delete"
+        >
+          Delete
+        </button>
+      </div>
+    `);
+
+    try {
+      setViewport(420, 300);
+
+      const renameAction = getRequiredElement<HTMLButtonElement>("#rename-action");
+      const deleteAction = getRequiredElement<HTMLButtonElement>("#delete-action");
+
+      setRect(renameAction, 120, 112, 180, 32);
+      setRect(deleteAction, 120, 152, 180, 32);
+
+      const targets = buildHintTargets("current-tab", "asdf", 1, false);
+      targets.forEach((target) => setMarkerSize(target.marker));
+      renderHintTargets(targets);
+
+      const renameTarget = getRequiredTarget(targets, "#rename-action");
+      const deleteTarget = getRequiredTarget(targets, "#delete-action");
+
+      expect(getMarkerLeft(renameTarget)).toBe(252);
+      expect(getMarkerTop(renameTarget)).toBe(112);
+      expect(getMarkerLeft(deleteTarget)).toBe(252);
+      expect(getMarkerTop(deleteTarget)).toBe(152);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
   test("keeps sanitized multi-section sidebar rows aligned without overlap", () => {
     const fixture = createDomFixture(`
       <div class="group/sidebar-expando-section mb-2">
