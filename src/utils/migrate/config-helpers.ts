@@ -1,13 +1,17 @@
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-export const hasLegacyReservedLabelsOption = (value: unknown): boolean => {
-  if (!isObjectRecord(value)) {
-    return false;
+const getHintsRecord = (value: unknown): Record<string, unknown> | null => {
+  if (!isObjectRecord(value) || !isObjectRecord(value.hints)) {
+    return null;
   }
 
-  const hints = value.hints;
-  if (!isObjectRecord(hints)) {
+  return value.hints;
+};
+
+export const hasLegacyReservedLabelsOption = (value: unknown): boolean => {
+  const hints = getHintsRecord(value);
+  if (!hints) {
     return false;
   }
 
@@ -15,16 +19,21 @@ export const hasLegacyReservedLabelsOption = (value: unknown): boolean => {
 };
 
 export const hasDirectivesOption = (value: unknown): boolean => {
-  if (!isObjectRecord(value)) {
-    return false;
-  }
-
-  const hints = value.hints;
-  if (!isObjectRecord(hints)) {
+  const hints = getHintsRecord(value);
+  if (!hints) {
     return false;
   }
 
   return "directives" in hints;
+};
+
+export const hasLegacyShowActivationIndicatorOption = (value: unknown): boolean => {
+  const hints = getHintsRecord(value);
+  if (!hints) {
+    return false;
+  }
+
+  return "showActivationIndicator" in hints || "showActivationIndicatorColor" in hints;
 };
 
 export const hasForceNormalModeOption = (value: unknown): boolean => {

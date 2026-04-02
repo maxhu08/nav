@@ -84,8 +84,10 @@ export const defaultConfig: Config = {
     showCapitalizedLetters: false,
     improveThumbnailMarkers: true,
     minLabelLength: 2,
-    showActivationIndicator: true,
-    showActivationIndicatorColor: DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
+    activationIndicator: {
+      enabled: true,
+      color: DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR
+    },
     styling: "default",
     customCSS: DEFAULT_HINT_CUSTOM_CSS,
     charset: DEFAULT_HINT_CHARSET,
@@ -110,8 +112,10 @@ export type Config = {
     showCapitalizedLetters: boolean;
     improveThumbnailMarkers: boolean;
     minLabelLength: number;
-    showActivationIndicator: boolean;
-    showActivationIndicatorColor: string;
+    activationIndicator: {
+      enabled: boolean;
+      color: string;
+    };
     styling: "default" | "custom";
     customCSS: string;
     charset: string;

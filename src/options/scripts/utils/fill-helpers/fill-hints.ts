@@ -44,24 +44,27 @@ export const syncHintsStylingControls = (styling: Config["hints"]["styling"]): v
 };
 
 export const syncHintsActivationIndicatorColorControls = (
-  showActivationIndicator: boolean
+  activationIndicatorEnabled: boolean
 ): void => {
-  hintsShowActivationIndicatorColorSectionEl.classList.toggle("hidden", !showActivationIndicator);
-  hintsShowActivationIndicatorColorSectionEl.classList.toggle("grid", showActivationIndicator);
+  hintsShowActivationIndicatorColorSectionEl.classList.toggle(
+    "hidden",
+    !activationIndicatorEnabled
+  );
+  hintsShowActivationIndicatorColorSectionEl.classList.toggle("grid", activationIndicatorEnabled);
 };
 
 export const fillHintsInputs = (config: Config): void => {
   hintsShowCapitalizedLettersCheckboxEl.checked = config.hints.showCapitalizedLetters;
   hintsImproveThumbnailMarkersCheckboxEl.checked = config.hints.improveThumbnailMarkers;
-  hintsShowActivationIndicatorCheckboxEl.checked = config.hints.showActivationIndicator;
-  hintsShowActivationIndicatorColorInputEl.value = config.hints.showActivationIndicatorColor;
+  hintsShowActivationIndicatorCheckboxEl.checked = config.hints.activationIndicator.enabled;
+  hintsShowActivationIndicatorColorInputEl.value = config.hints.activationIndicator.color;
   hintsCustomCSSTextareaEl.value = config.hints.customCSS;
   hintsCharsetInputEl.value = config.hints.charset;
   hintsMinLabelLengthInputEl.value = String(config.hints.minLabelLength);
   hintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
   hintsReservedLabelsTextareaEl.value = config.hints.directives;
   setHintsStylingButtonState(config.hints.styling);
-  syncHintsActivationIndicatorColorControls(config.hints.showActivationIndicator);
+  syncHintsActivationIndicatorColorControls(config.hints.activationIndicator.enabled);
   syncColorInputControl(hintsShowActivationIndicatorColorInputEl);
   refreshHintsCustomCSSHighlight();
   syncHintsCharsetHighlight();

@@ -32,8 +32,8 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setHintAvoidAdjacentPairs(fastConfig.hints.avoidAdjacentPairs);
   deps.setHintDirectiveLabels(fastConfig.hints.directives);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
-  deps.setShowActivationIndicator(fastConfig.hints.showActivationIndicator);
-  deps.setActivationIndicatorColor(fastConfig.hints.showActivationIndicatorColor);
+  deps.setShowActivationIndicator(fastConfig.hints.activationIndicator.enabled);
+  deps.setActivationIndicatorColor(fastConfig.hints.activationIndicator.color);
   deps.syncFocusStyles();
   deps.syncHintStyles();
   deps.syncHintMarkers();

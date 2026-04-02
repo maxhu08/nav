@@ -42,8 +42,10 @@ export type FastConfig = {
     showCapitalizedLetters: boolean;
     improveThumbnailMarkers: boolean;
     minLabelLength: number;
-    showActivationIndicator: boolean;
-    showActivationIndicatorColor: string;
+    activationIndicator: {
+      enabled: boolean;
+      color: string;
+    };
     css: string;
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
@@ -85,8 +87,8 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
     typeof value?.hints?.minLabelLength === "number" &&
-    typeof value?.hints?.showActivationIndicator === "boolean" &&
-    typeof value?.hints?.showActivationIndicatorColor === "string" &&
+    typeof value?.hints?.activationIndicator?.enabled === "boolean" &&
+    typeof value?.hints?.activationIndicator?.color === "string" &&
     typeof value?.hints?.css === "string" &&
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
@@ -275,10 +277,10 @@ export const buildFastConfig = (config: Config): FastConfig => {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,
       improveThumbnailMarkers: config.hints.improveThumbnailMarkers,
       minLabelLength: parseMinLabelLengthValue(config.hints.minLabelLength),
-      showActivationIndicator: config.hints.showActivationIndicator,
-      showActivationIndicatorColor: parseActivationIndicatorColorValue(
-        config.hints.showActivationIndicatorColor
-      ),
+      activationIndicator: {
+        enabled: config.hints.activationIndicator.enabled,
+        color: parseActivationIndicatorColorValue(config.hints.activationIndicator.color)
+      },
       css: resolveHintCSS(config),
       charset: parseHintCharsetValue(config.hints.charset),
       avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),

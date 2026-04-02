@@ -10,8 +10,35 @@ import {
 import {
   hasDirectivesOption,
   hasForceNormalModeOption,
-  hasLegacyReservedLabelsOption
+  hasLegacyReservedLabelsOption,
+  hasLegacyShowActivationIndicatorOption
 } from "~/src/utils/migrate/config-helpers";
+
+const migrateHintActivationIndicatorOptions = (config: Config): void => {
+  const hints = config.hints as Config["hints"] & {
+    showActivationIndicator?: boolean;
+    showActivationIndicatorColor?: string;
+  };
+
+  hints.activationIndicator ??= {
+    enabled: config.hints.activationIndicator?.enabled ?? true,
+    color: fallbackActivationIndicatorColor(config)
+  };
+
+  if (typeof hints.showActivationIndicator === "boolean") {
+    hints.activationIndicator.enabled = hints.showActivationIndicator;
+    delete hints.showActivationIndicator;
+  }
+
+  if (typeof hints.showActivationIndicatorColor === "string") {
+    hints.activationIndicator.color = hints.showActivationIndicatorColor;
+    delete hints.showActivationIndicatorColor;
+  }
+};
+
+const fallbackActivationIndicatorColor = (config: Config): string => {
+  return config.hints.activationIndicator?.color ?? "#eab308";
+};
 
 const appendMissingHotkeyDeclarations = (mappings: string): string => {
   const declaredActions = new Set<string>();
@@ -124,6 +151,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   // if config before v1.0.4
   if (!hasForceNormalModeOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+    migrateHintActivationIndicatorOptions(migratedConfig);
     migratedConfig.hotkeys.mappings = appendMissingHotkeyDeclarations(
       migratedConfig.hotkeys.mappings
     );
@@ -132,6 +160,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   }
 
   const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+  migrateHintActivationIndicatorOptions(migratedConfig);
 
   // if config before v1.1.1
   migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
@@ -148,6 +177,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   // if config before v1.1.4
   if (!hasDirectivesOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+    migrateHintActivationIndicatorOptions(migratedConfig);
     migratedConfig.hints.directives = fallbackConfig.hints.directives;
     migratedConfig.hints.styling = fallbackConfig.hints.styling;
 
@@ -161,6 +191,10 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     migratedConfig.hints.directives = appendMissingHintDirectives(migratedConfig.hints.directives);
 
     return migratedConfig;
+  }
+
+  if (hasLegacyShowActivationIndicatorOption(config)) {
+    migrateHintActivationIndicatorOptions(migratedConfig);
   }
 
   migratedConfig.hints.directives = appendMissingHintDirectives(migratedConfig.hints.directives);

@@ -71,6 +71,57 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
     }
   },
   {
+    desc: "renames legacy activation indicator hint settings during migration",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hints: {
+          ...structuredClone(defaultConfig).hints,
+          activationIndicator: undefined,
+          showActivationIndicator: false,
+          showActivationIndicatorColor: "rebeccapurple"
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.activationIndicator.enabled).toBe(false);
+      expect(migratedConfig.hints.activationIndicator.color).toBe("rebeccapurple");
+      expect("showActivationIndicator" in migratedConfig.hints).toBe(false);
+      expect("showActivationIndicatorColor" in migratedConfig.hints).toBe(false);
+    }
+  },
+  {
+    desc: "renames legacy activation indicator hint settings for configs before v1.1.4",
+    test: () => {
+      const oldConfig = {
+        rules: {
+          forceNormalMode: true,
+          urls: {
+            mode: "blacklist",
+            blacklist: "",
+            whitelist: ""
+          }
+        },
+        hotkeys: {
+          mappings: "j scroll-down"
+        },
+        hints: {
+          reservedLabels: "@input kj",
+          showActivationIndicator: false,
+          showActivationIndicatorColor: "tomato"
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hints.activationIndicator.enabled).toBe(false);
+      expect(migratedConfig.hints.activationIndicator.color).toBe("tomato");
+      expect(migratedConfig.hints.directives).toBe(defaultConfig.hints.directives);
+      expect(migratedConfig.hints.styling).toBe(defaultConfig.hints.styling);
+    }
+  },
+  {
     desc: "adds missing hotkey mappings as unbound during migration",
     test: () => {
       const oldConfig = {

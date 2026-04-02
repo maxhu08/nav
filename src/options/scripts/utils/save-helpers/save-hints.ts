@@ -19,8 +19,8 @@ export const saveHintsSettingsToDraft = (draft: Config): void => {
     1,
     Number.parseInt(hintsMinLabelLengthInputEl.value, 10) || 2
   );
-  draft.hints.showActivationIndicator = hintsShowActivationIndicatorCheckboxEl.checked;
-  draft.hints.showActivationIndicatorColor = hintsShowActivationIndicatorColorInputEl.value;
+  draft.hints.activationIndicator.enabled = hintsShowActivationIndicatorCheckboxEl.checked;
+  draft.hints.activationIndicator.color = hintsShowActivationIndicatorColorInputEl.value;
   draft.hints.styling =
     hintsStylingCustomButtonEl.getAttribute("aria-pressed") === "true" ? "custom" : "default";
   draft.hints.customCSS = hintsCustomCSSTextareaEl.value;
