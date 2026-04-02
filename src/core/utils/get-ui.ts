@@ -37,7 +37,10 @@ export const findStyleParams: FindStyleRenderParams = {
   findMatchCountId: FIND_MATCH_COUNT_ID,
   findStatusTextId: FIND_STATUS_TEXT_ID,
   findHighlightName: FIND_HIGHLIGHT_NAME,
-  findCurrentHighlightName: FIND_CURRENT_HIGHLIGHT_NAME
+  findCurrentHighlightName: FIND_CURRENT_HIGHLIGHT_NAME,
+  findHighlightBackgroundColor: "rgba(234, 179, 8, 0.35)",
+  findCurrentHighlightBackgroundColor: "#eab308",
+  findHighlightTextColor: "#000000"
 };
 
 export const getOverlayRoot = (): HTMLDivElement | null =>

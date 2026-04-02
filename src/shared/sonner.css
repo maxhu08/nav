@@ -12,6 +12,12 @@
   --border-radius: 8px;
 }
 
+#toaster-wrapper [data-sonner-toaster]::selection,
+#toaster-wrapper [data-sonner-toaster] *::selection {
+  background-color: #ffffff20 !important;
+  color: inherit !important;
+}
+
 #toaster-wrapper [data-sonner-toaster][data-x-position="right"] {
   right: max(var(--offset), env(safe-area-inset-right));
 }

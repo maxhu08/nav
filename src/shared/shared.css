@@ -1,5 +1,7 @@
 * {
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   transition-duration: 250ms;
 }
 
@@ -25,7 +27,17 @@
 }
 
 ::selection {
-  background-color: #ffffff20;
+  background: #ffffff20 !important;
+  background-color: #ffffff20 !important;
+}
+
+[data-nav-overlay-root]::selection,
+[data-nav-overlay-root] *::selection,
+#toaster-wrapper::selection,
+#toaster-wrapper *::selection {
+  background: #ffffff20 !important;
+  background-color: #ffffff20 !important;
+  color: inherit !important;
 }
 
 *:focus:not(input):not(textarea) {

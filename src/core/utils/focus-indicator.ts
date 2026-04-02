@@ -90,6 +90,9 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
   let focusOverlayTimeout: number | null = null;
   let showActivationIndicator = true;
   let activationIndicatorColor = DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
+  let findUIRoot: ShadowRoot | null = null;
+  let findUIStyleId: string | null = null;
+  let findUIStyleParams: FindStyleRenderParams | null = null;
 
   const getFocusOverlay = (): HTMLDivElement => {
     const existing = document.getElementById(FOCUS_OVERLAY_ID);
@@ -115,6 +118,25 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     activationIndicatorColor,
     colorToRgba
   });
+
+  const syncStoredFindUIStyles = (): void => {
+    if (!findUIRoot || !findUIStyleId || !findUIStyleParams) {
+      return;
+    }
+
+    injectStyles({
+      focusStyleId: FOCUS_STYLE_ID,
+      focus: getFocusStyleParams(),
+      findStyleId: findUIStyleId,
+      find: {
+        ...findUIStyleParams,
+        findHighlightBackgroundColor: colorToRgba(activationIndicatorColor, 0.35),
+        findCurrentHighlightBackgroundColor: activationIndicatorColor,
+        findHighlightTextColor: "#000000"
+      },
+      findRoot: findUIRoot
+    });
+  };
 
   const clearFocusOverlayFrame = (): void => {
     if (focusOverlayFrame === null) {
@@ -252,25 +274,25 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
         focusStyleId: FOCUS_STYLE_ID,
         focus: getFocusStyleParams()
       });
+
+      syncStoredFindUIStyles();
     },
     setShowActivationIndicator: (value: boolean): void => {
       showActivationIndicator = value;
     },
     setActivationIndicatorColor: (value: string): void => {
       activationIndicatorColor = value;
+      syncStoredFindUIStyles();
     },
     syncFindUIStyles: (
       root: ShadowRoot,
       findStyleId: string,
       findStyleParams: FindStyleRenderParams
     ): void => {
-      injectStyles({
-        focusStyleId: FOCUS_STYLE_ID,
-        focus: getFocusStyleParams(),
-        findStyleId,
-        find: findStyleParams,
-        findRoot: root
-      });
+      findUIRoot = root;
+      findUIStyleId = findStyleId;
+      findUIStyleParams = findStyleParams;
+      syncStoredFindUIStyles();
     }
   };
 };

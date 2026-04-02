@@ -47,6 +47,8 @@ export const injectStyles = (params: InjectStylesParams): void => {
   upsertStyle(getDocumentStyleRoot(), params.focusStyleId, renderFocusStyles(params.focus));
 
   if (params.findStyleId && params.find && params.findRoot) {
-    upsertStyle(params.findRoot, params.findStyleId, renderFindStyles(params.find));
+    const findCss = renderFindStyles(params.find);
+    upsertStyle(params.findRoot, params.findStyleId, findCss);
+    upsertStyle(getDocumentStyleRoot(), `${params.findStyleId}-global`, findCss);
   }
 };

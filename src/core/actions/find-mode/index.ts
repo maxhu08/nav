@@ -34,6 +34,35 @@ type FindMatch = {
   element: HTMLElement;
 };
 
+const getSelectionAnchorRange = (): Range | null => {
+  const selection = globalThis.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0).cloneRange();
+  if (!range.collapsed) {
+    range.collapse(true);
+  }
+
+  return range;
+};
+
+const createBodyStartRange = (): Range | null => {
+  if (!document.body) {
+    return null;
+  }
+
+  const range = document.createRange();
+  range.setStart(document.body, 0);
+  range.setEnd(document.body, 0);
+  return range;
+};
+
+const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const hasUpperCase = (value: string): boolean => /\p{Lu}/u.test(value);
+
 type CreateFindModeControllerDeps = {
   getMode: () => CoreMode;
   setMode: (mode: CoreMode) => void;
@@ -70,6 +99,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let currentFindMatchIndex = -1;
   let isFindStatusVisible = false;
   let findUIElements: FindUIElements | null = null;
+  let findSessionAnchorRange: Range | null = null;
 
   const clearFindHighlights = (): void => {
     const highlights = getCssHighlights();
@@ -88,7 +118,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     const separator = document.createElement("span");
     separator.className = "nav-find-status-separator";
-    separator.textContent = " / ";
+    separator.textContent = "\u00a0/\u00a0";
 
     const total = document.createElement("span");
     total.className = "nav-find-status-number";
@@ -179,7 +209,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return false;
     }
 
-    if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) {
+    if (element instanceof HTMLInputElement) {
       return false;
     }
 
@@ -190,9 +220,13 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return false;
     }
 
+    if (typeof element.checkVisibility === "function" && !element.checkVisibility()) {
+      return false;
+    }
+
     const style = window.getComputedStyle(element);
     return (
-      style.display !== "none" &&
+      (style.display === "contents" || style.display !== "none") &&
       style.visibility !== "hidden" &&
       style.visibility !== "collapse" &&
       Number.parseFloat(style.opacity) !== 0
@@ -200,10 +234,12 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   };
 
   const collectFindMatches = (query: string): FindMatch[] => {
-    const normalizedQuery = query.toLowerCase();
-    if (!normalizedQuery || !document.body) {
+    const parsedQuery = query.replace(/\u00a0/g, " ");
+    if (!parsedQuery || !document.body) {
       return [];
     }
+
+    const regex = new RegExp(escapeRegex(parsedQuery), hasUpperCase(parsedQuery) ? "g" : "gi");
 
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const matches: FindMatch[] = [];
@@ -215,18 +251,16 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
         if (isFindableTextContainer(parentElement)) {
           const text = currentNode.textContent ?? "";
-          const normalizedText = text.toLowerCase();
-          let searchIndex = 0;
+          let match = regex.exec(text);
 
-          while (searchIndex < normalizedText.length) {
-            const matchIndex = normalizedText.indexOf(normalizedQuery, searchIndex);
-            if (matchIndex === -1) {
+          while (match) {
+            if (!match[0]) {
               break;
             }
 
             const range = document.createRange();
-            range.setStart(currentNode, matchIndex);
-            range.setEnd(currentNode, matchIndex + normalizedQuery.length);
+            range.setStart(currentNode, match.index);
+            range.setEnd(currentNode, match.index + match[0].length);
 
             if (range.getClientRects().length > 0) {
               matches.push({
@@ -235,8 +269,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
               });
             }
 
-            searchIndex = matchIndex + normalizedQuery.length;
+            match = regex.exec(text);
           }
+
+          regex.lastIndex = 0;
         }
       }
 
@@ -244,6 +280,23 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     }
 
     return matches;
+  };
+
+  const resolveActiveFindMatchIndex = (matches: FindMatch[]): number => {
+    if (matches.length === 0) {
+      return -1;
+    }
+
+    const anchorRange = findSessionAnchorRange;
+    if (!anchorRange) {
+      return 0;
+    }
+
+    const nextMatchIndex = matches.findIndex((match) => {
+      return anchorRange.compareBoundaryPoints(Range.START_TO_START, match.range) <= 0;
+    });
+
+    return nextMatchIndex >= 0 ? nextMatchIndex : 0;
   };
 
   const focusCurrentFindMatch = (): void => {
@@ -261,16 +314,18 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       behavior: "auto"
     });
 
-    deps.onFocusIndicator(currentMatch.element);
-
     updateFindUICounts();
     applyFindHighlights();
   };
 
   const setFindQuery = (query: string): void => {
+    if (findQuery.length === 0 && query.length > 0) {
+      findSessionAnchorRange = getSelectionAnchorRange() ?? createBodyStartRange();
+    }
+
     findQuery = query;
     findMatches = collectFindMatches(query);
-    currentFindMatchIndex = findMatches.length > 0 ? 0 : -1;
+    currentFindMatchIndex = resolveActiveFindMatchIndex(findMatches);
     updateFindUICounts();
     applyFindHighlights();
   };
@@ -315,6 +370,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     findMatches = [];
     currentFindMatchIndex = -1;
     isFindStatusVisible = false;
+    findSessionAnchorRange = null;
     deactivateSiteKeybindIgnore("find");
     clearFindHighlights();
     updateFindUICounts();
