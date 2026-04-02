@@ -81,4 +81,40 @@ describe("hide directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("does not synthesize hide for left-positioned navigation dialogs", () => {
+    const fixture = createDomFixture(`
+      <div
+        role="dialog"
+        id="global-nav-dialog"
+        aria-labelledby="global-nav-title"
+        aria-modal="true"
+        data-position-regular="left"
+        class="nav-dialog"
+      >
+        <h2 id="global-nav-title">Global Navigation Menu</h2>
+        <button id="close-nav-button" type="button" aria-labelledby="close-nav-label">
+          <svg aria-hidden="true" class="octicon octicon-x">
+            <path d="M3 3L13 13M13 3L3 13"></path>
+          </svg>
+        </button>
+        <span id="close-nav-label">Close menu</span>
+        <nav>
+          <a data-testid="side-nav-menu-item-HOME" href="/dashboard">Home</a>
+        </nav>
+      </div>
+    `);
+
+    const dialog = fixture.document.getElementById("global-nav-dialog") as HTMLElement;
+    dialog.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 320, 700);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const hideTarget = targets.find((target) => target.directiveMatch?.directive === "hide");
+
+      expect(hideTarget).toBeUndefined();
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

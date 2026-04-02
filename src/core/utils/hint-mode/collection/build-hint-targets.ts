@@ -63,6 +63,8 @@ const MODAL_TOKEN_PATTERN = /\b(dialog|modal|popup|popover|sheet|overlay|lightbo
 const NON_MODAL_CONTAINER_PATTERN = /\b(sidebar|drawer|slideover|tooltip|toast|dropdown|menu)\b/i;
 const MODAL_SECTION_PATTERN =
   /(?:^|[-_])(popup|modal|dialog|popover|lightbox)[-_](wrapper|body|content|header|footer)(?:$|[-_])/i;
+const SIDE_DIALOG_PATTERN =
+  /\b(side[-\s]?nav|sidebar|drawer|navigation menu|global navigation menu)\b/i;
 const MORE_ACTION_LABEL_PATTERN =
   /\b(more actions|more options|open (?:item|conversation) options|(?:item|conversation) options|additional actions|overflow)\b/i;
 const MORE_ACTION_ICON_PATTERN =
@@ -448,6 +450,31 @@ const getModalCandidateScore = (element: HTMLElement): number => {
     return 0;
   }
 
+  const labelledByText = (() => {
+    const labelledBy = element.getAttribute("aria-labelledby")?.trim();
+    if (!labelledBy) {
+      return "";
+    }
+
+    return labelledBy
+      .split(/\s+/)
+      .map((id) => document.getElementById(id)?.textContent?.trim() ?? "")
+      .filter((value) => value.length > 0)
+      .join(" ");
+  })();
+  const extendedDescriptorText = getJoinedElementText([
+    descriptorText,
+    labelledByText,
+    element.querySelector("[data-testid^='side-nav-menu-item-']") ? "side-nav-menu-item" : ""
+  ]);
+
+  if (
+    SIDE_DIALOG_PATTERN.test(extendedDescriptorText) &&
+    /^(?:left|right)$/i.test(element.getAttribute("data-position-regular") ?? "")
+  ) {
+    return 0;
+  }
+
   if (isModalSectionCandidate(element)) {
     return 0;
   }
@@ -456,10 +483,10 @@ const getModalCandidateScore = (element: HTMLElement): number => {
     element.tagName.toLowerCase() === "dialog" ||
     element.getAttribute("role")?.toLowerCase() === "dialog" ||
     element.getAttribute("aria-modal")?.toLowerCase() === "true";
-  const tokenScore = MODAL_TOKEN_PATTERN.test(descriptorText) ? 12 : 0;
+  const tokenScore = MODAL_TOKEN_PATTERN.test(extendedDescriptorText) ? 12 : 0;
   const semanticsScore = hasExplicitModalSemantics ? 18 : 0;
   const panelScore = getPopupPanelScore(element);
-  const sectionPenalty = MODAL_SECTION_PATTERN.test(descriptorText) ? 10 : 0;
+  const sectionPenalty = MODAL_SECTION_PATTERN.test(extendedDescriptorText) ? 10 : 0;
   const viewportScore = rect.width >= window.innerWidth * 0.2 && rect.height >= 120 ? 4 : 0;
 
   return Math.max(semanticsScore + tokenScore + panelScore + viewportScore - sectionPenalty, 0);

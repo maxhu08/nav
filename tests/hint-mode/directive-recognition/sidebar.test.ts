@@ -104,4 +104,138 @@ describe("sidebar directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("does not treat settings dropdown triggers as sidebar directives", () => {
+    const fixture = createDomFixture(`
+      <action-menu class="contribution-settings-menu">
+        <button
+          id="settings-menu-button"
+          popovertarget="settings-menu-overlay"
+          aria-controls="settings-menu-list"
+          aria-haspopup="true"
+          type="button"
+          class="settings-link button"
+        >
+          <span class="button-label">Contribution settings</span>
+          <span class="button-trailing-visual">
+            <svg aria-hidden="true" class="triangle-down">
+              <path d="M4 6L8 10L12 6"></path>
+            </svg>
+          </span>
+        </button>
+      </action-menu>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const settingsTarget = targets.find((target) => target.element.id === "settings-menu-button");
+
+      expect(settingsTarget?.directiveMatch?.directive).not.toBe("sidebar");
+      expect(settingsTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).not.toBe("directive");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("still recognizes header hamburger buttons that open dialogs as sidebar directives", () => {
+    const fixture = createDomFixture(`
+      <header class="app-header">
+        <span id="app-nav-label">Open navigation</span>
+        <button
+          id="header-nav-button"
+          type="button"
+          aria-haspopup="dialog"
+          aria-labelledby="app-nav-label"
+          class="app-header-button"
+        >
+          <svg aria-hidden="true" class="octicon-three-bars">
+            <path d="M1 3H15M1 8H15M1 13H15"></path>
+          </svg>
+        </button>
+      </header>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const sidebarTarget = targets.find((target) => target.element.id === "header-nav-button");
+
+      expectDirectiveIconMarker(sidebarTarget, HINT_SIDEBAR_ICON_PATH);
+      expect(sidebarTarget?.label).toBe("we");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("recognizes github-style app header nav buttons from aria-labelledby text", () => {
+    const fixture = createDomFixture(`
+      <header class="styles-module__appHeader__shell">
+        <span id="header-nav-label">Open navigation menu</span>
+        <button
+          id="github-header-nav-button"
+          data-component="IconButton"
+          type="button"
+          aria-haspopup="dialog"
+          class="app-header-button"
+          aria-labelledby="header-nav-label"
+        >
+          <svg aria-hidden="true" class="octicon octicon-three-bars">
+            <path d="M1 3H15M1 8H15M1 13H15"></path>
+          </svg>
+        </button>
+      </header>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const sidebarTarget = targets.find(
+        (target) => target.element.id === "github-header-nav-button"
+      );
+
+      expectDirectiveIconMarker(sidebarTarget, HINT_SIDEBAR_ICON_PATH);
+      expect(sidebarTarget?.label).toBe("we");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("recognizes github-style sidebar close buttons inside the nav dialog", () => {
+    const fixture = createDomFixture(`
+      <div
+        role="dialog"
+        aria-labelledby="global-nav-title"
+        aria-modal="true"
+        data-position-regular="left"
+        class="nav-dialog"
+      >
+        <h2 id="global-nav-title">Global Navigation Menu</h2>
+        <button
+          id="github-close-nav-button"
+          data-component="IconButton"
+          type="button"
+          class="nav-close-button"
+          aria-labelledby="close-menu-label"
+        >
+          <svg aria-hidden="true" class="octicon octicon-x">
+            <path d="M3 3L13 13M13 3L3 13"></path>
+          </svg>
+        </button>
+        <span id="close-menu-label">Close menu</span>
+        <nav>
+          <a data-testid="side-nav-menu-item-HOME" href="/dashboard">Home</a>
+        </nav>
+      </div>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const sidebarTarget = targets.find(
+        (target) => target.element.id === "github-close-nav-button"
+      );
+
+      expectDirectiveIconMarker(sidebarTarget, HINT_SIDEBAR_ICON_PATH);
+      expect(sidebarTarget?.label).toBe("we");
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });
