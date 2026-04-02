@@ -1,5 +1,9 @@
 import { getHintContainer } from "~/src/core/utils/hint-mode/rendering/get-hint-container";
 import {
+  positionChatGptSidebarTarget,
+  positionDeferredChatGptSidebarTargets
+} from "~/src/core/utils/hint-mode/rendering/chatgpt-sidebar-placement";
+import {
   createMarkerPlacementState,
   positionMarkerElement,
   positionMarkerElementAtTop,
@@ -99,6 +103,8 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
   const placementState = createMarkerPlacementState();
   const inputTargetsByElement = new Map<HTMLElement, HintTarget>();
   const specialRows = new Map<string, SpecialRowState>();
+  const renderedTargetsByElement = new Map<HTMLElement, HintTarget>();
+  const deferredPlacementTargets: HintTarget[] = [];
   const fragment = document.createDocumentFragment();
 
   for (const target of targets) {
@@ -135,6 +141,23 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
       }
     }
 
+    if (
+      positionChatGptSidebarTarget(
+        target,
+        placementState,
+        renderedTargetsByElement,
+        deferredPlacementTargets
+      )
+    ) {
+      if (target.directiveMatch?.directive === "input") {
+        inputTargetsByElement.set(target.element, target);
+      }
+
+      renderedTargetsByElement.set(target.element, target);
+
+      continue;
+    }
+
     if (specialRowKey) {
       const specialRow = specialRows.get(specialRowKey);
 
@@ -158,6 +181,8 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
         inputTargetsByElement.set(target.element, target);
       }
 
+      renderedTargetsByElement.set(target.element, target);
+
       continue;
     }
 
@@ -166,5 +191,13 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
     if (target.directiveMatch?.directive === "input") {
       inputTargetsByElement.set(target.element, target);
     }
+
+    renderedTargetsByElement.set(target.element, target);
   }
+
+  positionDeferredChatGptSidebarTargets(
+    deferredPlacementTargets,
+    placementState,
+    renderedTargetsByElement
+  );
 };

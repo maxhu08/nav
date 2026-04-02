@@ -275,11 +275,32 @@ const getExpandableAncestor = (element: HTMLElement): HTMLElement | null => {
   return null;
 };
 
+const isNestedSidebarDisclosureButton = (element: HTMLElement): boolean => {
+  if (!element.matches("button.icon[data-state='open'], button.icon[data-state='closed']")) {
+    return false;
+  }
+
+  const sidebarItem = element.closest("a[data-sidebar-item='true']");
+  if (!(sidebarItem instanceof HTMLElement)) {
+    return false;
+  }
+
+  return (
+    !!element.querySelector("[data-testid='project-folder-icon']") ||
+    !!element.querySelector("svg[aria-label]") ||
+    !!sidebarItem.querySelector("[data-testid='project-folder-icon']")
+  );
+};
+
 const seemsExpandable = (element: HTMLElement): boolean => {
   const tagName = element.tagName.toLowerCase();
 
   if (isFormControl(element)) {
     return false;
+  }
+
+  if (isNestedSidebarDisclosureButton(element)) {
+    return true;
   }
 
   if (hasLinkSemantics(element)) {

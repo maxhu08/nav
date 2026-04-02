@@ -107,13 +107,14 @@ describe("positionMarkerElement", () => {
     }
   });
 
-  test("keeps icon markers aligned with the same left edge as label-only markers", () => {
+  test("keeps icon markers visually aligned while allowing icon width offset", () => {
     const fixture = createDomFixture("<div></div>");
 
     try {
       setViewport(300, 200);
       const placementState = createMarkerPlacementState();
-      const marker = createMarkerElement(60, 20);
+      const plainMarker = createMarkerElement(40, 20);
+      const iconMarker = createMarkerElement(60, 20);
       const label = document.createElement("span");
       const icon = document.createElement("span");
 
@@ -124,12 +125,15 @@ describe("positionMarkerElement", () => {
         get: () => 40
       });
 
-      marker.append(label, icon);
-      fixture.document.body.append(marker);
+      iconMarker.append(label, icon);
+      fixture.document.body.append(plainMarker, iconMarker);
 
-      positionMarkerElement(marker, new DOMRect(10, 10, 20, 20), placementState);
+      positionMarkerElement(plainMarker, new DOMRect(10, 10, 20, 20), placementState);
+      placementState.previousMarkerBounds = null;
+      positionMarkerElement(iconMarker, new DOMRect(10, 10, 20, 20), placementState);
 
-      expect(marker.style.left).toBe("20px");
+      expect(plainMarker.style.left).toBe("16px");
+      expect(iconMarker.style.left).toBe("20px");
     } finally {
       fixture.cleanup();
     }

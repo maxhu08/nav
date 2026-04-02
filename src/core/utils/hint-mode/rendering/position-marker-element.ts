@@ -5,7 +5,7 @@ import {
   MARKER_LABEL_ATTRIBUTE
 } from "~/src/core/utils/hint-mode/shared/constants";
 
-type MarkerPlacementState = {
+export type MarkerPlacementState = {
   previousMarkerBounds: {
     bottom: number;
     left: number;
@@ -24,7 +24,9 @@ const clampToViewport = (position: number, size: number, viewportSize: number): 
   return clamp(Math.round(position), min, max);
 };
 
-const getMarkerLabelWidth = (marker: HTMLDivElement, width: number): number => {
+export const getMarkerAnchorWidth = (marker: HTMLDivElement): number => {
+  const width = marker.offsetWidth;
+
   if (!marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)) {
     return width;
   }
@@ -69,7 +71,7 @@ export const positionMarkerElement = (
 ): void => {
   const width = marker.offsetWidth;
   const height = marker.offsetHeight;
-  const anchorWidth = getMarkerLabelWidth(marker, width);
+  const anchorWidth = getMarkerAnchorWidth(marker);
   const visualLeft = clampToViewport(
     rect.left - width * 0.2 + (width - anchorWidth) * 0.2,
     width,
@@ -107,7 +109,7 @@ export const positionMarkerElementAtTop = (
 ): void => {
   const width = marker.offsetWidth;
   const height = marker.offsetHeight;
-  const anchorWidth = getMarkerLabelWidth(marker, width);
+  const anchorWidth = getMarkerAnchorWidth(marker);
   const visualLeft = clampToViewport(
     rect.left - width * 0.2 + (width - anchorWidth) * 0.2,
     width,
@@ -127,17 +129,93 @@ export const positionMarkerElementAtTop = (
   marker.style.top = `${clampedTop}px`;
 };
 
+export const positionMarkerElementAtTopLeft = (
+  marker: HTMLDivElement,
+  rect: DOMRect,
+  placementState: MarkerPlacementState
+): void => {
+  const width = marker.offsetWidth;
+  const height = marker.offsetHeight;
+  const anchorWidth = getMarkerAnchorWidth(marker);
+  const visualLeft = clampToViewport(
+    rect.left - width * 0.2 + (width - anchorWidth) * 0.2,
+    width,
+    window.innerWidth
+  );
+  const left = visualLeft + width * 0.2;
+  const top = clampToViewport(rect.top, height, window.innerHeight);
+
+  placementState.previousMarkerBounds = {
+    bottom: top + height,
+    left: visualLeft,
+    right: visualLeft + width,
+    top
+  };
+
+  marker.style.left = `${left}px`;
+  marker.style.top = `${top}px`;
+};
+
+export const positionMarkerElementAtTopRight = (
+  marker: HTMLDivElement,
+  rect: DOMRect,
+  placementState: MarkerPlacementState
+): void => {
+  const width = marker.offsetWidth;
+  const height = marker.offsetHeight;
+  const left = clampToViewport(rect.right - width, width, window.innerWidth);
+  const top = clampToViewport(rect.top, height, window.innerHeight);
+
+  placementState.previousMarkerBounds = {
+    bottom: top + height,
+    left,
+    right: left + width,
+    top
+  };
+
+  marker.style.left = `${left}px`;
+  marker.style.top = `${top}px`;
+};
+
 export const positionMarkerElementToRightOf = (
   marker: HTMLDivElement,
   referenceMarker: HTMLDivElement,
-  placementState: MarkerPlacementState
+  placementState: MarkerPlacementState,
+  referenceWidth = referenceMarker.offsetWidth
 ): void => {
   const width = marker.offsetWidth;
   const height = marker.offsetHeight;
   const referenceLeft = Number.parseInt(referenceMarker.style.left, 10) || 0;
   const referenceTop = Number.parseInt(referenceMarker.style.top, 10) || 0;
   const left = clampToViewport(
-    referenceLeft + referenceMarker.offsetWidth + HINT_MARKER_MIN_GAP,
+    referenceLeft + referenceWidth + HINT_MARKER_MIN_GAP,
+    width,
+    window.innerWidth
+  );
+  const top = clampToViewport(referenceTop, height, window.innerHeight);
+
+  placementState.previousMarkerBounds = {
+    bottom: top + height,
+    left,
+    right: left + width,
+    top
+  };
+
+  marker.style.left = `${left}px`;
+  marker.style.top = `${top}px`;
+};
+
+export const positionMarkerElementToLeftOf = (
+  marker: HTMLDivElement,
+  referenceMarker: HTMLDivElement,
+  placementState: MarkerPlacementState
+): void => {
+  const width = marker.offsetWidth;
+  const height = marker.offsetHeight;
+  const referenceLeft = Number.parseFloat(referenceMarker.style.left) || 0;
+  const referenceTop = Number.parseFloat(referenceMarker.style.top) || 0;
+  const left = clampToViewport(
+    referenceLeft - width - HINT_MARKER_MIN_GAP,
     width,
     window.innerWidth
   );
