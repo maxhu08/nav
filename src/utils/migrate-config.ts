@@ -168,6 +168,8 @@ const renameHotkeyMappingIfPresent = (
 };
 
 export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Config => {
+  const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+
   // if config before v1.0.3
   if (!hasDirectivesOption(config) && !hasLegacyReservedLabelsOption(config)) {
     return structuredClone(fallbackConfig);
@@ -184,10 +186,6 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     migratedConfig.hints.directives = appendMissingHintDirectives(migratedConfig.hints.directives);
     return migratedConfig;
   }
-
-  const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
-  migrateHintActivationIndicatorOptions(migratedConfig);
-  ensurePromptOptions(migratedConfig, fallbackConfig);
 
   // if config before v1.1.1
   migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
@@ -226,6 +224,9 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   }
 
   migratedConfig.hints.directives = appendMissingHintDirectives(migratedConfig.hints.directives);
+
+  // if config before v1.1.5
+  ensurePromptOptions(migratedConfig, fallbackConfig);
 
   return migratedConfig;
 };
