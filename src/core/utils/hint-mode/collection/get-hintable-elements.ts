@@ -228,6 +228,98 @@ const filterFalsePositives = (elements: HintableElementState[]): HintableElement
   return filtered.reverse();
 };
 
+const PREFERRED_NATIVE_INTERACTIVE_TAGS = new Set(["a", "button"]);
+
+const hasLinkOrButtonSemantics = (element: HTMLElement): boolean => {
+  const tagName = element.tagName.toLowerCase();
+  if (PREFERRED_NATIVE_INTERACTIVE_TAGS.has(tagName)) {
+    return true;
+  }
+
+  const role = element.getAttribute("role")?.toLowerCase();
+  return role === "link" || role === "button";
+};
+
+const shouldSuppressNestedCandidate = (
+  candidate: HintableElementState,
+  ancestor: HintableElementState
+): boolean => {
+  if (candidate.possibleFalsePositive) {
+    return true;
+  }
+
+  const ancestorTagName = ancestor.element.tagName.toLowerCase();
+  if (!PREFERRED_NATIVE_INTERACTIVE_TAGS.has(ancestorTagName)) {
+    return false;
+  }
+
+  const candidateTagName = candidate.element.tagName.toLowerCase();
+  const candidateRole = candidate.element.getAttribute("role")?.toLowerCase();
+
+  if (ancestorTagName === "a") {
+    return candidateTagName === "a" || candidateRole === "link";
+  }
+
+  if (ancestorTagName === "button") {
+    return candidateTagName === "button" || candidateRole === "button";
+  }
+
+  return false;
+};
+
+const shouldSuppressAncestorCandidate = (
+  ancestor: HintableElementState,
+  descendant: HintableElementState
+): boolean => {
+  if (!ancestor.element.hasAttribute("aria-expanded")) {
+    return false;
+  }
+
+  const ancestorTagName = ancestor.element.tagName.toLowerCase();
+  if (PREFERRED_NATIVE_INTERACTIVE_TAGS.has(ancestorTagName)) {
+    return false;
+  }
+
+  return hasLinkOrButtonSemantics(descendant.element);
+};
+
+const filterNestedCandidates = (elements: HintableElementState[]): HintableElementState[] => {
+  const candidatesByElement = new Map(elements.map((candidate) => [candidate.element, candidate]));
+  const suppressedAncestors = new Set<HTMLElement>();
+
+  for (const candidate of elements) {
+    let ancestor = candidate.element.parentElement;
+
+    while (ancestor) {
+      const ancestorCandidate = candidatesByElement.get(ancestor);
+      if (ancestorCandidate && shouldSuppressAncestorCandidate(ancestorCandidate, candidate)) {
+        suppressedAncestors.add(ancestorCandidate.element);
+      }
+
+      ancestor = ancestor.parentElement;
+    }
+  }
+
+  return elements.filter((candidate) => {
+    if (suppressedAncestors.has(candidate.element)) {
+      return false;
+    }
+
+    let ancestor = candidate.element.parentElement;
+
+    while (ancestor) {
+      const ancestorCandidate = candidatesByElement.get(ancestor);
+      if (ancestorCandidate && shouldSuppressNestedCandidate(candidate, ancestorCandidate)) {
+        return false;
+      }
+
+      ancestor = ancestor.parentElement;
+    }
+
+    return true;
+  });
+};
+
 export const getHintableElements = (mode: HintActionMode): HTMLElement[] => {
   if (mode === "yank-image" || mode === "yank-image-url") {
     const results: HTMLElement[] = [];
@@ -269,5 +361,7 @@ export const getHintableElements = (mode: HintActionMode): HTMLElement[] => {
     });
   }
 
-  return filterFalsePositives(candidates).map((candidate) => candidate.element);
+  return filterNestedCandidates(filterFalsePositives(candidates)).map(
+    (candidate) => candidate.element
+  );
 };

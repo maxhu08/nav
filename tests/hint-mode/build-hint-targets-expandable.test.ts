@@ -176,4 +176,31 @@ describe("buildHintTargets expandable markers", () => {
       fixture.cleanup();
     }
   });
+
+  test("prefers inner links over outer expandable containers", () => {
+    const fixture = createDomFixture(`
+      <ytd-guide-entry-renderer
+        id="collapser-item"
+        role="button"
+        aria-expanded="true"
+      >
+        <a id="endpoint" href="/playlist?list=LL" role="link" title="Show less">
+          <tp-yt-paper-item id="guide-entry" role="link" tabindex="0" aria-disabled="false">
+            <yt-formatted-string class="title">Show less</yt-formatted-string>
+          </tp-yt-paper-item>
+        </a>
+      </ytd-guide-entry-renderer>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false);
+
+      expect(targets).toHaveLength(1);
+      expect(targets[0]?.element.id).toBe("endpoint");
+      expect(targets[0]?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
+      expect(targets[0]?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)).toBeNull();
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

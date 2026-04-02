@@ -129,6 +129,11 @@ const hasButtonSemantics = (element: HTMLElement): boolean => {
   return role === "button" || element.tagName.toLowerCase() === "button";
 };
 
+const hasLinkSemantics = (element: HTMLElement): boolean => {
+  const role = element.getAttribute("role")?.toLowerCase();
+  return role === "link" || element.tagName.toLowerCase() === "a";
+};
+
 const opensPopup = (element: HTMLElement): boolean => {
   const popupType = element.getAttribute("aria-haspopup")?.toLowerCase();
   return typeof popupType === "string" && popupType !== "false";
@@ -205,6 +210,10 @@ const seemsExpandable = (element: HTMLElement): boolean => {
   const tagName = element.tagName.toLowerCase();
 
   if (isFormControl(element)) {
+    return false;
+  }
+
+  if (hasLinkSemantics(element)) {
     return false;
   }
 

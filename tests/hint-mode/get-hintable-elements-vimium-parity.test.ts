@@ -44,4 +44,38 @@ describe("getHintableElements Vimium parity", () => {
       fixture.cleanup();
     }
   });
+
+  test("dedupes false-positive descendants inside native buttons", () => {
+    const fixture = createDomFixture(`
+      <button id="github-button" class="rd-btn rd-btn-outline" type="button">
+        <span class="rd-btn-icon">
+          <i class="rd-icon-github"></i>
+        </span>
+      </button>
+    `);
+
+    try {
+      const elements = getHintableElements("current-tab");
+      expect(elements.map((element) => element.id)).toEqual(["github-button"]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("dedupes role-based link descendants inside native links", () => {
+    const fixture = createDomFixture(`
+      <a id="endpoint" href="/playlist?list=LL">
+        <tp-yt-paper-item id="guide-entry" role="link" tabindex="0" aria-disabled="false">
+          <yt-formatted-string>Liked videos</yt-formatted-string>
+        </tp-yt-paper-item>
+      </a>
+    `);
+
+    try {
+      const elements = getHintableElements("current-tab");
+      expect(elements.map((element) => element.id)).toEqual(["endpoint"]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });
