@@ -1,11 +1,9 @@
-# Changes in 1.1.4
+# Changes in 1.1.5
 
 in this release:
 
-- new improved hint engine
-- improve find-mode
-- rename hints.showActivationIndicator to hints.activationIndicator.enabled
-- rename hints.showActivationIndicatorColor to hints.activationIndicator.color
-- rename hints.reservedLabels to hints.directives
+- add bar
+- add new actions (close-tabs-other, close-tabs-left, close-tabs-right, first-tab, last-tab, move-tab-left, move-tab-right, restore-closed-tab, visit-previous-tab, bar-mode-current-tab, bar-mode-new-tab, bar-mode-edit-current-tab)
+- improve hint recognition and positioning
 - performance improvements
 - bug fixes
