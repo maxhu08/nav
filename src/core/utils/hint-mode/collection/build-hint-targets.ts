@@ -37,6 +37,23 @@ const DIRECTIVE_ICON_SVGS = Object.fromEntries(
   ])
 ) as Record<ReservedHintDirective, string>;
 const MAX_DIRECTIVE_SCORE = 9999;
+const MODAL_CANDIDATE_SELECTOR = [
+  "dialog",
+  "[role='dialog']",
+  "[aria-modal='true']",
+  "[data-modal]",
+  "[data-dialog]",
+  "[class*='modal']",
+  "[class*='popup']",
+  "[class*='popover']",
+  "[class*='lightbox']",
+  "[id*='modal']",
+  "[id*='popup']"
+].join(",");
+const MODAL_TOKEN_PATTERN = /\b(dialog|modal|popup|popover|sheet|overlay|lightbox)\b/i;
+const NON_MODAL_CONTAINER_PATTERN = /\b(sidebar|drawer|slideover|tooltip|toast|dropdown|menu)\b/i;
+const MODAL_SECTION_PATTERN =
+  /(?:^|[-_])(popup|modal|dialog|popover|lightbox)[-_](wrapper|body|content|header|footer)(?:$|[-_])/i;
 
 type DirectiveMatch = {
   element: HTMLElement;
@@ -288,6 +305,170 @@ const createDirectiveTarget = (
   };
 };
 
+const getModalDescriptorText = (element: HTMLElement): string => {
+  return [
+    element.tagName,
+    element.getAttribute("role"),
+    element.getAttribute("aria-modal"),
+    element.getAttribute("aria-label"),
+    element.getAttribute("data-testid"),
+    element.id,
+    element.className
+  ]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ")
+    .trim();
+};
+
+const getElementClassTokens = (element: HTMLElement): string[] => {
+  return element.className
+    .split(/\s+/)
+    .map((token) => token.trim().toLowerCase())
+    .filter((token) => token.length > 0);
+};
+
+const getPopupPanelScore = (element: HTMLElement): number => {
+  let score = 0;
+
+  for (const token of getElementClassTokens(element)) {
+    if (
+      /(?:^|[-_])(popup|modal|dialog|popover|lightbox)[-_](wrapper|body|content|header|footer)(?:$|[-_])/.test(
+        token
+      )
+    ) {
+      score -= 20;
+      continue;
+    }
+
+    if (/^(?:.+-)?(?:popup|modal|dialog|popover|lightbox)$/.test(token)) {
+      score += 12;
+      continue;
+    }
+
+    if (/(?:^|[-_])(?:popup|modal|dialog|popover|lightbox)(?:$|[-_])/.test(token)) {
+      score += 4;
+    }
+  }
+
+  return score;
+};
+
+const isModalSectionCandidate = (element: HTMLElement): boolean => {
+  return getElementClassTokens(element).some((token) => {
+    return /(?:^|[-_])(popup|modal|dialog|popover|lightbox)[-_](wrapper|body|content|header|footer)(?:$|[-_])/.test(
+      token
+    );
+  });
+};
+
+const getModalCandidateScore = (element: HTMLElement): number => {
+  const rect = element.getBoundingClientRect();
+  if (rect.width < 120 || rect.height < 80) {
+    return 0;
+  }
+
+  const descriptorText = getModalDescriptorText(element);
+  if (NON_MODAL_CONTAINER_PATTERN.test(descriptorText)) {
+    return 0;
+  }
+
+  if (isModalSectionCandidate(element)) {
+    return 0;
+  }
+
+  const hasExplicitModalSemantics =
+    element.tagName.toLowerCase() === "dialog" ||
+    element.getAttribute("role")?.toLowerCase() === "dialog" ||
+    element.getAttribute("aria-modal")?.toLowerCase() === "true";
+  const tokenScore = MODAL_TOKEN_PATTERN.test(descriptorText) ? 12 : 0;
+  const semanticsScore = hasExplicitModalSemantics ? 18 : 0;
+  const panelScore = getPopupPanelScore(element);
+  const sectionPenalty = MODAL_SECTION_PATTERN.test(descriptorText) ? 10 : 0;
+  const viewportScore = rect.width >= window.innerWidth * 0.2 && rect.height >= 120 ? 4 : 0;
+
+  return Math.max(semanticsScore + tokenScore + panelScore + viewportScore - sectionPenalty, 0);
+};
+
+const getElementDepth = (element: HTMLElement): number => {
+  let depth = 0;
+  let current = element.parentElement;
+
+  while (current) {
+    depth += 1;
+    current = current.parentElement;
+  }
+
+  return depth;
+};
+
+const resolveHideDirectiveTarget = (label: string): HintTarget | null => {
+  const modalCandidates = Array.from(
+    document.querySelectorAll<HTMLElement>(MODAL_CANDIDATE_SELECTOR)
+  );
+  let matchedElement: HTMLElement | null = null;
+  let matchedScore = 0;
+
+  for (const candidate of modalCandidates) {
+    const score = getModalCandidateScore(candidate);
+    if (score === 0) {
+      continue;
+    }
+
+    if (!matchedElement) {
+      matchedElement = candidate;
+      matchedScore = score;
+      continue;
+    }
+
+    if (score > matchedScore) {
+      matchedElement = candidate;
+      matchedScore = score;
+      continue;
+    }
+
+    if (score === matchedScore) {
+      const candidateRect = candidate.getBoundingClientRect();
+      const matchedRect = matchedElement.getBoundingClientRect();
+      const candidateArea = candidateRect.width * candidateRect.height;
+      const matchedArea = matchedRect.width * matchedRect.height;
+      const candidateDepth = getElementDepth(candidate);
+      const matchedDepth = getElementDepth(matchedElement);
+
+      if (
+        candidateArea < matchedArea ||
+        (candidateArea === matchedArea && candidateDepth > matchedDepth)
+      ) {
+        matchedElement = candidate;
+      }
+    }
+  }
+
+  if (!matchedElement || matchedScore === 0) {
+    return null;
+  }
+
+  const modalRect = matchedElement.getBoundingClientRect();
+  const anchorRect = new DOMRect(
+    Math.max(modalRect.left, modalRect.right - 8),
+    modalRect.top + 8,
+    1,
+    1
+  );
+
+  return {
+    element: matchedElement,
+    label,
+    marker: createHintMarker(),
+    rect: anchorRect,
+    imageUrl: null,
+    linkUrl: null,
+    directiveMatch: {
+      directive: "hide",
+      label
+    }
+  };
+};
+
 const assignDirectiveLabel = (
   target: HintTarget,
   directive: ReservedHintDirective,
@@ -463,6 +644,18 @@ export const buildHintTargets = (
 
     reservedDirectiveLabels.add(preferredLabel);
     assignDirectiveLabel(matchedTarget, directive, preferredLabel, directiveTargets);
+  }
+
+  const hideLabel = directiveLabels.hide.find(
+    (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
+  );
+
+  if (hideLabel) {
+    const hideTarget = resolveHideDirectiveTarget(hideLabel);
+    if (hideTarget) {
+      reservedDirectiveLabels.add(hideLabel);
+      directiveTargets.push(hideTarget);
+    }
   }
 
   const allTargets = [...targets, ...directiveTargets];

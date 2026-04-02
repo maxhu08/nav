@@ -18,8 +18,9 @@ import { scoreShareDirectiveCandidate } from "~/src/core/utils/hint-mode/directi
 import { scoreSidebarDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/sidebar";
 import { scoreSubmitDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/submit";
 
-// erase uses the same element as input
-// prev and next use the same as the element from follow-prev and follow-next
+// erase directive uses the same element as input
+// prev and next directives use the same as the element from follow-prev and follow-next
+// hide directive doesn't check through these elements
 export const DIRECTIVE_SCORERS: Partial<Record<ReservedHintDirective, DirectiveScorer>> = {
   home: scoreHomeDirectiveCandidate,
   input: scoreInputDirectiveCandidate,

@@ -2,6 +2,7 @@ import { getHintContainer } from "~/src/core/utils/hint-mode/rendering/get-hint-
 import {
   createMarkerPlacementState,
   positionMarkerElement,
+  positionMarkerElementInTopRightCorner,
   positionMarkerElementToRightOf
 } from "~/src/core/utils/hint-mode/rendering/position-marker-element";
 import type { HintTarget } from "~/src/core/utils/hint-mode/shared/types";
@@ -19,6 +20,15 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
   container.replaceChildren(fragment);
 
   for (const target of targets) {
+    if (target.directiveMatch?.directive === "hide") {
+      positionMarkerElementInTopRightCorner(
+        target.marker,
+        target.element.getBoundingClientRect(),
+        placementState
+      );
+      continue;
+    }
+
     if (target.directiveMatch?.directive === "erase") {
       const inputTarget = inputTargetsByElement.get(target.element);
       if (inputTarget) {

@@ -125,3 +125,24 @@ export const positionMarkerElementToRightOf = (
   marker.style.left = `${left}px`;
   marker.style.top = `${top}px`;
 };
+
+export const positionMarkerElementInTopRightCorner = (
+  marker: HTMLDivElement,
+  rect: DOMRect,
+  placementState: MarkerPlacementState
+): void => {
+  const width = marker.offsetWidth;
+  const height = marker.offsetHeight;
+  const left = clampToViewport(rect.right - width * 0.45, width, window.innerWidth);
+  const top = clampToViewport(rect.top - height * 0.45, height, window.innerHeight);
+
+  placementState.previousMarkerBounds = {
+    bottom: top + height,
+    left,
+    right: left + width,
+    top
+  };
+
+  marker.style.left = `${left}px`;
+  marker.style.top = `${top}px`;
+};

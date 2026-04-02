@@ -7,6 +7,7 @@ import {
 import {
   createMarkerPlacementState,
   positionMarkerElement,
+  positionMarkerElementInTopRightCorner,
   positionMarkerElementToRightOf
 } from "~/src/core/utils/hint-mode/rendering/position-marker-element";
 import { HINT_MARKER_MIN_GAP } from "~/src/core/utils/hint-mode/shared/constants";
@@ -217,6 +218,25 @@ describe("positionMarkerElement", () => {
 
       expect(eraseMarker.style.left).toBe(`${20 + 60 + HINT_MARKER_MIN_GAP}px`);
       expect(eraseMarker.style.top).toBe("10px");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("can pin a marker to the top-right corner of a modal", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      setViewport(300, 200);
+      const placementState = createMarkerPlacementState();
+      const marker = createMarkerElement(60, 20);
+
+      fixture.document.body.append(marker);
+
+      positionMarkerElementInTopRightCorner(marker, new DOMRect(100, 10, 160, 80), placementState);
+
+      expect(marker.style.left).toBe("232px");
+      expect(marker.style.top).toBe("8px");
     } finally {
       fixture.cleanup();
     }

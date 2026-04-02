@@ -110,4 +110,57 @@ describe("activateHintTarget", () => {
       fixture.cleanup();
     }
   });
+
+  test("dispatches the hide directive click outside the modal", async () => {
+    const fixture = createDomFixture(`
+      <div id='backdrop'>
+        <div id='modal' class='rd-popup'></div>
+      </div>
+    `);
+
+    try {
+      const { activateHintTarget } =
+        await import("~/src/core/utils/hint-mode/actions/activate-hint-target");
+
+      const backdrop = document.getElementById("backdrop") as HTMLDivElement;
+      const modal = document.getElementById("modal") as HTMLDivElement;
+      const receivedEvents: string[] = [];
+      const receivedPoints: Array<[number, number]> = [];
+
+      modal.getBoundingClientRect = (): DOMRect => new DOMRect(100, 100, 400, 300);
+      backdrop.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+      document.elementsFromPoint = (x: number, y: number): Element[] => {
+        if (x >= 100 && x <= 500 && y >= 100 && y <= 400) {
+          return [modal];
+        }
+
+        return [backdrop];
+      };
+
+      for (const eventName of ["mousedown", "mouseup", "click"]) {
+        backdrop.addEventListener(eventName, (event) => {
+          const mouseEvent = event as MouseEvent;
+          receivedEvents.push(eventName);
+          receivedPoints.push([mouseEvent.clientX, mouseEvent.clientY]);
+        });
+      }
+
+      expect(
+        activateHintTarget("current-tab", {
+          ...createHintTarget(modal),
+          rect: new DOMRect(492, 108, 1, 1),
+          directiveMatch: {
+            directive: "hide",
+            label: "hi"
+          }
+        })
+      ).toBe(true);
+      expect(receivedEvents).toEqual(["mousedown", "mouseup", "click"]);
+      expect(
+        receivedPoints.every(([x, y]) => !(x >= 100 && x <= 500 && y >= 100 && y <= 400))
+      ).toBe(true);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });
