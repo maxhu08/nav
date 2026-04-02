@@ -119,16 +119,15 @@ Use this map to decide where new code should go.
 
 ## Debug Runtime
 
-- Dev-only main-world debug entry: `src/core/debug/debug-main.ts`
-- Supporting debug helpers: `src/core/debug/`
-- Chrome dev builds add this extra entry so the extension can inspect page-level keyboard/debug behavior without shipping it in production packages.
+- Dev-only main-world debug helper: `src/static/core/debug/debug-main.js`
+- This script is copied into `dist/` from `src/static/` for dev workflows; it is not bundled through Parcel.
 
 ## Build Scripts
 
 - Task runner: `scripts/tasks.ts`
 - This file handles `clean`, `dev`, `build`, `package`, `rc`, and `source` tasks.
-- It bundles `src/background.ts`, `src/core/index.ts`, `src/core/debug/debug-main.ts`, `src/popup.html`, `src/options.html`, and `src/docs.html`.
-- It generates manifests, runs Parcel, copies files from `src/static/`, and creates package artifacts.
+- It bundles `src/background.ts`, `src/core/index.ts`, `src/popup.html`, `src/options.html`, and `src/docs.html`.
+- It generates manifests, runs Parcel, copies files from `src/static/`, prunes dev-only artifacts for packaged builds, and creates package artifacts.
 
 ## Useful Rule of Thumb
 

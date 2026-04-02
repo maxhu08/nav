@@ -2,6 +2,13 @@
 
 Keep tests small, readable, and easy to place.
 
+## Test Layout
+
+- Keep feature-specific coverage in the closest matching area under `tests/`.
+- `tests/hint-mode/` holds hint-mode regressions, including directive-recognition cases and site-specific fixtures.
+- Put shared JSDOM fixtures and reusable helpers in `tests/helpers/`.
+- Prefer small focused files over broad catch-all suites.
+
 ## Adding Test Cases
 
 - Add coverage for every behavior change or bug fix.
@@ -19,3 +26,10 @@ Keep tests small, readable, and easy to place.
 
 - Make sure all affected test cases pass whenever you make a change.
 - If possible, run the targeted tests for the area you changed plus any broader checks needed for confidence.
+
+## Common Commands
+
+- Run the full suite: `bun run test`
+- Run one file: `bun test tests/config.test.ts`
+- Run a feature folder while iterating: `bun test tests/hint-mode`
+- Run the repo-wide validation pass: `bun run check`
