@@ -92,4 +92,83 @@ describe("ChatGPT site hint marker alignment", () => {
       fixture.cleanup();
     }
   });
+
+  test("keeps the typed composer submit marker on the same row", () => {
+    const fixture = createDomFixture(`
+      <div class="composer-shell">
+        <form class="group/composer" data-type="unified-composer">
+          <div data-composer-surface="true">
+            <div class="leading">
+              <button
+                type="button"
+                class="composer-btn"
+                data-testid="composer-plus-btn"
+                aria-label="Add files and more"
+                id="composer-plus-btn"
+              ></button>
+            </div>
+
+            <div class="primary">
+              <div
+                contenteditable="true"
+                translate="no"
+                class="ProseMirror"
+                id="prompt-textarea"
+                role="textbox"
+                aria-multiline="true"
+                aria-label="Chat with ChatGPT"
+              >
+                <p>Hello</p>
+              </div>
+            </div>
+
+            <div class="trailing">
+              <button aria-label="Start dictation" type="button" class="composer-btn"></button>
+              <button
+                id="composer-submit-button"
+                type="button"
+                aria-label="Send prompt"
+                data-testid="send-button"
+                class="composer-submit-btn"
+              ></button>
+            </div>
+          </div>
+        </form>
+      </div>
+    `);
+
+    try {
+      setViewport(1200, 900);
+
+      const plusButton = getRequiredElement<HTMLButtonElement>("#composer-plus-btn");
+      const promptTextarea = getRequiredElement<HTMLElement>("#prompt-textarea");
+      const dictationButton = getRequiredElement<HTMLButtonElement>(
+        "button[aria-label='Start dictation']"
+      );
+      const submitButton = getRequiredElement<HTMLButtonElement>("#composer-submit-button");
+
+      setRect(plusButton, 16, 10, 36, 36);
+      setRect(promptTextarea, 72, 12, 720, 36);
+      setRect(dictationButton, 820, 11, 36, 36);
+      setRect(submitButton, 872, 13, 36, 36);
+
+      const targets = buildHintTargets("current-tab", "asdf", 1, false);
+      targets.forEach((target) => setMarkerSize(target.marker));
+      renderHintTargets(targets);
+
+      const composerElements: HTMLElement[] = [
+        plusButton,
+        promptTextarea,
+        dictationButton,
+        submitButton
+      ];
+      const composerTargets = targets.filter((target) => composerElements.includes(target.element));
+
+      expect(new Set(composerTargets.map((target) => target.marker.style.top))).toEqual(
+        new Set(["10px"])
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

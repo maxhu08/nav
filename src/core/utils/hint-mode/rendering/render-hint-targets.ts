@@ -61,7 +61,9 @@ const isChatGptComposerTarget = (element: HTMLElement): boolean => {
       "#prompt-textarea.ProseMirror[role='textbox'][aria-label='Chat with ChatGPT']"
     ) ||
     element.matches("button[aria-label='Start dictation']") ||
-    element.matches("button[aria-label='Start Voice']")
+    element.matches("button[aria-label='Start Voice']") ||
+    element.matches("button[data-testid='send-button']") ||
+    element.matches("button[aria-label='Send prompt']")
   );
 };
 
