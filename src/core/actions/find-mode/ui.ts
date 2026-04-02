@@ -132,6 +132,7 @@ export const createFindStatus = (): {
   prevButton.id = FIND_PREV_BUTTON_ID;
   prevButton.className = "nav-find-nav";
   prevButton.setAttribute("data-find-nav", "");
+  prevButton.setAttribute("data-find-direction", "prev");
   prevButton.type = "button";
   prevButton.setAttribute("aria-label", "Previous match");
   prevButton.appendChild(createFindIconSvg(FIND_ARROW_UP_ICON_NODES));
@@ -140,6 +141,7 @@ export const createFindStatus = (): {
   nextButton.id = FIND_NEXT_BUTTON_ID;
   nextButton.className = "nav-find-nav";
   nextButton.setAttribute("data-find-nav", "");
+  nextButton.setAttribute("data-find-direction", "next");
   nextButton.type = "button";
   nextButton.setAttribute("aria-label", "Next match");
   nextButton.appendChild(createFindIconSvg(FIND_ARROW_DOWN_ICON_NODES));

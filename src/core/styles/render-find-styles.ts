@@ -31,7 +31,7 @@ export const renderFindStyles = (params: FindStyleRenderParams): string => {
 #${findOverlayId}{all:initial;position:absolute;inset:0;pointer-events:none}
 #${findBarId}{all:initial;position:fixed;top:20%;left:50%;transform:translate(-50%,-50%);z-index:2147483647;display:none;pointer-events:auto;width:min(640px,calc(100vw - 32px));grid-template-columns:max-content auto max-content;align-items:center;gap:0;padding:10px 12px;border:2px solid #eab308;border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:24px;line-height:32px}
 #${findBarId}[data-visible="true"]{display:grid}
-#${findStatusId}{all:initial;position:fixed;right:24px;bottom:24px;z-index:2147483647;display:none;pointer-events:auto;grid-auto-flow:column;align-items:center;gap:.5rem;padding:10px 12px;border:2px solid #eab308;border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:20px;line-height:28px}
+#${findStatusId}{all:initial;position:fixed;right:24px;bottom:24px;z-index:2147483647;display:none;pointer-events:auto;grid-template-columns:auto max-content max-content;align-items:center;gap:.5rem;padding:10px 12px;border:2px solid #eab308;border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:20px;line-height:28px}
 #${findStatusId}[data-visible="true"]{display:grid}
 #${findBarId} *,#${findStatusId} *{box-sizing:border-box}
 #${findBarId}::selection,#${findStatusId}::selection,#${findBarId} *::selection,#${findStatusId} *::selection{background:#ffffff20!important;background-color:#ffffff20!important;color:inherit!important}
@@ -46,7 +46,7 @@ export const renderFindStyles = (params: FindStyleRenderParams): string => {
 #${findStatusTextId}{all:unset;display:inline-flex;align-items:center;gap:0;color:#fafafa;font-size:20px;line-height:28px}
 .nav-find-status-number{color:#fafafa}
 .nav-find-status-separator{color:#a1a1aa}
-.nav-find-nav{all:unset;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:.4rem;color:#fafafa;cursor:pointer;transition:background-color .15s ease,color .15s ease,opacity .15s ease}
+.nav-find-nav{all:unset;display:grid;place-items:center;padding:9px;border-radius:.4rem;color:#fafafa;cursor:pointer;transition:background-color .15s ease,color .15s ease,opacity .15s ease}
 .nav-find-nav:hover:not(:disabled){background:rgba(255,255,255,.08)}
 .nav-find-nav:focus-visible{box-shadow:0 0 0 2px rgba(255,255,255,.18)}
 .nav-find-nav:disabled{opacity:.35;cursor:default}
