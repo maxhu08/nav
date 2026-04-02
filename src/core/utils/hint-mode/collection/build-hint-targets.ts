@@ -303,6 +303,26 @@ const assignDirectiveLabel = (
   return directiveTarget;
 };
 
+const createModeMarker = (mode: HintActionMode, element: HTMLElement): HTMLDivElement => {
+  if (mode === "yank-link-url" || mode === "yank-image" || mode === "yank-image-url") {
+    return createHintMarkerWithIcon("directive", DIRECTIVE_ICON_SVGS.copy);
+  }
+
+  if (seemsExpandable(element)) {
+    return createHintMarkerWithIcon("focus-action", createInlineSvgIcon(HINT_FOCUS_MODE_ICON_PATH));
+  }
+
+  return createHintMarker();
+};
+
+const getForcedDirectiveForMode = (mode: HintActionMode): ReservedHintDirective | null => {
+  if (mode === "yank-link-url" || mode === "yank-image" || mode === "yank-image-url") {
+    return "copy";
+  }
+
+  return null;
+};
+
 export const buildHintTargets = (
   mode: HintActionMode,
   charset: string,
@@ -329,9 +349,7 @@ export const buildHintTargets = (
   const targetsByElement = new Map<HTMLElement, HintTarget>();
   const targets = filteredElements.map((element) => {
     const rect = element.getBoundingClientRect();
-    const marker = seemsExpandable(element)
-      ? createHintMarkerWithIcon("focus-action", createInlineSvgIcon(HINT_FOCUS_MODE_ICON_PATH))
-      : createHintMarker();
+    const marker = createModeMarker(mode, element);
 
     const target: HintTarget = {
       element,
@@ -439,7 +457,14 @@ export const buildHintTargets = (
     renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
   }
 
+  const forcedDirective = getForcedDirectiveForMode(mode);
+
   for (const target of allTargets) {
+    if (forcedDirective && target.element.isConnected) {
+      applyDirectiveMarker(target, forcedDirective, showCapitalizedLetters);
+      continue;
+    }
+
     if (target.directiveMatch && target.element.isConnected) {
       applyDirectiveMarker(target, target.directiveMatch.directive, showCapitalizedLetters);
     }
