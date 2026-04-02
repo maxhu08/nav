@@ -11,10 +11,19 @@ export type ActionName =
   | "hint-mode-new-tab"
   | "create-new-tab"
   | "close-current-tab"
+  | "close-tabs-other"
+  | "close-tabs-left"
+  | "close-tabs-right"
   | "reload-current-tab"
   | "reload-current-tab-hard"
   | "tab-go-prev"
   | "tab-go-next"
+  | "first-tab"
+  | "last-tab"
+  | "move-tab-left"
+  | "move-tab-right"
+  | "restore-closed-tab"
+  | "visit-previous-tab"
   | "duplicate-current-tab"
   | "duplicate-current-tab-origin"
   | "move-current-tab-to-new-window"
@@ -50,10 +59,19 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "hint-mode-new-tab",
   "create-new-tab",
   "close-current-tab",
+  "close-tabs-other",
+  "close-tabs-left",
+  "close-tabs-right",
   "reload-current-tab",
   "reload-current-tab-hard",
   "tab-go-prev",
   "tab-go-next",
+  "first-tab",
+  "last-tab",
+  "move-tab-left",
+  "move-tab-right",
+  "restore-closed-tab",
+  "visit-previous-tab",
   "duplicate-current-tab",
   "duplicate-current-tab-origin",
   "move-current-tab-to-new-window",
@@ -278,10 +296,19 @@ F hint-mode-new-tab
 # tab actions
 t create-new-tab
 x close-current-tab
+<unbound> close-tabs-other
+<unbound> close-tabs-left
+<unbound> close-tabs-right
 r reload-current-tab
 R reload-current-tab-hard
 J tab-go-prev
 K tab-go-next
+g0 first-tab
+g$ last-tab
+<chevronleft><chevronleft> move-tab-left
+<chevronright><chevronright> move-tab-right
+X restore-closed-tab
+^ visit-previous-tab
 yt duplicate-current-tab
 yo duplicate-current-tab-origin
 W move-current-tab-to-new-window

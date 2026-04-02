@@ -4,13 +4,43 @@ import type { TabCommandMessage, TabCommandResponse } from "~/src/shared/backgro
 export type TabCommand =
   | "tab-go-prev"
   | "tab-go-next"
+  | "first-tab"
+  | "last-tab"
+  | "visit-previous-tab"
+  | "move-tab-left"
+  | "move-tab-right"
   | "duplicate-current-tab"
   | "duplicate-current-tab-origin"
   | "move-current-tab-to-new-window"
   | "close-current-tab"
+  | "close-tabs-other"
+  | "close-tabs-left"
+  | "close-tabs-right"
   | "create-new-tab"
+  | "restore-closed-tab"
   | "reload-current-tab"
   | "reload-current-tab-hard";
+
+const TAB_COMMAND_FAILURE_LABELS: Record<TabCommand, string> = {
+  "tab-go-prev": "go to previous tab",
+  "tab-go-next": "go to next tab",
+  "first-tab": "go to first tab",
+  "last-tab": "go to last tab",
+  "visit-previous-tab": "visit previous tab",
+  "move-tab-left": "move tab left",
+  "move-tab-right": "move tab right",
+  "duplicate-current-tab": "duplicate current tab",
+  "duplicate-current-tab-origin": "duplicate current tab origin",
+  "move-current-tab-to-new-window": "move current tab to new window",
+  "close-current-tab": "close current tab",
+  "close-tabs-other": "close other tabs",
+  "close-tabs-left": "close tabs to the left",
+  "close-tabs-right": "close tabs to the right",
+  "create-new-tab": "create new tab",
+  "restore-closed-tab": "restore closed tab",
+  "reload-current-tab": "reload current tab",
+  "reload-current-tab-hard": "hard reload current tab"
+};
 
 const getCurrentExtensionPageTabContext = async (): Promise<{
   tabId?: number;
@@ -51,26 +81,8 @@ const runTabCommand = (command: TabCommand): boolean => {
       }
 
       const toast = getToastApi();
-      const actionLabel =
-        command === "tab-go-prev"
-          ? "go to previous tab"
-          : command === "tab-go-next"
-            ? "go to next tab"
-            : command === "duplicate-current-tab"
-              ? "duplicate current tab"
-              : command === "duplicate-current-tab-origin"
-                ? "duplicate current tab origin"
-                : command === "move-current-tab-to-new-window"
-                  ? "move current tab to new window"
-                  : command === "close-current-tab"
-                    ? "close current tab"
-                    : command === "create-new-tab"
-                      ? "create new tab"
-                      : command === "reload-current-tab"
-                        ? "reload current tab"
-                        : "hard reload current tab";
 
-      toast?.error(`Could not ${actionLabel}`);
+      toast?.error(`Could not ${TAB_COMMAND_FAILURE_LABELS[command]}`);
     });
   });
 

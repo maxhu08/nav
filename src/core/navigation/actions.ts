@@ -72,35 +72,7 @@ export const createNavigationActions = ({
 
   const scrollActions = createScrollActionSet();
   const actions: Record<ActionName, ActionHandler> = {
-    "watch-mode": watchController.toggleVideoControls,
-    "toggle-fullscreen": watchController.toggleFullscreen,
-    "toggle-play-pause": watchController.togglePlayPause,
-    "toggle-loop": watchController.toggleLoop,
-    "toggle-mute": watchController.toggleMute,
-    "toggle-captions": watchController.toggleCaptions,
-    "find-mode": enableFindModeAction,
-    "cycle-match-next": () => findMode.cycleFindMatch(1),
-    "cycle-match-prev": () => findMode.cycleFindMatch(-1),
-    "history-go-prev": (count = 1) => goHistory(-count),
-    "history-go-next": (count = 1) => goHistory(count),
-    "follow-prev": followPreviousPage,
-    "follow-next": followNextPage,
-    "tab-go-prev": createTabCommandAction("tab-go-prev"),
-    "tab-go-next": createTabCommandAction("tab-go-next"),
-    "duplicate-current-tab": createTabCommandAction("duplicate-current-tab"),
-    "duplicate-current-tab-origin": createTabCommandAction("duplicate-current-tab-origin"),
-    "move-current-tab-to-new-window": createTabCommandAction("move-current-tab-to-new-window"),
-    "close-current-tab": createTabCommandAction("close-current-tab"),
-    "create-new-tab": createTabCommandAction("create-new-tab"),
-    "reload-current-tab": createTabCommandAction("reload-current-tab"),
-    "reload-current-tab-hard": createTabCommandAction("reload-current-tab-hard"),
-    "hint-mode-current-tab": () => hintController.activateMode("current-tab"),
-    "hint-mode-new-tab": () => hintController.activateMode("new-tab"),
-    "yank-link-url": () => hintController.activateMode("yank-link-url"),
-    "yank-image": () => hintController.activateMode("yank-image"),
-    "yank-image-url": () => hintController.activateMode("yank-image-url"),
-    "yank-current-tab-url": yankCurrentTabUrl,
-    "yank-current-tab-url-clean": yankCurrentTabUrlClean,
+    // scroll
     "scroll-down": scrollDown,
     "scroll-half-page-down": scrollHalfPageDown,
     "scroll-half-page-up": scrollHalfPageUp,
@@ -108,7 +80,57 @@ export const createNavigationActions = ({
     "scroll-right": scrollRight,
     "scroll-up": scrollUp,
     "scroll-to-bottom": scrollToBottom,
-    "scroll-to-top": scrollToTop
+    "scroll-to-top": scrollToTop,
+
+    // hints
+    "hint-mode-current-tab": () => hintController.activateMode("current-tab"),
+    "hint-mode-new-tab": () => hintController.activateMode("new-tab"),
+
+    // tab actions
+    "create-new-tab": createTabCommandAction("create-new-tab"),
+    "close-current-tab": createTabCommandAction("close-current-tab"),
+    "close-tabs-other": createTabCommandAction("close-tabs-other"),
+    "close-tabs-left": createTabCommandAction("close-tabs-left"),
+    "close-tabs-right": createTabCommandAction("close-tabs-right"),
+    "reload-current-tab": createTabCommandAction("reload-current-tab"),
+    "reload-current-tab-hard": createTabCommandAction("reload-current-tab-hard"),
+    "tab-go-prev": createTabCommandAction("tab-go-prev"),
+    "tab-go-next": createTabCommandAction("tab-go-next"),
+    "first-tab": createTabCommandAction("first-tab"),
+    "last-tab": createTabCommandAction("last-tab"),
+    "move-tab-left": createTabCommandAction("move-tab-left"),
+    "move-tab-right": createTabCommandAction("move-tab-right"),
+    "restore-closed-tab": createTabCommandAction("restore-closed-tab"),
+    "visit-previous-tab": createTabCommandAction("visit-previous-tab"),
+    "duplicate-current-tab": createTabCommandAction("duplicate-current-tab"),
+    "duplicate-current-tab-origin": createTabCommandAction("duplicate-current-tab-origin"),
+    "move-current-tab-to-new-window": createTabCommandAction("move-current-tab-to-new-window"),
+
+    // clipboard
+    "yank-link-url": () => hintController.activateMode("yank-link-url"),
+    "yank-image": () => hintController.activateMode("yank-image"),
+    "yank-image-url": () => hintController.activateMode("yank-image-url"),
+    "yank-current-tab-url": yankCurrentTabUrl,
+    "yank-current-tab-url-clean": yankCurrentTabUrlClean,
+
+    // misc
+    "history-go-prev": (count = 1) => goHistory(-count),
+    "history-go-next": (count = 1) => goHistory(count),
+    "follow-prev": followPreviousPage,
+    "follow-next": followNextPage,
+
+    // find
+    "find-mode": enableFindModeAction,
+    "cycle-match-next": () => findMode.cycleFindMatch(1),
+    "cycle-match-prev": () => findMode.cycleFindMatch(-1),
+
+    // watch
+    "watch-mode": watchController.toggleVideoControls,
+    "toggle-fullscreen": watchController.toggleFullscreen,
+    "toggle-play-pause": watchController.togglePlayPause,
+    "toggle-loop": watchController.toggleLoop,
+    "toggle-mute": watchController.toggleMute,
+    "toggle-captions": watchController.toggleCaptions
   };
 
   return {

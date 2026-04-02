@@ -84,6 +84,14 @@
               Modifier keys are specified as `&lt;c-x&gt;`, `&lt;m-x&gt;`, and `&lt;a-x&gt;` for ctrl+x, meta+x, and alt+x. Combined modifiers are written like `&lt;c-a-x&gt;` or `&lt;c-m-x&gt;`. Use
               `&lt;space&gt;` for the space key.
               <br /><br />
+              Reserved config characters must use named tokens:
+              <br />
+              - `&lt;` is `&lt;chevronleft&gt;`
+              <br />
+              - `&gt;` is `&lt;chevronright&gt;`
+              <br />
+              - `#` is `&lt;hashtag&gt;`
+              <br /><br />
               Actions run in mode context:
               <br />
               - normal mode actions work in regular browsing mode.
@@ -309,8 +317,17 @@
               <p class="text-[#dcdcaa]">history-go-next</p>
               <p class="text-[#dcdcaa]">tab-go-prev</p>
               <p class="text-[#dcdcaa]">tab-go-next</p>
+              <p class="text-[#dcdcaa]">first-tab</p>
+              <p class="text-[#dcdcaa]">last-tab</p>
               <p class="text-[#dcdcaa]">create-new-tab</p>
               <p class="text-[#dcdcaa]">close-current-tab</p>
+              <p class="text-[#dcdcaa]">close-tabs-other</p>
+              <p class="text-[#dcdcaa]">close-tabs-left</p>
+              <p class="text-[#dcdcaa]">close-tabs-right</p>
+              <p class="text-[#dcdcaa]">move-tab-left</p>
+              <p class="text-[#dcdcaa]">move-tab-right</p>
+              <p class="text-[#dcdcaa]">restore-closed-tab</p>
+              <p class="text-[#dcdcaa]">visit-previous-tab</p>
               <p class="text-[#dcdcaa]">duplicate-current-tab</p>
               <p class="text-[#dcdcaa]">duplicate-current-tab-origin</p>
               <p class="text-[#dcdcaa]">move-current-tab-to-new-window</p>
@@ -423,12 +440,48 @@
                 <p class="text-base text-neutral-500">Activates the next tab in the current window.</p>
               </div>
               <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">first-tab</p>
+                <p class="text-base text-neutral-500">Activates the first tab in the current window.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">last-tab</p>
+                <p class="text-base text-neutral-500">Activates the last tab in the current window.</p>
+              </div>
+              <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">create-new-tab</p>
                 <p class="text-base text-neutral-500">Opens a new browser tab.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">close-current-tab</p>
                 <p class="text-base text-neutral-500">Closes the active browser tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">close-tabs-other</p>
+                <p class="text-base text-neutral-500">Closes every other tab in the current window except the active tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">close-tabs-left</p>
+                <p class="text-base text-neutral-500">Closes tabs to the left of the active tab in the current window.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">close-tabs-right</p>
+                <p class="text-base text-neutral-500">Closes tabs to the right of the active tab in the current window.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">move-tab-left</p>
+                <p class="text-base text-neutral-500">Moves the active tab one position left within its current pinned state group.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">move-tab-right</p>
+                <p class="text-base text-neutral-500">Moves the active tab one position right within its current pinned state group.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">restore-closed-tab</p>
+                <p class="text-base text-neutral-500">Restores the most recently closed tab or window.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">visit-previous-tab</p>
+                <p class="text-base text-neutral-500">Activates the most recently visited tab in the current window.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">duplicate-current-tab</p>

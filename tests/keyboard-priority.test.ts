@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createNavigationKeydownHandler } from "~/src/core/navigation/keydown";
 import { createKeyboardPriorityController } from "~/src/core/navigation/keyboard-priority";
-import { createKeyState } from "~/src/core/utils/key-state";
+import { createKeyState, getKeyToken } from "~/src/core/utils/key-state";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 
 describe("keyboard priority", () => {
@@ -209,6 +209,18 @@ describe("keyboard priority", () => {
       document.dispatchEvent(new window.KeyboardEvent("keydown", { bubbles: true, key: "y" }));
 
       expect(receivedKeys).toEqual([]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("normalizes reserved printable keys to named tokens", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      expect(getKeyToken(new window.KeyboardEvent("keydown", { key: "<" }))).toBe("<chevronleft>");
+      expect(getKeyToken(new window.KeyboardEvent("keydown", { key: ">" }))).toBe("<chevronright>");
+      expect(getKeyToken(new window.KeyboardEvent("keydown", { key: "#" }))).toBe("<hashtag>");
     } finally {
       fixture.cleanup();
     }

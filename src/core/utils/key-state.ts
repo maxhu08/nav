@@ -27,6 +27,18 @@ const normalizeBaseKey = (key: string): string | null => {
     return "<space>";
   }
 
+  if (key === "<") {
+    return "<chevronleft>";
+  }
+
+  if (key === ">") {
+    return "<chevronright>";
+  }
+
+  if (key === "#") {
+    return "<hashtag>";
+  }
+
   if (key.length === 1) {
     return key;
   }

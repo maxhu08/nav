@@ -15,10 +15,19 @@ describe("parseHotkeyMappingsValue", () => {
 <unbound> hint-mode-new-tab
 <unbound> create-new-tab
 <unbound> close-current-tab
+<unbound> close-tabs-other
+<unbound> close-tabs-left
+<unbound> close-tabs-right
 <unbound> reload-current-tab
 <unbound> reload-current-tab-hard
 <unbound> tab-go-prev
 <unbound> tab-go-next
+<unbound> first-tab
+<unbound> last-tab
+<unbound> move-tab-left
+<unbound> move-tab-right
+<unbound> restore-closed-tab
+<unbound> visit-previous-tab
 <unbound> duplicate-current-tab
 <unbound> duplicate-current-tab-origin
 <unbound> move-current-tab-to-new-window
@@ -45,6 +54,21 @@ describe("parseHotkeyMappingsValue", () => {
     expect(parsed.mappings).toEqual({
       j: {
         normal: "scroll-down"
+      }
+    });
+  });
+
+  test("allows named tokens for reserved keys in sequences", () => {
+    const parsed = parseHotkeyMappingsValue(`<chevronleft><chevronright> create-new-tab
+<hashtag> close-current-tab`);
+
+    expect(parsed.errors.some((error) => error.code === "invalid-action")).toBe(false);
+    expect(parsed.mappings).toEqual({
+      "<chevronleft><chevronright>": {
+        normal: "create-new-tab"
+      },
+      "<hashtag>": {
+        normal: "close-current-tab"
       }
     });
   });

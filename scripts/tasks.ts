@@ -36,7 +36,7 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     name: "nav",
     author: "Max Hu",
     description: "vim style keyboard navigation for the web",
-    permissions: ["storage", "tabs"],
+    permissions: ["storage", "tabs", "sessions"],
     background: {
       service_worker: "background.js"
     },
@@ -76,7 +76,7 @@ const MANIFESTS: Record<BrowserTarget, Record<string, unknown>> = {
     name: "nav",
     author: "Max Hu",
     description: "vim style keyboard navigation for the web",
-    permissions: ["storage", "tabs"],
+    permissions: ["storage", "tabs", "sessions"],
     background: {
       service_worker: "background.js",
       scripts: ["background.js"]
