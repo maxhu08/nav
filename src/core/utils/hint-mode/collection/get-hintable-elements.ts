@@ -120,6 +120,10 @@ const getHintableElementState = (
   let possibleFalsePositive = false;
   let secondClassCitizen = false;
 
+  if (element.matches("[data-sidebar-item='true']")) {
+    isClickable = true;
+  }
+
   if (element.hasAttribute("onclick")) {
     isClickable = true;
   } else {

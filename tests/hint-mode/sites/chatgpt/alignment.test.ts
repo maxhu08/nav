@@ -171,4 +171,72 @@ describe("ChatGPT site hint marker alignment", () => {
       fixture.cleanup();
     }
   });
+
+  test("keeps response action markers on the same row", () => {
+    const fixture = createDomFixture(`
+      <div
+        aria-label="Response actions"
+        role="group"
+        tabindex="-1"
+      >
+        <button aria-label="Copy response" data-testid="copy-turn-action-button"></button>
+        <button aria-label="Good response" data-testid="good-response-turn-action-button"></button>
+        <button aria-label="Bad response" data-testid="bad-response-turn-action-button"></button>
+        <button aria-label="Share"></button>
+        <span>
+          <button type="button" aria-label="Switch model" aria-haspopup="menu"></button>
+        </span>
+        <button aria-label="More actions" type="button" aria-haspopup="menu"></button>
+      </div>
+    `);
+
+    try {
+      setViewport(1200, 900);
+
+      const copyButton = getRequiredElement<HTMLButtonElement>(
+        "button[aria-label='Copy response']"
+      );
+      const goodButton = getRequiredElement<HTMLButtonElement>(
+        "button[aria-label='Good response']"
+      );
+      const badButton = getRequiredElement<HTMLButtonElement>("button[aria-label='Bad response']");
+      const shareButton = getRequiredElement<HTMLButtonElement>("button[aria-label='Share']");
+      const switchModelButton = getRequiredElement<HTMLButtonElement>(
+        "button[aria-label='Switch model']"
+      );
+      const moreActionsButton = getRequiredElement<HTMLButtonElement>(
+        "button[aria-label='More actions']"
+      );
+
+      setRect(copyButton, 620, 200, 32, 32);
+      setRect(goodButton, 660, 202, 32, 32);
+      setRect(badButton, 700, 201, 32, 32);
+      setRect(shareButton, 740, 203, 32, 32);
+      setRect(switchModelButton, 780, 202, 32, 32);
+      setRect(moreActionsButton, 820, 201, 32, 32);
+
+      const targets = buildHintTargets("current-tab", "asdfgh", 1, false);
+      targets.forEach((target) => setMarkerSize(target.marker));
+      renderHintTargets(targets);
+
+      const responseActionElements: HTMLElement[] = [
+        copyButton,
+        goodButton,
+        badButton,
+        shareButton,
+        switchModelButton,
+        moreActionsButton
+      ];
+      const responseActionTargets = targets.filter((target) =>
+        responseActionElements.includes(target.element)
+      );
+
+      expect(responseActionTargets).toHaveLength(responseActionElements.length);
+      expect(new Set(responseActionTargets.map((target) => target.marker.style.top))).toEqual(
+        new Set(["200px"])
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

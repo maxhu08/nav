@@ -3,6 +3,8 @@ import {
   positionChatGptSidebarTarget,
   positionDeferredChatGptSidebarTargets
 } from "~/src/core/utils/hint-mode/rendering/chatgpt-sidebar-placement";
+import { getChatGptSpecialRowKey } from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
+import { getYouTubeSpecialRowKey } from "~/src/core/utils/hint-mode/rendering/sites/youtube";
 import {
   createMarkerPlacementState,
   positionMarkerElement,
@@ -19,68 +21,8 @@ type SpecialRowState = {
   top: number;
 };
 
-const isYouTubeMastheadStartTarget = (element: HTMLElement): boolean => {
-  if (!element.closest("ytd-masthead #start")) {
-    return false;
-  }
-
-  return (
-    element.matches("button[aria-label='Back']") ||
-    element.matches("button[aria-label='Guide']") ||
-    (element.matches("a#logo[href='/']") &&
-      element.matches("[title='YouTube Home']") &&
-      !!element.closest("ytd-topbar-logo-renderer#logo"))
-  );
-};
-
-const isYouTubeMastheadEndTarget = (element: HTMLElement): boolean => {
-  if (!element.closest("ytd-masthead #end")) {
-    return false;
-  }
-
-  return (
-    (element.matches("button[aria-label='Notifications']") &&
-      !!element.closest("ytd-notification-topbar-button-renderer")) ||
-    (element.matches("button#avatar-btn[aria-label='Account menu']") &&
-      !!element.closest("ytd-topbar-menu-button-renderer"))
-  );
-};
-
-const isChatGptComposerTarget = (element: HTMLElement): boolean => {
-  const composerSurface = element.closest(
-    "form[data-type='unified-composer'] [data-composer-surface='true']"
-  );
-
-  if (!composerSurface) {
-    return false;
-  }
-
-  return (
-    element.matches("#composer-plus-btn[aria-label='Add files and more']") ||
-    element.matches(
-      "#prompt-textarea.ProseMirror[role='textbox'][aria-label='Chat with ChatGPT']"
-    ) ||
-    element.matches("button[aria-label='Start dictation']") ||
-    element.matches("button[aria-label='Start Voice']") ||
-    element.matches("button[data-testid='send-button']") ||
-    element.matches("button[aria-label='Send prompt']")
-  );
-};
-
 const getSpecialRowKey = (target: HintTarget): string | null => {
-  if (isYouTubeMastheadStartTarget(target.element)) {
-    return "youtube-masthead-start";
-  }
-
-  if (isYouTubeMastheadEndTarget(target.element)) {
-    return "youtube-masthead-end";
-  }
-
-  if (isChatGptComposerTarget(target.element)) {
-    return "chatgpt-composer";
-  }
-
-  return null;
+  return getYouTubeSpecialRowKey(target) ?? getChatGptSpecialRowKey(target);
 };
 
 const markersOverlap = (marker: HTMLDivElement, referenceMarker: HTMLDivElement): boolean => {

@@ -5,6 +5,7 @@ import {
   MARKER_VARIANT_ATTRIBUTE
 } from "~/src/core/utils/hint-mode/shared/constants";
 import { buildHintTargets } from "~/src/core/utils/hint-mode/collection/build-hint-targets";
+import { getHintableElements } from "~/src/core/utils/hint-mode/collection/get-hintable-elements";
 import { renderHintTargets } from "~/src/core/utils/hint-mode/rendering/render-hint-targets";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 
@@ -87,6 +88,79 @@ const getMarkerRight = (target: ReturnType<typeof buildHintTargets>[number]): nu
 };
 
 describe("ChatGPT sidebar hint marker placement", () => {
+  test("collects focusable sidebar rows even when rendered as divs", () => {
+    const fixture = createDomFixture(`
+      <aside>
+        <div
+          id="search-chats-row"
+          tabindex="0"
+          data-fill=""
+          class="group __menu-item hoverable"
+          data-sidebar-keep-open="true"
+          data-state="closed"
+          data-sidebar-item="true"
+        >
+          <div class="flex min-w-0 items-center gap-1.5">
+            <div class="flex items-center justify-center icon"></div>
+            <div class="flex min-w-0 grow items-center gap-2.5"><div class="truncate">Search chats</div></div>
+          </div>
+        </div>
+
+        <div
+          id="deep-research-row"
+          tabindex="0"
+          data-fill=""
+          class="group __menu-item hoverable gap-1.5"
+          data-sidebar-keep-open="true"
+          data-state="closed"
+          data-sidebar-item="true"
+        >
+          <div class="flex items-center justify-center icon"></div>
+          <div class="flex min-w-0 grow items-center gap-2.5"><div class="truncate">Deep research</div></div>
+        </div>
+
+        <div
+          id="settings-row"
+          tabindex="0"
+          data-fill=""
+          class="group __menu-item hoverable gap-1.5"
+          data-testid="settings-menu-item"
+          data-sidebar-item="true"
+        >
+          <div class="flex items-center justify-center icon"></div>
+          Settings
+        </div>
+
+        <div
+          id="help-row"
+          tabindex="0"
+          data-fill=""
+          class="group __menu-item hoverable"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          data-state="closed"
+          data-sidebar-item="true"
+        >
+          <div class="flex min-w-0 items-center gap-1.5">
+            <div class="flex items-center justify-center icon"></div>
+            <div class="flex min-w-0 grow items-center gap-2.5"><div class="truncate">Help</div></div>
+          </div>
+        </div>
+      </aside>
+    `);
+
+    try {
+      const hintableElements = getHintableElements("current-tab");
+
+      expect(hintableElements.some((element) => element.id === "search-chats-row")).toBe(true);
+      expect(hintableElements.some((element) => element.id === "deep-research-row")).toBe(true);
+      expect(hintableElements.some((element) => element.id === "settings-row")).toBe(true);
+      expect(hintableElements.some((element) => element.id === "help-row")).toBe(true);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
   test("keeps project row markers on the icon, title, and row corner", () => {
     const fixture = createDomFixture(`
       <ul class="m-0 list-none p-0">
