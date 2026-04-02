@@ -4,7 +4,7 @@ import {
   isActionableDirectiveCandidate
 } from "~/src/core/utils/hint-mode/directive-recognition/shared";
 
-const DOWNLOAD_TOKEN_PATTERN = /\b(download|export|downloads)\b/i;
+const DOWNLOAD_TOKEN_PATTERN = /\b(download|export)\b/i;
 
 export const scoreDownloadDirectiveCandidate = (element: HTMLElement): number => {
   if (!isActionableDirectiveCandidate(element)) {

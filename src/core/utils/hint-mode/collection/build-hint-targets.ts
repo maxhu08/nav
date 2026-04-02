@@ -130,8 +130,11 @@ const hasButtonSemantics = (element: HTMLElement): boolean => {
 };
 
 const hasLinkSemantics = (element: HTMLElement): boolean => {
-  const role = element.getAttribute("role")?.toLowerCase();
-  return role === "link" || element.tagName.toLowerCase() === "a";
+  if (getClosestLinkUrl(element)) {
+    return true;
+  }
+
+  return false;
 };
 
 const opensPopup = (element: HTMLElement): boolean => {

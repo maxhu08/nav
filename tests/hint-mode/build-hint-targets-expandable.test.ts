@@ -203,4 +203,48 @@ describe("buildHintTargets expandable markers", () => {
       fixture.cleanup();
     }
   });
+
+  test("shows the focus icon for role-based link expanders without href", () => {
+    const fixture = createDomFixture(`
+      <a id="endpoint" role="link" title="Show less">
+        <tp-yt-paper-item id="guide-entry" role="link" tabindex="0" aria-disabled="false">
+          <yt-formatted-string class="title">Show less</yt-formatted-string>
+        </tp-yt-paper-item>
+      </a>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false);
+
+      expect(targets).toHaveLength(1);
+      expect(targets[0]?.element.id).toBe("endpoint");
+      expectFocusIconMarker(targets[0]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("dedupes nested YouTube-style disclosure wrappers to one focus target", () => {
+    const fixture = createDomFixture(`
+      <ytd-guide-collapsible-entry-renderer>
+        <ytd-guide-entry-renderer id="expander-item" role="button">
+          <a id="endpoint" role="link" title="Show more">
+            <tp-yt-paper-item role="link" tabindex="0" aria-disabled="false">
+              <yt-formatted-string class="title">Show more</yt-formatted-string>
+            </tp-yt-paper-item>
+          </a>
+        </ytd-guide-entry-renderer>
+      </ytd-guide-collapsible-entry-renderer>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false);
+
+      expect(targets).toHaveLength(1);
+      expect(targets[0]?.element.id).toBe("endpoint");
+      expectFocusIconMarker(targets[0]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

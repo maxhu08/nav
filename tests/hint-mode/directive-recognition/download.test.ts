@@ -29,4 +29,23 @@ describe("download directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("does not treat downloads navigation links as download actions", () => {
+    const fixture = createDomFixture(`
+      <main>
+        <a id="downloads-feed" href="/feed/downloads" title="Downloads">
+          <span>Downloads</span>
+        </a>
+      </main>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const downloadsFeedTarget = targets.find((target) => target.element.id === "downloads-feed");
+
+      expect(downloadsFeedTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

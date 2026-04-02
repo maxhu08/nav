@@ -240,6 +240,23 @@ const hasLinkOrButtonSemantics = (element: HTMLElement): boolean => {
   return role === "link" || role === "button";
 };
 
+const hasExplicitDisclosureLabel = (element: HTMLElement): boolean => {
+  const values = [
+    element.getAttribute("aria-label"),
+    element.getAttribute("title"),
+    element.textContent,
+    element.id,
+    element.className
+  ]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  return /\b(show more|show less|expand|collapse|see more|see less|view more|view less)\b/.test(
+    values
+  );
+};
+
 const shouldSuppressNestedCandidate = (
   candidate: HintableElementState,
   ancestor: HintableElementState
@@ -271,12 +288,20 @@ const shouldSuppressAncestorCandidate = (
   ancestor: HintableElementState,
   descendant: HintableElementState
 ): boolean => {
-  if (!ancestor.element.hasAttribute("aria-expanded")) {
+  const ancestorTagName = ancestor.element.tagName.toLowerCase();
+  if (PREFERRED_NATIVE_INTERACTIVE_TAGS.has(ancestorTagName)) {
     return false;
   }
 
-  const ancestorTagName = ancestor.element.tagName.toLowerCase();
-  if (PREFERRED_NATIVE_INTERACTIVE_TAGS.has(ancestorTagName)) {
+  if (
+    hasExplicitDisclosureLabel(ancestor.element) &&
+    hasExplicitDisclosureLabel(descendant.element) &&
+    hasLinkOrButtonSemantics(descendant.element)
+  ) {
+    return true;
+  }
+
+  if (!ancestor.element.hasAttribute("aria-expanded")) {
     return false;
   }
 
