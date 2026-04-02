@@ -1,8 +1,14 @@
 import { injectStyles } from "~/src/core/utils/inject-styles";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
-import { FOCUS_OVERLAY_ID, FOCUS_STYLE_ID } from "~/src/core/utils/get-ui";
+import {
+  ensureOverlayRoot,
+  FOCUS_OVERLAY_ID,
+  FOCUS_POSITION_STYLE_ID,
+  FOCUS_STYLE_ID
+} from "~/src/core/utils/get-ui";
 import type { FindStyleRenderParams } from "~/src/core/styles/render-find-styles";
+import { getDocumentStyleRoot, upsertStyle } from "~/src/core/utils/inject-styles";
 
 const FOCUS_OVERLAY_DURATION_MS = 1000;
 const FOCUS_OVERLAY_HIDE_MS = 920;
@@ -97,12 +103,13 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     overlay.setAttribute("data-visible", "false");
     overlay.setAttribute("data-animate", "false");
     overlay.setAttribute("data-hiding", "false");
-    document.documentElement.append(overlay);
+    ensureOverlayRoot().append(overlay);
     return overlay;
   };
 
   const getFocusStyleParams = () => ({
     overlayId: FOCUS_OVERLAY_ID,
+    overlayPositionStyleId: FOCUS_POSITION_STYLE_ID,
     fadeOutMs: FOCUS_OVERLAY_FADE_OUT_MS,
     durationMs: FOCUS_OVERLAY_DURATION_MS,
     activationIndicatorColor,
@@ -172,13 +179,16 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     const verticalInset = 2;
     const targetHeight = rect.height + verticalInset * 2;
     const centeredTop = rect.top + rect.height / 2 - targetHeight / 2;
+    const overlayLeft = Math.round(rect.left - horizontalInset);
+    const overlayTop = Math.round(centeredTop);
+    const overlayWidth = Math.round(rect.width + horizontalInset * 2);
+    const overlayHeight = Math.round(targetHeight);
 
-    overlay.style.top = `${Math.round(centeredTop)}px`;
-    overlay.style.left = `${Math.round(rect.left - horizontalInset)}px`;
-    overlay.style.width = `${Math.round(rect.width + horizontalInset * 2)}px`;
-    overlay.style.height = `${Math.round(targetHeight)}px`;
-    overlay.style.borderRadius = "0.375rem";
-    overlay.style.boxShadow = `0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.95)}`;
+    upsertStyle(
+      getDocumentStyleRoot(),
+      FOCUS_POSITION_STYLE_ID,
+      `#${FOCUS_OVERLAY_ID}{top:${overlayTop}px;left:${overlayLeft}px;width:${overlayWidth}px;height:${overlayHeight}px;box-shadow:0 0 0 2px ${colorToRgba(activationIndicatorColor, 0.88)}}`
+    );
     overlay.setAttribute("data-hiding", "false");
     overlay.setAttribute("data-visible", "true");
   };

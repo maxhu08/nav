@@ -1,7 +1,7 @@
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-export const hasReservedLabelsOption = (value: unknown): boolean => {
+export const hasLegacyReservedLabelsOption = (value: unknown): boolean => {
   if (!isObjectRecord(value)) {
     return false;
   }
@@ -12,6 +12,19 @@ export const hasReservedLabelsOption = (value: unknown): boolean => {
   }
 
   return "reservedLabels" in hints;
+};
+
+export const hasDirectivesOption = (value: unknown): boolean => {
+  if (!isObjectRecord(value)) {
+    return false;
+  }
+
+  const hints = value.hints;
+  if (!isObjectRecord(hints)) {
+    return false;
+  }
+
+  return "directives" in hints;
 };
 
 export const hasForceNormalModeOption = (value: unknown): boolean => {

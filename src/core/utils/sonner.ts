@@ -6,6 +6,7 @@ import {
   sendToastProxyMessage,
   subscribeToToastProxyMessages
 } from "~/src/core/utils/runtime-bridge";
+import { ensureOverlayRoot } from "~/src/core/utils/get-ui";
 import { getToastAsset } from "~/src/core/utils/sonner/assets";
 import { applyToastClasses } from "~/src/core/utils/sonner/render";
 import { createToastStyleElement } from "~/src/core/utils/sonner/style";
@@ -18,7 +19,7 @@ const TIME_BEFORE_UNMOUNT = 200;
 const TOAST_WIDTH = 300;
 const DEFAULT_POSITION = "bottom-right";
 const NAV_NAMESPACE_PREFIX = `nav-${getExtensionNamespace()}-`;
-const TOASTER_WRAPPER_ID = `${NAV_NAMESPACE_PREFIX}toaster-wrapper`;
+const TOASTER_WRAPPER_ID = "nav-toast-overlay";
 const TOASTER_LIST_ID = `${NAV_NAMESPACE_PREFIX}toaster-list`;
 const TOAST_CLASS = `${NAV_NAMESPACE_PREFIX}toast`;
 const STYLE_ID = `${NAV_NAMESPACE_PREFIX}toaster-style`;
@@ -37,12 +38,8 @@ function getWrapper() {
 }
 
 export function ensureToastWrapper() {
-  const root = document.documentElement ?? document.body;
-  if (!root) {
-    return;
-  }
-
   ensureToastStyle();
+  const root = ensureOverlayRoot();
 
   const wrapper = getWrapper() ?? document.createElement("div");
   if (!wrapper.id) {

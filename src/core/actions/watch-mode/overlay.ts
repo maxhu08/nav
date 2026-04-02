@@ -7,22 +7,16 @@ import {
   WATCH_VOLUME_MUTE_ICON_PATH,
   WATCH_VOLUME_UP_ICON_PATH
 } from "~/src/lib/inline-icons";
-import { WATCH_HINTS_ID } from "~/src/core/utils/get-ui";
+import { ensureOverlayRoot, WATCH_HINTS_ID, WATCH_STYLE_ID } from "~/src/core/utils/get-ui";
 import {
   LETTER_STYLE_ATTRIBUTE,
   MARKER_STYLE_ATTRIBUTE,
   MARKER_VARIANT_STYLE_ATTRIBUTE,
-  WATCH_COMPACT_TILE_BORDER_RADIUS_PX,
-  WATCH_LABEL_FONT_SIZE_PX,
   WATCH_LARGE_ICON_SIZE_PX,
-  WATCH_LARGE_TILE_SIZE_PX,
-  WATCH_OVERLAY_GAP_PX,
   WATCH_SMALL_ICON_SIZE_PX,
-  WATCH_SMALL_TILE_HEIGHT_PX,
-  WATCH_TILE_BORDER_RADIUS_PX,
-  WATCH_TILE_FONT_WEIGHT,
   type WatchActionTileOptions
 } from "~/src/core/actions/watch-mode/shared";
+import { getDocumentStyleRoot, upsertStyle } from "~/src/core/utils/inject-styles";
 
 type ActionSequenceName =
   | "toggle-fullscreen"
@@ -37,22 +31,24 @@ type WatchOverlayControllerDeps = {
   getVideoMutedState: (video: HTMLVideoElement) => boolean;
 };
 
-const applyTileBaseStyles = (tile: HTMLElement): void => {
-  tile.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
-  tile.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, "watch-action");
-  tile.style.display = "inline-flex";
-  tile.style.alignItems = "center";
-  tile.style.justifyContent = "center";
-  tile.style.position = "static";
-  tile.style.left = "auto";
-  tile.style.top = "auto";
-  tile.style.transform = "none";
-  tile.style.textShadow = "none";
-  tile.style.letterSpacing = "0";
-  tile.style.lineHeight = "1";
-  tile.style.boxSizing = "border-box";
-  tile.style.minWidth = "0";
-  tile.style.overflow = "hidden";
+const renderWatchOverlayStyles = (): string => {
+  return `#${WATCH_HINTS_ID}{position:fixed;left:0;top:0;transform:translate(-50%,-50%);display:none;pointer-events:none;z-index:2147483646;color:#f5f5f5;text-transform:lowercase;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.5)}#${WATCH_HINTS_ID}[data-visible="true"]{display:block}#${WATCH_HINTS_ID} [data-watch-grid="true"]{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-areas:"fullscreen fullscreen fullscreen pause pause pause" "mute mute captions captions loop loop";column-gap:12px;row-gap:12px;width:188px;max-width:100%;align-items:stretch}#${WATCH_HINTS_ID} [${MARKER_STYLE_ATTRIBUTE}="true"][${MARKER_VARIANT_STYLE_ATTRIBUTE}="watch-action"]{display:inline-flex;align-items:center;justify-content:center;position:static;left:auto;top:auto;transform:none;text-shadow:none;letter-spacing:0;line-height:1;box-sizing:border-box;min-width:0;overflow:hidden}#${WATCH_HINTS_ID} [data-watch-tile="true"]{gap:.45em;width:100%;padding:10px}#${WATCH_HINTS_ID} [data-watch-tile="true"][data-watch-compact="false"]{flex-direction:column;aspect-ratio:1/1;border-radius:12px}#${WATCH_HINTS_ID} [data-watch-tile="true"][data-watch-compact="true"]{flex-direction:row;height:48px;border-radius:8px}#${WATCH_HINTS_ID} [data-watch-area="fullscreen"]{grid-area:fullscreen}#${WATCH_HINTS_ID} [data-watch-area="pause"]{grid-area:pause}#${WATCH_HINTS_ID} [data-watch-area="mute"]{grid-area:mute}#${WATCH_HINTS_ID} [data-watch-area="captions"]{grid-area:captions}#${WATCH_HINTS_ID} [data-watch-area="loop"]{grid-area:loop}#${WATCH_HINTS_ID} [data-watch-icon="true"]{flex:0 0 auto;color:#000;opacity:.95}#${WATCH_HINTS_ID} [data-watch-label="true"]{display:inline-flex;align-items:center;justify-content:center;gap:.08em;font-size:15px;font-weight:800;line-height:1;text-shadow:none}#${WATCH_HINTS_ID} [${LETTER_STYLE_ATTRIBUTE}="typed"]{color:inherit}`;
+};
+
+const getWatchHintsOverlay = (): HTMLDivElement => {
+  const existingOverlay = document.getElementById(WATCH_HINTS_ID);
+  if (existingOverlay instanceof HTMLDivElement) {
+    return existingOverlay;
+  }
+
+  upsertStyle(getDocumentStyleRoot(), WATCH_STYLE_ID, renderWatchOverlayStyles());
+
+  const overlay = document.createElement("div");
+  overlay.id = WATCH_HINTS_ID;
+  overlay.setAttribute("aria-hidden", "true");
+  overlay.setAttribute("data-visible", "false");
+  ensureOverlayRoot().append(overlay);
+  return overlay;
 };
 
 const createWatchIcon = (path: string, sizePx: number): SVGSVGElement => {
@@ -62,9 +58,7 @@ const createWatchIcon = (path: string, sizePx: number): SVGSVGElement => {
   svg.setAttribute("height", String(sizePx));
   svg.setAttribute("fill", "currentColor");
   svg.setAttribute("aria-hidden", "true");
-  svg.style.flex = "0 0 auto";
-  svg.style.color = "#000000";
-  svg.style.opacity = "0.95";
+  svg.setAttribute("data-watch-icon", "true");
 
   const node = document.createElementNS("http://www.w3.org/2000/svg", "path");
   node.setAttribute("d", path);
@@ -75,45 +69,8 @@ const createWatchIcon = (path: string, sizePx: number): SVGSVGElement => {
 
 const createWatchActionGrid = (): HTMLDivElement => {
   const grid = document.createElement("div");
-  grid.style.display = "grid";
-  grid.style.gridTemplateColumns = "repeat(6, minmax(0, 1fr))";
-  grid.style.gridTemplateAreas = `
-    "fullscreen fullscreen fullscreen pause pause pause"
-    "mute mute captions captions loop loop"
-  `;
-  grid.style.columnGap = `${WATCH_OVERLAY_GAP_PX}px`;
-  grid.style.rowGap = `${WATCH_OVERLAY_GAP_PX}px`;
-  grid.style.width = `${WATCH_LARGE_TILE_SIZE_PX * 2 + WATCH_OVERLAY_GAP_PX}px`;
-  grid.style.maxWidth = "100%";
-  grid.style.alignItems = "stretch";
+  grid.setAttribute("data-watch-grid", "true");
   return grid;
-};
-
-const getWatchHintsOverlay = (): HTMLDivElement => {
-  const existingOverlay = document.getElementById(WATCH_HINTS_ID);
-  if (existingOverlay instanceof HTMLDivElement) {
-    return existingOverlay;
-  }
-
-  const overlay = document.createElement("div");
-  overlay.id = WATCH_HINTS_ID;
-  overlay.setAttribute("aria-hidden", "true");
-  overlay.style.position = "fixed";
-  overlay.style.left = "0";
-  overlay.style.top = "0";
-  overlay.style.transform = "translate(-50%, -50%)";
-  overlay.style.display = "none";
-  overlay.style.pointerEvents = "none";
-  overlay.style.zIndex = "2147483646";
-  overlay.style.color = "#f5f5f5";
-  overlay.style.textTransform = "lowercase";
-  overlay.style.fontFamily =
-    '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-  overlay.style.fontSize = "12px";
-  overlay.style.fontWeight = "700";
-  overlay.style.textShadow = "0 2px 8px rgba(0,0,0,0.5)";
-  document.documentElement.append(overlay);
-  return overlay;
 };
 
 export const createWatchOverlayController = ({
@@ -125,14 +82,7 @@ export const createWatchOverlayController = ({
 
   const createWatchLabel = (sequence: string): HTMLSpanElement => {
     const label = document.createElement("span");
-    label.style.display = "inline-flex";
-    label.style.alignItems = "center";
-    label.style.justifyContent = "center";
-    label.style.gap = "0.08em";
-    label.style.fontSize = `${WATCH_LABEL_FONT_SIZE_PX}px`;
-    label.style.fontWeight = WATCH_TILE_FONT_WEIGHT;
-    label.style.lineHeight = "1";
-    label.style.textShadow = "none";
+    label.setAttribute("data-watch-label", "true");
 
     const display = getShowCapitalizedLetters() ? sequence.toUpperCase() : sequence.toLowerCase();
 
@@ -140,7 +90,6 @@ export const createWatchOverlayController = ({
       const letter = document.createElement("span");
       letter.textContent = char;
       letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
-      letter.style.textShadow = "none";
       label.append(letter);
     }
 
@@ -153,26 +102,14 @@ export const createWatchOverlayController = ({
     compact = false
   }: WatchActionTileOptions): HTMLDivElement => {
     const tile = document.createElement("div");
-    applyTileBaseStyles(tile);
-
-    const iconSize = compact ? WATCH_SMALL_ICON_SIZE_PX : WATCH_LARGE_ICON_SIZE_PX;
-    const icon = createWatchIcon(iconPath, iconSize);
-    const label = createWatchLabel(sequence);
-
-    tile.style.flexDirection = compact ? "row" : "column";
-    tile.style.gap = "0.45em";
-    tile.style.width = "100%";
-    tile.style.padding = "10px";
-
-    if (compact) {
-      tile.style.height = `${WATCH_SMALL_TILE_HEIGHT_PX}px`;
-      tile.style.borderRadius = `${WATCH_COMPACT_TILE_BORDER_RADIUS_PX}px`;
-    } else {
-      tile.style.aspectRatio = "1 / 1";
-      tile.style.borderRadius = `${WATCH_TILE_BORDER_RADIUS_PX}px`;
-    }
-
-    tile.append(icon, label);
+    tile.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
+    tile.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, "watch-action");
+    tile.setAttribute("data-watch-tile", "true");
+    tile.setAttribute("data-watch-compact", compact ? "true" : "false");
+    tile.append(
+      createWatchIcon(iconPath, compact ? WATCH_SMALL_ICON_SIZE_PX : WATCH_LARGE_ICON_SIZE_PX),
+      createWatchLabel(sequence)
+    );
     return tile;
   };
 
@@ -198,34 +135,34 @@ export const createWatchOverlayController = ({
       iconPath: WATCH_FULLSCREEN_ICON_PATH,
       sequence: fullscreenSequence
     });
-    fullscreenTile.style.gridArea = "fullscreen";
+    fullscreenTile.setAttribute("data-watch-area", "fullscreen");
 
     const pauseTile = createWatchActionTile({
       iconPath: playPauseIconPath,
       sequence: pauseSequence
     });
-    pauseTile.style.gridArea = "pause";
+    pauseTile.setAttribute("data-watch-area", "pause");
 
     const muteTile = createWatchActionTile({
       iconPath: muteIconPath,
       sequence: muteSequence,
       compact: true
     });
-    muteTile.style.gridArea = "mute";
+    muteTile.setAttribute("data-watch-area", "mute");
 
     const captionsTile = createWatchActionTile({
       iconPath: WATCH_CAPTIONS_ICON_PATH,
       sequence: captionsSequence,
       compact: true
     });
-    captionsTile.style.gridArea = "captions";
+    captionsTile.setAttribute("data-watch-area", "captions");
 
     const loopTile = createWatchActionTile({
       iconPath: WATCH_LOOP_ICON_PATH,
       sequence: loopSequence,
       compact: true
     });
-    loopTile.style.gridArea = "loop";
+    loopTile.setAttribute("data-watch-area", "loop");
 
     grid.append(fullscreenTile, pauseTile, muteTile, captionsTile, loopTile);
     overlay.append(grid);
@@ -235,7 +172,7 @@ export const createWatchOverlayController = ({
     hideOverlay: (): void => {
       const overlay = document.getElementById(WATCH_HINTS_ID);
       if (overlay instanceof HTMLDivElement) {
-        overlay.style.display = "none";
+        overlay.setAttribute("data-visible", "false");
       }
     },
     invalidateRender: (): void => {
@@ -267,7 +204,7 @@ export const createWatchOverlayController = ({
       const bounds = video.getBoundingClientRect();
       overlay.style.left = `${Math.round(bounds.left + bounds.width / 2)}px`;
       overlay.style.top = `${Math.round(bounds.top + bounds.height / 2)}px`;
-      overlay.style.display = "block";
+      overlay.setAttribute("data-visible", "true");
     }
   };
 };

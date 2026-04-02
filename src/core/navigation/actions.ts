@@ -1,4 +1,3 @@
-import { activateHints, areHintsPendingSelection, exitHints } from "~/src/core/actions/hints";
 import {
   installScrollTracking,
   scrollHalfPageDown,
@@ -13,13 +12,7 @@ import {
 import { followNextPage, followPreviousPage } from "~/src/core/actions/navigation";
 import { createEnableFindModeAction } from "~/src/core/actions/find";
 import { createTabCommandAction, goHistory } from "~/src/core/actions/tabs";
-import {
-  yankCurrentTabUrl,
-  yankCurrentTabUrlClean,
-  yankImage,
-  yankImageUrl,
-  yankLinkUrl
-} from "~/src/core/actions/yank";
+import { yankCurrentTabUrl, yankCurrentTabUrlClean } from "~/src/core/actions/yank";
 import {
   FIND_STYLE_ID,
   FOCUS_INDICATOR_EVENT,
@@ -37,7 +30,12 @@ type NavigationActionDeps = {
     setFindQuery: (value: string) => void;
     cycleFindMatch: (direction: 1 | -1) => boolean;
   };
-  setMode: (mode: "find" | "watch" | "normal") => void;
+  hintController: {
+    activateMode: (
+      mode: "current-tab" | "new-tab" | "yank-link-url" | "yank-image" | "yank-image-url"
+    ) => boolean;
+  };
+  setMode: (mode: "find" | "hint" | "watch" | "normal") => void;
   watchController: {
     toggleVideoControls: () => boolean;
     toggleFullscreen: () => boolean;
@@ -54,6 +52,7 @@ type FindModeStylesDeps = {
 
 export const createNavigationActions = ({
   findMode,
+  hintController,
   setMode,
   watchController
 }: NavigationActionDeps): {
@@ -70,17 +69,6 @@ export const createNavigationActions = ({
       setMode("find");
     }
   });
-
-  const createToggleHintsAction = (mode: "current-tab" | "new-tab"): ActionHandler => {
-    return () => {
-      if (areHintsPendingSelection()) {
-        exitHints();
-        return true;
-      }
-
-      return activateHints(mode);
-    };
-  };
 
   const scrollActions = createScrollActionSet();
   const actions: Record<ActionName, ActionHandler> = {
@@ -106,11 +94,11 @@ export const createNavigationActions = ({
     "create-new-tab": createTabCommandAction("create-new-tab"),
     "reload-current-tab": createTabCommandAction("reload-current-tab"),
     "reload-current-tab-hard": createTabCommandAction("reload-current-tab-hard"),
-    "hint-mode-current-tab": createToggleHintsAction("current-tab"),
-    "hint-mode-new-tab": createToggleHintsAction("new-tab"),
-    "yank-link-url": yankLinkUrl,
-    "yank-image": yankImage,
-    "yank-image-url": yankImageUrl,
+    "hint-mode-current-tab": () => hintController.activateMode("current-tab"),
+    "hint-mode-new-tab": () => hintController.activateMode("new-tab"),
+    "yank-link-url": () => hintController.activateMode("yank-link-url"),
+    "yank-image": () => hintController.activateMode("yank-image"),
+    "yank-image-url": () => hintController.activateMode("yank-image-url"),
     "yank-current-tab-url": yankCurrentTabUrl,
     "yank-current-tab-url-clean": yankCurrentTabUrlClean,
     "scroll-down": scrollDown,

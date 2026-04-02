@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { defaultConfig } from "~/src/utils/config";
+import { VALID_ACTION_NAMES } from "~/src/utils/hotkeys";
+import { RESERVED_HINT_DIRECTIVES } from "~/src/utils/hint-reserved-label-directives";
 import { migrateOldConfig } from "~/src/utils/migrate-config";
 import type { ConfigMigrationTestCase } from "~/tests/types";
 
 export const configMigrationTestCases: ConfigMigrationTestCase[] = [
   {
-    desc: "returns fallback config when reserved labels are missing",
+    desc: "returns fallback config when directives are missing",
     test: () => {
       const migratedConfig = migrateOldConfig({}, defaultConfig);
 
@@ -35,18 +37,20 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
 
       expect(migratedConfig.rules.forceNormalMode).toBe(defaultConfig.rules.forceNormalMode);
       expect(migratedConfig.rules.urls.mode).toBe("whitelist");
-      expect(migratedConfig.hotkeys.mappings).toBe("j scroll-down");
-      expect(migratedConfig.hints.reservedLabels).toBe("@input kj");
+      expect(migratedConfig.hotkeys.mappings).toContain("j scroll-down");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> scroll-up");
+      expect(migratedConfig.hints.directives).toBe(defaultConfig.hints.directives);
+      expect(migratedConfig.hints.styling).toBe(defaultConfig.hints.styling);
     }
   },
   {
-    desc: "keeps removed directives removed during migration",
+    desc: "adds missing directives as unbound during migration",
     test: () => {
       const oldConfig = {
         ...structuredClone(defaultConfig),
         hints: {
           ...structuredClone(defaultConfig).hints,
-          reservedLabels: `@input kj kjf kjfd
+          directives: `@input kj kjf kjfd
 @attach up
 @home sd sdf sdfj`
         }
@@ -54,13 +58,20 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
 
       const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
 
-      expect(migratedConfig.hints.reservedLabels).toBe(oldConfig.hints.reservedLabels);
-      expect(migratedConfig.hints.reservedLabels).not.toContain("@share sh");
-      expect(migratedConfig.hints.reservedLabels).not.toContain("@notification nf");
+      expect(migratedConfig.hints.directives).toContain("@input kj kjf kjfd");
+      expect(migratedConfig.hints.directives).toContain("@attach up");
+      expect(migratedConfig.hints.directives).toContain("@home sd sdf sdfj");
+
+      for (const directive of RESERVED_HINT_DIRECTIVES) {
+        expect(migratedConfig.hints.directives).toContain(`@${directive} `);
+      }
+
+      expect(migratedConfig.hints.directives).toContain("@share <unbound>");
+      expect(migratedConfig.hints.directives).toContain("@notification <unbound>");
     }
   },
   {
-    desc: "keeps removed hotkey mappings removed during migration",
+    desc: "adds missing hotkey mappings as unbound during migration",
     test: () => {
       const oldConfig = {
         ...structuredClone(defaultConfig),
@@ -71,9 +82,14 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
 
       const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
 
-      expect(migratedConfig.hotkeys.mappings).toBe("j scroll-down");
-      expect(migratedConfig.hotkeys.mappings).not.toContain("yc yank-current-tab-url-clean");
-      expect(migratedConfig.hotkeys.mappings).not.toContain("yo duplicate-current-tab-origin");
+      expect(migratedConfig.hotkeys.mappings).toContain("j scroll-down");
+
+      for (const actionName of VALID_ACTION_NAMES) {
+        expect(migratedConfig.hotkeys.mappings).toContain(actionName);
+      }
+
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> yank-current-tab-url-clean");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> duplicate-current-tab-origin");
     }
   },
   {

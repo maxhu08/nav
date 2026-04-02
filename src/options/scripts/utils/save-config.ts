@@ -26,7 +26,7 @@ const SAVE_ERROR_FIELDS = [
   { path: "rules.urls.whitelist", statusEl: rulesUrlsWhitelistStatusEl },
   { path: "hotkeys.mappings", statusEl: hotkeysMappingsStatusEl },
   { path: "hints.charset", statusEl: hintsCharsetStatusEl },
-  { path: "hints.reservedLabels", statusEl: hintsReservedLabelsStatusEl },
+  { path: "hints.directives", statusEl: hintsReservedLabelsStatusEl },
   { path: "hints.avoidAdjacentPairs", statusEl: hintsAvoidAdjacentPairsStatusEl }
 ] as const;
 

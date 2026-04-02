@@ -77,6 +77,8 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "toggle-captions"
 ]);
 
+export const HOTKEY_UNBOUND_SEQUENCE = "<unbound>";
+
 export const isActionName = (value: string): value is ActionName => {
   return VALID_ACTION_NAMES.has(value as ActionName);
 };
@@ -111,7 +113,8 @@ export type HotkeyMappingErrorCode =
   | "missing-sequence"
   | "missing-action"
   | "invalid-action"
-  | "duplicate-sequence-mode";
+  | "duplicate-sequence-mode"
+  | "missing-action-declaration";
 
 type HotkeyMappingErrorDefinition = {
   code: HotkeyMappingErrorCode;
@@ -138,6 +141,10 @@ export const HOTKEY_MAPPING_AVAILABLE_ERRORS: HotkeyMappingErrorDefinition[] = [
   {
     code: "duplicate-sequence-mode",
     message: "Sequence is already used by another action in the same mode."
+  },
+  {
+    code: "missing-action-declaration",
+    message: "Every action must be declared at least once."
   }
 ];
 
@@ -149,7 +156,7 @@ const getHotkeyMappingErrorMessage = (code: HotkeyMappingErrorCode): string => {
 export type HotkeyMappingError = {
   code: HotkeyMappingErrorCode;
   message: string;
-  lineNumber: number;
+  lineNumber: number | null;
 };
 
 export type ParsedHotkeyMappings = {
@@ -160,7 +167,7 @@ export type ParsedHotkeyMappings = {
 const addHotkeyMappingError = (
   errors: HotkeyMappingError[],
   code: HotkeyMappingErrorCode,
-  lineNumber: number,
+  lineNumber: number | null,
   detail?: string
 ): void => {
   const baseMessage = getHotkeyMappingErrorMessage(code);
@@ -175,6 +182,7 @@ const addHotkeyMappingError = (
 export const parseHotkeyMappingsValue = (value: string): ParsedHotkeyMappings => {
   const mappings: HotkeyMappings = {};
   const errors: HotkeyMappingError[] = [];
+  const declaredActions = new Set<ActionName>();
 
   for (const [index, line] of value.split("\n").entries()) {
     const lineNumber = index + 1;
@@ -212,6 +220,12 @@ export const parseHotkeyMappingsValue = (value: string): ParsedHotkeyMappings =>
       continue;
     }
 
+    declaredActions.add(actionCandidate);
+
+    if (sequence === HOTKEY_UNBOUND_SEQUENCE) {
+      continue;
+    }
+
     const mode = getActionMode(actionCandidate);
     mappings[sequence] ??= {};
 
@@ -226,6 +240,19 @@ export const parseHotkeyMappingsValue = (value: string): ParsedHotkeyMappings =>
     }
 
     mappings[sequence]![mode] = actionCandidate;
+  }
+
+  for (const actionName of VALID_ACTION_NAMES) {
+    if (declaredActions.has(actionName)) {
+      continue;
+    }
+
+    addHotkeyMappingError(
+      errors,
+      "missing-action-declaration",
+      null,
+      `Declare "${actionName}" or set it to "${HOTKEY_UNBOUND_SEQUENCE}".`
+    );
   }
 
   return {
@@ -288,7 +315,7 @@ c toggle-captions # requires watch mode
 
 export const DEFAULT_HINT_CHARSET = "sadfjklewcmupgh";
 
-export const DEFAULT_HINT_RESERVED_LABELS = `@input kj kjf kjfd
+export const DEFAULT_HINT_DIRECTIVES = `@input kj kjf kjfd
 @erase er
 @attach up
 @chat ch

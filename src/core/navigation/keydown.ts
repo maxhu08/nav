@@ -1,9 +1,3 @@
-import {
-  areHintsActive,
-  areHintsPendingSelection,
-  exitHints,
-  handleHintsKeydown
-} from "~/src/core/actions/hints";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import { getKeyToken, isModifierKey } from "~/src/core/utils/key-state";
 import { proxyActionToFrames } from "~/src/core/navigation/frame-actions";
@@ -17,11 +11,7 @@ type KeyStateDeps = {
     actionName: ActionName | null;
     claimKeydown: boolean;
     consumed: boolean;
-  };
-  getToggleHintsActionName: (keyToken: string) => {
-    actionName: ActionName | null;
-    claimKeydown: boolean;
-    consumed: boolean;
+    matchedSequence: string | null;
   };
   getWatchActionName: (
     keyToken: string,
@@ -33,6 +23,7 @@ type KeyStateDeps = {
     actionName: ActionName | null;
     claimKeydown: boolean;
     consumed: boolean;
+    matchedSequence: string | null;
   };
   hasAllowedActionMappings: () => boolean;
   isActionAllowed: (actionName: ActionName) => boolean;
@@ -47,14 +38,22 @@ type KeydownHandlerDeps = {
     isFindModeActive: () => boolean;
     shouldIgnoreKeydownInFindUI: (event: KeyboardEvent) => boolean;
   };
+  hintController: {
+    activateMode: (
+      mode: "current-tab" | "new-tab" | "yank-link-url" | "yank-image" | "yank-image-url",
+      options?: { toggleKey?: string | null }
+    ) => boolean;
+    exitHintMode: () => void;
+    handleHintKeydown: (event: KeyboardEvent) => boolean;
+    isHintModeActive: () => boolean;
+  };
   forceNormalMode: {
+    isEnabled: () => boolean;
     handleKeydownCapture: (event: KeyboardEvent) => void;
   };
   isScrollAction: (actionName: ActionName) => boolean;
   keyState: KeyStateDeps;
   onConsumeKeydown: (event: KeyboardEvent) => void;
-  setShouldBypassNextTypingKeyAfterHintSelect: (value: boolean) => void;
-  shouldBypassNextTypingKeyAfterHintSelect: () => boolean;
   watchController: {
     exitWatchMode: () => void;
     getWatchActionSequences: () => Record<
@@ -75,14 +74,6 @@ const consumeKeyboardEvent = (event: KeyboardEvent): void => {
   event.stopImmediatePropagation();
 };
 
-const isLikelyTypingKey = (event: KeyboardEvent): boolean => {
-  if (event.ctrlKey || event.altKey || event.metaKey) {
-    return false;
-  }
-
-  return event.key.length === 1 || event.key === " ";
-};
-
 const isKeydownFromEditableTarget = (event: KeyboardEvent): boolean => {
   if (isEditableTarget(event.target) || isEditableTarget(getDeepActiveElement())) {
     return true;
@@ -101,15 +92,27 @@ const blurActiveEditableTarget = (): boolean => {
   return true;
 };
 
+const getHintToggleKey = (matchedSequence: string | null): string | null => {
+  if (!matchedSequence) {
+    return null;
+  }
+
+  const firstCharacter = Array.from(matchedSequence)[0] ?? null;
+  if (!firstCharacter || firstCharacter === "<") {
+    return null;
+  }
+
+  return firstCharacter.toLowerCase();
+};
+
 export const createNavigationKeydownHandler = ({
   actions,
   findMode,
   forceNormalMode,
+  hintController,
   isScrollAction,
   keyState,
   onConsumeKeydown,
-  setShouldBypassNextTypingKeyAfterHintSelect,
-  shouldBypassNextTypingKeyAfterHintSelect,
   watchController
 }: KeydownHandlerDeps): ((event: KeyboardEvent) => void) => {
   const consumeKeydownEvent = (event: KeyboardEvent): void => {
@@ -117,32 +120,32 @@ export const createNavigationKeydownHandler = ({
     consumeKeyboardEvent(event);
   };
 
-  const handleHintsModeKeydown = (event: KeyboardEvent): boolean => {
-    if (!areHintsActive()) {
+  const runAction = (actionName: ActionName, matchedSequence: string | null): boolean => {
+    if (!keyState.isActionAllowed(actionName)) {
+      keyState.clearPendingCount();
+      return true;
+    }
+
+    const hintToggleKey = getHintToggleKey(matchedSequence);
+    const didHandle =
+      actionName === "hint-mode-current-tab"
+        ? hintController.activateMode("current-tab", { toggleKey: hintToggleKey })
+        : actionName === "hint-mode-new-tab"
+          ? hintController.activateMode("new-tab", { toggleKey: hintToggleKey })
+          : actionName === "yank-link-url"
+            ? hintController.activateMode("yank-link-url", { toggleKey: hintToggleKey })
+            : actionName === "yank-image"
+              ? hintController.activateMode("yank-image", { toggleKey: hintToggleKey })
+              : actionName === "yank-image-url"
+                ? hintController.activateMode("yank-image-url", { toggleKey: hintToggleKey })
+                : actions[actionName](keyState.resolveCount());
+
+    if (!didHandle && proxyActionToFrames(actionName)) {
+      return true;
+    }
+
+    if (!didHandle && !isScrollAction(actionName)) {
       return false;
-    }
-
-    if (areHintsPendingSelection()) {
-      const keyToken = getKeyToken(event);
-      if (keyToken) {
-        const { actionName, claimKeydown, consumed } = keyState.getToggleHintsActionName(keyToken);
-        if (actionName) {
-          exitHints();
-          consumeKeydownEvent(event);
-          return true;
-        }
-
-        if (consumed) {
-          if (claimKeydown) {
-            consumeKeydownEvent(event);
-          }
-          return true;
-        }
-      }
-    }
-
-    if (handleHintsKeydown(event)) {
-      consumeKeydownEvent(event);
     }
 
     return true;
@@ -155,6 +158,13 @@ export const createNavigationKeydownHandler = ({
 
     if (watchController.isWatchModeActive()) {
       watchController.exitWatchMode();
+      keyState.clearPendingState();
+      consumeKeydownEvent(event);
+      return true;
+    }
+
+    if (hintController.isHintModeActive()) {
+      hintController.exitHintMode();
       keyState.clearPendingState();
       consumeKeydownEvent(event);
       return true;
@@ -221,7 +231,9 @@ export const createNavigationKeydownHandler = ({
   };
 
   const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
-    const { actionName, claimKeydown, consumed } = keyState.getActionName(keyToken);
+    const { actionName, claimKeydown, consumed, matchedSequence } =
+      keyState.getActionName(keyToken);
+
     if (!actionName) {
       if (consumed && claimKeydown) {
         consumeKeydownEvent(event);
@@ -229,19 +241,7 @@ export const createNavigationKeydownHandler = ({
       return;
     }
 
-    if (!keyState.isActionAllowed(actionName)) {
-      keyState.clearPendingCount();
-      consumeKeydownEvent(event);
-      return;
-    }
-
-    const didHandle = actions[actionName](keyState.resolveCount());
-    if (!didHandle && proxyActionToFrames(actionName)) {
-      consumeKeydownEvent(event);
-      return;
-    }
-
-    if (!didHandle && !isScrollAction(actionName)) {
+    if (!runAction(actionName, matchedSequence)) {
       return;
     }
 
@@ -251,10 +251,16 @@ export const createNavigationKeydownHandler = ({
   return (event: KeyboardEvent): void => {
     forceNormalMode.handleKeydownCapture(event);
 
-    if (!keyState.hasAllowedActionMappings()) {
-      if (areHintsActive()) {
-        exitHints();
+    if (hintController.isHintModeActive()) {
+      keyState.clearPendingState();
+
+      if (hintController.handleHintKeydown(event)) {
+        consumeKeydownEvent(event);
       }
+      return;
+    }
+
+    if (!keyState.hasAllowedActionMappings()) {
       if (watchController.isWatchModeActive()) {
         watchController.exitWatchMode();
       }
@@ -276,23 +282,10 @@ export const createNavigationKeydownHandler = ({
         return;
       }
 
-      setShouldBypassNextTypingKeyAfterHintSelect(false);
-      if (areHintsActive()) {
-        exitHints();
-      }
       keyState.clearPendingState();
       return;
     }
 
-    if (shouldBypassNextTypingKeyAfterHintSelect() && isLikelyTypingKey(event)) {
-      setShouldBypassNextTypingKeyAfterHintSelect(false);
-      keyState.clearPendingState();
-      return;
-    }
-
-    if (handleHintsModeKeydown(event)) {
-      return;
-    }
     if (handleEscapeModes(event)) {
       return;
     }

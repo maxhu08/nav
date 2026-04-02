@@ -76,7 +76,6 @@ describe("keyboard priority", () => {
 
     try {
       const keyState = createKeyState({
-        onReservedHintPrefixesChange: () => {},
         getMode: () => "normal"
       });
 
@@ -96,14 +95,19 @@ describe("keyboard priority", () => {
           isFindModeActive: () => false,
           shouldIgnoreKeydownInFindUI: () => false
         },
+        hintController: {
+          activateMode: () => false,
+          exitHintMode: () => {},
+          handleHintKeydown: () => false,
+          isHintModeActive: () => false
+        },
         forceNormalMode: {
+          isEnabled: () => false,
           handleKeydownCapture: () => {}
         },
         isScrollAction: (actionName) => actionName === "scroll-down",
         keyState,
         onConsumeKeydown: () => {},
-        setShouldBypassNextTypingKeyAfterHintSelect: () => {},
-        shouldBypassNextTypingKeyAfterHintSelect: () => false,
         watchController: {
           exitWatchMode: () => {},
           getWatchActionSequences: () => ({
@@ -133,6 +137,160 @@ describe("keyboard priority", () => {
 
       expect(navActionCount).toBe(0);
       expect(receivedKeys).toEqual(["g", "n"]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("claims shared prefixes when multiple nav actions depend on them", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      const keyState = createKeyState({
+        getMode: () => "normal"
+      });
+
+      keyState.applyHotkeyMappings(
+        {
+          yy: { normal: "yank-current-tab-url" },
+          yl: { normal: "yank-link-url" }
+        },
+        { y: true }
+      );
+
+      const receivedKeys: string[] = [];
+      const handleKeydown = createNavigationKeydownHandler({
+        actions: {
+          "yank-current-tab-url": () => true,
+          "yank-link-url": () => true
+        } as never,
+        findMode: {
+          handleFindUIKeydown: () => false,
+          exitFindMode: () => {},
+          isFindModeActive: () => false,
+          shouldIgnoreKeydownInFindUI: () => false
+        },
+        hintController: {
+          activateMode: () => false,
+          exitHintMode: () => {},
+          handleHintKeydown: () => false,
+          isHintModeActive: () => false
+        },
+        forceNormalMode: {
+          isEnabled: () => false,
+          handleKeydownCapture: () => {}
+        },
+        isScrollAction: () => false,
+        keyState,
+        onConsumeKeydown: () => {},
+        watchController: {
+          exitWatchMode: () => {},
+          getWatchActionSequences: () => ({
+            "toggle-fullscreen": "f",
+            "toggle-play-pause": "e",
+            "toggle-loop": "l",
+            "toggle-mute": "m",
+            "toggle-captions": "c"
+          }),
+          isWatchModeActive: () => false,
+          toggleFullscreen: () => false,
+          toggleWatchCaptions: () => false,
+          toggleWatchLoop: () => false,
+          toggleWatchMute: () => false,
+          toggleWatchPlayPause: () => false
+        }
+      });
+
+      window.addEventListener("keydown", handleKeydown, true);
+      document.addEventListener("keydown", (event) => {
+        receivedKeys.push(event.key);
+      });
+
+      document.dispatchEvent(new window.KeyboardEvent("keydown", { bubbles: true, key: "y" }));
+
+      expect(receivedKeys).toEqual([]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("ignores action mappings while hint mode is active", () => {
+    const fixture = createDomFixture("<div></div>");
+
+    try {
+      let clearPendingStateCount = 0;
+      let getActionNameCount = 0;
+      const handledKeys: string[] = [];
+      const handleKeydown = createNavigationKeydownHandler({
+        actions: {} as never,
+        findMode: {
+          handleFindUIKeydown: () => false,
+          exitFindMode: () => {},
+          isFindModeActive: () => false,
+          shouldIgnoreKeydownInFindUI: () => false
+        },
+        hintController: {
+          activateMode: () => false,
+          exitHintMode: () => {},
+          handleHintKeydown: (event) => {
+            handledKeys.push(event.key);
+            return true;
+          },
+          isHintModeActive: () => true
+        },
+        forceNormalMode: {
+          isEnabled: () => false,
+          handleKeydownCapture: () => {}
+        },
+        isScrollAction: () => false,
+        keyState: {
+          clearPendingCount: () => {},
+          clearPendingState: () => {
+            clearPendingStateCount += 1;
+          },
+          getActionName: () => {
+            getActionNameCount += 1;
+            return {
+              actionName: null,
+              claimKeydown: false,
+              consumed: false,
+              matchedSequence: null
+            };
+          },
+          getWatchActionName: () => ({
+            actionName: null,
+            claimKeydown: false,
+            consumed: false,
+            matchedSequence: null
+          }),
+          hasAllowedActionMappings: () => true,
+          isActionAllowed: () => true,
+          resolveCount: () => 1
+        },
+        onConsumeKeydown: () => {},
+        watchController: {
+          exitWatchMode: () => {},
+          getWatchActionSequences: () => ({
+            "toggle-fullscreen": "f",
+            "toggle-play-pause": "e",
+            "toggle-loop": "l",
+            "toggle-mute": "m",
+            "toggle-captions": "c"
+          }),
+          isWatchModeActive: () => false,
+          toggleFullscreen: () => false,
+          toggleWatchCaptions: () => false,
+          toggleWatchLoop: () => false,
+          toggleWatchMute: () => false,
+          toggleWatchPlayPause: () => false
+        }
+      });
+
+      handleKeydown(new window.KeyboardEvent("keydown", { key: "d" }));
+
+      expect(handledKeys).toEqual(["d"]);
+      expect(clearPendingStateCount).toBe(1);
+      expect(getActionNameCount).toBe(0);
     } finally {
       fixture.cleanup();
     }

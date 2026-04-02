@@ -1,5 +1,5 @@
-import { setReservedHintPrefixes } from "~/src/core/actions/hints";
 import { createFindModeController } from "~/src/core/actions/find-mode";
+import { createHintController } from "~/src/core/actions/hint-mode";
 import { createWatchController } from "~/src/core/actions/watch-mode";
 import { createStorageChangeHandler, syncFastConfig } from "~/src/core/utils/fast-config-sync";
 import { createFocusIndicatorController } from "~/src/core/utils/focus-indicator";
@@ -16,10 +16,7 @@ import { createKeyboardPriorityController } from "~/src/core/navigation/keyboard
 import { createModeController } from "~/src/core/navigation/shared";
 import { type FastConfig } from "~/src/utils/fast-config";
 
-const IS_NAV_DEBUG_ENABLED = process.env.NAV_DEV === "true";
-
 let isInitialized = false;
-let shouldBypassNextTypingKeyAfterHintSelect = false;
 
 const isOptionsPage = (): boolean => {
   const optionsUrl = chrome.runtime.getURL("options.html");
@@ -29,12 +26,10 @@ const isOptionsPage = (): boolean => {
 const modeController = createModeController();
 const keyboardPriority = createKeyboardPriorityController();
 
-const keyState = createKeyState({
-  onReservedHintPrefixesChange: setReservedHintPrefixes,
-  getMode: modeController.getMode
-});
+const keyState = createKeyState({ getMode: modeController.getMode });
 
 const focusIndicator = createFocusIndicatorController();
+const hintController = createHintController({ setMode: modeController.setMode });
 
 const findMode = createFindModeController({
   getMode: modeController.getMode,
@@ -50,6 +45,7 @@ const watchController = createWatchController({
 
 const { actions, installNavigationScrollTracking, isScrollAction } = createNavigationActions({
   findMode,
+  hintController,
   setMode: modeController.setMode,
   watchController
 });
@@ -77,14 +73,14 @@ const setForceNormalMode = (value: boolean): void => {
 const handleKeydown = createNavigationKeydownHandler({
   actions,
   findMode,
-  forceNormalMode,
+  forceNormalMode: {
+    isEnabled: forceNormalMode.isEnabled,
+    handleKeydownCapture: forceNormalMode.handleKeydownCapture
+  },
+  hintController,
   isScrollAction,
   keyState,
   onConsumeKeydown: keyboardPriority.handleConsumedKeydown,
-  setShouldBypassNextTypingKeyAfterHintSelect: (value) => {
-    shouldBypassNextTypingKeyAfterHintSelect = value;
-  },
-  shouldBypassNextTypingKeyAfterHintSelect: () => shouldBypassNextTypingKeyAfterHintSelect,
   watchController
 });
 
@@ -102,11 +98,20 @@ const fastConfigSyncDeps = {
     keyState.applyUrlRules(rules);
   },
   setForceNormalMode,
+  setHintShowCapitalizedLetters: hintController.setShowCapitalizedLetters,
+  setHintCharset: hintController.setHintCharset,
+  setHintCss: hintController.setHintCss,
+  setHintMinLabelLength: hintController.setMinLabelLength,
+  setImproveThumbnailMarkers: hintController.setImproveThumbnailMarkers,
+  setHintAvoidAdjacentPairs: hintController.setAvoidAdjacentPairs,
+  setHintDirectiveLabels: hintController.setDirectiveLabels,
   setWatchShowCapitalizedLetters: watchController.setWatchShowCapitalizedLetters,
   setShowActivationIndicator: focusIndicator.setShowActivationIndicator,
   setActivationIndicatorColor: focusIndicator.setActivationIndicatorColor,
   syncFocusStyles: focusIndicator.syncStyles,
-  syncWatchHintsOverlay: watchController.syncWatchHintsOverlay
+  syncWatchHintsOverlay: watchController.syncWatchHintsOverlay,
+  syncHintStyles: hintController.syncStyles,
+  syncHintMarkers: hintController.syncHintMarkers
 };
 
 export const initCoreNavigation = (): void => {
@@ -115,11 +120,6 @@ export const initCoreNavigation = (): void => {
   }
 
   isInitialized = true;
-  if (IS_NAV_DEBUG_ENABLED) {
-    void import("~/src/core/debug/nav-debug").then(({ installNavDebugApi }) => {
-      installNavDebugApi();
-    });
-  }
 
   installNavigationScrollTracking();
   keyboardPriority.install();
@@ -142,9 +142,6 @@ export const initCoreNavigation = (): void => {
         handleWatchMediaStateChange: watchController.handleWatchMediaStateChange,
         handleWatchRouteChange: watchController.handleWatchRouteChange,
         handleWatchDomMutation: watchController.handleWatchDomMutation
-      },
-      setShouldBypassNextTypingKeyAfterHintSelect: (value): void => {
-        shouldBypassNextTypingKeyAfterHintSelect = value;
       }
     });
   }

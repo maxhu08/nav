@@ -2,6 +2,18 @@
 
 Use this page as the fast entry point for contributors.
 
+## Documentation Map
+
+- [Setup](./SETUP.md): install dependencies and run the project locally.
+- [Coding Style](./CODING_STYLE.md): project-specific code style and implementation conventions.
+- [Testing](./TESTING.md): test workflow and expectations.
+- [Adding Actions](./ADDING_ACTIONS.md): how to add, rename, and wire up actions.
+- [Options Page](./OPTIONS_PAGE.md): guidance for options UI and persisted config changes.
+- [Project Structure](./PROJECT_STRUCTURE.md): where major parts of the codebase live.
+- [Terminology](./TERMINOLOGY.md): shared terms used throughout the project.
+- [Issue Reporting](./ISSUE_REPORTING.md): bug report guidance and template.
+- [Committing](./COMMITTING.md): commit message and pre-commit expectations.
+
 ## Quick Start
 
 1. Read [Setup](./SETUP.md) and run the project locally.
@@ -10,7 +22,6 @@ Use this page as the fast entry point for contributors.
 4. If you touch options UI or config persistence, read [Options Page](./OPTIONS_PAGE.md).
 5. Check [Project Structure](./PROJECT_STRUCTURE.md) if you are unsure where code belongs.
 6. Use [Committing](./COMMITTING.md) before opening a PR.
-7. For hint internals, read [Hints Architecture](./HINTS_ARCHITECTURE.md) and [Directive Recognition](./DIRECTIVE_RECOGNITION.md).
 
 ## Useful Things
 
@@ -21,31 +32,30 @@ Use this page as the fast entry point for contributors.
 - Package the source tree: `bun run package:source`
 - Run tests: `bun run test`
 - Validate changes before committing: `bun run check`
+- Make sure all relevant test cases pass before committing.
 - Format code before committing: `bun run format`
 - Formatter is also enforced by the pre-commit hook with `oxfmt`.
 - Commit messages are also checked by `commitlint` in the `commit-msg` hook. See [Committing](./COMMITTING.md).
 
-## Reporting Hint or Directive Issues
+## Reporting Hint Issues
 
-- If hint targeting, reserved labels, or directive behavior does not act as expected, write up the issue in a way that someone else can reproduce quickly.
-- Include the page URL or site name, what target you expected nav to choose, what it picked instead, and whether the problem is specific to `@input`, `@attach`, `@next`, `@prev`, or another directive.
-- If possible, include the relevant config values for `hints.reservedLabels`, `hints.charset`, `hints.minLabelLength`, and any matching `rules.urls.*` entries.
+- If hint targeting or label behavior does not act as expected, write up the issue in a way that someone else can reproduce quickly.
+- Include the page URL or site name, what target you expected nav to choose, and what it picked instead.
+- If possible, include the relevant config values for `hints.charset`, `hints.minLabelLength`, and any matching `rules.urls.*` entries.
 - Add screenshots, DOM snippets, or steps to reproduce when the issue depends on layout, overlays, or hover-only controls.
 - Use [Issue Reporting](./ISSUE_REPORTING.md) for a copy-paste template.
 
 ## Hint Feature Workflow
 
 - For hint changes, use `docs/PROJECT_STRUCTURE.md` as the file map before editing.
-- New directive work usually touches more than the recognition registry: `src/utils/hint-reserved-label-directives.ts`, `src/utils/hotkeys.ts`, `src/core/utils/hints/directive-recognition/definitions.ts` plus one of its helper modules under `src/core/utils/hints/directive-recognition/`, `src/lib/inline-icons.ts`, `src/core/utils/hints/markers.ts`, `src/docs.html`, and the matching regression coverage under `tests/directives/` or `tests/hints/`.
-- Collection and dedupe behavior belongs under `src/core/utils/hints/hint-recognition/`, while low-level DOM/visibility helpers belong in `src/core/utils/hints/dom/` with `src/core/utils/hints/dom.ts` as the facade.
-- Prefer extending the directive registry in `src/core/utils/hints/directive-recognition/definitions.ts` and then putting directive-specific scoring in the closest helper module instead of adding one-off branching elsewhere in the pipeline.
-- If a directive uses an icon, take the SVG path from `src/assets/remixicon-reference/` and store it as an inline path constant in `src/lib/inline-icons.ts`; then wire that constant through `src/core/utils/hints/markers.ts`.
-- Do not use `src/utils/migrate-config.ts` to re-add removed mappings or reserved labels; only use migrations for config-shape compatibility and renamed values.
-- When two controls look similar, prefer generic semantic tie-breakers in the scoring helper (for example stronger patterns or score boosts) instead of site-specific selectors.
+- Collection and target discovery behavior belongs under `src/core/utils/hint-mode/collection/`, directive scoring belongs under `src/core/utils/hint-mode/directive-recognition/`, and rendering belongs under `src/core/utils/hint-mode/rendering/`.
+- Follow the existing directive style: keep each directive scorer in its own file under `src/core/utils/hint-mode/directive-recognition/` and keep shared scoring helpers in `shared.ts`.
+- Use `src/utils/migrate-config.ts` for config-shape compatibility, renamed values, and required backfills such as missing hotkey declarations or missing hint directives.
+- Keep directive icon definitions in `src/lib/hint-directive-icons.ts` and marker-specific rendering in `src/core/utils/hint-mode/rendering/`.
 
 ## Refactor Conventions
 
-- Keep top-level runtime files such as `src/core/navigation.ts`, `src/core/actions/hints.ts`, and `src/core/actions/watch-mode.ts` as facades with stable exports.
+- Keep top-level runtime files such as `src/core/navigation.ts`, `src/core/actions/hint-mode/index.ts`, and `src/core/actions/watch-mode.ts` as facades with stable exports.
 - When a feature grows, prefer adding a nearby helper module directory before expanding one file indefinitely.
 - Source files should stay readable and intentionally scoped; as a rule of thumb, split them before they grow past roughly 500 lines.
 

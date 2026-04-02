@@ -25,6 +25,15 @@ export const isSelectableElement = (element: Element | null): boolean => {
 export const isEditableElement = (element: Element | null): boolean =>
   isSelectableElement(element) || element instanceof HTMLSelectElement;
 
+const isAriaEditableElement = (element: Element | null): boolean => {
+  if (!(element instanceof HTMLElement)) {
+    return false;
+  }
+
+  const role = element.getAttribute("role");
+  return role === "textbox" || role === "searchbox" || role === "combobox";
+};
+
 export const getDeepActiveElement = (root: Document | ShadowRoot = document): Element | null => {
   let activeElement: Element | null = root.activeElement;
 
@@ -41,8 +50,8 @@ export const isEditableTarget = (target: EventTarget | null | undefined): boolea
   }
 
   const editableContainer = target.closest(
-    "input, textarea, select, [contenteditable], [contenteditable='true']"
+    "input, textarea, select, [contenteditable], [contenteditable='true'], [role='textbox'], [role='searchbox'], [role='combobox']"
   );
 
-  return isEditableElement(editableContainer);
+  return isEditableElement(editableContainer) || isAriaEditableElement(editableContainer);
 };

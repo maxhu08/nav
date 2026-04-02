@@ -47,7 +47,7 @@ export type FastConfig = {
     css: string;
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
-    reservedLabels: ReservedHintLabels;
+    directives: ReservedHintLabels;
   };
 };
 
@@ -91,7 +91,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
     value?.hints?.avoidAdjacentPairs !== null &&
-    isReservedHintLabelsShapeValid(value?.hints?.reservedLabels)
+    isReservedHintLabelsShapeValid(value?.hints?.directives)
   );
 };
 
@@ -184,8 +184,10 @@ const parseAvoidAdjacentPairsValue = (
   return normalizedPairs;
 };
 
-const parseReservedLabelsValue = (value: string): FastConfig["hints"]["reservedLabels"] => {
-  return normalizeReservedHintLabels(parseReservedHintDirectives(value));
+const parseDirectivesValue = (value: unknown): FastConfig["hints"]["directives"] => {
+  return normalizeReservedHintLabels(
+    parseReservedHintDirectives(typeof value === "string" ? value : "")
+  );
 };
 
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
@@ -280,7 +282,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
       css: resolveHintCSS(config),
       charset: parseHintCharsetValue(config.hints.charset),
       avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),
-      reservedLabels: parseReservedLabelsValue(config.hints.reservedLabels)
+      directives: parseDirectivesValue(config.hints.directives)
     }
   };
 };

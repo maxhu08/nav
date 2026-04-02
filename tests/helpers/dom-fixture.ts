@@ -49,6 +49,7 @@ const installDomGlobals = (window: JSDOM["window"]): (() => void) => {
     ["HTMLInputElement", domWindow.HTMLInputElement],
     ["HTMLTextAreaElement", domWindow.HTMLTextAreaElement],
     ["HTMLButtonElement", domWindow.HTMLButtonElement],
+    ["HTMLImageElement", domWindow.HTMLImageElement],
     ["HTMLSelectElement", domWindow.HTMLSelectElement],
     ["HTMLVideoElement", domWindow.HTMLVideoElement],
     ["HTMLAnchorElement", domWindow.HTMLAnchorElement],

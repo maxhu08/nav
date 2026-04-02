@@ -21,11 +21,9 @@ const OUTPUT_DIR = resolve(ROOT, "output");
 const SRC_DIR = resolve(ROOT, "src");
 const STATIC_DIR = resolve(SRC_DIR, "static");
 const CORE_BUNDLE_PATH = "core/index.js";
-const DEBUG_MAIN_BUNDLE_PATH = "core/debug/debug-main.js";
 const ENTRY_FILES = [
   resolve(ROOT, "src", "background.ts"),
   resolve(ROOT, "src", "core", "index.ts"),
-  resolve(ROOT, "src", "core", "debug", "debug-main.ts"),
   resolve(ROOT, "src", "popup.html"),
   resolve(ROOT, "src", "options.html"),
   resolve(ROOT, "src", "docs.html")
@@ -145,8 +143,8 @@ async function main() {
       clean();
       ensureDist();
       syncStaticFiles();
-      writeManifest(target, readVersion(), undefined, true);
-      runParcel("watch", true);
+      writeManifest(target, readVersion());
+      runParcel("watch");
       return;
     case "build":
       clean();
@@ -207,9 +205,9 @@ function clean() {
 
 function buildBundle(target: BrowserTarget, version = readVersion()) {
   ensureDist();
-  runParcel("build", false);
+  runParcel("build");
   syncStaticFiles();
-  writeManifest(target, version, undefined, false);
+  writeManifest(target, version);
 }
 
 function ensureDist() {
@@ -220,25 +218,8 @@ function syncStaticFiles() {
   copyDirectoryContents(STATIC_DIR, DIST_DIR);
 }
 
-function writeManifest(
-  target: BrowserTarget,
-  version = readVersion(),
-  versionName?: string,
-  isDev = false
-) {
+function writeManifest(target: BrowserTarget, version = readVersion(), versionName?: string) {
   const manifest = structuredClone(MANIFESTS[target]);
-
-  if (isDev && target === "chrome") {
-    const contentScripts = manifest.content_scripts as Array<Record<string, unknown>>;
-    contentScripts.push({
-      matches: ["<all_urls>"],
-      js: [DEBUG_MAIN_BUNDLE_PATH],
-      run_at: "document_start",
-      all_frames: true,
-      match_about_blank: true,
-      world: "MAIN"
-    });
-  }
 
   const withVersion = {
     ...manifest,
@@ -253,12 +234,8 @@ function readVersion() {
   return readFileSync(VERSION_FILE, "utf8").trim();
 }
 
-function runParcel(mode: "build" | "watch", isDev: boolean) {
+function runParcel(mode: "build" | "watch") {
   const args = ["x", "parcel"];
-  const env = {
-    ...process.env,
-    NAV_DEV: isDev ? "true" : "false"
-  };
 
   if (mode === "build") {
     args.push(
@@ -269,12 +246,12 @@ function runParcel(mode: "build" | "watch", isDev: boolean) {
       "--no-source-maps",
       "--no-content-hash"
     );
-    runCommand(process.execPath, args, ROOT, env);
+    runCommand(process.execPath, args, ROOT, process.env);
     return;
   }
 
   args.push("watch", ...ENTRY_FILES, "--dist-dir", DIST_DIR, "--no-content-hash");
-  const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit", env });
+  const child = spawn(process.execPath, args, { cwd: ROOT, stdio: "inherit", env: process.env });
 
   child.on("exit", (code) => {
     process.exit(code ?? 0);

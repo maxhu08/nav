@@ -1,7 +1,7 @@
 import {
   DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
   DEFAULT_HINT_CHARSET,
-  DEFAULT_HINT_RESERVED_LABELS,
+  DEFAULT_HINT_DIRECTIVES,
   DEFAULT_HOTKEY_MAPPINGS
 } from "~/src/utils/hotkeys";
 import { migrateOldConfig } from "~/src/utils/migrate-config";
@@ -90,7 +90,7 @@ export const defaultConfig: Config = {
     customCSS: DEFAULT_HINT_CUSTOM_CSS,
     charset: DEFAULT_HINT_CHARSET,
     avoidAdjacentPairs: DEFAULT_HINT_AVOID_ADJACENT_PAIRS,
-    reservedLabels: DEFAULT_HINT_RESERVED_LABELS
+    directives: DEFAULT_HINT_DIRECTIVES
   }
 };
 
@@ -116,6 +116,6 @@ export type Config = {
     customCSS: string;
     charset: string;
     avoidAdjacentPairs: string;
-    reservedLabels: string;
+    directives: string;
   };
 };

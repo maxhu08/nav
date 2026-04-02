@@ -32,92 +32,40 @@ Use this map to decide where new code should go.
 
 ## Hints Pipeline
 
-- Runtime coordinator and public hint API: `src/core/actions/hints.ts`
-- Hint action helpers: `src/core/actions/hints/`
-- Pipeline stage modules: `src/core/utils/hints/`
-- Hints internals are split by responsibility so contributors can change one layer without reading the full pipeline first:
-  - Shared hint mode/types: `src/core/utils/hints/model.ts`
-  - DOM facade re-exporting shared hint DOM helpers: `src/core/utils/hints/dom.ts`
-  - DOM geometry helpers: `src/core/utils/hints/dom/geometry.ts`
-  - DOM interactivity and target-preference scoring: `src/core/utils/hints/dom/interactive.ts`
-  - DOM visibility and hit-testing helpers, including overlay-aware pointer-event handling: `src/core/utils/hints/dom/visibility.ts`
-  - DOM shared hint types/constants: `src/core/utils/hints/dom/shared.ts`
-  - Hint session lifecycle and activation entrypoint, including per-page stable focus-hint label caching: `src/core/actions/hints/controller.ts`
-  - Hint activation behavior (focus, click simulation, tab-open behavior): `src/core/actions/hints/activation.ts`
-  - Target collection facade and public compatibility exports: `src/core/utils/hints/hint-recognition.ts`
-  - Hint collection and ordering: `src/core/utils/hints/hint-recognition/collection.ts`
-  - Hint collection caches and derived context: `src/core/utils/hints/hint-recognition/context.ts`
-  - Hint dedupe pipeline facade: `src/core/utils/hints/hint-recognition/dedupe.ts`
-  - Structural equivalent-target dedupe: `src/core/utils/hints/hint-recognition/equivalent.ts`
-  - Label/control dedupe: `src/core/utils/hints/hint-recognition/labels.ts`
-  - File-input attach dedupe: `src/core/utils/hints/hint-recognition/attach.ts`
-  - Spatial semantic dedupe: `src/core/utils/hints/hint-recognition/semantic.ts`
-  - Ancestor-link suppression: `src/core/utils/hints/hint-recognition/ancestor.ts`
-  - Hint-recognition shared types: `src/core/utils/hints/hint-recognition/shared.ts`
-  - Hover-only reveal helpers: `src/core/utils/hints/hint-recognition/reveal.ts`
-  - Directive recognition facade and public exports: `src/core/utils/hints/directive-recognition.ts`
-  - Directive registry and thresholds: `src/core/utils/hints/directive-recognition/definitions.ts`
-  - Directive candidate generation and shared feature cache: `src/core/utils/hints/directive-recognition/candidate-generation.ts`
-  - Directive winner selection: `src/core/utils/hints/directive-recognition/winner-selection.ts`
-  - Directive post-selection remapping (`attach`, `sidebar`): `src/core/utils/hints/directive-recognition/post-selection.ts`
-  - Shared directive scorer helpers: `src/core/utils/hints/directive-recognition/scoring.ts`
-  - Shared directive geometry helpers: `src/core/utils/hints/directive-recognition/geometry.ts`
-  - Shared directive text/feature helpers and constants: `src/core/utils/hints/directive-recognition/shared.ts`
-  - Directive-specific shared types: `src/core/utils/hints/directive-recognition/types.ts`
-  - Input and attach scoring: `src/core/utils/hints/directive-recognition/input-attach.ts`
-  - Home and sidebar scoring: `src/core/utils/hints/directive-recognition/home-sidebar.ts`
-  - Action-like directive scoring (`next`, `prev`, `cancel`, `submit`, `share`, `download`, `login`, `microphone`, reactions): `src/core/utils/hints/directive-recognition/action-directives.ts`
-  - Reserved-label assignment: `src/core/utils/hints/semantics.ts`
-  - Label generation: `src/core/utils/hints/labels.ts`
-  - Pipeline orchestration and stable focus-toggle identity mapping: `src/core/utils/hints/pipeline.ts`
-  - Hint pipeline target types: `src/core/utils/hints/pipeline-types.ts`
-  - Marker DOM creation and updates: `src/core/utils/hints/markers.ts`
-  - Marker layout facade: `src/core/utils/hints/layout.ts`
-  - Shared layout constants/types: `src/core/utils/hints/layout/shared.ts`
-  - Layout-only extracted types: `src/core/utils/hints/layout/types.ts`
-  - Thumbnail heuristics and marker sizing: `src/core/utils/hints/layout/thumbnail.ts`
-  - Position candidate generation: `src/core/utils/hints/layout/placement.ts`
-  - Collision and occlusion scoring: `src/core/utils/hints/layout/collision.ts`
-  - Video-control reveal helpers: `src/core/utils/hints/layout/video.ts`
-  - Overlay/style rendering: `src/core/utils/hints/renderer.ts`
-  - Typed-input filtering: `src/core/utils/hints/input.ts`
+- Runtime coordinator and public hint API: `src/core/actions/hint-mode/index.ts`
+- Pipeline stage modules: `src/core/utils/hint-mode/`
+- Hint internals are split by responsibility so contributors can change one layer without reading the full pipeline first:
+  - Session lifecycle, typed-prefix handling, and config application: `src/core/actions/hint-mode/index.ts`
+  - Target collection and target model building: `src/core/utils/hint-mode/collection/`
+  - Label generation and charset normalization: `src/core/utils/hint-mode/generation/`
+  - Directive scoring and best-target recognition: `src/core/utils/hint-mode/directive-recognition/`
+  - Marker rendering, layout, and overlay syncing: `src/core/utils/hint-mode/rendering/`
+  - Activation side effects and clipboard helpers: `src/core/utils/hint-mode/actions/`
+  - Shared constants and types: `src/core/utils/hint-mode/shared/`
 - The hints flow is organized into explicit stages:
-  1. Collect and dedupe hintable targets: `hint-recognition.ts`, `hint-recognition/collection.ts`, `hint-recognition/dedupe.ts`, and `pipeline.ts` (`collectHintTargets`)
-  2. Generate directive candidates from shared feature caches: `directive-recognition/candidate-generation.ts`
-  3. Select winning reserved targets per directive using the registry thresholds and directive order: `directive-recognition/winner-selection.ts`
-  4. Remap presentation-sensitive directives like `attach` and `sidebar` after selection: `directive-recognition/post-selection.ts`
-  5. Assign reserved labels for chosen directives: `semantics.ts`
-  6. Generate and assign labels (charset, minimum length, reserved prefixes, blocked adjacent pairs, fallback): `labels.ts` + `pipeline.ts`
-  7. Build marker models and marker DOM nodes: `markers.ts`
-  8. Layout markers (thumbnail heuristics, collision avoidance, viewport clamping): `layout.ts` plus `layout/`
-  9. Render overlay and marker CSS: `renderer.ts`
-  10. Apply typed-input filtering and marker visibility updates: `input.ts`
-  11. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hints/controller.ts`
-- Shared hints types live in `src/core/utils/hints/types.ts`.
-- When adding a new directive, follow this order:
-  1. Add the directive name in `src/utils/hint-reserved-label-directives.ts`
-  2. Add its default reserved label in `src/utils/hotkeys.ts`
-  3. Add its scorer and registry entry in `src/core/utils/hints/directive-recognition/definitions.ts`
-  4. Add or extend directive-specific patterns and scorer helpers in the closest helper under `src/core/utils/hints/directive-recognition/`
-  5. Add its inline marker icon path in `src/lib/inline-icons.ts` and wire it in `src/core/utils/hints/markers.ts`
-  6. Update marker priority in `src/core/utils/hints/layout/shared.ts` if the directive should participate in reserved marker ordering
-  7. Update the user-facing directive list and examples in `src/docs.html`
-  8. Add or extend test coverage in the matching file under `tests/directives/` and `tests/hints/`
-- `src/utils/migrate-config.ts` should only preserve backward compatibility for config shape or renamed values; it should not silently re-add settings a user intentionally removed.
+  1. Collect visible, hintable elements and build target metadata: `collection/collect-elements.ts`, `collection/get-hintable-elements.ts`, and `collection/build-hint-targets.ts`
+  2. Score directive candidates and attach directive markers where applicable: `directive-recognition/` plus `collection/build-hint-targets.ts`
+  3. Generate labels from charset, minimum length, and blocked adjacent pairs: `generation/generate-hint-labels.ts`
+  4. Create marker DOM, sync styles, and place markers: `rendering/create-marker-element.ts`, `rendering/render-hint-targets.ts`, and `rendering/position-marker-element.ts`
+  5. Apply typed-prefix filtering and marker visibility updates: `rendering/update-visible-targets.ts`
+  6. Resolve exact matches, activate selected targets, and cleanup session state: `src/core/actions/hint-mode/index.ts` plus `actions/activate-hint-target.ts`
+- Shared hint-mode types live in `src/core/utils/hint-mode/shared/types.ts`.
+- `src/utils/migrate-config.ts` preserves backward compatibility for config shape, renamed values, and required backfills for missing hotkey or directive declarations.
+- Keep directive scorers split one file per directive under `src/core/utils/hint-mode/directive-recognition/`; use `shared.ts` only for reusable scoring helpers.
 - For icon work, prefer copying the path data from the matching reference SVG under `src/assets/remixicon-reference/` into `src/lib/inline-icons.ts` instead of adding runtime file lookups.
-- For new action-like directives, check `src/core/utils/hints/directive-recognition/action-directives.ts` first; many directives need both broad patterns and a stronger tie-breaker score so nearby generic controls do not win.
-- For high-level design context, read `docs/HINTS_ARCHITECTURE.md`, `docs/DIRECTIVE_RECOGNITION.md`, and `docs/MARKER_LAYOUT.md`.
 
 ## Config Layers
 
 - `src/utils/config.ts`: defines the persisted `config` object stored in `chrome.storage.local`.
 - `config` keeps option values in the same shape the options UI edits them.
-- Example: `config.rules.urls.mode` stores the active list, while `config.rules.urls.blacklist`, `config.rules.urls.whitelist`, and `config.hints.reservedLabels` store raw textarea strings.
+- Example: `config.rules.urls.mode` stores the active list, while `config.rules.urls.blacklist`, `config.rules.urls.whitelist`, `config.hotkeys.mappings`, and `config.hints.directives` store raw editable strings.
 - `src/utils/fast-config.ts`: defines `fastConfig`, a derived runtime cache built from `config`.
 - `fastConfig.rules.urls` stores the active mode plus parsed blacklist and whitelist rule arrays.
-- `fastConfig.hotkeys.mappings` is a parsed key-to-action map.
+- `fastConfig.hotkeys.mappings` is a parsed key-to-action map that excludes `<unbound>` declarations.
 - `fastConfig.hotkeys.prefixes` is a derived lookup used for multi-key sequence matching.
-- `fastConfig.hints.reservedLabels` stores parsed directive label arrays for special hint targets (for example `input`, `attach`, `home`, and `sidebar`).
+- `hotkeys.mappings` must declare every action at least once; use `<unbound> action-name` to keep an action intentionally unbound.
+- `hints.directives` must contain exactly one line for each reserved directive; use `@directive <unbound>` to keep a directive intentionally unbound.
+- `fastConfig.hints.directives` stores the parsed directive label map used at runtime, with `<unbound>` lines normalized to empty label arrays.
 - `src/options/scripts/utils/save-config.ts` writes both `config` and a rebuilt `fastConfig` together.
 - In runtime, URL rule patterns are compiled to `RegExp` once on config apply (`src/core/utils/key-state.ts`) and reused for key matching.
 
@@ -153,7 +101,7 @@ Use this map to decide where new code should go.
 
 ## Other Refactored Runtime Areas
 
-- Find mode facade: `src/core/actions/find-mode.ts`
+- Find mode facade: `src/core/actions/find-mode/index.ts`
 - Find mode UI builder/helpers: `src/core/actions/find-mode/ui.ts`
 - Watch mode facade: `src/core/actions/watch-mode.ts`
 - Watch mode shared constants/types: `src/core/actions/watch-mode/shared.ts`

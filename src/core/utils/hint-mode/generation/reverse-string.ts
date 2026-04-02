@@ -1,0 +1,1 @@
+export const reverseString = (value: string): string => Array.from(value).reverse().join("");

@@ -31,6 +31,14 @@ const getActionClassName = (actionName: string): string => {
   return "hotkeys-mappings-token-action";
 };
 
+const getSequenceClassName = (_sequence: string, lineHasError: boolean): string => {
+  if (lineHasError) {
+    return "hotkeys-mappings-token-invalid";
+  }
+
+  return "hotkeys-mappings-token-sequence";
+};
+
 const renderLine = (
   line: string,
   lineHasError: boolean
@@ -73,9 +81,7 @@ const renderLine = (
   const actionClass = lineHasError
     ? "hotkeys-mappings-token-invalid"
     : getActionClassName(actionName);
-  const sequenceClass = lineHasError
-    ? "hotkeys-mappings-token-invalid"
-    : "hotkeys-mappings-token-sequence";
+  const sequenceClass = getSequenceClassName(sequence, lineHasError);
 
   return {
     html: [
@@ -92,6 +98,10 @@ export const syncHotkeysMappingsHighlight = (): void => {
   const errorsByLine = new Map<number, string[]>();
 
   for (const error of parsedMappings.errors) {
+    if (error.lineNumber === null) {
+      continue;
+    }
+
     const errors = errorsByLine.get(error.lineNumber) ?? [];
     errors.push(`[${error.code}] line ${error.lineNumber}: ${error.message}`);
     errorsByLine.set(error.lineNumber, errors);
@@ -115,7 +125,8 @@ export const syncHotkeysMappingsHighlight = (): void => {
     hotkeysMappingsStatusEl,
     parsedMappings.errors.map((error) => ({
       code: error.code,
-      message: `line ${error.lineNumber}: ${error.message}`
+      message:
+        error.lineNumber === null ? error.message : `line ${error.lineNumber}: ${error.message}`
     }))
   );
 };

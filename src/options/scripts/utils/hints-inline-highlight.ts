@@ -10,7 +10,9 @@ import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highl
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import {
   normalizeReservedHintDirective,
-  RESERVED_HINT_DIRECTIVE_LINE_PATTERN
+  RESERVED_HINT_DIRECTIVES,
+  RESERVED_HINT_DIRECTIVE_LINE_PATTERN,
+  RESERVED_HINT_UNBOUND_LABEL
 } from "~/src/utils/hint-reserved-label-directives";
 
 const escapeHtml = (value: string): string =>
@@ -117,7 +119,8 @@ const renderReservedLabelsHighlight = (
 
       const directiveValue = (match[1] ?? "").toLowerCase();
       const directive = normalizeReservedHintDirective(directiveValue);
-      const labels = (match[2] ?? "").split(" ");
+      const labelsValue = (match[2] ?? "").toLowerCase();
+      const labels = labelsValue.split(" ");
 
       if (!directive) {
         hasError = true;
@@ -140,15 +143,20 @@ const renderReservedLabelsHighlight = (
 
       const seenLabels = new Set<string>();
       let previousLabelLength: number | null = null;
+      const isUnboundDirective = labelsValue === RESERVED_HINT_UNBOUND_LABEL;
       const labelTokens = labels.map((label) => {
         const normalizedLabel = label.toLowerCase();
-        const isValidLabel = /^[a-z]+$/i.test(label);
+        const isValidLabel = isUnboundDirective
+          ? label === RESERVED_HINT_UNBOUND_LABEL
+          : /^[a-z]+$/i.test(label);
         const hasExpectedLength =
-          previousLabelLength === null || label.length === previousLabelLength + 1;
+          isUnboundDirective ||
+          previousLabelLength === null ||
+          label.length === previousLabelLength + 1;
         const isDuplicate = seenLabels.has(normalizedLabel);
         const isValid = isValidLabel && hasExpectedLength && !isDuplicate;
 
-        if (isValidLabel) {
+        if (isValidLabel && !isUnboundDirective) {
           seenLabels.add(normalizedLabel);
           previousLabelLength = label.length;
         }
@@ -159,7 +167,7 @@ const renderReservedLabelsHighlight = (
           if (!isValidLabel) {
             errors.push({
               code: "invalid-label",
-              message: `line ${lineNumber}: Label "${label}" must contain only letters a-z.`
+              message: `line ${lineNumber}: Label "${label}" must contain only letters a-z, or be exactly "${RESERVED_HINT_UNBOUND_LABEL}".`
             });
           } else if (!hasExpectedLength) {
             errors.push({
@@ -187,6 +195,18 @@ const renderReservedLabelsHighlight = (
       ].join("");
     })
     .join("\n");
+
+  for (const directive of RESERVED_HINT_DIRECTIVES) {
+    if (seenDirectives.has(directive)) {
+      continue;
+    }
+
+    hasError = true;
+    errors.push({
+      code: "missing-directive",
+      message: `Missing "@${directive}" directive. Use "@${directive} <unbound>" if it should stay unbound.`
+    });
+  }
 
   return { hasError, html, errors };
 };

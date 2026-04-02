@@ -32,10 +32,19 @@ Example:
 
 - `config` is the user-facing stored shape from `src/utils/config.ts`.
 - Keep `config` values easy to edit and export.
-- Example: `config.hotkeys.mappings`, `config.rules.urls.blacklist`, `config.rules.urls.whitelist`, and `config.hints.reservedLabels` are stored as raw strings.
+- Example: `config.hotkeys.mappings`, `config.rules.urls.blacklist`, `config.rules.urls.whitelist`, and `config.hints.directives` are stored as raw strings.
+- `config.hotkeys.mappings` must declare every action at least once. Use `<unbound> action-name` when an action should exist in config but not be bound to a key sequence.
+- `config.hints.directives` must contain exactly one line for each reserved directive. Use `@directive <unbound>` when a directive should stay declared but have no labels.
 - `fastConfig` is the derived runtime shape from `src/utils/fast-config.ts`.
 - Keep `fastConfig` values ready for the content script to consume without reparsing on every keydown.
-- Example: parsed URL rules, parsed hotkey mappings, hotkey prefixes, and parsed `hints.reservedLabels` directives belong in `fastConfig`.
+- Example: parsed URL rules, parsed hotkey mappings, hotkey prefixes, and other derived hint settings belong in `fastConfig`.
+- `<unbound>` hotkey declarations are validated and preserved in `config`, but they are omitted from `fastConfig.hotkeys.mappings` because they do not create runtime bindings.
+- `<unbound>` directive lines are validated and preserved in `config`, but they are normalized to empty label arrays in `fastConfig.hints.directives`.
+
+## Directive Names
+
+- Valid reserved directives are: `input`, `erase`, `attach`, `chat`, `share`, `download`, `login`, `microphone`, `notification`, `delete`, `save`, `copy`, `hide`, `home`, `sidebar`, `next`, `prev`, `cancel`, `submit`, `like`, and `dislike`.
+- Each directive line must use the form `@directive label1 label2 ...` or `@directive <unbound>`.
 
 ## Required Wiring When Adding a New Interaction
 
