@@ -1,7 +1,16 @@
 import { HINT_DIRECTIVE_ICON_PATHS } from "~/src/lib/hint-directive-icons";
-import { EXTERNAL_LINK_ICON_PATH, HINT_FOCUS_MODE_ICON_PATH } from "~/src/lib/inline-icons";
+import {
+  EXTERNAL_LINK_ICON_PATH,
+  HINT_FOCUS_MODE_ICON_PATH,
+  HINT_MORE_ICON_PATH
+} from "~/src/lib/inline-icons";
 import { DIRECTIVE_SCORERS } from "~/src/core/utils/hint-mode/directive-recognition";
 import type { DirectiveScorer } from "~/src/core/utils/hint-mode/directive-recognition/shared";
+import {
+  getElementTextValues,
+  getJoinedElementText,
+  isButtonLikeDirectiveCandidate
+} from "~/src/core/utils/hint-mode/directive-recognition/shared";
 import { getClosestLinkUrl } from "~/src/core/utils/hint-mode/collection/get-closest-link-url";
 import { getElementImageUrl } from "~/src/core/utils/hint-mode/collection/get-element-image-url";
 import { getHintableElements } from "~/src/core/utils/hint-mode/collection/get-hintable-elements";
@@ -54,6 +63,11 @@ const MODAL_TOKEN_PATTERN = /\b(dialog|modal|popup|popover|sheet|overlay|lightbo
 const NON_MODAL_CONTAINER_PATTERN = /\b(sidebar|drawer|slideover|tooltip|toast|dropdown|menu)\b/i;
 const MODAL_SECTION_PATTERN =
   /(?:^|[-_])(popup|modal|dialog|popover|lightbox)[-_](wrapper|body|content|header|footer)(?:$|[-_])/i;
+const MORE_ACTION_LABEL_PATTERN =
+  /\b(more actions|more options|open (?:item|conversation) options|(?:item|conversation) options|additional actions|overflow)\b/i;
+const MORE_ACTION_ICON_PATTERN =
+  /\b(ellipsis|kebab|overflow|more[-_\s]?(?:horiz|vert|horizontal|vertical)|three[-_\s]?dots|dots)\b/i;
+const MORE_ACTION_TRIGGER_PATTERN = /(?:^|[-_])(options?|menu)(?:$|[-_])/i;
 
 type DirectiveMatch = {
   element: HTMLElement;
@@ -76,6 +90,15 @@ const applyForcedIconMarker = (
   showCapitalizedLetters: boolean
 ): void => {
   target.marker = createHintMarkerWithIcon("directive", createInlineSvgIcon(iconPath));
+  renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
+};
+
+const applyInlineIconMarker = (
+  target: HintTarget,
+  iconPath: string,
+  showCapitalizedLetters: boolean
+): void => {
+  target.marker = createHintMarkerWithIcon("inline-icon", createInlineSvgIcon(iconPath));
   renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
 };
 
@@ -140,6 +163,47 @@ const hasLinkSemantics = (element: HTMLElement): boolean => {
 const opensPopup = (element: HTMLElement): boolean => {
   const popupType = element.getAttribute("aria-haspopup")?.toLowerCase();
   return typeof popupType === "string" && popupType !== "false";
+};
+
+const isMoreActionsTarget = (element: HTMLElement): boolean => {
+  if (!isButtonLikeDirectiveCandidate(element)) {
+    return false;
+  }
+
+  const labelText = getJoinedElementText(
+    getElementTextValues(element, ["aria-label", "title", "aria-description", "data-tooltip"])
+  );
+
+  if (MORE_ACTION_LABEL_PATTERN.test(labelText)) {
+    return true;
+  }
+
+  if (!opensPopup(element)) {
+    return false;
+  }
+
+  const descriptorText = getJoinedElementText([
+    ...getElementTextValues(element, [
+      "data-testid",
+      "data-conversation-options-trigger",
+      "id",
+      "class",
+      "name",
+      "icon"
+    ]),
+    element.textContent
+  ]);
+
+  if (MORE_ACTION_ICON_PATTERN.test(descriptorText)) {
+    return true;
+  }
+
+  if (MORE_ACTION_TRIGGER_PATTERN.test(descriptorText)) {
+    return true;
+  }
+
+  const textContent = element.textContent?.trim() ?? "";
+  return /^(?:\.\.\.|…|⋯)$/.test(textContent);
 };
 
 const hasDisclosureState = (element: HTMLElement): boolean => {
@@ -707,6 +771,11 @@ export const buildHintTargets = (
 
     if (target.directiveMatch && target.element.isConnected) {
       applyDirectiveMarker(target, target.directiveMatch.directive, showCapitalizedLetters);
+      continue;
+    }
+
+    if (target.element.isConnected && isMoreActionsTarget(target.element)) {
+      applyInlineIconMarker(target, HINT_MORE_ICON_PATH, showCapitalizedLetters);
     }
   }
 

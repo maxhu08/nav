@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { HINT_SIDEBAR_ICON_PATH } from "~/src/lib/inline-icons";
+import { HINT_MORE_ICON_PATH, HINT_SIDEBAR_ICON_PATH } from "~/src/lib/inline-icons";
 import { buildHintTargets } from "~/src/core/utils/hint-mode/collection/build-hint-targets";
-import { MARKER_VARIANT_ATTRIBUTE } from "~/src/core/utils/hint-mode/shared/constants";
+import {
+  MARKER_ICON_ATTRIBUTE,
+  MARKER_VARIANT_ATTRIBUTE
+} from "~/src/core/utils/hint-mode/shared/constants";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 import {
   directiveLabels,
@@ -33,7 +36,10 @@ describe("sidebar directive recognition", () => {
 
       expectDirectiveIconMarker(sidebarTarget, HINT_SIDEBAR_ICON_PATH);
       expect(sidebarTarget?.label).toBe("we");
-      expect(rowMenuTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
+      expect(rowMenuTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("inline-icon");
+      expect(
+        rowMenuTarget?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)?.innerHTML
+      ).toContain(HINT_MORE_ICON_PATH);
     } finally {
       fixture.cleanup();
     }
@@ -58,7 +64,10 @@ describe("sidebar directive recognition", () => {
 
       expectDirectiveIconMarker(sidebarTarget, HINT_SIDEBAR_ICON_PATH);
       expect(sidebarTarget?.label).toBe("we");
-      expect(rowMenuTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
+      expect(rowMenuTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("inline-icon");
+      expect(
+        rowMenuTarget?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)?.innerHTML
+      ).toContain(HINT_MORE_ICON_PATH);
     } finally {
       fixture.cleanup();
     }

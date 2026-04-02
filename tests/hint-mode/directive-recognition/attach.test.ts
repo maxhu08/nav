@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { HINT_ATTACH_ICON_PATH } from "~/src/lib/inline-icons";
+import { HINT_ATTACH_ICON_PATH, HINT_MORE_ICON_PATH } from "~/src/lib/inline-icons";
 import { buildHintTargets } from "~/src/core/utils/hint-mode/collection/build-hint-targets";
-import { MARKER_VARIANT_ATTRIBUTE } from "~/src/core/utils/hint-mode/shared/constants";
+import {
+  MARKER_ICON_ATTRIBUTE,
+  MARKER_VARIANT_ATTRIBUTE
+} from "~/src/core/utils/hint-mode/shared/constants";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 import {
   directiveLabels,
@@ -54,13 +57,19 @@ describe("attach directive recognition", () => {
     `);
 
     try {
-      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const targets = buildHintTargets("current-tab", "abcd", 1, false);
       const attachTarget = targets.find(
         (target) =>
           target.element.id === "more-actions" && target.directiveMatch?.directive === "attach"
       );
+      const moreActionsTarget = targets.find((target) => target.element.id === "more-actions");
 
       expect(attachTarget).toBeUndefined();
+      expect(moreActionsTarget?.directiveMatch).toBeUndefined();
+      expect(moreActionsTarget?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("inline-icon");
+      expect(
+        moreActionsTarget?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)?.innerHTML
+      ).toContain(HINT_MORE_ICON_PATH);
     } finally {
       fixture.cleanup();
     }

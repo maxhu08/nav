@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { HINT_FOCUS_MODE_ICON_PATH } from "~/src/lib/inline-icons";
+import { HINT_FOCUS_MODE_ICON_PATH, HINT_MORE_ICON_PATH } from "~/src/lib/inline-icons";
 import { buildHintTargets } from "~/src/core/utils/hint-mode/collection/build-hint-targets";
 import {
   MARKER_ICON_ATTRIBUTE,
@@ -13,6 +13,14 @@ const expectFocusIconMarker = (
   expect(target?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("focus-action");
   const icon = target?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`);
   expect(icon?.innerHTML).toContain(HINT_FOCUS_MODE_ICON_PATH);
+};
+
+const expectMoreIconMarker = (
+  target: ReturnType<typeof buildHintTargets>[number] | undefined
+): void => {
+  expect(target?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("inline-icon");
+  const icon = target?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`);
+  expect(icon?.innerHTML).toContain(HINT_MORE_ICON_PATH);
 };
 
 describe("buildHintTargets expandable markers", () => {
@@ -35,8 +43,7 @@ describe("buildHintTargets expandable markers", () => {
 
     try {
       const [target] = buildHintTargets("current-tab", "abcd", 1, false);
-      expect(target?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
-      expect(target?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)).toBeNull();
+      expectMoreIconMarker(target);
     } finally {
       fixture.cleanup();
     }
@@ -169,9 +176,43 @@ describe("buildHintTargets expandable markers", () => {
       }
 
       for (const target of optionTargets) {
-        expect(target.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("default");
-        expect(target.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)).toBeNull();
+        expectMoreIconMarker(target);
       }
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("shows the more icon for conversation option menu triggers", () => {
+    const fixture = createDomFixture(`
+      <div class="history-row">
+        <button
+          tabindex="0"
+          data-trailing-button=""
+          class="history-item-trailing-btn"
+          data-testid="history-item-0-options"
+          data-conversation-options-trigger="conversation-0"
+          aria-label="Open conversation options for Example Thread"
+          type="button"
+          id="conversation-options-trigger"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          data-state="closed"
+        >
+          <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon">
+              <path d="M3 12H21"></path>
+            </svg>
+          </div>
+        </button>
+      </div>
+    `);
+
+    try {
+      const [target] = buildHintTargets("current-tab", "abcd", 1, false);
+
+      expect(target?.directiveMatch).toBeUndefined();
+      expectMoreIconMarker(target);
     } finally {
       fixture.cleanup();
     }
