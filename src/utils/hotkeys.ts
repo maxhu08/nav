@@ -9,6 +9,7 @@ export type ActionName =
   | "scroll-to-bottom"
   | "hint-mode-current-tab"
   | "hint-mode-new-tab"
+  | "hint-mode-right-click"
   | "create-new-tab"
   | "close-current-tab"
   | "close-tabs-other"
@@ -57,6 +58,7 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "scroll-to-bottom",
   "hint-mode-current-tab",
   "hint-mode-new-tab",
+  "hint-mode-right-click",
   "create-new-tab",
   "close-current-tab",
   "close-tabs-other",
@@ -292,6 +294,7 @@ G scroll-to-bottom
 # hints
 f hint-mode-current-tab
 F hint-mode-new-tab
+<a-f> hint-mode-right-click
 
 # tab actions
 t create-new-tab

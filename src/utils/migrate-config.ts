@@ -1,6 +1,11 @@
 import { deepMerge } from "~/src/utils/deep-merge";
 import type { Config } from "~/src/utils/config";
-import { HOTKEY_UNBOUND_SEQUENCE, isActionName, VALID_ACTION_NAMES } from "~/src/utils/hotkeys";
+import {
+  getActionMode,
+  HOTKEY_UNBOUND_SEQUENCE,
+  isActionName,
+  VALID_ACTION_NAMES
+} from "~/src/utils/hotkeys";
 import {
   normalizeReservedHintDirective,
   RESERVED_HINT_DIRECTIVES,
@@ -42,6 +47,7 @@ const fallbackActivationIndicatorColor = (config: Config): string => {
 
 const appendMissingHotkeyDeclarations = (mappings: string): string => {
   const declaredActions = new Set<string>();
+  const declaredSequenceModes = new Set<string>();
 
   for (const line of mappings.split("\n")) {
     const commentStartIndex = line.indexOf("#");
@@ -60,12 +66,26 @@ const appendMissingHotkeyDeclarations = (mappings: string): string => {
     const actionCandidate = trimmedLine.slice(separatorIndex).trim();
     if (isActionName(actionCandidate)) {
       declaredActions.add(actionCandidate);
+
+      const sequence = trimmedLine.slice(0, separatorIndex).trim();
+      if (sequence !== HOTKEY_UNBOUND_SEQUENCE) {
+        declaredSequenceModes.add(`${getActionMode(actionCandidate)}:${sequence}`);
+      }
     }
   }
 
   const missingDeclarations = Array.from(VALID_ACTION_NAMES)
     .filter((actionName) => !declaredActions.has(actionName))
-    .map((actionName) => `${HOTKEY_UNBOUND_SEQUENCE} ${actionName}`);
+    .map((actionName) => {
+      if (
+        actionName === "hint-mode-right-click" &&
+        !declaredSequenceModes.has(`${getActionMode(actionName)}:<a-f>`)
+      ) {
+        return `<a-f> ${actionName}`;
+      }
+
+      return `${HOTKEY_UNBOUND_SEQUENCE} ${actionName}`;
+    });
 
   if (missingDeclarations.length === 0) {
     return mappings;

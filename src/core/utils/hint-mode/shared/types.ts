@@ -6,6 +6,7 @@ import type {
 export type HintActionMode =
   | "current-tab"
   | "new-tab"
+  | "right-click"
   | "yank-link-url"
   | "yank-image"
   | "yank-image-url";

@@ -40,7 +40,13 @@ type KeydownHandlerDeps = {
   };
   hintController: {
     activateMode: (
-      mode: "current-tab" | "new-tab" | "yank-link-url" | "yank-image" | "yank-image-url",
+      mode:
+        | "current-tab"
+        | "new-tab"
+        | "right-click"
+        | "yank-link-url"
+        | "yank-image"
+        | "yank-image-url",
       options?: { toggleKey?: string | null }
     ) => boolean;
     exitHintMode: () => void;
@@ -132,13 +138,15 @@ export const createNavigationKeydownHandler = ({
         ? hintController.activateMode("current-tab", { toggleKey: hintToggleKey })
         : actionName === "hint-mode-new-tab"
           ? hintController.activateMode("new-tab", { toggleKey: hintToggleKey })
-          : actionName === "yank-link-url"
-            ? hintController.activateMode("yank-link-url", { toggleKey: hintToggleKey })
-            : actionName === "yank-image"
-              ? hintController.activateMode("yank-image", { toggleKey: hintToggleKey })
-              : actionName === "yank-image-url"
-                ? hintController.activateMode("yank-image-url", { toggleKey: hintToggleKey })
-                : actions[actionName](keyState.resolveCount());
+          : actionName === "hint-mode-right-click"
+            ? hintController.activateMode("right-click", { toggleKey: hintToggleKey })
+            : actionName === "yank-link-url"
+              ? hintController.activateMode("yank-link-url", { toggleKey: hintToggleKey })
+              : actionName === "yank-image"
+                ? hintController.activateMode("yank-image", { toggleKey: hintToggleKey })
+                : actionName === "yank-image-url"
+                  ? hintController.activateMode("yank-image-url", { toggleKey: hintToggleKey })
+                  : actions[actionName](keyState.resolveCount());
 
     if (!didHandle && proxyActionToFrames(actionName)) {
       return true;

@@ -139,8 +139,25 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
         expect(migratedConfig.hotkeys.mappings).toContain(actionName);
       }
 
+      expect(migratedConfig.hotkeys.mappings).toContain("<a-f> hint-mode-right-click");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> yank-current-tab-url-clean");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> duplicate-current-tab-origin");
+    }
+  },
+  {
+    desc: "leaves right click hint mode unbound during migration when alt-f is already used in normal mode",
+    test: () => {
+      const oldConfig = {
+        ...structuredClone(defaultConfig),
+        hotkeys: {
+          mappings: "<a-f> create-new-tab"
+        }
+      };
+
+      const migratedConfig = migrateOldConfig(oldConfig, defaultConfig);
+
+      expect(migratedConfig.hotkeys.mappings).toContain("<a-f> create-new-tab");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> hint-mode-right-click");
     }
   },
   {

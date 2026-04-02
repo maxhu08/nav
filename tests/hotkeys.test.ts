@@ -13,6 +13,7 @@ describe("parseHotkeyMappingsValue", () => {
 <unbound> scroll-to-bottom
 <unbound> hint-mode-current-tab
 <unbound> hint-mode-new-tab
+<unbound> hint-mode-right-click
 <unbound> create-new-tab
 <unbound> close-current-tab
 <unbound> close-tabs-other

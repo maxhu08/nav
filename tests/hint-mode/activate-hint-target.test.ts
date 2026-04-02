@@ -77,6 +77,48 @@ describe("activateHintTarget", () => {
     }
   });
 
+  test("dispatches right click events for right click hint mode", async () => {
+    const fixture = createDomFixture(
+      "<button id='trigger' type='button' aria-haspopup='menu'>Open menu</button>"
+    );
+
+    try {
+      const { activateHintTarget } =
+        await import("~/src/core/utils/hint-mode/actions/activate-hint-target");
+
+      Object.defineProperty(window, "PointerEvent", {
+        configurable: true,
+        value: window.MouseEvent
+      });
+
+      const trigger = document.getElementById("trigger") as HTMLButtonElement;
+      const receivedEvents: string[] = [];
+      let focusIndicatorTarget: HTMLElement | null = null;
+
+      window.addEventListener(FOCUS_INDICATOR_EVENT, ((event: Event) => {
+        focusIndicatorTarget = (event as CustomEvent<{ element: HTMLElement }>).detail.element;
+      }) as EventListener);
+
+      for (const eventName of ["pointerdown", "mousedown", "pointerup", "mouseup", "contextmenu"]) {
+        trigger.addEventListener(eventName, () => {
+          receivedEvents.push(eventName);
+        });
+      }
+
+      expect(activateHintTarget("right-click", createHintTarget(trigger))).toBe(true);
+      expect(receivedEvents).toEqual([
+        "pointerdown",
+        "mousedown",
+        "pointerup",
+        "mouseup",
+        "contextmenu"
+      ]);
+      expect(focusIndicatorTarget === trigger).toBe(true);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
   test("clears erase directive targets and keeps focus", async () => {
     const fixture = createDomFixture("<textarea id='composer'>hello world</textarea>");
 

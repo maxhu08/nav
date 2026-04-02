@@ -96,6 +96,81 @@ const dispatchSyntheticClickEventAt = (
   );
 };
 
+const dispatchSyntheticContextMenuEventAt = (
+  element: HTMLElement,
+  clientX: number,
+  clientY: number
+): void => {
+  element.dispatchEvent(
+    new window.MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+      clientX,
+      clientY,
+      button: 2,
+      buttons: 0,
+      composed: true
+    })
+  );
+};
+
+const dispatchSyntheticRightClickEvents = (element: HTMLElement): void => {
+  const rect = element.getBoundingClientRect();
+  const clientX = rect.left + rect.width / 2;
+  const clientY = rect.top + rect.height / 2;
+  const sharedMouseInit: MouseEventInit = {
+    bubbles: true,
+    cancelable: true,
+    clientX,
+    clientY,
+    composed: true
+  };
+
+  if (typeof window.PointerEvent === "function") {
+    const sharedPointerInit: PointerEventInit = {
+      ...sharedMouseInit,
+      button: 2,
+      buttons: 2,
+      isPrimary: true,
+      pointerId: 1,
+      pointerType: "mouse"
+    };
+
+    element.dispatchEvent(new window.PointerEvent("pointerdown", sharedPointerInit));
+  }
+
+  element.dispatchEvent(
+    new window.MouseEvent("mousedown", {
+      ...sharedMouseInit,
+      button: 2,
+      buttons: 2
+    })
+  );
+
+  if (typeof window.PointerEvent === "function") {
+    element.dispatchEvent(
+      new window.PointerEvent("pointerup", {
+        ...sharedMouseInit,
+        button: 2,
+        buttons: 0,
+        isPrimary: true,
+        pointerId: 1,
+        pointerType: "mouse"
+      })
+    );
+  }
+
+  element.dispatchEvent(
+    new window.MouseEvent("mouseup", {
+      ...sharedMouseInit,
+      button: 2,
+      buttons: 0
+    })
+  );
+
+  dispatchSyntheticContextMenuEventAt(element, clientX, clientY);
+};
+
 const clampToViewport = (value: number, viewportSize: number): number => {
   return Math.min(Math.max(Math.round(value), 1), Math.max(viewportSize - 1, 1));
 };
@@ -274,6 +349,12 @@ export const activateHintTarget = (mode: HintActionMode, target: HintTarget): bo
     if (newWindow) {
       return true;
     }
+  }
+
+  if (mode === "right-click") {
+    dispatchFocusIndicator(target.element);
+    dispatchSyntheticRightClickEvents(target.element);
+    return true;
   }
 
   if (shouldFocusBeforeActivation(target.element)) {

@@ -32,7 +32,13 @@ type NavigationActionDeps = {
   };
   hintController: {
     activateMode: (
-      mode: "current-tab" | "new-tab" | "yank-link-url" | "yank-image" | "yank-image-url"
+      mode:
+        | "current-tab"
+        | "new-tab"
+        | "right-click"
+        | "yank-link-url"
+        | "yank-image"
+        | "yank-image-url"
     ) => boolean;
   };
   setMode: (mode: "find" | "hint" | "watch" | "normal") => void;
@@ -85,6 +91,7 @@ export const createNavigationActions = ({
     // hints
     "hint-mode-current-tab": () => hintController.activateMode("current-tab"),
     "hint-mode-new-tab": () => hintController.activateMode("new-tab"),
+    "hint-mode-right-click": () => hintController.activateMode("right-click"),
 
     // tab actions
     "create-new-tab": createTabCommandAction("create-new-tab"),

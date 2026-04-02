@@ -61,11 +61,14 @@
                 ><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">?</span><span class="text-[#d06969]">github</span><span class="text-[#d6b97c]">\.</span
                 ><span class="text-[#d06969]">com/</span><span class="text-[#d6b97c]">.*$</span>
               </p>
-              <p><span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">hint-mode-current-tab</span> <span class="text-[#dcdcaa]">yank-current-tab-url</span></p>
+              <p>
+                <span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">hint-mode-current-tab</span> <span class="text-[#dcdcaa]">hint-mode-right-click</span>
+                <span class="text-[#dcdcaa]">yank-current-tab-url</span>
+              </p>
             </div>
             <p class="text-base text-neutral-500">
-              In `rules.urls.blacklist`, this blocks every action on GitHub pages except `hint-mode-current-tab` and `yank-current-tab-url`. In `rules.urls.whitelist`, the same rule would allow only
-              those actions on GitHub pages.
+              In `rules.urls.blacklist`, this blocks every action on GitHub pages except `hint-mode-current-tab`, `hint-mode-right-click`, and `yank-current-tab-url`. In `rules.urls.whitelist`, the
+              same rule would allow only those actions on GitHub pages.
             </p>
           </div>
         </section>
@@ -99,6 +102,10 @@
               - find mode actions (`cycle-match-next`, `cycle-match-prev`) only work while find mode is active.
               <br />
               - watch mode actions (`toggle-fullscreen`, `toggle-play-pause`) only work while watch mode is active.
+              <br /><br />
+              Default hint bindings are `f`, `F`, and `&lt;a-f&gt;` for current-tab, new-tab, and right-click hint mode.
+              <br /><br />
+              Right-click hint mode behaves like current-tab hint mode, except it right-clicks the selected target, ignores reserved directives, and always shows the cursor marker.
               <br /><br />
               A key sequence can be reused across different modes (for example `f` for hints in normal mode and fullscreen in watch mode), but duplicate mappings in the same mode are rejected.
               <br /><br />
@@ -306,6 +313,7 @@
               <p class="text-[#dcdcaa]">scroll-half-page-up</p>
               <p class="text-[#dcdcaa]">hint-mode-current-tab</p>
               <p class="text-[#dcdcaa]">hint-mode-new-tab</p>
+              <p class="text-[#dcdcaa]">hint-mode-right-click</p>
               <p class="text-[#dcdcaa]">reload-current-tab</p>
               <p class="text-[#dcdcaa]">reload-current-tab-hard</p>
               <p class="text-[#dcdcaa]">yank-link-url</p>
@@ -386,6 +394,10 @@
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">hint-mode-new-tab</p>
                 <p class="text-base text-neutral-500">Shows link hints and opens the selected link in a new tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">hint-mode-right-click</p>
+                <p class="text-base text-neutral-500">Shows current-tab-style hints, but right-clicks the selected target instead.</p>
               </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">reload-current-tab</p>

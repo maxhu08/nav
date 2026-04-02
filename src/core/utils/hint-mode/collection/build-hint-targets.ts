@@ -1,6 +1,7 @@
 import { HINT_DIRECTIVE_ICON_PATHS } from "~/src/lib/hint-directive-icons";
 import {
   EXTERNAL_LINK_ICON_PATH,
+  HINT_CURSOR_ICON_PATH,
   HINT_FOCUS_MODE_ICON_PATH,
   HINT_MORE_ICON_PATH,
   WATCH_PLAY_ICON_PATH
@@ -694,6 +695,10 @@ const createModeMarker = (mode: HintActionMode, element: HTMLElement): HTMLDivEl
     return createHintMarkerWithIcon("directive", createInlineSvgIcon(EXTERNAL_LINK_ICON_PATH));
   }
 
+  if (mode === "right-click") {
+    return createHintMarkerWithIcon("directive", createInlineSvgIcon(HINT_CURSOR_ICON_PATH));
+  }
+
   if (mode === "yank-link-url" || mode === "yank-image" || mode === "yank-image-url") {
     return createHintMarkerWithIcon("directive", DIRECTIVE_ICON_SVGS.copy);
   }
@@ -718,6 +723,10 @@ const getForcedIconForMode = (mode: HintActionMode): string | null => {
     return EXTERNAL_LINK_ICON_PATH;
   }
 
+  if (mode === "right-click") {
+    return HINT_CURSOR_ICON_PATH;
+  }
+
   if (mode === "yank-link-url" || mode === "yank-image" || mode === "yank-image-url") {
     return HINT_DIRECTIVE_ICON_PATHS.copy;
   }
@@ -735,6 +744,7 @@ export const buildHintTargets = (
   forbiddenAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {},
   improveThumbnailMarkers = false
 ): HintTarget[] => {
+  const ignoreDirectives = mode === "right-click";
   const elements = getHintableElements(mode);
   const filteredElements = elements.filter((element) => {
     if (mode === "new-tab") {
@@ -771,24 +781,26 @@ export const buildHintTargets = (
 
     targetsByElement.set(element, target);
 
-    for (const [directive, scorer] of DIRECTIVE_SCORER_ENTRIES) {
-      if (!scorer) {
-        continue;
-      }
+    if (!ignoreDirectives) {
+      for (const [directive, scorer] of DIRECTIVE_SCORER_ENTRIES) {
+        if (!scorer) {
+          continue;
+        }
 
-      const currentMatch = directiveMatches.get(directive);
-      if (currentMatch?.score === MAX_DIRECTIVE_SCORE) {
-        continue;
-      }
+        const currentMatch = directiveMatches.get(directive);
+        if (currentMatch?.score === MAX_DIRECTIVE_SCORE) {
+          continue;
+        }
 
-      const score = scorer(element);
+        const score = scorer(element);
 
-      if (score > 0 && (!currentMatch || score > currentMatch.score)) {
-        directiveMatches.set(directive, {
-          element,
-          score,
-          target
-        });
+        if (score > 0 && (!currentMatch || score > currentMatch.score)) {
+          directiveMatches.set(directive, {
+            element,
+            score,
+            target
+          });
+        }
       }
     }
 
@@ -798,62 +810,64 @@ export const buildHintTargets = (
   const reservedDirectiveLabels = new Set<string>();
   const directiveTargets: HintTarget[] = [];
 
-  for (const [directive, match] of directiveMatches.entries()) {
-    const preferredLabel = directiveLabels[directive].find(
-      (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
-    );
-
-    if (!preferredLabel) {
-      continue;
-    }
-
-    reservedDirectiveLabels.add(preferredLabel);
-    assignDirectiveLabel(match.target, directive, preferredLabel, directiveTargets);
-
-    if (directive === "input") {
-      const eraseLabel = directiveLabels.erase.find(
+  if (!ignoreDirectives) {
+    for (const [directive, match] of directiveMatches.entries()) {
+      const preferredLabel = directiveLabels[directive].find(
         (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
       );
 
-      if (eraseLabel) {
-        reservedDirectiveLabels.add(eraseLabel);
-        directiveTargets.push(createDirectiveTarget(match.target, "erase", eraseLabel));
+      if (!preferredLabel) {
+        continue;
+      }
+
+      reservedDirectiveLabels.add(preferredLabel);
+      assignDirectiveLabel(match.target, directive, preferredLabel, directiveTargets);
+
+      if (directive === "input") {
+        const eraseLabel = directiveLabels.erase.find(
+          (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
+        );
+
+        if (eraseLabel) {
+          reservedDirectiveLabels.add(eraseLabel);
+          directiveTargets.push(createDirectiveTarget(match.target, "erase", eraseLabel));
+        }
       }
     }
-  }
 
-  for (const directive of ["prev", "next"] as const) {
-    const preferredLabel = directiveLabels[directive].find(
+    for (const directive of ["prev", "next"] as const) {
+      const preferredLabel = directiveLabels[directive].find(
+        (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
+      );
+
+      if (!preferredLabel) {
+        continue;
+      }
+
+      const matchedElement = resolveFollowDirectionTarget(directive === "prev" ? "prev" : "next");
+      if (!(matchedElement instanceof HTMLElement)) {
+        continue;
+      }
+
+      const matchedTarget = targetsByElement.get(matchedElement);
+      if (!matchedTarget || matchedTarget.directiveMatch) {
+        continue;
+      }
+
+      reservedDirectiveLabels.add(preferredLabel);
+      assignDirectiveLabel(matchedTarget, directive, preferredLabel, directiveTargets);
+    }
+
+    const hideLabel = directiveLabels.hide.find(
       (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
     );
 
-    if (!preferredLabel) {
-      continue;
-    }
-
-    const matchedElement = resolveFollowDirectionTarget(directive === "prev" ? "prev" : "next");
-    if (!(matchedElement instanceof HTMLElement)) {
-      continue;
-    }
-
-    const matchedTarget = targetsByElement.get(matchedElement);
-    if (!matchedTarget || matchedTarget.directiveMatch) {
-      continue;
-    }
-
-    reservedDirectiveLabels.add(preferredLabel);
-    assignDirectiveLabel(matchedTarget, directive, preferredLabel, directiveTargets);
-  }
-
-  const hideLabel = directiveLabels.hide.find(
-    (label) => label.length > 0 && !reservedDirectiveLabels.has(label)
-  );
-
-  if (hideLabel) {
-    const hideTarget = resolveHideDirectiveTarget(hideLabel);
-    if (hideTarget) {
-      reservedDirectiveLabels.add(hideLabel);
-      directiveTargets.push(hideTarget);
+    if (hideLabel) {
+      const hideTarget = resolveHideDirectiveTarget(hideLabel);
+      if (hideTarget) {
+        reservedDirectiveLabels.add(hideLabel);
+        directiveTargets.push(hideTarget);
+      }
     }
   }
 
