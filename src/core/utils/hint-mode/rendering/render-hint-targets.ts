@@ -7,6 +7,7 @@ import {
   createMarkerPlacementState,
   positionMarkerElement,
   positionMarkerElementAtTop,
+  positionMarkerElementInCenter,
   positionMarkerElementInTopRightCorner,
   positionMarkerElementToRightOf
 } from "~/src/core/utils/hint-mode/rendering/position-marker-element";
@@ -98,7 +99,7 @@ const markersOverlap = (marker: HTMLDivElement, referenceMarker: HTMLDivElement)
   );
 };
 
-export const renderHintTargets = (targets: HintTarget[]): void => {
+export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers = false): void => {
   const container = getHintContainer();
   const placementState = createMarkerPlacementState();
   const inputTargetsByElement = new Map<HTMLElement, HintTarget>();
@@ -139,6 +140,12 @@ export const renderHintTargets = (targets: HintTarget[]): void => {
 
         continue;
       }
+    }
+
+    if (improveThumbnailMarkers && target.isMediaThumbnail) {
+      positionMarkerElementInCenter(target.marker, target.rect, placementState);
+      renderedTargetsByElement.set(target.element, target);
+      continue;
     }
 
     if (

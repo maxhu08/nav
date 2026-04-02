@@ -37,6 +37,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
   let hintCharset = DEFAULT_HINT_CHARSET;
   let minLabelLength = 1;
   let hintCss = "";
+  let improveThumbnailMarkers = false;
   let avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
   let directiveLabels: HintDirectiveLabelMap = createEmptyReservedHintLabels();
 
@@ -48,7 +49,8 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       showCapitalizedLetters,
       directiveLabels,
       toggleKey ? [toggleKey] : [],
-      avoidAdjacentPairs
+      avoidAdjacentPairs,
+      improveThumbnailMarkers
     );
   };
 
@@ -80,7 +82,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       typedPrefix = "";
       activateSiteKeybindIgnore("hints");
       setMode("hint");
-      renderHintTargets(hintTargets);
+      renderHintTargets(hintTargets, improveThumbnailMarkers);
       return true;
     },
     exitHintMode,
@@ -148,6 +150,9 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
     setMinLabelLength: (value: number): void => {
       minLabelLength = clampMinLabelLength(value);
     },
+    setImproveThumbnailMarkers: (value: boolean): void => {
+      improveThumbnailMarkers = value;
+    },
     setShowCapitalizedLetters: (value: boolean): void => {
       showCapitalizedLetters = value;
     },
@@ -170,7 +175,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
         return;
       }
 
-      renderHintTargets(hintTargets);
+      renderHintTargets(hintTargets, improveThumbnailMarkers);
       updateVisibleTargets(hintTargets, typedPrefix, showCapitalizedLetters);
     },
     syncStyles: (): void => {

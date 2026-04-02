@@ -2,7 +2,8 @@ import { HINT_DIRECTIVE_ICON_PATHS } from "~/src/lib/hint-directive-icons";
 import {
   EXTERNAL_LINK_ICON_PATH,
   HINT_FOCUS_MODE_ICON_PATH,
-  HINT_MORE_ICON_PATH
+  HINT_MORE_ICON_PATH,
+  WATCH_PLAY_ICON_PATH
 } from "~/src/lib/inline-icons";
 import { DIRECTIVE_SCORERS } from "~/src/core/utils/hint-mode/directive-recognition";
 import type { DirectiveScorer } from "~/src/core/utils/hint-mode/directive-recognition/shared";
@@ -18,6 +19,7 @@ import { resolveFollowDirectionTarget } from "~/src/core/utils/follow-page-targe
 import { generateHintLabels } from "~/src/core/utils/hint-mode/generation/generate-hint-labels";
 import {
   createHintMarker,
+  createHintThumbnailMarker,
   createHintMarkerWithIcon
 } from "~/src/core/utils/hint-mode/rendering/create-marker-element";
 import { renderMarkerLabel } from "~/src/core/utils/hint-mode/rendering/render-marker-label";
@@ -104,6 +106,22 @@ const applyInlineIconMarker = (
   renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
 };
 
+const applyThumbnailMarker = (target: HintTarget, showCapitalizedLetters: boolean): void => {
+  target.marker = createHintThumbnailMarker(createInlineSvgIcon(WATCH_PLAY_ICON_PATH));
+  renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
+};
+
+const applyThumbnailInlineIconMarker = (
+  target: HintTarget,
+  showCapitalizedLetters: boolean
+): void => {
+  target.marker = createHintMarkerWithIcon(
+    "inline-icon",
+    createInlineSvgIcon(WATCH_PLAY_ICON_PATH)
+  );
+  renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
+};
+
 const isFormControl = (element: HTMLElement): boolean => {
   const tagName = element.tagName.toLowerCase();
   return (
@@ -160,6 +178,58 @@ const hasLinkSemantics = (element: HTMLElement): boolean => {
   }
 
   return false;
+};
+
+const MEDIA_THUMBNAIL_SELECTOR = "img, video, image[href], image[xlink\\:href], [role='img']";
+
+const isVisibleMediaElement = (element: Element): element is HTMLElement => {
+  if (!(element instanceof HTMLElement)) {
+    return false;
+  }
+
+  return !element.hasAttribute("hidden") && element.getAttribute("aria-hidden") !== "true";
+};
+
+const getMediaThumbnailElement = (element: HTMLElement): HTMLElement | null => {
+  if (element.matches(MEDIA_THUMBNAIL_SELECTOR) && isVisibleMediaElement(element)) {
+    return element;
+  }
+
+  for (const candidate of element.querySelectorAll(MEDIA_THUMBNAIL_SELECTOR)) {
+    if (isVisibleMediaElement(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+};
+
+const isMediaThumbnailTarget = (element: HTMLElement, rect: DOMRect): boolean => {
+  if (rect.width < 72 || rect.height < 40) {
+    return false;
+  }
+
+  if (!(hasLinkSemantics(element) || hasButtonSemantics(element))) {
+    return false;
+  }
+
+  const mediaElement = getMediaThumbnailElement(element);
+  if (!mediaElement) {
+    return false;
+  }
+
+  const mediaRect = mediaElement.getBoundingClientRect();
+  if (mediaRect.width < 64 || mediaRect.height < 36) {
+    return false;
+  }
+
+  if (mediaRect.width < rect.width * 0.45 || mediaRect.height < rect.height * 0.45) {
+    return false;
+  }
+
+  const rectArea = Math.max(rect.width * rect.height, 1);
+  const mediaArea = mediaRect.width * mediaRect.height;
+  return mediaArea >= rectArea * 0.3;
 };
 
 const opensPopup = (element: HTMLElement): boolean => {
@@ -397,6 +467,7 @@ const createDirectiveTarget = (
     rect: sourceTarget.rect,
     imageUrl: sourceTarget.imageUrl,
     linkUrl: sourceTarget.linkUrl,
+    isMediaThumbnail: sourceTarget.isMediaThumbnail,
     directiveMatch: {
       directive,
       label
@@ -586,6 +657,7 @@ const resolveHideDirectiveTarget = (label: string): HintTarget | null => {
     rect: anchorRect,
     imageUrl: null,
     linkUrl: null,
+    isMediaThumbnail: false,
     directiveMatch: {
       directive: "hide",
       label
@@ -660,7 +732,8 @@ export const buildHintTargets = (
   showCapitalizedLetters: boolean,
   directiveLabels: HintDirectiveLabelMap = createEmptyReservedHintLabels(),
   forbiddenLeadingCharacters: string[] = [],
-  forbiddenAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {}
+  forbiddenAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {},
+  improveThumbnailMarkers = false
 ): HintTarget[] => {
   const elements = getHintableElements(mode);
   const filteredElements = elements.filter((element) => {
@@ -684,6 +757,7 @@ export const buildHintTargets = (
   const targets = filteredElements.map((element) => {
     const rect = element.getBoundingClientRect();
     const marker = createModeMarker(mode, element);
+    const isMediaThumbnail = isMediaThumbnailTarget(element, rect);
 
     const target: HintTarget = {
       element,
@@ -691,7 +765,8 @@ export const buildHintTargets = (
       marker,
       rect,
       imageUrl: getElementImageUrl(element),
-      linkUrl: getClosestLinkUrl(element)
+      linkUrl: getClosestLinkUrl(element),
+      isMediaThumbnail
     };
 
     targetsByElement.set(element, target);
@@ -819,6 +894,15 @@ export const buildHintTargets = (
 
     if (target.directiveMatch && target.element.isConnected) {
       applyDirectiveMarker(target, target.directiveMatch.directive, showCapitalizedLetters);
+      continue;
+    }
+
+    if (target.isMediaThumbnail && target.element.isConnected) {
+      if (improveThumbnailMarkers) {
+        applyThumbnailMarker(target, showCapitalizedLetters);
+      } else {
+        applyThumbnailInlineIconMarker(target, showCapitalizedLetters);
+      }
       continue;
     }
 

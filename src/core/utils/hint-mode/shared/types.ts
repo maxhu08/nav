@@ -22,6 +22,7 @@ export type HintTarget = {
   rect: DOMRect;
   imageUrl: string | null;
   linkUrl: string | null;
+  isMediaThumbnail?: boolean;
   directiveMatch?: HintTargetDirectiveMatch;
 };
 

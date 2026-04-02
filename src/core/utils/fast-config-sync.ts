@@ -9,6 +9,7 @@ type FastConfigSyncDeps = {
   setHintCharset: (value: string) => void;
   setHintCss: (value: string) => void;
   setHintMinLabelLength: (value: number) => void;
+  setImproveThumbnailMarkers: (value: boolean) => void;
   setHintAvoidAdjacentPairs: (value: FastConfig["hints"]["avoidAdjacentPairs"]) => void;
   setHintDirectiveLabels: (value: FastConfig["hints"]["directives"]) => void;
   setWatchShowCapitalizedLetters: (value: boolean) => void;
@@ -27,6 +28,7 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setHintCharset(fastConfig.hints.charset);
   deps.setHintCss(fastConfig.hints.css);
   deps.setHintMinLabelLength(fastConfig.hints.minLabelLength);
+  deps.setImproveThumbnailMarkers(fastConfig.hints.improveThumbnailMarkers);
   deps.setHintAvoidAdjacentPairs(fastConfig.hints.avoidAdjacentPairs);
   deps.setHintDirectiveLabels(fastConfig.hints.directives);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);

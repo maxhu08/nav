@@ -33,3 +33,9 @@ export const createHintMarkerWithIcon = (variant: string, iconSvg: string): HTML
   marker.append(createMarkerLabelElement(), createMarkerIconElement(iconSvg));
   return marker;
 };
+
+export const createHintThumbnailMarker = (iconSvg: string): HTMLDivElement => {
+  const marker = createMarkerElement("thumbnail");
+  marker.append(createMarkerLabelElement(), createMarkerIconElement(iconSvg));
+  return marker;
+};
