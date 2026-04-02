@@ -42,6 +42,9 @@ describe("parseHotkeyMappingsValue", () => {
 <unbound> follow-prev
 <unbound> follow-next
 <unbound> find-mode
+<unbound> bar-mode-current-tab
+<unbound> bar-mode-new-tab
+<unbound> bar-mode-edit-current-tab
 <unbound> cycle-match-next
 <unbound> cycle-match-prev
 <unbound> watch-mode

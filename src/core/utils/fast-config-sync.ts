@@ -5,6 +5,9 @@ type FastConfigSyncDeps = {
   applyHotkeyMappings: (mappings: HotkeyMappings, prefixes: Partial<Record<string, true>>) => void;
   applyUrlRules: (rules: FastConfig["rules"]["urls"]) => void;
   setForceNormalMode: (value: boolean) => void;
+  setBarColor: (value: string) => void;
+  setBarSearchEngineURL: (value: string) => void;
+  setFindColor: (value: string) => void;
   setHintShowCapitalizedLetters: (value: boolean) => void;
   setHintCharset: (value: string) => void;
   setHintCss: (value: string) => void;
@@ -24,6 +27,9 @@ type FastConfigSyncDeps = {
 const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void => {
   deps.setForceNormalMode(fastConfig.rules.forceNormalMode);
   deps.applyUrlRules(fastConfig.rules.urls);
+  deps.setBarColor(fastConfig.bar.color);
+  deps.setBarSearchEngineURL(fastConfig.bar.searchEngineURL);
+  deps.setFindColor(fastConfig.find.color);
   deps.setHintShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setHintCharset(fastConfig.hints.charset);
   deps.setHintCss(fastConfig.hints.css);

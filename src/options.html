@@ -357,6 +357,84 @@
             </div>
           </div>
         </section>
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="bar-collapse-button" class="text-xl text-neutral-500" aria-label="toggle bar section">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">bar</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="bar-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p class="text-base text-white">bar.color</p>
+            <p class="text-base text-neutral-500">Sets the outline color of the bar prompt UI.</p>
+            <div id="bar-color-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input
+                id="bar-color-input"
+                type="text"
+                aria-label="bar color"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
+                placeholder="#14b8a6"
+              />
+            </div>
+          </div>
+          <div class="grid gap-2">
+            <p class="text-base text-white">bar.searchEngineURL</p>
+            <p class="text-base text-neutral-500">
+              Used when bar input is treated as a search instead of a URL.
+              <br /><br />
+              Use `{}` to represent the search query.
+              <br />
+              Example: `https://www.google.com/search?q={}`
+            </p>
+            <div id="bar-search-engine-url-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input
+                id="bar-search-engine-url-input"
+                type="text"
+                aria-label="bar search engine url"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
+                placeholder="https://duckduckgo.com/?q={}"
+              />
+            </div>
+          </div>
+        </section>
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="find-collapse-button" class="text-xl text-neutral-500" aria-label="toggle find section">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">find</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="find-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p class="text-base text-white">find.color</p>
+            <p class="text-base text-neutral-500">Sets the outline color for the find bar and the next/prev widget.</p>
+            <div id="find-color-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input
+                id="find-color-input"
+                type="text"
+                aria-label="find color"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
+                placeholder="#eab308"
+              />
+            </div>
+          </div>
+        </section>
         <div class="my-12 grid grid-flow-row place-items-center gap-4 py-4">
           <div class="grid w-full grid-flow-row place-items-center gap-4">
             <div class="grid w-full grid-flow-row place-items-center">

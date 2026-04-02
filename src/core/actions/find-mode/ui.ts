@@ -3,6 +3,7 @@ import {
   FIND_ARROW_UP_ICON_NODES,
   FIND_CLOSE_ICON_NODES,
   FIND_SEARCH_ICON_NODES,
+  TERMINAL_LINE_ICON_NODES,
   type SvgNodeDefinition
 } from "~/src/lib/inline-icons";
 import {
@@ -75,7 +76,16 @@ export const createFindBar = (): {
   const icon = document.createElement("span");
   icon.className = "nav-find-icon";
   icon.setAttribute("data-find-icon", "");
-  icon.appendChild(createFindIconSvg(FIND_SEARCH_ICON_NODES));
+
+  const findIcon = document.createElement("span");
+  findIcon.setAttribute("data-prompt-icon-kind", "find");
+  findIcon.appendChild(createFindIconSvg(FIND_SEARCH_ICON_NODES));
+
+  const barIcon = document.createElement("span");
+  barIcon.setAttribute("data-prompt-icon-kind", "bar");
+  barIcon.appendChild(createFindIconSvg(TERMINAL_LINE_ICON_NODES));
+
+  icon.append(findIcon, barIcon);
 
   const input = document.createElement("input");
   input.id = FIND_INPUT_ID;

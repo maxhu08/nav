@@ -38,6 +38,9 @@ export const findStyleParams: FindStyleRenderParams = {
   findStatusTextId: FIND_STATUS_TEXT_ID,
   findHighlightName: FIND_HIGHLIGHT_NAME,
   findCurrentHighlightName: FIND_CURRENT_HIGHLIGHT_NAME,
+  barOutlineColor: "#14b8a6",
+  findOutlineColor: "#eab308",
+  barUrlTextColor: "#3b82f6",
   findHighlightBackgroundColor: "rgba(234, 179, 8, 0.35)",
   findCurrentHighlightBackgroundColor: "#eab308",
   findHighlightTextColor: "#000000"

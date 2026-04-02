@@ -26,12 +26,63 @@ import {
   activateSiteKeybindIgnore,
   deactivateSiteKeybindIgnore
 } from "~/src/core/utils/ignore-site-keybinds";
+import { DEFAULT_BAR_SEARCH_ENGINE_URL } from "~/src/utils/config";
 
 type CoreMode = "normal" | "find" | "hint" | "watch";
 
 type FindMatch = {
   range: Range;
   element: HTMLElement;
+};
+
+type PromptSession =
+  | {
+      kind: "find";
+    }
+  | {
+      kind: "bar";
+      target: "current-tab" | "new-tab";
+    };
+
+const BAR_URL_TEXT_COLOR = "#3b82f6";
+
+const looksLikeUrl = (value: string): boolean => {
+  const normalized = value.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    return true;
+  }
+
+  if (/^(localhost|\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?(?:[/?#]|$)/i.test(normalized)) {
+    return true;
+  }
+
+  return /^(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#]|$)/i.test(normalized);
+};
+
+const resolveBarNavigationUrl = (value: string): string | null => {
+  const normalized = value.trim();
+  if (!looksLikeUrl(normalized)) {
+    return null;
+  }
+
+  const candidate = /^https?:\/\//i.test(normalized) ? normalized : `https://${normalized}`;
+
+  try {
+    const url = new URL(candidate);
+    return /^https?:$/.test(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
+
+const resolveSearchUrl = (query: string, template: string): string => {
+  const encodedQuery = encodeURIComponent(query);
+  const normalizedTemplate = template.includes("{}") ? template : DEFAULT_BAR_SEARCH_ENGINE_URL;
+  return normalizedTemplate.replaceAll("{}", encodedQuery);
 };
 
 const getSelectionAnchorRange = (): Range | null => {
@@ -100,6 +151,57 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let isFindStatusVisible = false;
   let findUIElements: FindUIElements | null = null;
   let findSessionAnchorRange: Range | null = null;
+  let promptSession: PromptSession = { kind: "find" };
+  let barSearchEngineURL = DEFAULT_BAR_SEARCH_ENGINE_URL;
+
+  const ensureFindUIReady = (): { bar: HTMLDivElement; input: HTMLInputElement } | null => {
+    if (!getFindBar() || !getFindStatus()) {
+      const { overlay } = createFindOverlay(deps.injectFindUIStyles);
+      const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
+      const { bar, actions, input, matchCount, clearButton } = createFindBar();
+      const { status, statusText, prevButton, nextButton } = createFindStatus();
+
+      root.append(bar, status);
+
+      findUIElements = {
+        barActions: actions,
+        matchCount,
+        statusText,
+        prevButton,
+        nextButton,
+        clearButton
+      };
+
+      attachFindUIEventListeners(input, prevButton, nextButton, clearButton, {
+        setFindQuery: (query: string) => {
+          if (promptSession.kind === "find") {
+            setFindQuery(query);
+          } else {
+            updateFindUICounts();
+          }
+
+          syncPromptKind();
+        },
+        commitFindQuery,
+        exitFindMode,
+        cycleFindMatch,
+        clearFindInput
+      });
+
+      syncPromptKind();
+      updateFindUICounts();
+      syncFindStatusVisibility();
+    }
+
+    const bar = getFindBar();
+    const input = getFindInput();
+
+    if (!bar || !input) {
+      return null;
+    }
+
+    return { bar, input };
+  };
 
   const clearFindHighlights = (): void => {
     const highlights = getCssHighlights();
@@ -155,18 +257,39 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     return findUIElements;
   };
 
+  const syncPromptKind = (): void => {
+    const bar = getFindBar();
+    const input = getFindInput();
+
+    if (!bar || !input) {
+      return;
+    }
+
+    bar.setAttribute("data-prompt-kind", promptSession.kind);
+    input.placeholder = promptSession.kind === "find" ? "find..." : "open url or search...";
+    input.setAttribute(
+      "data-url-like",
+      promptSession.kind === "bar" && looksLikeUrl(input.value) ? "true" : "false"
+    );
+    input.style.color =
+      promptSession.kind === "bar" && looksLikeUrl(input.value) ? BAR_URL_TEXT_COLOR : "";
+  };
+
   const updateFindUICounts = (): void => {
     const ui = resolveFindUIElements();
     if (!ui) {
       return;
     }
 
-    ui.matchCount.textContent = getFindCountLabel(findMatches.length);
+    ui.matchCount.textContent =
+      promptSession.kind === "find" ? getFindCountLabel(findMatches.length) : "";
     renderFindStatusLabel(ui.statusText, currentFindMatchIndex, findMatches.length);
 
     const hasMatches = findMatches.length > 0;
-    const hasQuery = findQuery.length > 0;
+    const hasQuery = (getFindInput()?.value ?? "").length > 0;
     ui.barActions.setAttribute("data-visible", hasQuery ? "true" : "false");
+    ui.barActions.setAttribute("data-prompt-kind", promptSession.kind);
+    ui.matchCount.hidden = promptSession.kind !== "find";
     ui.prevButton.disabled = !hasMatches;
     ui.nextButton.disabled = !hasMatches;
     ui.clearButton.disabled = !hasQuery;
@@ -357,7 +480,12 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     }
 
     input.value = "";
-    setFindQuery("");
+    if (promptSession.kind === "find") {
+      setFindQuery("");
+    } else {
+      updateFindUICounts();
+    }
+    syncPromptKind();
     input.focus();
   };
 
@@ -371,8 +499,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     currentFindMatchIndex = -1;
     isFindStatusVisible = false;
     findSessionAnchorRange = null;
+    promptSession = { kind: "find" };
     deactivateSiteKeybindIgnore("find");
     clearFindHighlights();
+    syncPromptKind();
     updateFindUICounts();
     syncFindStatusVisibility();
     hideFindBar();
@@ -389,6 +519,30 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
   const commitFindQuery = (): boolean => {
     const query = getFindInput()?.value ?? "";
+
+    if (promptSession.kind === "bar") {
+      const target = promptSession.target;
+      const trimmedQuery = query.trim();
+
+      if (!trimmedQuery) {
+        clearFindSession();
+        return false;
+      }
+
+      const destination =
+        resolveBarNavigationUrl(trimmedQuery) ?? resolveSearchUrl(trimmedQuery, barSearchEngineURL);
+
+      clearFindSession();
+
+      if (target === "new-tab") {
+        window.open(destination, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.assign(destination);
+      }
+
+      return true;
+    }
+
     setFindQuery(query);
     hideFindBar();
 
@@ -420,36 +574,52 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
   return {
     ensureFindUI: (): void => {
-      if (getFindBar() && getFindStatus()) {
-        return;
+      ensureFindUIReady();
+    },
+    openFindPrompt: (): boolean => {
+      const ui = ensureFindUIReady();
+
+      if (!ui) {
+        return false;
       }
 
-      const { overlay } = createFindOverlay(deps.injectFindUIStyles);
-      const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
-      const { bar, actions, input, matchCount, clearButton } = createFindBar();
-      const { status, statusText, prevButton, nextButton } = createFindStatus();
+      const { bar, input } = ui;
 
-      root.append(bar, status);
+      promptSession = { kind: "find" };
+      input.value = findQuery;
+      setFindQuery(input.value);
+      syncPromptKind();
+      bar.setAttribute("data-visible", "true");
+      activateSiteKeybindIgnore("find");
+      deps.setMode("find");
+      input.focus();
+      input.select();
+      return true;
+    },
+    openBarPrompt: (target: "current-tab" | "new-tab", initialValue = ""): boolean => {
+      const ui = ensureFindUIReady();
 
-      findUIElements = {
-        barActions: actions,
-        matchCount,
-        statusText,
-        prevButton,
-        nextButton,
-        clearButton
-      };
+      if (!ui) {
+        return false;
+      }
 
-      attachFindUIEventListeners(input, prevButton, nextButton, clearButton, {
-        setFindQuery,
-        commitFindQuery,
-        exitFindMode,
-        cycleFindMatch,
-        clearFindInput
-      });
+      const { bar, input } = ui;
 
-      updateFindUICounts();
+      promptSession = { kind: "bar", target };
+      isFindStatusVisible = false;
+      findMatches = [];
+      currentFindMatchIndex = -1;
+      clearFindHighlights();
       syncFindStatusVisibility();
+      input.value = initialValue;
+      syncPromptKind();
+      updateFindUICounts();
+      bar.setAttribute("data-visible", "true");
+      activateSiteKeybindIgnore("find");
+      deps.setMode("find");
+      input.focus();
+      input.select();
+      return true;
     },
     getFindQuery: (): string => findQuery,
     setFindQuery: (query: string): void => {
@@ -459,6 +629,9 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     hideFindBar,
     exitFindMode,
     cycleFindMatch,
+    setBarSearchEngineURL: (value: string): void => {
+      barSearchEngineURL = value || DEFAULT_BAR_SEARCH_ENGINE_URL;
+    },
     isFindModeActive: (): boolean => deps.getMode() === "find",
     isFindInputFocused,
     handleFindUIKeydown: (event: KeyboardEvent): boolean => {

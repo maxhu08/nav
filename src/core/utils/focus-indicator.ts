@@ -1,6 +1,10 @@
 import { injectStyles } from "~/src/core/utils/inject-styles";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
-import { DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR } from "~/src/utils/config";
+import {
+  DEFAULT_BAR_COLOR,
+  DEFAULT_FIND_COLOR,
+  DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR
+} from "~/src/utils/config";
 import {
   ensureOverlayRoot,
   FOCUS_OVERLAY_ID,
@@ -23,6 +27,8 @@ type FocusIndicatorController = {
   syncStyles: () => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
+  setBarColor: (value: string) => void;
+  setFindColor: (value: string) => void;
   syncFindUIStyles: (
     root: ShadowRoot,
     findStyleId: string,
@@ -90,6 +96,8 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
   let focusOverlayTimeout: number | null = null;
   let showActivationIndicator = true;
   let activationIndicatorColor = DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
+  let barColor = DEFAULT_BAR_COLOR;
+  let findColor = DEFAULT_FIND_COLOR;
   let findUIRoot: ShadowRoot | null = null;
   let findUIStyleId: string | null = null;
   let findUIStyleParams: FindStyleRenderParams | null = null;
@@ -130,8 +138,10 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
       findStyleId: findUIStyleId,
       find: {
         ...findUIStyleParams,
-        findHighlightBackgroundColor: colorToRgba(activationIndicatorColor, 0.35),
-        findCurrentHighlightBackgroundColor: activationIndicatorColor,
+        barOutlineColor: barColor,
+        findOutlineColor: findColor,
+        findHighlightBackgroundColor: colorToRgba(findColor, 0.35),
+        findCurrentHighlightBackgroundColor: findColor,
         findHighlightTextColor: "#000000"
       },
       findRoot: findUIRoot
@@ -282,6 +292,14 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     },
     setActivationIndicatorColor: (value: string): void => {
       activationIndicatorColor = value;
+      syncStoredFindUIStyles();
+    },
+    setBarColor: (value: string): void => {
+      barColor = value;
+      syncStoredFindUIStyles();
+    },
+    setFindColor: (value: string): void => {
+      findColor = value;
       syncStoredFindUIStyles();
     },
     syncFindUIStyles: (

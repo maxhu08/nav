@@ -1,4 +1,7 @@
 import {
+  barColorInputEl,
+  barSearchEngineURLInputEl,
+  findColorInputEl,
   hintsCharsetStatusEl,
   hintsAvoidAdjacentPairsStatusEl,
   hintsReservedLabelsStatusEl,
@@ -49,6 +52,9 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   const draft = await getConfig();
   saveRulesSettingsToDraft(draft);
   saveHotkeysSettingsToDraft(draft);
+  draft.bar.color = barColorInputEl.value;
+  draft.bar.searchEngineURL = barSearchEngineURLInputEl.value;
+  draft.find.color = findColorInputEl.value;
   saveHintsSettingsToDraft(draft);
 
   const config = deepMerge(structuredClone(defaultConfig), draft);

@@ -1,4 +1,7 @@
 import {
+  DEFAULT_BAR_COLOR,
+  DEFAULT_BAR_SEARCH_ENGINE_URL,
+  DEFAULT_FIND_COLOR,
   DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
   DEFAULT_HINT_CUSTOM_CSS,
   type Config,
@@ -37,6 +40,13 @@ export type FastConfig = {
   hotkeys: {
     mappings: HotkeyMappings;
     prefixes: Partial<Record<string, true>>;
+  };
+  bar: {
+    color: string;
+    searchEngineURL: string;
+  };
+  find: {
+    color: string;
   };
   hints: {
     showCapitalizedLetters: boolean;
@@ -84,6 +94,9 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     isHotkeyMappingsShapeValid(value?.hotkeys?.mappings) &&
     typeof value?.hotkeys?.prefixes === "object" &&
     value?.hotkeys?.prefixes !== null &&
+    typeof value?.bar?.color === "string" &&
+    typeof value?.bar?.searchEngineURL === "string" &&
+    typeof value?.find?.color === "string" &&
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
     typeof value?.hints?.minLabelLength === "number" &&
@@ -114,6 +127,19 @@ const normalizeCssColor = (value: string): string | null => {
 
 const parseActivationIndicatorColorValue = (value: string): string => {
   return normalizeCssColor(value.trim()) || DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
+};
+
+const parseBarColorValue = (value: string): string => {
+  return normalizeCssColor(value.trim()) || DEFAULT_BAR_COLOR;
+};
+
+const parseFindColorValue = (value: string): string => {
+  return normalizeCssColor(value.trim()) || DEFAULT_FIND_COLOR;
+};
+
+const parseBarSearchEngineURLValue = (value: string): string => {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  return normalized ? normalized : DEFAULT_BAR_SEARCH_ENGINE_URL;
 };
 
 const parseMinLabelLengthValue = (value: number): number => {
@@ -272,6 +298,13 @@ export const buildFastConfig = (config: Config): FastConfig => {
     hotkeys: {
       mappings,
       prefixes: createHotkeyPrefixes(mappings)
+    },
+    bar: {
+      color: parseBarColorValue(config.bar.color),
+      searchEngineURL: parseBarSearchEngineURLValue(config.bar.searchEngineURL)
+    },
+    find: {
+      color: parseFindColorValue(config.find.color)
     },
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,

@@ -124,6 +124,36 @@
           </div>
         </section>
 
+        <section id="bar-options-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="bar-color" class="text-base text-white">
+              <a href="#bar-color">bar.color</a>
+            </p>
+            <p class="text-base text-neutral-500">Controls the outline color of the bar prompt.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="bar-search-engine-url" class="text-base text-white">
+              <a href="#bar-search-engine-url">bar.searchEngineURL</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Used when the bar input is not recognized as a URL.
+              <br /><br />
+              Use `{}` to represent the search query.
+              <br />
+              Example: `https://www.google.com/search?q={}`
+            </p>
+          </div>
+        </section>
+
+        <section id="find-options-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="find-color" class="text-base text-white">
+              <a href="#find-color">find.color</a>
+            </p>
+            <p class="text-base text-neutral-500">Controls the outline color of the find bar and the next/prev status widget.</p>
+          </div>
+        </section>
+
         <section id="hints-directives-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
             <p id="hints-directives" class="text-base text-white">
@@ -340,6 +370,11 @@
               <p class="text-[#dcdcaa]">duplicate-current-tab-origin</p>
               <p class="text-[#dcdcaa]">move-current-tab-to-new-window</p>
               <br />
+              <p class="text-neutral-500"># actions.names.bar</p>
+              <p class="text-[#dcdcaa]">bar-mode-current-tab</p>
+              <p class="text-[#dcdcaa]">bar-mode-new-tab</p>
+              <p class="text-[#dcdcaa]">bar-mode-edit-current-tab</p>
+              <br />
               <p class="text-neutral-500"># actions.names.find</p>
               <p class="text-[#f97316]">cycle-match-next</p>
               <p class="text-[#f97316]">cycle-match-prev</p>
@@ -506,6 +541,21 @@
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">move-current-tab-to-new-window</p>
                 <p class="text-base text-neutral-500">Moves the active browser tab into a new window.</p>
+              </div>
+              <p id="action-names-bar" class="text-base text-white">
+                <a href="#action-names-bar">action.names.bar</a>
+              </p>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">bar-mode-current-tab</p>
+                <p class="text-base text-neutral-500">Opens the bar prompt and loads the selected URL or search in the current tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">bar-mode-new-tab</p>
+                <p class="text-base text-neutral-500">Opens the bar prompt and loads the selected URL or search in a new tab.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">bar-mode-edit-current-tab</p>
+                <p class="text-base text-neutral-500">Opens the bar prompt with the current tab URL prefilled for quick editing.</p>
               </div>
               <p id="action-names-find" class="text-base text-white">
                 <a href="#action-names-find">action.names.find</a>

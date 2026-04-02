@@ -46,7 +46,6 @@ const watchController = createWatchController({
 const { actions, installNavigationScrollTracking, isScrollAction } = createNavigationActions({
   findMode,
   hintController,
-  setMode: modeController.setMode,
   watchController
 });
 
@@ -98,6 +97,9 @@ const fastConfigSyncDeps = {
     keyState.applyUrlRules(rules);
   },
   setForceNormalMode,
+  setBarColor: focusIndicator.setBarColor,
+  setBarSearchEngineURL: findMode.setBarSearchEngineURL,
+  setFindColor: focusIndicator.setFindColor,
   setHintShowCapitalizedLetters: hintController.setShowCapitalizedLetters,
   setHintCharset: hintController.setHintCharset,
   setHintCss: hintController.setHintCss,

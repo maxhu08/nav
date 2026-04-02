@@ -7,6 +7,9 @@ export type FindStyleRenderParams = {
   findStatusTextId: string;
   findHighlightName: string;
   findCurrentHighlightName: string;
+  barOutlineColor: string;
+  findOutlineColor: string;
+  barUrlTextColor: string;
   findHighlightBackgroundColor: string;
   findCurrentHighlightBackgroundColor: string;
   findHighlightTextColor: string;
@@ -22,6 +25,9 @@ export const renderFindStyles = (params: FindStyleRenderParams): string => {
     findStatusTextId,
     findHighlightName,
     findCurrentHighlightName,
+    barOutlineColor,
+    findOutlineColor,
+    barUrlTextColor,
     findHighlightBackgroundColor,
     findCurrentHighlightBackgroundColor,
     findHighlightTextColor
@@ -29,15 +35,20 @@ export const renderFindStyles = (params: FindStyleRenderParams): string => {
 
   return `
 #${findOverlayId}{all:initial;position:absolute;inset:0;pointer-events:none}
-#${findBarId}{all:initial;position:fixed;top:20%;left:50%;transform:translate(-50%,-50%);z-index:2147483647;display:none;pointer-events:auto;width:min(640px,calc(100vw - 32px));grid-template-columns:max-content auto max-content;align-items:center;gap:0;padding:10px 12px;border:2px solid #eab308;border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:24px;line-height:32px}
+#${findBarId}{all:initial;position:fixed;top:20%;left:50%;transform:translate(-50%,-50%);z-index:2147483647;display:none;pointer-events:auto;width:min(640px,calc(100vw - 32px));grid-template-columns:max-content auto max-content;align-items:center;gap:0;padding:10px 12px;border:2px solid ${findOutlineColor};border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:24px;line-height:32px}
 #${findBarId}[data-visible="true"]{display:grid}
-#${findStatusId}{all:initial;position:fixed;right:24px;bottom:24px;z-index:2147483647;display:none;pointer-events:auto;grid-template-columns:auto max-content max-content;align-items:center;gap:.5rem;padding:10px 12px;border:2px solid #eab308;border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:20px;line-height:28px}
+#${findBarId}[data-prompt-kind="bar"]{border-color:${barOutlineColor}}
+#${findStatusId}{all:initial;position:fixed;right:24px;bottom:24px;z-index:2147483647;display:none;pointer-events:auto;grid-template-columns:auto max-content max-content;align-items:center;gap:.5rem;padding:10px 12px;border:2px solid ${findOutlineColor};border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:20px;line-height:28px}
 #${findStatusId}[data-visible="true"]{display:grid}
 #${findBarId} *,#${findStatusId} *{box-sizing:border-box}
 #${findBarId}::selection,#${findStatusId}::selection,#${findBarId} *::selection,#${findStatusId} *::selection{background:#ffffff20!important;background-color:#ffffff20!important;color:inherit!important}
 .nav-find-icon{all:unset;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:1.5em;height:1.5em;color:#a1a1aa;font-size:24px;line-height:32px;margin-right:.25rem}
 .nav-find-icon svg{width:1em;height:1em;display:block}
+.nav-find-icon [data-prompt-icon-kind]{display:none}
+#${findBarId}[data-prompt-kind="find"] .nav-find-icon [data-prompt-icon-kind="find"]{display:inline-flex}
+#${findBarId}[data-prompt-kind="bar"] .nav-find-icon [data-prompt-icon-kind="bar"]{display:inline-flex}
 #${findInputId}{all:unset;flex:1 1 auto;display:block;min-width:0;border:0;background:transparent;color:#fafafa;font-size:24px;line-height:32px;outline:none;box-shadow:none;appearance:none;-webkit-appearance:none;font-family:inherit;padding-right:.25rem}
+#${findInputId}[data-url-like="true"]{color:${barUrlTextColor}}
 #${findInputId}:focus,#${findInputId}:focus-visible{outline:none;box-shadow:none}
 #${findInputId}::placeholder{color:#a1a1aa}
 #${findMatchCountId}{all:unset;flex:0 0 auto;display:inline-block;color:#a1a1aa;font-size:24px;line-height:32px;white-space:nowrap;padding-left:.25rem}

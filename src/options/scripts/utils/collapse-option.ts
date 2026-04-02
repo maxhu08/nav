@@ -66,5 +66,7 @@ export const createCollapseGroups = (): Promise<void> => {
       optionsData.sectionsExpanded.hotkeys
     );
     newCollapseGroup("hints-collapse-button", "hints-section", optionsData.sectionsExpanded.hints);
+    newCollapseGroup("bar-collapse-button", "bar-section", optionsData.sectionsExpanded.bar);
+    newCollapseGroup("find-collapse-button", "find-section", optionsData.sectionsExpanded.find);
   });
 };

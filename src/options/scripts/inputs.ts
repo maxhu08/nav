@@ -1,4 +1,8 @@
 import {
+  barColorContainerEl,
+  barColorInputEl,
+  barSearchEngineURLContainerEl,
+  barSearchEngineURLInputEl,
   hintsAvoidAdjacentPairsContainerEl,
   hintsAvoidAdjacentPairsTextareaEl,
   hintsCustomCSSContainerEl,
@@ -25,7 +29,9 @@ import {
   rulesUrlsModeWhitelistButtonEl,
   rulesUrlsWhitelistContainerEl,
   rulesUrlsWhitelistTextareaEl,
-  saveButtonEl
+  saveButtonEl,
+  findColorContainerEl,
+  findColorInputEl
 } from "~/src/options/scripts/ui";
 import { saveAndExportConfig } from "~/src/options/scripts/utils/export-config";
 import { importConfigAndSave } from "~/src/options/scripts/utils/import-config";
@@ -134,6 +140,30 @@ export const listenToInputs = (): void => {
 
   hotkeysMappingsTextareaEl.addEventListener("blur", () => {
     hotkeysMappingsContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  barColorInputEl.addEventListener("focus", () => {
+    barColorContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  barColorInputEl.addEventListener("blur", () => {
+    barColorContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  barSearchEngineURLInputEl.addEventListener("focus", () => {
+    barSearchEngineURLContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  barSearchEngineURLInputEl.addEventListener("blur", () => {
+    barSearchEngineURLContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  findColorInputEl.addEventListener("focus", () => {
+    findColorContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  findColorInputEl.addEventListener("blur", () => {
+    findColorContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   hintsCharsetInputEl.addEventListener("focus", () => {

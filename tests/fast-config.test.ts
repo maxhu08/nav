@@ -46,4 +46,22 @@ describe("buildFastConfig", () => {
       expect(fastConfig.hints.directives[directive]).toEqual([]);
     }
   });
+
+  test("falls back to default bar and find options when values are invalid", async () => {
+    const config = structuredClone(defaultConfig);
+    config.bar.color = "";
+    config.bar.searchEngineURL = "";
+    config.find.color = "";
+    const fixture = createDomFixture("");
+    installCanvasStub();
+    const { buildFastConfig } = await import("~/src/utils/fast-config");
+
+    const fastConfig = buildFastConfig(config);
+
+    fixture.cleanup();
+
+    expect(fastConfig.bar.color).toBe(defaultConfig.bar.color);
+    expect(fastConfig.bar.searchEngineURL).toBe(defaultConfig.bar.searchEngineURL);
+    expect(fastConfig.find.color).toBe(defaultConfig.find.color);
+  });
 });

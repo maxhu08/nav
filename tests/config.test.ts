@@ -39,6 +39,8 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
       expect(migratedConfig.rules.urls.mode).toBe("whitelist");
       expect(migratedConfig.hotkeys.mappings).toContain("j scroll-down");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> scroll-up");
+      expect(migratedConfig.bar).toEqual(defaultConfig.bar);
+      expect(migratedConfig.find).toEqual(defaultConfig.find);
       expect(migratedConfig.hints.directives).toBe(defaultConfig.hints.directives);
       expect(migratedConfig.hints.styling).toBe(defaultConfig.hints.styling);
     }
@@ -142,6 +144,9 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
       expect(migratedConfig.hotkeys.mappings).toContain("<a-f> hint-mode-right-click");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> yank-current-tab-url-clean");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> duplicate-current-tab-origin");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-current-tab");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-new-tab");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-edit-current-tab");
     }
   },
   {

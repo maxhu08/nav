@@ -92,6 +92,7 @@ describe("keyboard priority", () => {
         findMode: {
           handleFindUIKeydown: () => false,
           exitFindMode: () => {},
+          isFindInputFocused: () => false,
           isFindModeActive: () => false,
           shouldIgnoreKeydownInFindUI: () => false
         },
@@ -167,6 +168,7 @@ describe("keyboard priority", () => {
         findMode: {
           handleFindUIKeydown: () => false,
           exitFindMode: () => {},
+          isFindInputFocused: () => false,
           isFindModeActive: () => false,
           shouldIgnoreKeydownInFindUI: () => false
         },
@@ -238,6 +240,7 @@ describe("keyboard priority", () => {
         findMode: {
           handleFindUIKeydown: () => false,
           exitFindMode: () => {},
+          isFindInputFocused: () => false,
           isFindModeActive: () => false,
           shouldIgnoreKeydownInFindUI: () => false
         },

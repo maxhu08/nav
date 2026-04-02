@@ -10,24 +10,17 @@ import {
   scrollUp
 } from "~/src/core/actions/scroll";
 import { followNextPage, followPreviousPage } from "~/src/core/actions/navigation";
-import { createEnableFindModeAction } from "~/src/core/actions/find";
 import { createTabCommandAction, goHistory } from "~/src/core/actions/tabs";
 import { yankCurrentTabUrl, yankCurrentTabUrlClean } from "~/src/core/actions/yank";
-import {
-  FIND_STYLE_ID,
-  FOCUS_INDICATOR_EVENT,
-  findStyleParams,
-  getFindBar,
-  getFindInput
-} from "~/src/core/utils/get-ui";
+import { FIND_STYLE_ID, FOCUS_INDICATOR_EVENT, findStyleParams } from "~/src/core/utils/get-ui";
 import type { FindStyleRenderParams } from "~/src/core/styles/render-find-styles";
 import { createScrollActionSet, type ActionHandler } from "~/src/core/navigation/shared";
 import type { ActionName } from "~/src/utils/hotkeys";
 
 type NavigationActionDeps = {
   findMode: {
-    getFindQuery: () => string;
-    setFindQuery: (value: string) => void;
+    openBarPrompt: (target: "current-tab" | "new-tab", initialValue?: string) => boolean;
+    openFindPrompt: () => boolean;
     cycleFindMatch: (direction: 1 | -1) => boolean;
   };
   hintController: {
@@ -41,7 +34,6 @@ type NavigationActionDeps = {
         | "yank-image-url"
     ) => boolean;
   };
-  setMode: (mode: "find" | "hint" | "watch" | "normal") => void;
   watchController: {
     toggleVideoControls: () => boolean;
     toggleFullscreen: () => boolean;
@@ -59,23 +51,12 @@ type FindModeStylesDeps = {
 export const createNavigationActions = ({
   findMode,
   hintController,
-  setMode,
   watchController
 }: NavigationActionDeps): {
   actions: Record<ActionName, ActionHandler>;
   isScrollAction: (actionName: ActionName) => boolean;
   installNavigationScrollTracking: () => void;
 } => {
-  const enableFindModeAction = createEnableFindModeAction({
-    getFindBar,
-    getFindInput,
-    getFindQuery: findMode.getFindQuery,
-    setFindQuery: findMode.setFindQuery,
-    onEnable: () => {
-      setMode("find");
-    }
-  });
-
   const scrollActions = createScrollActionSet();
   const actions: Record<ActionName, ActionHandler> = {
     // scroll
@@ -127,7 +108,10 @@ export const createNavigationActions = ({
     "follow-next": followNextPage,
 
     // find
-    "find-mode": enableFindModeAction,
+    "find-mode": findMode.openFindPrompt,
+    "bar-mode-current-tab": () => findMode.openBarPrompt("current-tab"),
+    "bar-mode-new-tab": () => findMode.openBarPrompt("new-tab"),
+    "bar-mode-edit-current-tab": () => findMode.openBarPrompt("current-tab", window.location.href),
     "cycle-match-next": () => findMode.cycleFindMatch(1),
     "cycle-match-prev": () => findMode.cycleFindMatch(-1),
 

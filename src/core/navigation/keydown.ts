@@ -35,6 +35,7 @@ type KeydownHandlerDeps = {
   findMode: {
     handleFindUIKeydown: (event: KeyboardEvent) => boolean;
     exitFindMode: () => void;
+    isFindInputFocused: () => boolean;
     isFindModeActive: () => boolean;
     shouldIgnoreKeydownInFindUI: (event: KeyboardEvent) => boolean;
   };
@@ -73,6 +74,21 @@ type KeydownHandlerDeps = {
     toggleWatchMute: () => boolean;
     toggleWatchPlayPause: () => boolean;
   };
+};
+
+const isExtensionUiPage = (): boolean => {
+  const optionsUrl = chrome.runtime.getURL("options.html");
+  const docsUrl = chrome.runtime.getURL("docs.html");
+  return window.location.href === optionsUrl || window.location.href === docsUrl;
+};
+
+const isExtensionEditableModeAction = (actionName: ActionName | null): boolean => {
+  return (
+    actionName === "find-mode" ||
+    actionName === "bar-mode-current-tab" ||
+    actionName === "bar-mode-new-tab" ||
+    actionName === "bar-mode-edit-current-tab"
+  );
 };
 
 const consumeKeyboardEvent = (event: KeyboardEvent): void => {
@@ -245,11 +261,19 @@ export const createNavigationKeydownHandler = ({
     if (!actionName) {
       if (consumed && claimKeydown) {
         consumeKeydownEvent(event);
+        return;
+      }
+
+      if (findMode.isFindModeActive()) {
+        consumeKeydownEvent(event);
       }
       return;
     }
 
     if (!runAction(actionName, matchedSequence)) {
+      if (findMode.isFindModeActive()) {
+        consumeKeydownEvent(event);
+      }
       return;
     }
 
@@ -262,9 +286,23 @@ export const createNavigationKeydownHandler = ({
     if (hintController.isHintModeActive()) {
       keyState.clearPendingState();
 
-      if (hintController.handleHintKeydown(event)) {
+      hintController.handleHintKeydown(event);
+      consumeKeydownEvent(event);
+      return;
+    }
+
+    if (findMode.isFindModeActive() && findMode.isFindInputFocused()) {
+      keyState.clearPendingState();
+
+      if (findMode.handleFindUIKeydown(event)) {
         consumeKeydownEvent(event);
+        return;
       }
+
+      if (handleEscapeModes(event)) {
+        return;
+      }
+
       return;
     }
 
@@ -290,6 +328,27 @@ export const createNavigationKeydownHandler = ({
         return;
       }
 
+      if (isExtensionUiPage()) {
+        const keyToken = getKeyToken(event);
+
+        if (keyToken) {
+          const { actionName, claimKeydown, consumed, matchedSequence } =
+            keyState.getActionName(keyToken);
+
+          if (actionName && isExtensionEditableModeAction(actionName)) {
+            if (runAction(actionName, matchedSequence)) {
+              consumeKeydownEvent(event);
+              return;
+            }
+          }
+
+          if (consumed && claimKeydown) {
+            consumeKeydownEvent(event);
+            return;
+          }
+        }
+      }
+
       keyState.clearPendingState();
       return;
     }
@@ -304,6 +363,11 @@ export const createNavigationKeydownHandler = ({
 
     const keyToken = getKeyToken(event);
     if (!keyToken) {
+      if (findMode.isFindModeActive()) {
+        consumeKeydownEvent(event);
+        return;
+      }
+
       if (!isModifierKey(event.key)) {
         keyState.clearPendingState();
       }

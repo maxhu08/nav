@@ -38,6 +38,9 @@ export type ActionName =
   | "follow-prev"
   | "follow-next"
   | "find-mode"
+  | "bar-mode-current-tab"
+  | "bar-mode-new-tab"
+  | "bar-mode-edit-current-tab"
   | "cycle-match-next"
   | "cycle-match-prev"
   | "watch-mode"
@@ -87,6 +90,9 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "follow-prev",
   "follow-next",
   "find-mode",
+  "bar-mode-current-tab",
+  "bar-mode-new-tab",
+  "bar-mode-edit-current-tab",
   "cycle-match-next",
   "cycle-match-prev",
   "watch-mode",
@@ -328,6 +334,11 @@ H history-go-prev
 L history-go-next
 [ follow-prev
 ] follow-next
+
+# bar
+o bar-mode-current-tab
+O bar-mode-new-tab
+ge bar-mode-edit-current-tab
 
 # find
 / find-mode

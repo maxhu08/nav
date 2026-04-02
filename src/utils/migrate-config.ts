@@ -45,6 +45,11 @@ const fallbackActivationIndicatorColor = (config: Config): string => {
   return config.hints.activationIndicator?.color ?? "#eab308";
 };
 
+const ensurePromptOptions = (config: Config, fallbackConfig: Config): void => {
+  config.bar ??= structuredClone(fallbackConfig.bar);
+  config.find ??= structuredClone(fallbackConfig.find);
+};
+
 const appendMissingHotkeyDeclarations = (mappings: string): string => {
   const declaredActions = new Set<string>();
   const declaredSequenceModes = new Set<string>();
@@ -172,6 +177,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   if (!hasForceNormalModeOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
     migrateHintActivationIndicatorOptions(migratedConfig);
+    ensurePromptOptions(migratedConfig, fallbackConfig);
     migratedConfig.hotkeys.mappings = appendMissingHotkeyDeclarations(
       migratedConfig.hotkeys.mappings
     );
@@ -181,6 +187,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
 
   const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
   migrateHintActivationIndicatorOptions(migratedConfig);
+  ensurePromptOptions(migratedConfig, fallbackConfig);
 
   // if config before v1.1.1
   migratedConfig.hotkeys.mappings = renameHotkeyMappingIfPresent(
@@ -198,6 +205,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   if (!hasDirectivesOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
     migrateHintActivationIndicatorOptions(migratedConfig);
+    ensurePromptOptions(migratedConfig, fallbackConfig);
     migratedConfig.hints.directives = fallbackConfig.hints.directives;
     migratedConfig.hints.styling = fallbackConfig.hints.styling;
 

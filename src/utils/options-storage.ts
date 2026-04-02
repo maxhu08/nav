@@ -4,6 +4,8 @@ export type OptionsData = {
   sectionsExpanded: {
     rules: boolean;
     hotkeys: boolean;
+    bar: boolean;
+    find: boolean;
     hints: boolean;
   };
   pendingExcludeSiteUrl: string | null;
@@ -13,6 +15,8 @@ export const defaultOptionsData: OptionsData = {
   sectionsExpanded: {
     rules: true,
     hotkeys: true,
+    bar: true,
+    find: true,
     hints: true
   },
   pendingExcludeSiteUrl: null

@@ -46,6 +46,12 @@ export const [hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl] = getContai
 export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-mappings-highlight");
 export const hotkeysMappingsStatusEl = getElement<HTMLParagraphElement>("hotkeys-mappings-status");
 
+export const [barColorContainerEl, barColorInputEl] = getContainerAndInput("bar-color");
+export const [barSearchEngineURLContainerEl, barSearchEngineURLInputEl] =
+  getContainerAndInput("bar-search-engine-url");
+
+export const [findColorContainerEl, findColorInputEl] = getContainerAndInput("find-color");
+
 export const hintsShowCapitalizedLettersCheckboxEl = getElement<HTMLInputElement>(
   "hints-show-capitalized-letters-checkbox"
 );
@@ -99,5 +105,13 @@ export const colorInputs = [
   {
     container: hintsShowActivationIndicatorColorContainerEl,
     input: hintsShowActivationIndicatorColorInputEl
+  },
+  {
+    container: barColorContainerEl,
+    input: barColorInputEl
+  },
+  {
+    container: findColorContainerEl,
+    input: findColorInputEl
   }
 ] as const satisfies Array<{ container: HTMLDivElement; input: HTMLInputElement }>;
