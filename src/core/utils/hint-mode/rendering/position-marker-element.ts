@@ -99,6 +99,34 @@ export const positionMarkerElement = (
   marker.style.top = `${top}px`;
 };
 
+export const positionMarkerElementAtTop = (
+  marker: HTMLDivElement,
+  rect: DOMRect,
+  top: number,
+  placementState: MarkerPlacementState
+): void => {
+  const width = marker.offsetWidth;
+  const height = marker.offsetHeight;
+  const anchorWidth = getMarkerLabelWidth(marker, width);
+  const visualLeft = clampToViewport(
+    rect.left - width * 0.2 + (width - anchorWidth) * 0.2,
+    width,
+    window.innerWidth
+  );
+  const left = visualLeft + width * 0.2;
+  const clampedTop = clampToViewport(top, height, window.innerHeight);
+
+  placementState.previousMarkerBounds = {
+    bottom: clampedTop + height,
+    left: visualLeft,
+    right: visualLeft + width,
+    top: clampedTop
+  };
+
+  marker.style.left = `${left}px`;
+  marker.style.top = `${clampedTop}px`;
+};
+
 export const positionMarkerElementToRightOf = (
   marker: HTMLDivElement,
   referenceMarker: HTMLDivElement,
