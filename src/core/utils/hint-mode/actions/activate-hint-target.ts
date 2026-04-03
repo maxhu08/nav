@@ -345,10 +345,8 @@ export const activateHintTarget = (mode: HintActionMode, target: HintTarget): bo
 
   if (mode === "new-tab" && target.linkUrl) {
     dispatchFocusIndicator(target.element);
-    const newWindow = window.open(target.linkUrl, "_blank", "noopener,noreferrer");
-    if (newWindow) {
-      return true;
-    }
+    window.open(target.linkUrl, "_blank", "noopener,noreferrer");
+    return true;
   }
 
   if (mode === "right-click") {

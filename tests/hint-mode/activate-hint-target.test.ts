@@ -119,6 +119,48 @@ describe("activateHintTarget", () => {
     }
   });
 
+  test("opens new-tab hint targets without activating the current tab", async () => {
+    const fixture = createDomFixture("<a id='docs-link' href='https://example.com/docs'>Docs</a>");
+
+    try {
+      const { activateHintTarget } =
+        await import("~/src/core/utils/hint-mode/actions/activate-hint-target");
+
+      const link = document.getElementById("docs-link") as HTMLAnchorElement;
+      let focusIndicatorTarget: HTMLElement | null = null;
+      let didClick = false;
+      const openCalls: Array<[string | URL | undefined, string | undefined, string | undefined]> =
+        [];
+
+      window.addEventListener(FOCUS_INDICATOR_EVENT, ((event: Event) => {
+        focusIndicatorTarget = (event as CustomEvent<{ element: HTMLElement }>).detail.element;
+      }) as EventListener);
+
+      link.click = () => {
+        didClick = true;
+      };
+
+      window.open = ((
+        ...args: [string | URL | undefined, string | undefined, string | undefined]
+      ) => {
+        openCalls.push(args);
+        return null;
+      }) as typeof window.open;
+
+      expect(
+        activateHintTarget("new-tab", {
+          ...createHintTarget(link),
+          linkUrl: link.href
+        })
+      ).toBe(true);
+      expect(openCalls).toEqual([[link.href, "_blank", "noopener,noreferrer"]]);
+      expect(didClick).toBe(false);
+      expect(focusIndicatorTarget === link).toBe(true);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
   test("clears erase directive targets and keeps focus", async () => {
     const fixture = createDomFixture("<textarea id='composer'>hello world</textarea>");
 
