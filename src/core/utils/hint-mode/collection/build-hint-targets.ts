@@ -107,8 +107,12 @@ const applyInlineIconMarker = (
   renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
 };
 
-const applyThumbnailMarker = (target: HintTarget, showCapitalizedLetters: boolean): void => {
-  target.marker = createHintThumbnailMarker(createInlineSvgIcon(WATCH_PLAY_ICON_PATH));
+const applyThumbnailMarker = (
+  target: HintTarget,
+  showCapitalizedLetters: boolean,
+  iconPath = WATCH_PLAY_ICON_PATH
+): void => {
+  target.marker = createHintThumbnailMarker(createInlineSvgIcon(iconPath));
   renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
 };
 
@@ -896,6 +900,13 @@ export const buildHintTargets = (
   const forcedIcon = getForcedIconForMode(mode);
 
   for (const target of allTargets) {
+    if (target.isMediaThumbnail && target.element.isConnected) {
+      if (improveThumbnailMarkers) {
+        applyThumbnailMarker(target, showCapitalizedLetters, forcedIcon ?? WATCH_PLAY_ICON_PATH);
+        continue;
+      }
+    }
+
     if (forcedIcon && target.element.isConnected) {
       applyForcedIconMarker(target, forcedIcon, showCapitalizedLetters);
       continue;
@@ -912,11 +923,7 @@ export const buildHintTargets = (
     }
 
     if (target.isMediaThumbnail && target.element.isConnected) {
-      if (improveThumbnailMarkers) {
-        applyThumbnailMarker(target, showCapitalizedLetters);
-      } else {
-        applyThumbnailInlineIconMarker(target, showCapitalizedLetters);
-      }
+      applyThumbnailInlineIconMarker(target, showCapitalizedLetters);
       continue;
     }
 
