@@ -76,21 +76,6 @@ type KeydownHandlerDeps = {
   };
 };
 
-const isExtensionUiPage = (): boolean => {
-  const optionsUrl = chrome.runtime.getURL("options.html");
-  const docsUrl = chrome.runtime.getURL("docs.html");
-  return window.location.href === optionsUrl || window.location.href === docsUrl;
-};
-
-const isExtensionEditableModeAction = (actionName: ActionName | null): boolean => {
-  return (
-    actionName === "find-mode" ||
-    actionName === "bar-mode-current-tab" ||
-    actionName === "bar-mode-new-tab" ||
-    actionName === "bar-mode-edit-current-tab"
-  );
-};
-
 const consumeKeyboardEvent = (event: KeyboardEvent): void => {
   event.preventDefault();
   event.stopImmediatePropagation();
@@ -326,27 +311,6 @@ export const createNavigationKeydownHandler = ({
 
       if (handleEscapeModes(event)) {
         return;
-      }
-
-      if (isExtensionUiPage()) {
-        const keyToken = getKeyToken(event);
-
-        if (keyToken) {
-          const { actionName, claimKeydown, consumed, matchedSequence } =
-            keyState.getActionName(keyToken);
-
-          if (actionName && isExtensionEditableModeAction(actionName)) {
-            if (runAction(actionName, matchedSequence)) {
-              consumeKeydownEvent(event);
-              return;
-            }
-          }
-
-          if (consumed && claimKeydown) {
-            consumeKeydownEvent(event);
-            return;
-          }
-        }
       }
 
       keyState.clearPendingState();

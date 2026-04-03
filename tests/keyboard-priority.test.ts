@@ -310,4 +310,78 @@ describe("keyboard priority", () => {
       fixture.cleanup();
     }
   });
+
+  test("does not consume mapped printable keys while typing in an input", () => {
+    const fixture = createDomFixture("<input id='field' />");
+
+    try {
+      const keyState = createKeyState({
+        getMode: () => "normal"
+      });
+
+      keyState.applyHotkeyMappings({ u: { normal: "scroll-down" } }, {});
+
+      let navActionCount = 0;
+      const handleKeydown = createNavigationKeydownHandler({
+        actions: {
+          "scroll-down": () => {
+            navActionCount += 1;
+            return true;
+          }
+        } as never,
+        findMode: {
+          handleFindUIKeydown: () => false,
+          exitFindMode: () => {},
+          isFindInputFocused: () => false,
+          isFindModeActive: () => false,
+          shouldIgnoreKeydownInFindUI: () => false
+        },
+        hintController: {
+          activateMode: () => false,
+          exitHintMode: () => {},
+          handleHintKeydown: () => false,
+          isHintModeActive: () => false
+        },
+        forceNormalMode: {
+          isEnabled: () => false,
+          handleKeydownCapture: () => {}
+        },
+        isScrollAction: (actionName) => actionName === "scroll-down",
+        keyState,
+        onConsumeKeydown: () => {},
+        watchController: {
+          exitWatchMode: () => {},
+          getWatchActionSequences: () => ({
+            "toggle-fullscreen": "f",
+            "toggle-play-pause": "e",
+            "toggle-loop": "l",
+            "toggle-mute": "m",
+            "toggle-captions": "c"
+          }),
+          isWatchModeActive: () => false,
+          toggleFullscreen: () => false,
+          toggleWatchCaptions: () => false,
+          toggleWatchLoop: () => false,
+          toggleWatchMute: () => false,
+          toggleWatchPlayPause: () => false
+        }
+      });
+
+      const field = fixture.document.getElementById("field") as HTMLInputElement;
+      const receivedKeys: string[] = [];
+
+      window.addEventListener("keydown", handleKeydown, true);
+      field.addEventListener("keydown", (event) => {
+        receivedKeys.push(event.key);
+      });
+
+      field.focus();
+      field.dispatchEvent(new window.KeyboardEvent("keydown", { bubbles: true, key: "u" }));
+
+      expect(navActionCount).toBe(0);
+      expect(receivedKeys).toEqual(["u"]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });
