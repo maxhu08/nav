@@ -117,6 +117,23 @@ const hasClickableLabelControl = (element: HTMLElement): boolean => {
   return !getHintableElementState(control).isClickable;
 };
 
+const hasNativeInteractiveLabelPeer = (element: HTMLElement): boolean => {
+  const label = element.closest("label");
+  if (!(label instanceof HTMLLabelElement)) {
+    return false;
+  }
+
+  for (const candidate of label.querySelectorAll("a, button, [role='link'], [role='button']")) {
+    if (!(candidate instanceof HTMLElement) || candidate === element) {
+      continue;
+    }
+
+    return true;
+  }
+
+  return false;
+};
+
 const getHintableElementState = (
   element: HTMLElement
 ): {
@@ -229,6 +246,10 @@ const filterFalsePositives = (elements: HintableElementState[]): HintableElement
   const filtered = reversed.filter((candidate, position) => {
     if (!candidate.possibleFalsePositive) {
       return true;
+    }
+
+    if (hasNativeInteractiveLabelPeer(candidate.element)) {
+      return false;
     }
 
     const lookbackWindow = 6;
