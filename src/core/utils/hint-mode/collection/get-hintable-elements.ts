@@ -1,6 +1,7 @@
 import { IMAGE_SELECTOR } from "~/src/core/utils/hint-mode/shared/constants";
 import { collectElements } from "~/src/core/utils/hint-mode/collection/collect-elements";
 import { isElementVisible } from "~/src/core/utils/hint-mode/collection/is-element-visible";
+import { shouldSuppressChatGptDuplicateTarget } from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
 import type { HintActionMode } from "~/src/core/utils/hint-mode/shared/types";
 
 type HintableElementState = {
@@ -425,6 +426,10 @@ export const getHintableElements = (mode: HintActionMode): HTMLElement[] => {
     }
 
     if (!isElementVisible(element)) {
+      continue;
+    }
+
+    if (shouldSuppressChatGptDuplicateTarget(element)) {
       continue;
     }
 
