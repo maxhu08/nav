@@ -65,16 +65,16 @@ m toggle-mute # requires watch mode
 c toggle-captions # requires watch mode
 `.trim();
 
-export const DEFAULT_HINT_CHARSET = "sldkfjeiotu";
+export const DEFAULT_HINT_CHARSET = "sldkfjeiomwu";
 
 export const DEFAULT_HINT_AVOID_ADJACENT_PAIRS = `# double letters
-dd ee ff ii jj kk ll oo ss tt uu
+dd ee ff ii jj kk ll mm oo ss uu ww
 
 # same finger bigrams
-de ed ft tf ju uj ki ik lo ol
+sw ws de ed ki ik lo ol jm mj ju uj mu um
 
 # other
-ou uo lu ul il
+ou uo lu ul
 `.trim();
 
 export const DEFAULT_HINT_DIRECTIVES = `@input kj kjf kjfd
