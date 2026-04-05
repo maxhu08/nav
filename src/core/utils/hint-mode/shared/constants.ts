@@ -4,7 +4,6 @@ import {
   HINT_STYLE_ID as HINT_STYLE_ID_FROM_UI
 } from "~/src/core/utils/get-ui";
 
-export const DEFAULT_HINT_CHARSET = "sadfjklewcmupgh";
 export const HINT_CONTAINER_ID = HINT_OVERLAY_ID;
 export const HINT_POSITION_STYLE_ID = HINT_POSITION_STYLE_ID_FROM_UI;
 export const HINT_STYLE_ID = HINT_STYLE_ID_FROM_UI;

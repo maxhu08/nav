@@ -7,9 +7,9 @@ import {
   type Config,
   getConfig
 } from "~/src/utils/config";
+import { DEFAULT_HINT_CHARSET } from "~/src/utils/config-defaults";
 import {
   type ActionName,
-  DEFAULT_HINT_CHARSET,
   type HotkeyActionMode,
   type HotkeyMappings,
   isActionName,

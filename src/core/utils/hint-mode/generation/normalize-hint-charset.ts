@@ -1,4 +1,4 @@
-import { DEFAULT_HINT_CHARSET } from "~/src/core/utils/hint-mode/shared/constants";
+import { DEFAULT_HINT_CHARSET } from "~/src/utils/config-defaults";
 
 export const normalizeHintCharset = (value: string): string => {
   const uniqueCharacters = Array.from(new Set(Array.from(value.toLowerCase()).filter(Boolean)));

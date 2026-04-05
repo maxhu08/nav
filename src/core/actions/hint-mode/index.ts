@@ -11,15 +11,13 @@ import {
   activateSiteKeybindIgnore,
   deactivateSiteKeybindIgnore
 } from "~/src/core/utils/ignore-site-keybinds";
-import {
-  DEFAULT_HINT_CHARSET,
-  HINT_CONTAINER_ID
-} from "~/src/core/utils/hint-mode/shared/constants";
+import { HINT_CONTAINER_ID } from "~/src/core/utils/hint-mode/shared/constants";
 import type {
   HintActionMode,
   HintDirectiveLabelMap,
   HintTarget
 } from "~/src/core/utils/hint-mode/shared/types";
+import { DEFAULT_HINT_CHARSET } from "~/src/utils/config-defaults";
 import { createEmptyReservedHintLabels } from "~/src/utils/hint-reserved-label-directives";
 
 type HintControllerDeps = {

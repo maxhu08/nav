@@ -3,7 +3,7 @@ import {
   DEFAULT_HINT_CHARSET,
   DEFAULT_HINT_DIRECTIVES,
   DEFAULT_HOTKEY_MAPPINGS
-} from "~/src/utils/hotkeys";
+} from "~/src/utils/config-defaults";
 import { migrateOldConfig } from "~/src/utils/migrate-config";
 
 export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
