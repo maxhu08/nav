@@ -108,4 +108,54 @@ describe("YouTube site hint marker alignment", () => {
       fixture.cleanup();
     }
   });
+
+  test("keeps fullscreen quick action markers on the same row", () => {
+    const fixture = createDomFixture(`
+      <div class="ytp-fullscreen-quick-actions" data-overlay-order="13">
+        <button id="like-button" aria-label="Like"></button>
+        <button id="dislike-button" aria-label="Dislike"></button>
+        <button id="comments-button" aria-label="Comments"></button>
+        <button id="share-button" aria-label="Share"></button>
+        <button id="ask-button" aria-label="Ask"></button>
+      </div>
+    `);
+
+    try {
+      setViewport(1600, 900);
+
+      const likeButton = getRequiredElement<HTMLButtonElement>("#like-button");
+      const dislikeButton = getRequiredElement<HTMLButtonElement>("#dislike-button");
+      const commentsButton = getRequiredElement<HTMLButtonElement>("#comments-button");
+      const shareButton = getRequiredElement<HTMLButtonElement>("#share-button");
+      const askButton = getRequiredElement<HTMLButtonElement>("#ask-button");
+
+      setRect(likeButton, 1100, 200, 32, 32);
+      setRect(dislikeButton, 1150, 204, 32, 32);
+      setRect(commentsButton, 1200, 208, 32, 32);
+      setRect(shareButton, 1250, 202, 32, 32);
+      setRect(askButton, 1300, 206, 32, 32);
+
+      const targets = buildHintTargets("current-tab", "asdfg", 1, false);
+      targets.forEach((target) => setMarkerSize(target.marker));
+      renderHintTargets(targets);
+
+      const quickActionElements: HTMLElement[] = [
+        likeButton,
+        dislikeButton,
+        commentsButton,
+        shareButton,
+        askButton
+      ];
+      const quickActionTargets = targets.filter((target) =>
+        quickActionElements.includes(target.element)
+      );
+
+      expect(quickActionTargets).toHaveLength(quickActionElements.length);
+      expect(new Set(quickActionTargets.map((target) => target.marker.style.top))).toEqual(
+        new Set(["200px"])
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

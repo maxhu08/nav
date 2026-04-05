@@ -27,7 +27,19 @@ const isYouTubeMastheadEndTarget = (element: HTMLElement): boolean => {
   );
 };
 
+const isYouTubeFullscreenQuickActionTarget = (element: HTMLElement): boolean => {
+  if (!element.closest(".ytp-fullscreen-quick-actions")) {
+    return false;
+  }
+
+  return element.matches("button");
+};
+
 export const getYouTubeSpecialRowKey = (target: HintTarget): string | null => {
+  if (isYouTubeFullscreenQuickActionTarget(target.element)) {
+    return "youtube-fullscreen-quick-actions";
+  }
+
   if (isYouTubeMastheadStartTarget(target.element)) {
     return "youtube-masthead-start";
   }
