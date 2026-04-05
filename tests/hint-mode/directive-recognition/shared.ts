@@ -7,7 +7,7 @@ import {
 import { parseReservedHintDirectives } from "~/src/utils/hint-reserved-label-directives";
 
 export const directiveLabels = parseReservedHintDirectives(
-  `@input kj\n@erase er\n@attach up\n@chat ch\n@share sh\n@download dl\n@login si\n@microphone mic\n@notification nf\n@delete dd\n@save sv\n@copy cp\n@hide hi\n@sidebar we\n@home sd\n@next kl\n@prev lk\n@cancel no\n@submit ok\n@like iu\n@dislike oi`
+  `@input kj\n@erase er\n@attach up\n@chat ch\n@comment km\n@share sh\n@download dl\n@login si\n@microphone mic\n@notification nf\n@delete dd\n@save sv\n@copy cp\n@hide hi\n@sidebar we\n@home sd\n@next kl\n@prev lk\n@cancel no\n@submit ok\n@like iu\n@dislike oi`
 );
 
 export const expectDirectiveIconMarker = (

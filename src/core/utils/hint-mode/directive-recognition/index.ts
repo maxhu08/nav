@@ -3,6 +3,7 @@ import type { DirectiveScorer } from "~/src/core/utils/hint-mode/directive-recog
 import { scoreAttachDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/attach";
 import { scoreCancelDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/cancel";
 import { scoreChatDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/chat";
+import { scoreCommentDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/comment";
 import { scoreCopyDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/copy";
 import { scoreDeleteDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/delete";
 import { scoreDislikeDirectiveCandidate } from "~/src/core/utils/hint-mode/directive-recognition/dislike";
@@ -27,6 +28,7 @@ export const DIRECTIVE_SCORERS: Partial<Record<ReservedHintDirective, DirectiveS
   sidebar: scoreSidebarDirectiveCandidate,
   attach: scoreAttachDirectiveCandidate,
   chat: scoreChatDirectiveCandidate,
+  comment: scoreCommentDirectiveCandidate,
   share: scoreShareDirectiveCandidate,
   download: scoreDownloadDirectiveCandidate,
   login: scoreLoginDirectiveCandidate,

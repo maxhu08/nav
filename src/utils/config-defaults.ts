@@ -81,6 +81,7 @@ export const DEFAULT_HINT_DIRECTIVES = `@input kj kjf kjfd
 @erase er
 @attach up
 @chat ch
+@comment km
 @share sh
 @download dl
 @login si
