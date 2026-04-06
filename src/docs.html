@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="shared/remixicon-lite.css" />
     <link rel="stylesheet" href="shared/tailwind.css" />
     <link rel="stylesheet" href="shared/shared.css" />
     <script src="docs/scripts/init.ts" type="module" defer></script>
@@ -23,7 +24,29 @@
         </p>
       </div>
       <main class="grid grid-flow-row pt-16">
-        <section id="rules-urls" class="mb-20 grid grid-flow-row gap-4">
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="rules-collapse-button" class="text-xl text-neutral-500" aria-label="toggle rules section">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">rules</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="rules-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="rules-urls-mode" class="text-base text-white">
+              <a href="#rules-urls-mode">rules.urls.mode</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Chooses which URL rules list is active.
+              <br /><br />
+              `blacklist` blocks matching actions from `rules.urls.blacklist`.
+              <br />
+              `whitelist` only allows matching actions from `rules.urls.whitelist`.
+            </p>
+          </div>
           <div class="grid gap-2">
             <p id="rules-urls-lists" class="text-base text-white">
               <a href="#rules-urls-lists">rules.urls.blacklist / rules.urls.whitelist</a>
@@ -71,9 +94,25 @@
               same rule would allow only those actions on GitHub pages.
             </p>
           </div>
+          <div class="grid gap-2">
+            <p id="rules-force-normal-mode" class="text-base text-white">
+              <a href="#rules-force-normal-mode">rules.forceNormalMode</a>
+            </p>
+            <p class="text-base text-neutral-500">Keeps nav in normal mode on page load by rejecting automatic focus into editable fields until you manually focus one.</p>
+          </div>
         </section>
 
-        <section id="hotkeys-mappings-section" class="mb-20 grid grid-flow-row gap-4">
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="hotkeys-collapse-button" class="text-xl text-neutral-500" aria-label="toggle hotkeys section">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">hotkeys</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="hotkeys-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
             <p id="hotkeys-mappings" class="text-base text-white">
               <a href="#hotkeys-mappings">hotkeys.mappings</a>
@@ -122,221 +161,10 @@
               - <span class="text-[#f43f5e]">invalid tokens</span> are red.
             </p>
           </div>
-        </section>
-
-        <section id="bar-options-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
-            <p id="bar-color" class="text-base text-white">
-              <a href="#bar-color">bar.color</a>
-            </p>
-            <p class="text-base text-neutral-500">Controls the outline color of the bar prompt.</p>
-          </div>
-          <div class="grid gap-2">
-            <p id="bar-search-engine-url" class="text-base text-white">
-              <a href="#bar-search-engine-url">bar.searchEngineURL</a>
-            </p>
-            <p class="text-base text-neutral-500">
-              Used when the bar input is not recognized as a URL.
-              <br /><br />
-              Use `{}` to represent the search query.
-              <br />
-              Example: `https://www.google.com/search?q={}`
-            </p>
-          </div>
-        </section>
-
-        <section id="find-options-section" class="mb-20 grid grid-flow-row gap-4">
-          <div class="grid gap-2">
-            <p id="find-color" class="text-base text-white">
-              <a href="#find-color">find.color</a>
-            </p>
-            <p class="text-base text-neutral-500">Controls the outline color of the find bar and the next/prev status widget.</p>
-          </div>
-        </section>
-
-        <section id="hints-directives-section" class="mb-20 grid grid-flow-row gap-4">
-          <div class="grid gap-2">
-            <p id="hints-directives" class="text-base text-white">
-              <a href="#hints-directives">hints.directives</a>
-            </p>
-            <p class="text-base text-neutral-500">
-              Sets preferred hint directives for special elements.
-              <br /><br />
-              Rules:
-              <br />
-              - Each directive must be on its own line.
-              <br />
-              - Use exactly one space between the directive and labels, and between labels.
-              <br />
-              - Labels must contain only letters a-z and each next label must be exactly one character longer than the previous label.
-              <br />
-              - Supported directives are listed below.
-              <br />
-              - Matching directive hints show the directive icon next to the hint label.
-              <br />
-              - Directives can use letters outside `hints.charset` and are still typeable in hint mode.
-            </p>
-            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
-              <p><span class="text-[#c586c0]">@input</span> <span class="text-[#569cd6]">kj kjf kjfd</span></p>
-              <p><span class="text-[#c586c0]">@erase</span> <span class="text-[#569cd6]">er</span></p>
-              <p><span class="text-[#c586c0]">@attach</span> <span class="text-[#569cd6]">up</span></p>
-              <p><span class="text-[#c586c0]">@chat</span> <span class="text-[#569cd6]">ch</span></p>
-              <p><span class="text-[#c586c0]">@comment</span> <span class="text-[#569cd6]">km</span></p>
-              <p><span class="text-[#c586c0]">@share</span> <span class="text-[#569cd6]">sh</span></p>
-              <p><span class="text-[#c586c0]">@download</span> <span class="text-[#569cd6]">dl</span></p>
-              <p><span class="text-[#c586c0]">@login</span> <span class="text-[#569cd6]">si</span></p>
-              <p><span class="text-[#c586c0]">@microphone</span> <span class="text-[#569cd6]">mic</span></p>
-              <p><span class="text-[#c586c0]">@notification</span> <span class="text-[#569cd6]">nf</span></p>
-              <p><span class="text-[#c586c0]">@delete</span> <span class="text-[#569cd6]">dd</span></p>
-              <p><span class="text-[#c586c0]">@save</span> <span class="text-[#569cd6]">sv</span></p>
-              <p><span class="text-[#c586c0]">@copy</span> <span class="text-[#569cd6]">cp</span></p>
-              <p><span class="text-[#c586c0]">@hide</span> <span class="text-[#569cd6]">hi</span></p>
-              <p><span class="text-[#c586c0]">@home</span> <span class="text-[#569cd6]">sd sdf sdfj</span></p>
-              <p><span class="text-[#c586c0]">@sidebar</span> <span class="text-[#569cd6]">we wer wert</span></p>
-              <p><span class="text-[#c586c0]">@next</span> <span class="text-[#569cd6]">kl</span></p>
-              <p><span class="text-[#c586c0]">@prev</span> <span class="text-[#569cd6]">lk</span></p>
-              <p><span class="text-[#c586c0]">@cancel</span> <span class="text-[#569cd6]">no</span></p>
-              <p><span class="text-[#c586c0]">@submit</span> <span class="text-[#569cd6]">ok</span></p>
-              <p><span class="text-[#c586c0]">@like</span> <span class="text-[#569cd6]">iu</span></p>
-              <p><span class="text-[#c586c0]">@dislike</span> <span class="text-[#569cd6]">oi</span></p>
-            </div>
-          </div>
-          <div class="grid gap-2">
-            <p id="directive-names" class="text-base text-white">
-              <a href="#directive-names">directive.names</a>
-            </p>
-            <p class="text-base text-neutral-500">
-              Available directives:
-              <br /><br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="input"></span>
-                @input </span
-              >: Tries to identify the website's main input or search input target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="erase"></span>
-                @erase </span
-              >: Clears the page's main input and focuses it afterward.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="attach"></span>
-                @attach </span
-              >: The page's primary attach or upload target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="chat"></span>
-                @chat </span
-              >: The page's primary AI chat button, support chat button, or chat widget target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="comment"></span>
-                @comment </span
-              >: The page's primary comment, reply, or discussion entry target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="share"></span>
-                @share </span
-              >: The page's primary share, repost, or forward target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="download"></span>
-                @download </span
-              >: The page's primary download, save offline, or export target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="login"></span>
-                @login </span
-              >: The page's primary login, sign in, or authentication target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="microphone"></span>
-                @microphone </span
-              >: The page's primary microphone, voice input, or push-to-talk target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="notification"></span>
-                @notification </span
-              >: The page's primary notifications, alerts, or inbox target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="delete"></span>
-                @delete </span
-              >: The page's primary delete, remove, or trash action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="save"></span>
-                @save </span
-              >: The page's primary save, bookmark, or watch-later action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="copy"></span>
-                @copy </span
-              >: The page's primary copy-to-clipboard action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="hide"></span>
-                @hide </span
-              >: A modal or popup backdrop that hides the surface when there is no dedicated close button.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="home"></span>
-                @home </span
-              >: The page's primary home navigation target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="sidebar"></span>
-                @sidebar </span
-              >: The page's primary sidebar or side navigation target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="next"></span>
-                @next </span
-              >: The page's primary next action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="prev"></span>
-                @prev </span
-              >: The page's primary previous action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="cancel"></span>
-                @cancel </span
-              >: The page's primary cancel or close action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="submit"></span>
-                @submit </span
-              >: The page's primary submit or confirm action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="like"></span>
-                @like </span
-              >: The page's primary like or upvote action target.
-              <br />
-              <span class="inline-flex items-center gap-1 text-[#c586c0]">
-                <span data-directive-icon="dislike"></span>
-                @dislike </span
-              >: The page's primary dislike or downvote action target.
-            </p>
-          </div>
-        </section>
-
-        <section id="actions-names" class="mb-20 grid grid-flow-row gap-4">
-          <div class="grid gap-2">
-            <p class="text-base text-white">
-              <a href="#actions-names">actions.names</a>
-            </p>
-            <p class="text-base text-neutral-500">
-              These are the currently valid action names, organized by mode.
-              <br /><br />
-              <span class="text-[#dcdcaa]">normal mode actions</span> are yellow.
-              <br />
-              <span class="text-[#f97316]">find mode actions</span> are orange.
-              <br />
-              <span class="text-[#10b981]">watch mode actions</span> are green.
-            </p>
+            <p class="text-base text-neutral-500">Here are the available actions you can use in `hotkeys.mappings`.</p>
             <div class="rounded-md bg-neutral-800 p-3 font-mono text-base">
-              <p class="text-neutral-500"># actions.names.normal</p>
+              <p class="text-neutral-500"># in normal mode</p>
               <p class="text-[#dcdcaa]">watch-mode</p>
               <p class="text-[#dcdcaa]">find-mode</p>
               <p class="text-[#dcdcaa]">scroll-left</p>
@@ -375,17 +203,15 @@
               <p class="text-[#dcdcaa]">duplicate-current-tab</p>
               <p class="text-[#dcdcaa]">duplicate-current-tab-origin</p>
               <p class="text-[#dcdcaa]">move-current-tab-to-new-window</p>
-              <br />
-              <p class="text-neutral-500"># actions.names.bar</p>
               <p class="text-[#dcdcaa]">bar-mode-current-tab</p>
               <p class="text-[#dcdcaa]">bar-mode-new-tab</p>
               <p class="text-[#dcdcaa]">bar-mode-edit-current-tab</p>
               <br />
-              <p class="text-neutral-500"># actions.names.find</p>
+              <p class="text-neutral-500"># in find mode</p>
               <p class="text-[#f97316]">cycle-match-next</p>
               <p class="text-[#f97316]">cycle-match-prev</p>
               <br />
-              <p class="text-neutral-500"># actions.names.watch</p>
+              <p class="text-neutral-500"># in watch mode</p>
               <p class="text-[#10b981]">toggle-fullscreen</p>
               <p class="text-[#10b981]">toggle-play-pause</p>
               <p class="text-[#10b981]">toggle-loop</p>
@@ -393,9 +219,7 @@
               <p class="text-[#10b981]">toggle-captions</p>
             </div>
             <div class="grid gap-4">
-              <p id="action-names-normal" class="text-base text-white">
-                <a href="#action-names-normal">action.names.normal</a>
-              </p>
+              <p class="text-base text-neutral-500">In normal mode:</p>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">scroll-left</p>
                 <p class="text-base text-neutral-500">Scrolls left in the current scrollable area.</p>
@@ -548,9 +372,6 @@
                 <p class="text-base text-[#dcdcaa]">move-current-tab-to-new-window</p>
                 <p class="text-base text-neutral-500">Moves the active browser tab into a new window.</p>
               </div>
-              <p id="action-names-bar" class="text-base text-white">
-                <a href="#action-names-bar">action.names.bar</a>
-              </p>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">bar-mode-current-tab</p>
                 <p class="text-base text-neutral-500">Opens the bar prompt and loads the selected URL or search in the current tab.</p>
@@ -563,9 +384,7 @@
                 <p class="text-base text-[#dcdcaa]">bar-mode-edit-current-tab</p>
                 <p class="text-base text-neutral-500">Opens the bar prompt with the current tab URL prefilled for quick editing.</p>
               </div>
-              <p id="action-names-find" class="text-base text-white">
-                <a href="#action-names-find">action.names.find</a>
-              </p>
+              <p class="text-base text-neutral-500">In find mode:</p>
               <div class="grid gap-1">
                 <p class="text-base text-[#f97316]">cycle-match-next</p>
                 <p class="text-base text-neutral-500">Moves to the next in-page search match while find mode is active.</p>
@@ -574,9 +393,7 @@
                 <p class="text-base text-[#f97316]">cycle-match-prev</p>
                 <p class="text-base text-neutral-500">Moves to the previous in-page search match while find mode is active.</p>
               </div>
-              <p id="action-names-watch" class="text-base text-white">
-                <a href="#action-names-watch">action.names.watch</a>
-              </p>
+              <p class="text-base text-neutral-500">In watch mode:</p>
               <div class="grid gap-1">
                 <p class="text-base text-[#10b981]">toggle-fullscreen</p>
                 <p class="text-base text-neutral-500">Toggles fullscreen for the active watch-mode video.</p>
@@ -598,6 +415,296 @@
                 <p class="text-base text-neutral-500">Toggles captions for the active watch-mode video when available.</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="hints-collapse-button" class="text-xl text-neutral-500" aria-label="toggle hints section">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">hints</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="hints-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="hints-show-capitalized-letters" class="text-base text-white">
+              <a href="#hints-show-capitalized-letters">hints.showCapitalizedLetters</a>
+            </p>
+            <p class="text-base text-neutral-500">Changes how hint labels are displayed. The required key presses stay lowercase.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-improve-thumbnail-markers" class="text-base text-white">
+              <a href="#hints-improve-thumbnail-markers">hints.improveThumbnailMarkers</a>
+            </p>
+            <p class="text-base text-neutral-500">Makes hint markers much easier to see on thumbnail-like media targets by centering them and rendering a larger badge.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-activation-indicator-enabled" class="text-base text-white">
+              <a href="#hints-activation-indicator-enabled">hints.activationIndicator.enabled</a>
+            </p>
+            <p class="text-base text-neutral-500">Shows a temporary activation ring after you open or focus something through hints.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-activation-indicator-color" class="text-base text-white">
+              <a href="#hints-activation-indicator-color">hints.activationIndicator.color</a>
+            </p>
+            <p class="text-base text-neutral-500">Sets the activation ring color used when `hints.activationIndicator.enabled` is on.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-charset" class="text-base text-white">
+              <a href="#hints-charset">hints.charset</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Controls which letters are used to generate hint labels. Letters earlier in the charset are prioritized first.
+              <br /><br />
+              This applies to generated (non-reserved) hint labels. Reserved directive labels can still be typed even if they use letters outside this charset.
+              <br /><br />
+              Use letters only, with no spaces and no duplicates. Any repeated character, whitespace, or non-letter is treated as an error.
+            </p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-min-label-length" class="text-base text-white">
+              <a href="#hints-min-label-length">hints.minLabelLength</a>
+            </p>
+            <p class="text-base text-neutral-500">Sets the minimum number of characters generated hint labels must use.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-avoid-adjacent-pairs" class="text-base text-white">
+              <a href="#hints-avoid-adjacent-pairs">hints.avoidAdjacentPairs</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Lists consecutive character pairs to avoid inside generated hint labels. It is recommended to put hard-to-press character pairs here.
+              <br /><br />
+              Separate pairs with spaces or newlines. Entries must be exactly two letters, and `#` starts a comment anywhere on the line.
+            </p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-directives" class="text-base text-white">
+              <a href="#hints-directives">hints.directives</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Sets preferred hint directives for special elements.
+              <br /><br />
+              Rules:
+              <br />
+              - Each directive must be on its own line.
+              <br />
+              - Use exactly one space between the directive and labels, and between labels.
+              <br />
+              - Labels must contain only letters a-z and each next label must be exactly one character longer than the previous label.
+              <br />
+              - Matching directive hints show the directive icon next to the hint label.
+              <br />
+              - Directives can use letters outside `hints.charset` and are still typeable in hint mode.
+            </p>
+            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
+              <p><span class="text-[#c586c0]">@input</span> <span class="text-[#569cd6]">kj kjf kjfd</span></p>
+              <p><span class="text-[#c586c0]">@erase</span> <span class="text-[#569cd6]">er</span></p>
+              <p><span class="text-[#c586c0]">@attach</span> <span class="text-[#569cd6]">up</span></p>
+              <p><span class="text-[#c586c0]">@chat</span> <span class="text-[#569cd6]">ch</span></p>
+              <p><span class="text-[#c586c0]">@comment</span> <span class="text-[#569cd6]">km</span></p>
+              <p><span class="text-[#c586c0]">@share</span> <span class="text-[#569cd6]">sh</span></p>
+              <p><span class="text-[#c586c0]">@download</span> <span class="text-[#569cd6]">dl</span></p>
+              <p><span class="text-[#c586c0]">@login</span> <span class="text-[#569cd6]">si</span></p>
+              <p><span class="text-[#c586c0]">@microphone</span> <span class="text-[#569cd6]">mic</span></p>
+              <p><span class="text-[#c586c0]">@notification</span> <span class="text-[#569cd6]">nf</span></p>
+              <p><span class="text-[#c586c0]">@delete</span> <span class="text-[#569cd6]">dd</span></p>
+              <p><span class="text-[#c586c0]">@save</span> <span class="text-[#569cd6]">sv</span></p>
+              <p><span class="text-[#c586c0]">@copy</span> <span class="text-[#569cd6]">cp</span></p>
+              <p><span class="text-[#c586c0]">@hide</span> <span class="text-[#569cd6]">hi</span></p>
+              <p><span class="text-[#c586c0]">@home</span> <span class="text-[#569cd6]">sd sdf sdfj</span></p>
+              <p><span class="text-[#c586c0]">@sidebar</span> <span class="text-[#569cd6]">we wer wert</span></p>
+              <p><span class="text-[#c586c0]">@next</span> <span class="text-[#569cd6]">kl</span></p>
+              <p><span class="text-[#c586c0]">@prev</span> <span class="text-[#569cd6]">lk</span></p>
+              <p><span class="text-[#c586c0]">@cancel</span> <span class="text-[#569cd6]">no</span></p>
+              <p><span class="text-[#c586c0]">@submit</span> <span class="text-[#569cd6]">ok</span></p>
+              <p><span class="text-[#c586c0]">@like</span> <span class="text-[#569cd6]">iu</span></p>
+              <p><span class="text-[#c586c0]">@dislike</span> <span class="text-[#569cd6]">oi</span></p>
+            </div>
+            <p class="text-base text-neutral-500">
+              These are the valid directives:
+              <br /><br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="input"></span>
+                @input </span
+              >: Tries to identify the website's main input or search input target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="erase"></span>
+                @erase </span
+              >: Clears the page's main input and focuses it afterward.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="attach"></span>
+                @attach </span
+              >: The page's primary attach or upload target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="chat"></span>
+                @chat </span
+              >: The page's primary AI chat button, support chat button, or chat widget target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="comment"></span>
+                @comment </span
+              >: The page's primary comment, reply, or discussion entry target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="share"></span>
+                @share </span
+              >: The page's primary share, repost, or forward target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="download"></span>
+                @download </span
+              >: The page's primary download, save offline, or export target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="login"></span>
+                @login </span
+              >: The page's primary login, sign in, or authentication target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="microphone"></span>
+                @microphone </span
+              >: The page's primary microphone, voice input, or push-to-talk target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="notification"></span>
+                @notification </span
+              >: The page's primary notifications, alerts, or inbox target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="delete"></span>
+                @delete </span
+              >: The page's primary delete, remove, or trash action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="save"></span>
+                @save </span
+              >: The page's primary save, bookmark, or watch-later action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="copy"></span>
+                @copy </span
+              >: The page's primary copy-to-clipboard action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="hide"></span>
+                @hide </span
+              >: A modal or popup backdrop that hides the surface when there is no dedicated close button.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="home"></span>
+                @home </span
+              >: The page's primary home navigation target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="sidebar"></span>
+                @sidebar </span
+              >: The page's primary sidebar or side navigation target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="next"></span>
+                @next </span
+              >: The page's primary next action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="prev"></span>
+                @prev </span
+              >: The page's primary previous action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="cancel"></span>
+                @cancel </span
+              >: The page's primary cancel or close action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="submit"></span>
+                @submit </span
+              >: The page's primary submit or confirm action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="like"></span>
+                @like </span
+              >: The page's primary like or upvote action target.
+              <br />
+              <span class="inline-flex items-center gap-1 text-[#c586c0]">
+                <span data-directive-icon="dislike"></span>
+                @dislike </span
+              >: The page's primary dislike or downvote action target.
+            </p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-styling" class="text-base text-white">
+              <a href="#hints-styling">hints.styling</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Chooses how hint markers are styled.
+              <br /><br />
+              `default` uses the built-in marker look.
+              <br />
+              `custom` uses the CSS in `hints.customCSS`.
+            </p>
+          </div>
+          <div class="grid gap-2">
+            <p id="hints-custom-css" class="text-base text-white">
+              <a href="#hints-custom-css">hints.customCSS</a>
+            </p>
+            <p class="text-base text-neutral-500">Custom CSS applied to hint markers when `hints.styling` is set to `custom`.</p>
+          </div>
+        </section>
+
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="bar-collapse-button" class="text-xl text-neutral-500" aria-label="toggle bar section">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">bar</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="bar-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="bar-color" class="text-base text-white">
+              <a href="#bar-color">bar.color</a>
+            </p>
+            <p class="text-base text-neutral-500">Controls the outline color of the bar prompt.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="bar-search-engine-url" class="text-base text-white">
+              <a href="#bar-search-engine-url">bar.searchEngineURL</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Used when the bar input is not recognized as a URL.
+              <br /><br />
+              Use `{}` to represent the search query.
+              <br />
+              Example: `https://www.google.com/search?q={}`
+            </p>
+          </div>
+        </section>
+
+        <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
+          <div class="grid grid-cols-[max-content_auto] items-center gap-2">
+            <button id="find-collapse-button" class="text-xl text-neutral-500" aria-label="toggle find section">
+              <i class="ri-collapse-horizontal-line"></i>
+            </button>
+            <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+          </div>
+          <span class="mx-2 text-base text-neutral-500">find</span>
+          <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
+        </div>
+        <section id="find-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="find-color" class="text-base text-white">
+              <a href="#find-color">find.color</a>
+            </p>
+            <p class="text-base text-neutral-500">Controls the outline color of the find bar and the next/prev status widget.</p>
           </div>
         </section>
       </main>

@@ -1,4 +1,5 @@
 import { initCoreNavigation } from "~/src/core/navigation";
+import { createCollapseGroups } from "~/src/docs/scripts/utils/collapse-docs";
 import { HINT_DIRECTIVE_ICON_PATHS } from "~/src/lib/hint-directive-icons";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -34,4 +35,5 @@ const renderDirectiveIcons = (): void => {
 };
 
 initCoreNavigation();
+void createCollapseGroups();
 renderDirectiveIcons();

@@ -27,6 +27,7 @@ Example:
 4. Add save logic in `src/options/scripts/utils/save-helpers/`.
 5. Wire the new fill/save helpers through `fill-inputs.ts` and `save-config.ts`.
 6. If the option needs a parsed or optimized runtime representation, update `src/utils/fast-config.ts` so `save-config.ts` can rebuild `fastConfig`.
+7. If the option changes what users can configure or how a documented field behaves, update `src/docs.html` so the docs page stays in sync with `src/options.html`.
 
 ## Config vs Fast Config
 
