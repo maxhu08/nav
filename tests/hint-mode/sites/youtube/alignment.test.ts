@@ -109,6 +109,96 @@ describe("YouTube site hint marker alignment", () => {
     }
   });
 
+  test("keeps the masthead start row aligned when the home link contains media content", () => {
+    const fixture = createDomFixture(`
+      <div id="masthead-container">
+        <ytd-masthead id="masthead">
+          <div id="container">
+            <div id="start">
+              <yt-icon-button id="back-button">
+                <button aria-label="Back" type="button"></button>
+              </yt-icon-button>
+              <yt-icon-button id="guide-button">
+                <button aria-label="Guide" type="button"></button>
+              </yt-icon-button>
+              <ytd-topbar-logo-renderer id="logo" show-yoodle="">
+                <a id="logo-link" href="/?promo=featured" aria-label="YouTube Home" title="Featured creator event">
+                  <ytd-yoodle-renderer>
+                    <video aria-hidden="true"></video>
+                  </ytd-yoodle-renderer>
+                </a>
+              </ytd-topbar-logo-renderer>
+            </div>
+
+            <div id="center">
+              <yt-searchbox role="search">
+                <input id="search-input" type="text" name="search_query" placeholder="Search" aria-label="Search" />
+                <button id="search-submit" aria-label="Search" type="button"></button>
+              </yt-searchbox>
+              <button id="voice-search" aria-label="Search with your voice" type="button"></button>
+            </div>
+
+            <div id="end">
+              <button id="create-button" aria-label="Create" type="button">Create</button>
+              <ytd-notification-topbar-button-renderer>
+                <yt-icon-button id="icon">
+                  <button id="notifications-button" aria-label="Notifications" type="button"></button>
+                </yt-icon-button>
+              </ytd-notification-topbar-button-renderer>
+              <ytd-topbar-menu-button-renderer>
+                <button id="avatar-btn" aria-label="Account menu" type="button"></button>
+              </ytd-topbar-menu-button-renderer>
+            </div>
+          </div>
+        </ytd-masthead>
+      </div>
+    `);
+
+    try {
+      setViewport(1600, 900);
+
+      const backButton = getRequiredElement<HTMLButtonElement>("#back-button > button");
+      const guideButton = getRequiredElement<HTMLButtonElement>("#guide-button > button");
+      const logoLink = getRequiredElement<HTMLAnchorElement>("#logo-link");
+      const searchInput = getRequiredElement<HTMLInputElement>("#search-input");
+      const notificationsButton = getRequiredElement<HTMLButtonElement>("#notifications-button");
+      const avatarButton = getRequiredElement<HTMLButtonElement>("#avatar-btn");
+
+      setRect(backButton, 16, 10, 32, 32);
+      setRect(guideButton, 88, 10, 32, 32);
+      setRect(logoLink, 160, 14, 120, 32);
+      setRect(searchInput, 520, 18, 480, 36);
+      setRect(notificationsButton, 1384, 13, 32, 32);
+      setRect(avatarButton, 1448, 11, 32, 32);
+
+      const targets = buildHintTargets("current-tab", "asdf", 1, false);
+      targets.forEach((target) => setMarkerSize(target.marker));
+      renderHintTargets(targets);
+
+      const mastheadStartElements: HTMLElement[] = [backButton, guideButton, logoLink];
+      const mastheadEndElements: HTMLElement[] = [notificationsButton, avatarButton];
+      const mastheadStartTargets = targets.filter((target) =>
+        mastheadStartElements.includes(target.element)
+      );
+      const mastheadEndTargets = targets.filter((target) =>
+        mastheadEndElements.includes(target.element)
+      );
+      const searchInputTargets = targets.filter((target) => target.element === searchInput);
+
+      expect(new Set(mastheadStartTargets.map((target) => target.marker.style.top))).toEqual(
+        new Set(["10px"])
+      );
+      expect(new Set(mastheadEndTargets.map((target) => target.marker.style.top))).toEqual(
+        new Set(["13px"])
+      );
+      expect(new Set(searchInputTargets.map((target) => target.marker.style.top))).toEqual(
+        new Set(["18px"])
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
   test("keeps fullscreen quick action markers on the same row", () => {
     const fixture = createDomFixture(`
       <div class="ytp-fullscreen-quick-actions" data-overlay-order="13">

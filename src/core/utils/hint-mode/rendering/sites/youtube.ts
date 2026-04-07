@@ -1,5 +1,20 @@
 import type { HintTarget } from "~/src/core/utils/hint-mode/shared/types";
 
+const isYouTubeTopbarLogoTarget = (element: HTMLElement): boolean => {
+  if (
+    !(element instanceof HTMLAnchorElement) ||
+    !element.closest("ytd-topbar-logo-renderer#logo")
+  ) {
+    return false;
+  }
+
+  try {
+    return new URL(element.href, window.location.href).pathname === "/";
+  } catch {
+    return false;
+  }
+};
+
 const isYouTubeMastheadStartTarget = (element: HTMLElement): boolean => {
   if (!element.closest("ytd-masthead #start")) {
     return false;
@@ -8,9 +23,7 @@ const isYouTubeMastheadStartTarget = (element: HTMLElement): boolean => {
   return (
     element.matches("button[aria-label='Back']") ||
     element.matches("button[aria-label='Guide']") ||
-    (element.matches("a#logo[href='/']") &&
-      element.matches("[title='YouTube Home']") &&
-      !!element.closest("ytd-topbar-logo-renderer#logo"))
+    isYouTubeTopbarLogoTarget(element)
   );
 };
 
