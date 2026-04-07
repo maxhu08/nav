@@ -901,7 +901,7 @@ export const buildHintTargets = (
 
   for (const target of allTargets) {
     if (target.isMediaThumbnail && target.element.isConnected) {
-      if (improveThumbnailMarkers) {
+      if (improveThumbnailMarkers && !target.directiveMatch) {
         applyThumbnailMarker(target, showCapitalizedLetters, forcedIcon ?? WATCH_PLAY_ICON_PATH);
         continue;
       }

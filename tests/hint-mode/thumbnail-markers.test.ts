@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { buildHintTargets } from "~/src/core/utils/hint-mode/collection/build-hint-targets";
 import { renderHintTargets } from "~/src/core/utils/hint-mode/rendering/render-hint-targets";
+import { HINT_DOWNLOAD_ICON_PATH } from "~/src/lib/inline-icons";
 import {
   MARKER_ICON_ATTRIBUTE,
   MARKER_VARIANT_ATTRIBUTE
 } from "~/src/core/utils/hint-mode/shared/constants";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
+import { directiveLabels } from "~/tests/hint-mode/directive-recognition/shared";
 
 const setViewport = (width: number, height: number): void => {
   Object.defineProperty(window, "innerWidth", {
@@ -96,6 +98,48 @@ describe("thumbnail hint markers", () => {
 
       expect(targets[0]?.marker.style.left).toBe("160px");
       expect(targets[0]?.marker.style.top).toBe("244px");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("does not apply improved thumbnail markers to directive-recognized thumbnails", () => {
+    const fixture = createDomFixture(
+      '<a id="download-thumb" href="https://example.com/report.mp4" download aria-label="Download video"><img id="download-thumb-image" src="https://example.com/thumb.jpg" alt="" /></a>'
+    );
+
+    try {
+      setViewport(1280, 720);
+      const thumbnailLink = document.getElementById("download-thumb");
+      const thumbnailImage = document.getElementById("download-thumb-image");
+      expect(thumbnailLink).toBeInstanceOf(HTMLElement);
+      expect(thumbnailImage).toBeInstanceOf(HTMLElement);
+      setRect(thumbnailLink as HTMLElement, 100, 200, 200, 120);
+      setRect(thumbnailImage as HTMLElement, 100, 200, 200, 120);
+
+      const [target] = buildHintTargets(
+        "current-tab",
+        "asdf",
+        1,
+        false,
+        directiveLabels,
+        [],
+        {},
+        true
+      );
+
+      expect(target?.isMediaThumbnail).toBe(true);
+      expect(target?.directiveMatch?.directive).toBe("download");
+      expect(target?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("directive");
+      expect(
+        target?.marker.querySelector(`[${MARKER_ICON_ATTRIBUTE}="true"]`)?.innerHTML
+      ).toContain(HINT_DOWNLOAD_ICON_PATH);
+
+      setMarkerSize(target!.marker, 80, 32);
+      renderHintTargets([target!], true);
+
+      expect(target?.marker.style.left).toBe("116px");
+      expect(target?.marker.style.top).toBe("200px");
     } finally {
       fixture.cleanup();
     }

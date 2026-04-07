@@ -86,7 +86,7 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
       }
     }
 
-    if (improveThumbnailMarkers && target.isMediaThumbnail) {
+    if (improveThumbnailMarkers && target.isMediaThumbnail && !target.directiveMatch) {
       positionMarkerElementInCenter(target.marker, target.rect, placementState);
       renderedTargetsByElement.set(target.element, target);
       continue;
