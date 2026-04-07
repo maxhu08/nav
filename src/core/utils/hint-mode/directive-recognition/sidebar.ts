@@ -15,6 +15,17 @@ const NON_SIDEBAR_MENU_PATTERN =
 const SIDEBAR_ICON_PATTERN = /\b(three-bars|sidebar|hamburger|nav(?:igation)?|menu|x|close)\b/i;
 const MAX_DIRECTIVE_SCORE = 9999;
 
+const isYouTubeMastheadGuideButton = (element: HTMLElement): boolean => {
+  if (element.matches("yt-icon-button#guide-button > button, #guide-button > button")) {
+    return true;
+  }
+
+  return (
+    element.getAttribute("aria-label")?.trim().toLowerCase() === "guide" &&
+    !!element.closest("yt-icon-button#guide-button, ytd-masthead #guide-button, #guide-button")
+  );
+};
+
 const getAriaLabelledByText = (element: HTMLElement): string => {
   const labelledBy = element.getAttribute("aria-labelledby")?.trim();
   if (!labelledBy) {
@@ -129,9 +140,10 @@ export const scoreSidebarDirectiveCandidate = (element: HTMLElement): number => 
   const menuScore = /\b(menu|hamburger)\b/i.test(descriptorText) ? 6 : 0;
   const iconScore = SIDEBAR_ICON_PATTERN.test(descriptorText) ? 4 : 0;
   const actionScore = SIDEBAR_ACTION_PATTERN.test(descriptorText) ? 6 : 0;
-  const guideScore =
-    getPatternScore(descriptorText, GUIDE_TOKEN_PATTERN, 10) +
-    (SHELL_CONTEXT_PATTERN.test(ancestorDescriptorText) ? 6 : 0);
+  const guideScore = isYouTubeMastheadGuideButton(element)
+    ? getPatternScore(descriptorText, GUIDE_TOKEN_PATTERN, 10) +
+      (SHELL_CONTEXT_PATTERN.test(ancestorDescriptorText) ? 6 : 0)
+    : 0;
   const sidebarContextScore =
     SIDEBAR_TOKEN_PATTERN.test(sidebarContainerContextText) ||
     /\bside-nav-menu-item\b/i.test(sidebarContainerContextText)
