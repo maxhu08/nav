@@ -6,6 +6,20 @@ const CHATGPT_COMPOSER_SURFACE_SELECTOR =
 const CHATGPT_COMPOSER_PLUS_BUTTON_SELECTOR =
   "#composer-plus-btn[aria-label='Add files and more'], [data-testid='composer-plus-btn'][aria-label='Add files and more']";
 
+export const isChatGptHintContext = (): boolean => {
+  if (/(^|\.)chatgpt\.com$/i.test(window.location.hostname)) {
+    return true;
+  }
+
+  return (
+    document.querySelector("form[data-type='unified-composer']") instanceof HTMLElement ||
+    document.querySelector("[data-sidebar-item='true']") instanceof HTMLElement ||
+    document.querySelector("[role='menu'][aria-label='Conversation options']") instanceof
+      HTMLElement ||
+    document.querySelector("[aria-label='Response actions'][role='group']") instanceof HTMLElement
+  );
+};
+
 const isChatGptComposerFileInput = (element: HTMLElement): boolean => {
   if (!(element instanceof HTMLInputElement) || element.type.toLowerCase() !== "file") {
     return false;

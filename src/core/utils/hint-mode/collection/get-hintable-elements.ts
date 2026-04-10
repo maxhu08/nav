@@ -1,7 +1,10 @@
 import { IMAGE_SELECTOR } from "~/src/core/utils/hint-mode/shared/constants";
 import { collectElements } from "~/src/core/utils/hint-mode/collection/collect-elements";
 import { isElementVisible } from "~/src/core/utils/hint-mode/collection/is-element-visible";
-import { shouldSuppressChatGptDuplicateTarget } from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
+import {
+  isChatGptHintContext,
+  shouldSuppressChatGptDuplicateTarget
+} from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
 import type { HintActionMode } from "~/src/core/utils/hint-mode/shared/types";
 
 type HintableElementState = {
@@ -35,19 +38,49 @@ const READONLY_SELECTABLE_INPUT_TYPES = new Set([
   "url"
 ]);
 
-const getAllElements = (root: ParentNode, results: HTMLElement[] = []): HTMLElement[] => {
-  for (const element of root.querySelectorAll("*")) {
-    if (!(element instanceof HTMLElement)) {
-      continue;
-    }
+const HINTABLE_CANDIDATE_SELECTOR = [
+  "a",
+  "area",
+  "button",
+  "input",
+  "textarea",
+  "select",
+  "label",
+  "summary",
+  "details",
+  "object",
+  "embed",
+  "[role='button']",
+  "[role='tab']",
+  "[role='link']",
+  "[role='checkbox']",
+  "[role='menuitem']",
+  "[role='menuitemcheckbox']",
+  "[role='menuitemradio']",
+  "[role='radio']",
+  "[role='textbox']",
+  "[role='searchbox']",
+  "[role='combobox']",
+  "[tabindex]",
+  "[onclick]",
+  "[jsaction]",
+  "[contenteditable]",
+  "[data-sidebar-item='true']",
+  "[class*='button']",
+  "[class*='Button']",
+  "[class*='btn']",
+  "[class*='Btn']"
+].join(",");
 
-    results.push(element);
-    if (element.shadowRoot) {
-      getAllElements(element.shadowRoot, results);
-    }
-  }
-
-  return results;
+const isViewportIntersectingRect = (rect: DOMRect): boolean => {
+  return (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.bottom >= 0 &&
+    rect.right >= 0 &&
+    rect.left <= window.innerWidth &&
+    rect.top <= window.innerHeight
+  );
 };
 
 const hasClickableJsAction = (element: HTMLElement): boolean => {
@@ -402,7 +435,12 @@ export const getHintableElements = (mode: HintActionMode): HTMLElement[] => {
 
     const seen = new Set<HTMLElement>();
     return results.filter((element) => {
-      if (seen.has(element) || !isElementVisible(element)) {
+      if (seen.has(element)) {
+        return false;
+      }
+
+      const rect = element.getBoundingClientRect();
+      if (!isViewportIntersectingRect(rect) || !isElementVisible(element)) {
         return false;
       }
 
@@ -413,13 +451,22 @@ export const getHintableElements = (mode: HintActionMode): HTMLElement[] => {
 
   const seen = new Set<HTMLElement>();
   const candidates: HintableElementState[] = [];
+  const matchedElements: HTMLElement[] = [];
+  const suppressChatGptDuplicates = isChatGptHintContext();
 
-  for (const element of getAllElements(document.documentElement)) {
+  collectElements(document.documentElement, HINTABLE_CANDIDATE_SELECTOR, matchedElements);
+
+  for (const element of matchedElements) {
     if (seen.has(element)) {
       continue;
     }
 
     seen.add(element);
+    const rect = element.getBoundingClientRect();
+    if (!isViewportIntersectingRect(rect)) {
+      continue;
+    }
+
     const state = getHintableElementState(element);
     if (!state.isClickable || state.secondClassCitizen) {
       continue;
@@ -429,7 +476,7 @@ export const getHintableElements = (mode: HintActionMode): HTMLElement[] => {
       continue;
     }
 
-    if (shouldSuppressChatGptDuplicateTarget(element)) {
+    if (suppressChatGptDuplicates && shouldSuppressChatGptDuplicateTarget(element)) {
       continue;
     }
 

@@ -9,6 +9,8 @@ import {
 import { DIRECTIVE_SCORERS } from "~/src/core/utils/hint-mode/directive-recognition";
 import type { DirectiveScorer } from "~/src/core/utils/hint-mode/directive-recognition/shared";
 import {
+  isActionableDirectiveCandidate,
+  isEditableInputCandidate,
   getElementTextValues,
   getJoinedElementText,
   isButtonLikeDirectiveCandidate
@@ -747,6 +749,50 @@ const getForcedIconForMode = (mode: HintActionMode): string | null => {
   return null;
 };
 
+const hasBoundDirectiveLabel = (
+  directiveLabels: HintDirectiveLabelMap,
+  directive: ReservedHintDirective
+): boolean => {
+  return directiveLabels[directive].some((label) => label.length > 0);
+};
+
+const hasScorer = (
+  entry: [ReservedHintDirective, DirectiveScorer | undefined]
+): entry is [ReservedHintDirective, DirectiveScorer] => {
+  return !!entry[1];
+};
+
+const shouldScoreDirectiveForElement = (
+  directive: ReservedHintDirective,
+  element: HTMLElement
+): boolean => {
+  switch (directive) {
+    case "input":
+      return isEditableInputCandidate(element);
+    case "sidebar":
+    case "attach":
+    case "microphone":
+    case "submit":
+    case "like":
+    case "dislike":
+      return isButtonLikeDirectiveCandidate(element);
+    case "chat":
+    case "comment":
+    case "share":
+    case "download":
+    case "login":
+    case "notification":
+    case "delete":
+    case "save":
+    case "copy":
+    case "cancel":
+    case "home":
+      return isActionableDirectiveCandidate(element);
+    default:
+      return true;
+  }
+};
+
 const isElementCompatibleWithMode = (mode: HintActionMode, element: HTMLElement): boolean => {
   if (mode === "new-tab" || mode === "yank-link-url") {
     return !!getClosestLinkUrl(element);
@@ -844,10 +890,19 @@ export const buildHintTargets = (
 ): HintTarget[] => {
   const ignoreDirectives = mode === "right-click";
   const customSelectorMatches = getMatchingCustomSelectorTargets(mode, customSelectors);
-  const filteredElements = [...getHintableElements(mode)];
+  const filteredElements = getHintableElements(mode).filter((element) => {
+    return isElementCompatibleWithMode(mode, element);
+  });
+  const filteredElementSet = new Set(filteredElements);
+  const activeDirectiveScorerEntries = ignoreDirectives
+    ? []
+    : DIRECTIVE_SCORER_ENTRIES.filter(hasScorer).filter(([directive]) => {
+        return hasBoundDirectiveLabel(directiveLabels, directive);
+      });
 
   for (const element of customSelectorMatches.matchedElements) {
-    if (!filteredElements.includes(element)) {
+    if (!filteredElementSet.has(element)) {
+      filteredElementSet.add(element);
       filteredElements.push(element);
     }
   }
@@ -871,14 +926,14 @@ export const buildHintTargets = (
 
     targetsByElement.set(element, target);
 
-    if (!ignoreDirectives) {
-      for (const [directive, scorer] of DIRECTIVE_SCORER_ENTRIES) {
-        if (!scorer) {
+    if (activeDirectiveScorerEntries.length > 0) {
+      for (const [directive, scorer] of activeDirectiveScorerEntries) {
+        const currentMatch = directiveMatches.get(directive);
+        if (currentMatch?.score === MAX_DIRECTIVE_SCORE) {
           continue;
         }
 
-        const currentMatch = directiveMatches.get(directive);
-        if (currentMatch?.score === MAX_DIRECTIVE_SCORE) {
+        if (!shouldScoreDirectiveForElement(directive, element)) {
           continue;
         }
 

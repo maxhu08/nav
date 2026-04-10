@@ -20,7 +20,7 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
     element.closest("[role='menu']")
   ) {
     return {
-      rect: element.getBoundingClientRect(),
+      rect: target.rect,
       strategy: "top-right"
     };
   }
@@ -62,14 +62,14 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
     const projectToggle = element.querySelector("button.icon[data-state]");
     if (hasProjectToggle && projectToggle instanceof HTMLElement) {
       return {
-        rect: element.getBoundingClientRect(),
+        rect: target.rect,
         strategy: "right-of-marker",
         referenceElement: projectToggle
       };
     }
 
     return {
-      rect: element.getBoundingClientRect(),
+      rect: target.rect,
       strategy: "top-left"
     };
   }
@@ -81,7 +81,7 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
     const icon = element.querySelector("svg");
     if (icon instanceof SVGElement) {
       return {
-        rect: element.getBoundingClientRect(),
+        rect: target.rect,
         strategy: "top-left"
       };
     }

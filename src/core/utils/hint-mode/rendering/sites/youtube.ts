@@ -1,5 +1,17 @@
 import type { HintTarget } from "~/src/core/utils/hint-mode/shared/types";
 
+export const isYouTubeHintContext = (): boolean => {
+  if (/(^|\.)youtube\.com$/i.test(window.location.hostname)) {
+    return true;
+  }
+
+  return (
+    document.querySelector("ytd-masthead") instanceof HTMLElement ||
+    document.querySelector("ytd-topbar-logo-renderer#logo") instanceof HTMLElement ||
+    document.querySelector(".ytp-fullscreen-quick-actions") instanceof HTMLElement
+  );
+};
+
 const isYouTubeTopbarLogoTarget = (element: HTMLElement): boolean => {
   if (
     !(element instanceof HTMLAnchorElement) ||

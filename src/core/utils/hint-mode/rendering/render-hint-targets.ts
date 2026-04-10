@@ -3,8 +3,14 @@ import {
   positionChatGptSidebarTarget,
   positionDeferredChatGptSidebarTargets
 } from "~/src/core/utils/hint-mode/rendering/chatgpt-sidebar-placement";
-import { getChatGptSpecialRowKey } from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
-import { getYouTubeSpecialRowKey } from "~/src/core/utils/hint-mode/rendering/sites/youtube";
+import {
+  getChatGptSpecialRowKey,
+  isChatGptHintContext as isChatGptSiteContext
+} from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
+import {
+  getYouTubeSpecialRowKey,
+  isYouTubeHintContext
+} from "~/src/core/utils/hint-mode/rendering/sites/youtube";
 import {
   createMarkerPlacementState,
   positionMarkerElement,
@@ -21,8 +27,19 @@ type SpecialRowState = {
   top: number;
 };
 
-const getSpecialRowKey = (target: HintTarget): string | null => {
-  return getYouTubeSpecialRowKey(target) ?? getChatGptSpecialRowKey(target);
+const getSpecialRowKey = (
+  target: HintTarget,
+  siteFlags: { isChatGpt: boolean; isYouTube: boolean }
+): string | null => {
+  if (siteFlags.isYouTube) {
+    return getYouTubeSpecialRowKey(target);
+  }
+
+  if (siteFlags.isChatGpt) {
+    return getChatGptSpecialRowKey(target);
+  }
+
+  return null;
 };
 
 const markersOverlap = (marker: HTMLDivElement, referenceMarker: HTMLDivElement): boolean => {
@@ -51,6 +68,10 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
   const renderedTargetsByElement = new Map<HTMLElement, HintTarget>();
   const deferredPlacementTargets: HintTarget[] = [];
   const fragment = document.createDocumentFragment();
+  const siteFlags = {
+    isChatGpt: isChatGptSiteContext(),
+    isYouTube: isYouTubeHintContext()
+  };
 
   for (const target of targets) {
     fragment.append(target.marker);
@@ -59,14 +80,10 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
   container.replaceChildren(fragment);
 
   for (const target of targets) {
-    const specialRowKey = getSpecialRowKey(target);
+    const specialRowKey = getSpecialRowKey(target, siteFlags);
 
     if (target.directiveMatch?.directive === "hide") {
-      positionMarkerElementInTopRightCorner(
-        target.marker,
-        target.element.getBoundingClientRect(),
-        placementState
-      );
+      positionMarkerElementInTopRightCorner(target.marker, target.rect, placementState);
       continue;
     }
 
@@ -93,6 +110,7 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
     }
 
     if (
+      siteFlags.isChatGpt &&
       positionChatGptSidebarTarget(
         target,
         placementState,
@@ -146,9 +164,11 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
     renderedTargetsByElement.set(target.element, target);
   }
 
-  positionDeferredChatGptSidebarTargets(
-    deferredPlacementTargets,
-    placementState,
-    renderedTargetsByElement
-  );
+  if (siteFlags.isChatGpt && deferredPlacementTargets.length > 0) {
+    positionDeferredChatGptSidebarTargets(
+      deferredPlacementTargets,
+      placementState,
+      renderedTargetsByElement
+    );
+  }
 };
