@@ -315,6 +315,35 @@
             <p id="hints-reserved-labels-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
           </div>
           <div class="grid gap-2">
+            <p class="text-base text-white">hints.advanced.customSelectors</p>
+            <p class="text-base text-neutral-500">
+              Adds site-specific selector overrides for hint generation.
+              <br /><br />
+              See
+              <a href="docs.html#hints-advanced-custom-selectors" target="_blank" rel="noopener noreferrer" class="text-blue-500 transition hover:text-blue-600"
+                >docs#hints-advanced-custom-selectors</a
+              >
+              for syntax and examples.
+              <br /><br />
+              Use `* &lt;regex-pattern&gt; {` to start a site block, then one selector per line as `&lt;key&gt; &lt;css-selector&gt;`, and close the block with `}`.
+              <br /><br />
+              `&lt;key&gt;` must be letters only and at least as long as `hints.minLabelLength`, or exactly `&lt;auto&gt;` to generate a label automatically.
+            </p>
+            <div id="hints-custom-selectors-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <pre id="hints-custom-selectors-highlight" aria-hidden="true" class="hints-custom-selectors-editor-layer"></pre>
+              <textarea
+                id="hints-custom-selectors-textarea"
+                aria-label="hints advanced custom selectors"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                rows="3"
+                class="hints-custom-selectors-editor-layer hints-custom-selectors-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
+              ></textarea>
+            </div>
+            <p id="hints-custom-selectors-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+          </div>
+          <div class="grid gap-2">
             <p class="text-base text-white">hints.styling</p>
             <p class="text-base text-neutral-500">Use the built-in hint marker look, or switch to editable CSS for full control.</p>
             <div class="grid grid-cols-2 gap-2 text-base">

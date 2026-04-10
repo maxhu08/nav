@@ -639,6 +639,56 @@
             </p>
           </div>
           <div class="grid gap-2">
+            <p id="hints-advanced-custom-selectors" class="text-base text-white">
+              <a href="#hints-advanced-custom-selectors">hints.advanced.customSelectors</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Adds site-specific selector overrides for hint generation.
+              <br /><br />
+              This option can override the default hint target discovery on sites where important interactive surfaces are not exposed as normal clickable HTML controls.
+              <br /><br />
+              It is especially useful for applications with custom chat inputs, editors, or button-like surfaces that rely on framework-managed click handling instead of standard browser semantics.
+              <br /><br />
+              Matching selectors allow Nav to surface those targets in hint mode so they can still be addressed and activated with a click event.
+              <br /><br />
+              Rules:
+              <br />
+              - Each site block must start with `* &lt;regex-pattern&gt; {` and end with `}`.
+              <br />
+              - `regex-pattern` matches `window.location.href`.
+              <br />
+              - Each entry inside the block must be `&lt;key&gt; &lt;css-selector&gt;`.
+              <br />
+              - `key` must be letters only and at least as long as `hints.minLabelLength`, or exactly `&lt;auto&gt;`.
+              <br />
+              - `&lt;auto&gt;` keeps the selector site-specific but lets the label be generated from `hints.charset`.
+              <br />
+              - Explicit keys reserve that label and override the normal generated label for the first visible matching element.
+              <br />
+              - Custom selector matches are included in hint generation even when the page would not normally expose them as hintable targets.
+            </p>
+            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
+              <p>
+                <span class="text-[#c586c0]">*</span>
+                <span class="text-[#d6b97c]">^</span><span class="text-[#d06969]">https://chatgpt</span><span class="text-[#d6b97c]">\.</span><span class="text-[#d06969]">com/</span>
+                <span class="text-neutral-400"> {</span>
+              </p>
+              <p>
+                <span class="text-neutral-400">&nbsp;&nbsp;</span><span class="text-[#569cd6]">proj</span>
+                <span class="text-neutral-400"> </span>
+                <span class="text-[#d7ba7d]">button</span><span class="text-[#cccccc]">[</span><span class="text-[#d7ba7d]">data-testid</span><span class="text-[#d4d4d4]">=</span
+                ><span class="text-[#ce9178]">'create-new-project-button'</span><span class="text-[#cccccc]">]</span>
+              </p>
+              <p>
+                <span class="text-neutral-400">&nbsp;&nbsp;</span><span class="text-[#569cd6]">&lt;auto&gt;</span>
+                <span class="text-neutral-400"> </span>
+                <span class="text-[#d7ba7d]">nav</span><span class="text-[#cccccc]">[</span><span class="text-[#d7ba7d]">aria-label</span><span class="text-[#d4d4d4]">=</span
+                ><span class="text-[#ce9178]">'Chat history'</span><span class="text-[#cccccc]">]</span><span class="text-neutral-400"> </span><span class="text-[#d7ba7d]">a</span>
+              </p>
+              <p><span class="text-neutral-400">}</span></p>
+            </div>
+          </div>
+          <div class="grid gap-2">
             <p id="hints-styling" class="text-base text-white">
               <a href="#hints-styling">hints.styling</a>
             </p>

@@ -2,6 +2,7 @@ import { type Config } from "~/src/utils/config";
 import {
   hintsAvoidAdjacentPairsTextareaEl,
   hintsCharsetInputEl,
+  hintsCustomSelectorsTextareaEl,
   hintsCustomCSSSectionEl,
   hintsCustomCSSTextareaEl,
   hintsImproveThumbnailMarkersCheckboxEl,
@@ -18,6 +19,7 @@ import { syncHintsAvoidAdjacentPairsHighlight } from "~/src/options/scripts/util
 import { refreshHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
 import {
   syncHintsCharsetHighlight,
+  syncHintsCustomSelectorsHighlight,
   syncHintsReservedLabelsHighlight
 } from "~/src/options/scripts/utils/hints-inline-highlight";
 import { syncColorInputControl } from "~/src/options/scripts/utils/color-inputs";
@@ -59,6 +61,7 @@ export const fillHintsInputs = (config: Config): void => {
   hintsShowActivationIndicatorCheckboxEl.checked = config.hints.activationIndicator.enabled;
   hintsShowActivationIndicatorColorInputEl.value = config.hints.activationIndicator.color;
   hintsCustomCSSTextareaEl.value = config.hints.customCSS;
+  hintsCustomSelectorsTextareaEl.value = config.hints.advanced.customSelectors;
   hintsCharsetInputEl.value = config.hints.charset;
   hintsMinLabelLengthInputEl.value = String(config.hints.minLabelLength);
   hintsAvoidAdjacentPairsTextareaEl.value = config.hints.avoidAdjacentPairs;
@@ -70,4 +73,5 @@ export const fillHintsInputs = (config: Config): void => {
   syncHintsCharsetHighlight();
   syncHintsAvoidAdjacentPairsHighlight();
   syncHintsReservedLabelsHighlight();
+  syncHintsCustomSelectorsHighlight();
 };

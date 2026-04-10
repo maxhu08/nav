@@ -5,6 +5,8 @@ import {
   barSearchEngineURLInputEl,
   hintsAvoidAdjacentPairsContainerEl,
   hintsAvoidAdjacentPairsTextareaEl,
+  hintsCustomSelectorsContainerEl,
+  hintsCustomSelectorsTextareaEl,
   hintsCustomCSSContainerEl,
   hintsCustomCSSTextareaEl,
   exportButtonEl,
@@ -34,6 +36,7 @@ import {
   findColorInputEl
 } from "~/src/options/scripts/ui";
 import { saveAndExportConfig } from "~/src/options/scripts/utils/export-config";
+import { enableEditorTabInsertion } from "~/src/options/scripts/utils/editor-tabs";
 import { importConfigAndSave } from "~/src/options/scripts/utils/import-config";
 import {
   syncHotkeysMappingsHighlight,
@@ -50,6 +53,8 @@ import {
 import {
   syncHintsCharsetHighlight,
   syncHintsCharsetHighlightScroll,
+  syncHintsCustomSelectorsHighlight,
+  syncHintsCustomSelectorsHighlightScroll,
   syncHintsReservedLabelsHighlight,
   syncHintsReservedLabelsHighlightScroll
 } from "~/src/options/scripts/utils/hints-inline-highlight";
@@ -67,6 +72,19 @@ import { setDefaultConfig } from "~/src/options/scripts/utils/set-default-config
 import { tippy } from "~/src/options/scripts/utils/tooltip";
 
 export const listenToInputs = (): void => {
+  for (const editor of [
+    rulesUrlsBlacklistTextareaEl,
+    rulesUrlsWhitelistTextareaEl,
+    hotkeysMappingsTextareaEl,
+    hintsCharsetInputEl,
+    hintsReservedLabelsTextareaEl,
+    hintsCustomSelectorsTextareaEl,
+    hintsAvoidAdjacentPairsTextareaEl,
+    hintsCustomCSSTextareaEl
+  ]) {
+    enableEditorTabInsertion(editor);
+  }
+
   saveButtonEl.addEventListener("click", () => {
     void saveConfigAndFastConfig();
   });
@@ -205,6 +223,11 @@ export const listenToInputs = (): void => {
     hintsMinLabelLengthContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
 
+  hintsMinLabelLengthInputEl.addEventListener("input", () => {
+    syncHintsCustomSelectorsHighlight();
+    syncHintsCustomSelectorsHighlightScroll();
+  });
+
   hintsMinLabelLengthInputEl.addEventListener("blur", () => {
     hintsMinLabelLengthContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
@@ -224,6 +247,23 @@ export const listenToInputs = (): void => {
 
   hintsReservedLabelsTextareaEl.addEventListener("blur", () => {
     hintsReservedLabelsContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  hintsCustomSelectorsTextareaEl.addEventListener("focus", () => {
+    hintsCustomSelectorsContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  hintsCustomSelectorsTextareaEl.addEventListener("input", () => {
+    syncHintsCustomSelectorsHighlight();
+    syncHintsCustomSelectorsHighlightScroll();
+  });
+
+  hintsCustomSelectorsTextareaEl.addEventListener("scroll", () => {
+    syncHintsCustomSelectorsHighlightScroll();
+  });
+
+  hintsCustomSelectorsTextareaEl.addEventListener("blur", () => {
+    hintsCustomSelectorsContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   hintsAvoidAdjacentPairsTextareaEl.addEventListener("focus", () => {

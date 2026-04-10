@@ -3,6 +3,7 @@ import {
   barSearchEngineURLInputEl,
   findColorInputEl,
   hintsCharsetStatusEl,
+  hintsCustomSelectorsStatusEl,
   hintsAvoidAdjacentPairsStatusEl,
   hintsReservedLabelsStatusEl,
   hotkeysMappingsStatusEl,
@@ -30,6 +31,7 @@ const SAVE_ERROR_FIELDS = [
   { path: "hotkeys.mappings", statusEl: hotkeysMappingsStatusEl },
   { path: "hints.charset", statusEl: hintsCharsetStatusEl },
   { path: "hints.directives", statusEl: hintsReservedLabelsStatusEl },
+  { path: "hints.advanced.customSelectors", statusEl: hintsCustomSelectorsStatusEl },
   { path: "hints.avoidAdjacentPairs", statusEl: hintsAvoidAdjacentPairsStatusEl }
 ] as const;
 

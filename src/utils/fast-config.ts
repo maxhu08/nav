@@ -21,6 +21,10 @@ import {
   normalizeReservedHintLabels,
   parseReservedHintDirectives
 } from "~/src/utils/hint-reserved-label-directives";
+import {
+  parseHintCustomSelectorsValue,
+  type HintCustomSelectorRule
+} from "~/src/utils/hint-custom-selectors";
 
 export type FastRule = {
   pattern: string;
@@ -60,7 +64,27 @@ export type FastConfig = {
     charset: string;
     avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>>;
     directives: ReservedHintLabels;
+    customSelectors: HintCustomSelectorRule[];
   };
+};
+
+const isHintCustomSelectorShapeValid = (value: unknown): value is HintCustomSelectorRule[] => {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+
+  return value.every((rule) => {
+    return (
+      typeof rule?.pattern === "string" &&
+      Array.isArray(rule.entries) &&
+      rule.entries.every((entry: HintCustomSelectorRule["entries"][number]) => {
+        return (
+          (typeof entry?.key === "string" || entry?.key === null) &&
+          typeof entry?.selector === "string"
+        );
+      })
+    );
+  });
 };
 
 const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch"];
@@ -106,7 +130,8 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hints?.charset === "string" &&
     typeof value?.hints?.avoidAdjacentPairs === "object" &&
     value?.hints?.avoidAdjacentPairs !== null &&
-    isReservedHintLabelsShapeValid(value?.hints?.directives)
+    isReservedHintLabelsShapeValid(value?.hints?.directives) &&
+    isHintCustomSelectorShapeValid(value?.hints?.customSelectors)
   );
 };
 
@@ -218,6 +243,14 @@ const parseDirectivesValue = (value: unknown): FastConfig["hints"]["directives"]
   );
 };
 
+const parseCustomSelectorsValue = (
+  value: unknown,
+  minLabelLength: number
+): FastConfig["hints"]["customSelectors"] => {
+  return parseHintCustomSelectorsValue(typeof value === "string" ? value : "", minLabelLength)
+    .rules;
+};
+
 const parseActions = (value: string): Partial<Record<ActionName, true>> => {
   const actions: Partial<Record<ActionName, true>> = {};
 
@@ -285,6 +318,7 @@ const parseRulesUrlsValue = (value: string): FastRule[] => {
 export const buildFastConfig = (config: Config): FastConfig => {
   const parsedMappings = parseHotkeyMappingsValue(config.hotkeys.mappings);
   const mappings = parsedMappings.mappings;
+  const minLabelLength = parseMinLabelLengthValue(config.hints.minLabelLength);
 
   return {
     rules: {
@@ -309,7 +343,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,
       improveThumbnailMarkers: config.hints.improveThumbnailMarkers,
-      minLabelLength: parseMinLabelLengthValue(config.hints.minLabelLength),
+      minLabelLength,
       activationIndicator: {
         enabled: config.hints.activationIndicator.enabled,
         color: parseActivationIndicatorColorValue(config.hints.activationIndicator.color)
@@ -317,7 +351,11 @@ export const buildFastConfig = (config: Config): FastConfig => {
       css: resolveHintCSS(config),
       charset: parseHintCharsetValue(config.hints.charset),
       avoidAdjacentPairs: parseAvoidAdjacentPairsValue(config.hints.avoidAdjacentPairs),
-      directives: parseDirectivesValue(config.hints.directives)
+      directives: parseDirectivesValue(config.hints.directives),
+      customSelectors: parseCustomSelectorsValue(
+        config.hints.advanced.customSelectors,
+        minLabelLength
+      )
     }
   };
 };

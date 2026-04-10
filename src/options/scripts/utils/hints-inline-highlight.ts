@@ -2,11 +2,17 @@ import {
   hintsCharsetHighlightEl,
   hintsCharsetInputEl,
   hintsCharsetStatusEl,
+  hintsCustomSelectorsHighlightEl,
+  hintsCustomSelectorsStatusEl,
+  hintsCustomSelectorsTextareaEl,
+  hintsMinLabelLengthInputEl,
   hintsReservedLabelsHighlightEl,
   hintsReservedLabelsStatusEl,
   hintsReservedLabelsTextareaEl
 } from "~/src/options/scripts/ui";
 import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
+import { tokenizeCssSelectorValue } from "~/src/options/scripts/utils/hints-custom-css-highlight";
+import { tokenizeRegexPattern } from "~/src/options/scripts/utils/rules-highlight";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import {
   normalizeReservedHintDirective,
@@ -14,6 +20,7 @@ import {
   RESERVED_HINT_DIRECTIVE_LINE_PATTERN,
   RESERVED_HINT_UNBOUND_LABEL
 } from "~/src/utils/hint-reserved-label-directives";
+import { parseHintCustomSelectorsValue } from "~/src/utils/hint-custom-selectors";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -211,6 +218,96 @@ const renderReservedLabelsHighlight = (
   return { hasError, html, errors };
 };
 
+const renderCustomSelectorsHighlight = (
+  value: string,
+  minLabelLength: number
+): { hasError: boolean; html: string; errors: EditorStatusError[] } => {
+  const parsedValue = parseHintCustomSelectorsValue(value, minLabelLength);
+  const errorsByLine = new Map<number, string[]>();
+
+  for (const error of parsedValue.errors) {
+    if (error.lineNumber === null) {
+      continue;
+    }
+
+    const lineErrors = errorsByLine.get(error.lineNumber) ?? [];
+    lineErrors.push(error.message);
+    errorsByLine.set(error.lineNumber, lineErrors);
+  }
+
+  let insideBlock = false;
+  const html = value
+    .split("\n")
+    .map((line, index) => {
+      const lineNumber = index + 1;
+      const trimmedLine = line.trim();
+      const lineHasError = (errorsByLine.get(lineNumber)?.length ?? 0) > 0;
+
+      if (!trimmedLine) {
+        return "";
+      }
+
+      if (!insideBlock) {
+        const blockMatch = trimmedLine.match(/^\*\s+(.*?)\s*\{$/);
+        insideBlock = !!blockMatch;
+
+        if (!blockMatch || lineHasError) {
+          return wrapToken("hints-custom-selectors-token-invalid", line);
+        }
+
+        const leadingWhitespace = line.match(/^\s*/)?.[0] ?? "";
+        const trailingWhitespace = line.match(/\s*$/)?.[0] ?? "";
+        const pattern = (blockMatch[1] ?? "").trim();
+        return [
+          escapeHtml(leadingWhitespace),
+          wrapToken("hints-custom-selectors-token-operator", "*"),
+          wrapToken("hints-custom-selectors-token-separator", " "),
+          tokenizeRegexPattern(pattern),
+          wrapToken("hints-custom-selectors-token-separator", " "),
+          wrapToken("hints-custom-selectors-token-brace", "{"),
+          escapeHtml(trailingWhitespace)
+        ].join("");
+      }
+
+      if (trimmedLine === "}") {
+        insideBlock = false;
+        return wrapToken(
+          lineHasError
+            ? "hints-custom-selectors-token-invalid"
+            : "hints-custom-selectors-token-brace",
+          line
+        );
+      }
+
+      const entryMatch = trimmedLine.match(/^(\S+)\s+(.+)$/);
+      if (!entryMatch || lineHasError) {
+        return wrapToken("hints-custom-selectors-token-invalid", line);
+      }
+
+      const leadingWhitespace = line.match(/^\s*/)?.[0] ?? "";
+      const trailingWhitespace = line.match(/\s*$/)?.[0] ?? "";
+      const key = entryMatch[1] ?? "";
+      const selector = (entryMatch[2] ?? "").trim();
+      return [
+        escapeHtml(leadingWhitespace),
+        wrapToken("hotkeys-mappings-token-sequence", key),
+        wrapToken("hints-custom-selectors-token-separator", " "),
+        tokenizeCssSelectorValue(selector),
+        escapeHtml(trailingWhitespace)
+      ].join("");
+    })
+    .join("\n");
+
+  return {
+    hasError: parsedValue.errors.length > 0,
+    html,
+    errors: parsedValue.errors.map((error) => ({
+      code: error.code,
+      message: error.message
+    }))
+  };
+};
+
 export const syncHintsCharsetHighlight = (): void => {
   const { html, errors } = renderCharsetHighlight(hintsCharsetInputEl.value);
   hintsCharsetHighlightEl.innerHTML = html;
@@ -233,4 +330,22 @@ export const syncHintsReservedLabelsHighlight = (): void => {
 export const syncHintsReservedLabelsHighlightScroll = (): void => {
   hintsReservedLabelsHighlightEl.scrollTop = hintsReservedLabelsTextareaEl.scrollTop;
   hintsReservedLabelsHighlightEl.scrollLeft = hintsReservedLabelsTextareaEl.scrollLeft;
+};
+
+export const syncHintsCustomSelectorsHighlight = (): void => {
+  const minLabelLength = Math.max(1, Number.parseInt(hintsMinLabelLengthInputEl.value, 10) || 2);
+  const { html, errors } = renderCustomSelectorsHighlight(
+    hintsCustomSelectorsTextareaEl.value,
+    minLabelLength
+  );
+  hintsCustomSelectorsHighlightEl.innerHTML = getTextareaOverlayHTML(
+    hintsCustomSelectorsTextareaEl.value,
+    html
+  );
+  setEditorStatus(hintsCustomSelectorsStatusEl, errors);
+};
+
+export const syncHintsCustomSelectorsHighlightScroll = (): void => {
+  hintsCustomSelectorsHighlightEl.scrollTop = hintsCustomSelectorsTextareaEl.scrollTop;
+  hintsCustomSelectorsHighlightEl.scrollLeft = hintsCustomSelectorsTextareaEl.scrollLeft;
 };

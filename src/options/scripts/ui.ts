@@ -88,6 +88,14 @@ export const hintsReservedLabelsHighlightEl = getElement<HTMLPreElement>(
 export const hintsReservedLabelsStatusEl = getElement<HTMLParagraphElement>(
   "hints-reserved-labels-status"
 );
+export const [hintsCustomSelectorsContainerEl, hintsCustomSelectorsTextareaEl] =
+  getContainerAndTextarea("hints-custom-selectors");
+export const hintsCustomSelectorsHighlightEl = getElement<HTMLPreElement>(
+  "hints-custom-selectors-highlight"
+);
+export const hintsCustomSelectorsStatusEl = getElement<HTMLParagraphElement>(
+  "hints-custom-selectors-status"
+);
 export const hintsStylingDefaultButtonEl = getElement<HTMLButtonElement>(
   "hints-styling-default-button"
 );

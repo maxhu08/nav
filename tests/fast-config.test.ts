@@ -64,4 +64,46 @@ describe("buildFastConfig", () => {
     expect(fastConfig.bar.searchEngineURL).toBe(defaultConfig.bar.searchEngineURL);
     expect(fastConfig.find.color).toBe(defaultConfig.find.color);
   });
+
+  test("parses valid custom hint selectors into fastConfig", async () => {
+    const config = structuredClone(defaultConfig);
+    config.hints.advanced.customSelectors = `* ^https://example\\.com/ {
+abc button[data-test='primary']
+<auto> [data-test='secondary']
+}`;
+    const fixture = createDomFixture("");
+    installCanvasStub();
+    const { buildFastConfig } = await import("~/src/utils/fast-config");
+
+    const fastConfig = buildFastConfig(config);
+
+    fixture.cleanup();
+
+    expect(fastConfig.hints.customSelectors).toEqual([
+      {
+        pattern: "^https://example\\.com/",
+        entries: [
+          { key: "abc", selector: "button[data-test='primary']" },
+          { key: null, selector: "[data-test='secondary']" }
+        ]
+      }
+    ]);
+  });
+
+  test("allows explicit custom selector keys that match minLabelLength", async () => {
+    const config = structuredClone(defaultConfig);
+    config.hints.minLabelLength = 3;
+    config.hints.advanced.customSelectors = `* ^https://example\\.com/ {
+abc button[data-test='primary']
+}`;
+    const fixture = createDomFixture("");
+    installCanvasStub();
+    const { buildFastConfig } = await import("~/src/utils/fast-config");
+
+    const fastConfig = buildFastConfig(config);
+
+    fixture.cleanup();
+
+    expect(fastConfig.hints.customSelectors[0]?.entries[0]?.key).toBe("abc");
+  });
 });

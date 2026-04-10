@@ -14,8 +14,10 @@ import {
   isButtonLikeDirectiveCandidate
 } from "~/src/core/utils/hint-mode/directive-recognition/shared";
 import { getClosestLinkUrl } from "~/src/core/utils/hint-mode/collection/get-closest-link-url";
+import { collectElements } from "~/src/core/utils/hint-mode/collection/collect-elements";
 import { getElementImageUrl } from "~/src/core/utils/hint-mode/collection/get-element-image-url";
 import { getHintableElements } from "~/src/core/utils/hint-mode/collection/get-hintable-elements";
+import { isElementVisible } from "~/src/core/utils/hint-mode/collection/is-element-visible";
 import { resolveFollowDirectionTarget } from "~/src/core/utils/follow-page-target";
 import { generateHintLabels } from "~/src/core/utils/hint-mode/generation/generate-hint-labels";
 import {
@@ -33,6 +35,7 @@ import {
   createEmptyReservedHintLabels,
   type ReservedHintDirective
 } from "~/src/utils/hint-reserved-label-directives";
+import type { HintCustomSelectorRule } from "~/src/utils/hint-custom-selectors";
 
 const createInlineSvgIcon = (pathData: string): string => {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="${pathData}"></path></svg>`;
@@ -78,6 +81,12 @@ type DirectiveMatch = {
   element: HTMLElement;
   score: number;
   target: HintTarget;
+};
+
+type CustomSelectorMatches = {
+  autoTargets: Set<HTMLElement>;
+  explicitLabels: Map<HTMLElement, string>;
+  matchedElements: HTMLElement[];
 };
 
 const applyDirectiveMarker = (
@@ -738,6 +747,90 @@ const getForcedIconForMode = (mode: HintActionMode): string | null => {
   return null;
 };
 
+const isElementCompatibleWithMode = (mode: HintActionMode, element: HTMLElement): boolean => {
+  if (mode === "new-tab" || mode === "yank-link-url") {
+    return !!getClosestLinkUrl(element);
+  }
+
+  if (mode === "yank-image" || mode === "yank-image-url") {
+    return !!getElementImageUrl(element);
+  }
+
+  return true;
+};
+
+const getMatchingCustomSelectorTargets = (
+  mode: HintActionMode,
+  customSelectors: HintCustomSelectorRule[]
+): CustomSelectorMatches => {
+  const matchedElements: HTMLElement[] = [];
+  const seenElements = new Set<HTMLElement>();
+  const autoTargets = new Set<HTMLElement>();
+  const explicitLabels = new Map<HTMLElement, string>();
+  const currentUrl = window.location.href;
+
+  for (const rule of customSelectors) {
+    let regex: RegExp;
+
+    try {
+      regex = new RegExp(rule.pattern);
+    } catch {
+      continue;
+    }
+
+    if (!regex.test(currentUrl)) {
+      continue;
+    }
+
+    for (const entry of rule.entries) {
+      const elements: HTMLElement[] = [];
+
+      try {
+        collectElements(document, entry.selector, elements);
+      } catch {
+        continue;
+      }
+
+      const compatibleElements = elements.filter((element) => {
+        return isElementVisible(element) && isElementCompatibleWithMode(mode, element);
+      });
+
+      if (entry.key === null) {
+        for (const element of compatibleElements) {
+          if (!seenElements.has(element)) {
+            seenElements.add(element);
+            matchedElements.push(element);
+          }
+
+          autoTargets.add(element);
+        }
+
+        continue;
+      }
+
+      const matchedElement = compatibleElements[0];
+      if (!matchedElement) {
+        continue;
+      }
+
+      if (!seenElements.has(matchedElement)) {
+        seenElements.add(matchedElement);
+        matchedElements.push(matchedElement);
+      }
+
+      if (!explicitLabels.has(matchedElement)) {
+        explicitLabels.set(matchedElement, entry.key);
+      }
+    }
+  }
+
+  return {
+    autoTargets,
+    explicitLabels,
+    matchedElements
+  };
+};
+
 export const buildHintTargets = (
   mode: HintActionMode,
   charset: string,
@@ -746,25 +839,18 @@ export const buildHintTargets = (
   directiveLabels: HintDirectiveLabelMap = createEmptyReservedHintLabels(),
   forbiddenLeadingCharacters: string[] = [],
   forbiddenAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {},
-  improveThumbnailMarkers = false
+  improveThumbnailMarkers = false,
+  customSelectors: HintCustomSelectorRule[] = []
 ): HintTarget[] => {
   const ignoreDirectives = mode === "right-click";
-  const elements = getHintableElements(mode);
-  const filteredElements = elements.filter((element) => {
-    if (mode === "new-tab") {
-      return !!getClosestLinkUrl(element);
-    }
+  const customSelectorMatches = getMatchingCustomSelectorTargets(mode, customSelectors);
+  const filteredElements = [...getHintableElements(mode)];
 
-    if (mode === "yank-link-url") {
-      return !!getClosestLinkUrl(element);
+  for (const element of customSelectorMatches.matchedElements) {
+    if (!filteredElements.includes(element)) {
+      filteredElements.push(element);
     }
-
-    if (mode === "yank-image" || mode === "yank-image-url") {
-      return !!getElementImageUrl(element);
-    }
-
-    return true;
-  });
+  }
 
   const directiveMatches = new Map<ReservedHintDirective, DirectiveMatch>();
   const targetsByElement = new Map<HTMLElement, HintTarget>();
@@ -875,10 +961,27 @@ export const buildHintTargets = (
     }
   }
 
+  for (const [element, label] of customSelectorMatches.explicitLabels.entries()) {
+    const matchedTarget = targetsByElement.get(element);
+    if (!matchedTarget) {
+      continue;
+    }
+
+    matchedTarget.label = label;
+    matchedTarget.directiveMatch = undefined;
+    reservedDirectiveLabels.add(label);
+  }
+
   const allTargets = [...targets, ...directiveTargets];
+  const generatedTargets = allTargets.filter((target) => target.label.length === 0);
+  const prioritizedGeneratedTargets = generatedTargets.sort((left, right) => {
+    const leftPriority = customSelectorMatches.autoTargets.has(left.element) ? 0 : 1;
+    const rightPriority = customSelectorMatches.autoTargets.has(right.element) ? 0 : 1;
+    return leftPriority - rightPriority;
+  });
 
   const generatedLabels = generateAvailableLabels(
-    allTargets.filter((target) => !target.directiveMatch).length,
+    prioritizedGeneratedTargets.length,
     charset,
     minLabelLength,
     forbiddenLeadingCharacters,
@@ -887,12 +990,14 @@ export const buildHintTargets = (
   );
   let generatedLabelIndex = 0;
 
-  for (const target of allTargets) {
-    if (!target.directiveMatch) {
+  for (const target of prioritizedGeneratedTargets) {
+    if (target.label.length === 0) {
       target.label = generatedLabels[generatedLabelIndex] ?? "";
       generatedLabelIndex += 1;
     }
+  }
 
+  for (const target of allTargets) {
     renderMarkerLabel(target.marker, target.label, 0, showCapitalizedLetters);
   }
 

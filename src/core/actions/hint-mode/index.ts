@@ -19,6 +19,7 @@ import type {
 } from "~/src/core/utils/hint-mode/shared/types";
 import { DEFAULT_HINT_CHARSET } from "~/src/utils/config-defaults";
 import { createEmptyReservedHintLabels } from "~/src/utils/hint-reserved-label-directives";
+import type { HintCustomSelectorRule } from "~/src/utils/hint-custom-selectors";
 
 type HintControllerDeps = {
   setMode: (mode: "find" | "hint" | "normal" | "watch") => void;
@@ -38,6 +39,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
   let improveThumbnailMarkers = false;
   let avoidAdjacentPairs: Partial<Record<string, Partial<Record<string, true>>>> = {};
   let directiveLabels: HintDirectiveLabelMap = createEmptyReservedHintLabels();
+  let customSelectors: HintCustomSelectorRule[] = [];
 
   const rebuildHintTargets = (mode: HintActionMode): HintTarget[] => {
     return buildHintTargets(
@@ -48,7 +50,8 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       directiveLabels,
       toggleKey ? [toggleKey] : [],
       avoidAdjacentPairs,
-      improveThumbnailMarkers
+      improveThumbnailMarkers,
+      customSelectors
     );
   };
 
@@ -161,6 +164,9 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
     },
     setDirectiveLabels: (value: HintDirectiveLabelMap): void => {
       directiveLabels = value;
+    },
+    setCustomSelectors: (value: HintCustomSelectorRule[]): void => {
+      customSelectors = value;
     },
     syncHintMarkers: (): void => {
       if (!activeMode) {

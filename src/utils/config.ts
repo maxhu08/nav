@@ -93,6 +93,9 @@ export const defaultConfig: Config = {
   hints: {
     showCapitalizedLetters: false,
     improveThumbnailMarkers: true,
+    advanced: {
+      customSelectors: ""
+    },
     minLabelLength: 2,
     activationIndicator: {
       enabled: true,
@@ -128,6 +131,9 @@ export type Config = {
   hints: {
     showCapitalizedLetters: boolean;
     improveThumbnailMarkers: boolean;
+    advanced: {
+      customSelectors: string;
+    };
     minLabelLength: number;
     activationIndicator: {
       enabled: boolean;

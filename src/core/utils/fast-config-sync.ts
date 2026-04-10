@@ -15,6 +15,7 @@ type FastConfigSyncDeps = {
   setImproveThumbnailMarkers: (value: boolean) => void;
   setHintAvoidAdjacentPairs: (value: FastConfig["hints"]["avoidAdjacentPairs"]) => void;
   setHintDirectiveLabels: (value: FastConfig["hints"]["directives"]) => void;
+  setHintCustomSelectors: (value: FastConfig["hints"]["customSelectors"]) => void;
   setWatchShowCapitalizedLetters: (value: boolean) => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
@@ -37,6 +38,7 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setImproveThumbnailMarkers(fastConfig.hints.improveThumbnailMarkers);
   deps.setHintAvoidAdjacentPairs(fastConfig.hints.avoidAdjacentPairs);
   deps.setHintDirectiveLabels(fastConfig.hints.directives);
+  deps.setHintCustomSelectors(fastConfig.hints.customSelectors);
   deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setShowActivationIndicator(fastConfig.hints.activationIndicator.enabled);
   deps.setActivationIndicatorColor(fastConfig.hints.activationIndicator.color);

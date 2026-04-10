@@ -107,6 +107,7 @@ const fastConfigSyncDeps = {
   setImproveThumbnailMarkers: hintController.setImproveThumbnailMarkers,
   setHintAvoidAdjacentPairs: hintController.setAvoidAdjacentPairs,
   setHintDirectiveLabels: hintController.setDirectiveLabels,
+  setHintCustomSelectors: hintController.setCustomSelectors,
   setWatchShowCapitalizedLetters: watchController.setWatchShowCapitalizedLetters,
   setShowActivationIndicator: focusIndicator.setShowActivationIndicator,
   setActivationIndicatorColor: focusIndicator.setActivationIndicatorColor,

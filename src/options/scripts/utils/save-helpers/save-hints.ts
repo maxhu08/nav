@@ -2,6 +2,7 @@ import { type Config } from "~/src/utils/config";
 import {
   hintsAvoidAdjacentPairsTextareaEl,
   hintsCharsetInputEl,
+  hintsCustomSelectorsTextareaEl,
   hintsCustomCSSTextareaEl,
   hintsImproveThumbnailMarkersCheckboxEl,
   hintsMinLabelLengthInputEl,
@@ -24,6 +25,7 @@ export const saveHintsSettingsToDraft = (draft: Config): void => {
   draft.hints.styling =
     hintsStylingCustomButtonEl.getAttribute("aria-pressed") === "true" ? "custom" : "default";
   draft.hints.customCSS = hintsCustomCSSTextareaEl.value;
+  draft.hints.advanced.customSelectors = hintsCustomSelectorsTextareaEl.value;
   draft.hints.charset = hintsCharsetInputEl.value;
   draft.hints.avoidAdjacentPairs = hintsAvoidAdjacentPairsTextareaEl.value;
   draft.hints.directives = hintsReservedLabelsTextareaEl.value;
