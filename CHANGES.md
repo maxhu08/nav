@@ -1,6 +1,9 @@
-# Changes in 1.1.6
+# Changes in 1.1.7
 
 in this release:
 
-- improve hint recognition and positioning
+- add hints.advanced.customSelectors
+- add comment directive
+- improve hint recognition and placement
+- performance improvements
 - bug fixes
