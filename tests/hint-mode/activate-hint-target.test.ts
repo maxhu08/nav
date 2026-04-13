@@ -49,8 +49,8 @@ describe("activateHintTarget", () => {
     }
   });
 
-  test("focuses editable targets before activation", async () => {
-    const fixture = createDomFixture("<input id='field' />");
+  test("focuses editable targets and moves the caret to the end", async () => {
+    const fixture = createDomFixture("<input id='field' value='hello world' />");
 
     try {
       const { activateHintTarget } =
@@ -68,10 +68,14 @@ describe("activateHintTarget", () => {
         didClick = true;
       };
 
+      field.setSelectionRange(0, 0);
+
       expect(activateHintTarget("current-tab", createHintTarget(field))).toBe(true);
       expect(document.activeElement).toBe(field);
+      expect(field.selectionStart).toBe(field.value.length);
+      expect(field.selectionEnd).toBe(field.value.length);
       expect(focusIndicatorTarget === field).toBe(true);
-      expect(didClick).toBe(true);
+      expect(didClick).toBe(false);
     } finally {
       fixture.cleanup();
     }
