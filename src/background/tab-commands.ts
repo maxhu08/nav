@@ -52,8 +52,8 @@ const updateWindowTabHistory = (windowId: number, activeTabId: number): void => 
   history.activeTabId = activeTabId;
 };
 
-chrome.tabs.onActivated.addListener(({ windowId, tabId }) => {
-  updateWindowTabHistory(windowId, tabId);
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  updateWindowTabHistory(activeInfo.windowId, activeInfo.tabId);
 });
 
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {

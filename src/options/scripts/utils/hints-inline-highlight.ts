@@ -309,9 +309,9 @@ const renderCustomSelectorsHighlight = (
 };
 
 export const syncHintsCharsetHighlight = (): void => {
-  const { html, errors } = renderCharsetHighlight(hintsCharsetInputEl.value);
-  hintsCharsetHighlightEl.innerHTML = html;
-  setEditorStatus(hintsCharsetStatusEl, errors);
+  const result = renderCharsetHighlight(hintsCharsetInputEl.value);
+  hintsCharsetHighlightEl.innerHTML = result.html;
+  setEditorStatus(hintsCharsetStatusEl, result.errors);
 };
 
 export const syncHintsCharsetHighlightScroll = (): void => {
@@ -319,12 +319,12 @@ export const syncHintsCharsetHighlightScroll = (): void => {
 };
 
 export const syncHintsReservedLabelsHighlight = (): void => {
-  const { html, errors } = renderReservedLabelsHighlight(hintsReservedLabelsTextareaEl.value);
+  const result = renderReservedLabelsHighlight(hintsReservedLabelsTextareaEl.value);
   hintsReservedLabelsHighlightEl.innerHTML = getTextareaOverlayHTML(
     hintsReservedLabelsTextareaEl.value,
-    html
+    result.html
   );
-  setEditorStatus(hintsReservedLabelsStatusEl, errors);
+  setEditorStatus(hintsReservedLabelsStatusEl, result.errors);
 };
 
 export const syncHintsReservedLabelsHighlightScroll = (): void => {
@@ -334,15 +334,15 @@ export const syncHintsReservedLabelsHighlightScroll = (): void => {
 
 export const syncHintsCustomSelectorsHighlight = (): void => {
   const minLabelLength = Math.max(1, Number.parseInt(hintsMinLabelLengthInputEl.value, 10) || 2);
-  const { html, errors } = renderCustomSelectorsHighlight(
+  const result = renderCustomSelectorsHighlight(
     hintsCustomSelectorsTextareaEl.value,
     minLabelLength
   );
   hintsCustomSelectorsHighlightEl.innerHTML = getTextareaOverlayHTML(
     hintsCustomSelectorsTextareaEl.value,
-    html
+    result.html
   );
-  setEditorStatus(hintsCustomSelectorsStatusEl, errors);
+  setEditorStatus(hintsCustomSelectorsStatusEl, result.errors);
 };
 
 export const syncHintsCustomSelectorsHighlightScroll = (): void => {

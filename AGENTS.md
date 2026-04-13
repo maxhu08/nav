@@ -25,15 +25,29 @@ const version = (await Bun.file(versionFile).text()).trim();
 
 ### Destructuring
 
-Avoid destructuring unless it improves readability. Prefer dot notation so object context stays visible.
+Avoid object destructuring unless it clearly improves readability. Prefer dot notation so object context stays visible.
+
+This applies to local assignments, function parameters, callback parameters, and values returned from helpers. Default to `obj.x` over pulling properties into standalone names.
 
 ```ts
 // Good
 obj.a;
 obj.b;
 
+function render(user) {
+  return user.name;
+}
+
+items.map((item) => item.id);
+
 // Bad
 const { a, b } = obj;
+
+function render({ name }) {
+  return name;
+}
+
+items.map(({ id }) => id);
 ```
 
 ### Variables
@@ -52,7 +66,7 @@ else foo = 2;
 
 ### Control Flow
 
-Prefer early returns over `else` branches.
+Prefer early returns when one branch exits immediately. Keep direct `if`/`else` blocks when they express one paired decision more clearly than split `if` statements.
 
 ```ts
 // Good
@@ -61,10 +75,27 @@ function foo() {
   return 2;
 }
 
+function bar(condition) {
+  if (condition) {
+    doThing();
+  } else {
+    doOtherThing();
+  }
+}
+
 // Bad
 function foo() {
   if (condition) return 1;
   else return 2;
+}
+
+function bar(condition) {
+  if (condition) {
+    doThing();
+  }
+  if (!condition) {
+    doOtherThing();
+  }
 }
 ```
 

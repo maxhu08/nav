@@ -13,11 +13,11 @@ type PlacementOverride = {
 };
 
 const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
-  const { element } = target;
-
   if (
-    element.matches("[role='menuitem'], [role='menuitemcheckbox'], [role='menuitemradio']") &&
-    element.closest("[role='menu']")
+    target.element.matches(
+      "[role='menuitem'], [role='menuitemcheckbox'], [role='menuitemradio']"
+    ) &&
+    target.element.closest("[role='menu']")
   ) {
     return {
       rect: target.rect,
@@ -26,12 +26,12 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
   }
 
   if (
-    element.matches("button.icon[data-state='open'], button.icon[data-state='closed']") &&
-    element.closest("[data-sidebar-item='true']") &&
-    (element.querySelector("[data-testid='project-folder-icon']") ||
-      element.querySelector("svg[aria-label]"))
+    target.element.matches("button.icon[data-state='open'], button.icon[data-state='closed']") &&
+    target.element.closest("[data-sidebar-item='true']") &&
+    (target.element.querySelector("[data-testid='project-folder-icon']") ||
+      target.element.querySelector("svg[aria-label]"))
   ) {
-    const row = element.closest("[data-sidebar-item='true']");
+    const row = target.element.closest("[data-sidebar-item='true']");
 
     if (!(row instanceof HTMLElement)) {
       return null;
@@ -43,8 +43,8 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
     };
   }
 
-  if (element.matches("button.__menu-item-trailing-btn[data-trailing-button]")) {
-    const row = element.closest("[data-sidebar-item='true']");
+  if (target.element.matches("button.__menu-item-trailing-btn[data-trailing-button]")) {
+    const row = target.element.closest("[data-sidebar-item='true']");
 
     if (row instanceof HTMLElement) {
       return {
@@ -54,12 +54,12 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
     }
   }
 
-  if (element.matches("[data-sidebar-item='true']")) {
+  if (target.element.matches("[data-sidebar-item='true']")) {
     const hasProjectToggle =
-      element.querySelector("button.icon[data-state]") instanceof HTMLElement ||
-      element.querySelector("[data-testid='project-folder-icon']") instanceof HTMLElement;
+      target.element.querySelector("button.icon[data-state]") instanceof HTMLElement ||
+      target.element.querySelector("[data-testid='project-folder-icon']") instanceof HTMLElement;
 
-    const projectToggle = element.querySelector("button.icon[data-state]");
+    const projectToggle = target.element.querySelector("button.icon[data-state]");
     if (hasProjectToggle && projectToggle instanceof HTMLElement) {
       return {
         rect: target.rect,
@@ -75,10 +75,10 @@ const getPlacementOverride = (target: HintTarget): PlacementOverride | null => {
   }
 
   if (
-    element.matches("button[aria-expanded]") &&
-    element.closest(".group\\/sidebar-expando-section")
+    target.element.matches("button[aria-expanded]") &&
+    target.element.closest(".group\\/sidebar-expando-section")
   ) {
-    const icon = element.querySelector("svg");
+    const icon = target.element.querySelector("svg");
     if (icon instanceof SVGElement) {
       return {
         rect: target.rect,

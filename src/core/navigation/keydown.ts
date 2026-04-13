@@ -199,38 +199,35 @@ export const createNavigationKeydownHandler = ({
       return false;
     }
 
-    const { actionName, claimKeydown, consumed } = keyState.getWatchActionName(
-      keyToken,
-      watchController.getWatchActionSequences()
-    );
+    const action = keyState.getWatchActionName(keyToken, watchController.getWatchActionSequences());
 
-    if (event.repeat && (actionName || claimKeydown)) {
+    if (event.repeat && (action.actionName || action.claimKeydown)) {
       consumeKeydownEvent(event);
       return true;
     }
 
-    if (actionName === "toggle-fullscreen" && watchController.toggleFullscreen()) {
+    if (action.actionName === "toggle-fullscreen" && watchController.toggleFullscreen()) {
       consumeKeydownEvent(event);
       return true;
     }
-    if (actionName === "toggle-play-pause" && watchController.toggleWatchPlayPause()) {
+    if (action.actionName === "toggle-play-pause" && watchController.toggleWatchPlayPause()) {
       consumeKeydownEvent(event);
       return true;
     }
-    if (actionName === "toggle-loop" && watchController.toggleWatchLoop()) {
+    if (action.actionName === "toggle-loop" && watchController.toggleWatchLoop()) {
       consumeKeydownEvent(event);
       return true;
     }
-    if (actionName === "toggle-mute" && watchController.toggleWatchMute()) {
+    if (action.actionName === "toggle-mute" && watchController.toggleWatchMute()) {
       consumeKeydownEvent(event);
       return true;
     }
-    if (actionName === "toggle-captions" && watchController.toggleWatchCaptions()) {
+    if (action.actionName === "toggle-captions" && watchController.toggleWatchCaptions()) {
       consumeKeydownEvent(event);
       return true;
     }
-    if (consumed) {
-      if (claimKeydown) {
+    if (action.consumed) {
+      if (action.claimKeydown) {
         consumeKeydownEvent(event);
       }
       return true;
@@ -240,11 +237,10 @@ export const createNavigationKeydownHandler = ({
   };
 
   const handleActionKeydown = (event: KeyboardEvent, keyToken: string): void => {
-    const { actionName, claimKeydown, consumed, matchedSequence } =
-      keyState.getActionName(keyToken);
+    const action = keyState.getActionName(keyToken);
 
-    if (!actionName) {
-      if (consumed && claimKeydown) {
+    if (!action.actionName) {
+      if (action.consumed && action.claimKeydown) {
         consumeKeydownEvent(event);
         return;
       }
@@ -255,7 +251,7 @@ export const createNavigationKeydownHandler = ({
       return;
     }
 
-    if (!runAction(actionName, matchedSequence)) {
+    if (!runAction(action.actionName, action.matchedSequence)) {
       if (findMode.isFindModeActive()) {
         consumeKeydownEvent(event);
       }

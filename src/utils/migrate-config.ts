@@ -41,6 +41,10 @@ const migrateHintActivationIndicatorOptions = (config: Config): void => {
   }
 };
 
+type LegacyHintsConfig = Config["hints"] & {
+  reservedLabels?: unknown;
+};
+
 const fallbackActivationIndicatorColor = (config: Config): string => {
   return config.hints.activationIndicator?.color ?? "#eab308";
 };
@@ -202,13 +206,14 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   // if config before v1.1.4
   if (!hasDirectivesOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+    const hints = migratedConfig.hints as LegacyHintsConfig;
     migrateHintActivationIndicatorOptions(migratedConfig);
     ensurePromptOptions(migratedConfig, fallbackConfig);
     migratedConfig.hints.directives = fallbackConfig.hints.directives;
     migratedConfig.hints.styling = fallbackConfig.hints.styling;
 
-    if ((migratedConfig.hints as any).reservedLabels) {
-      delete (migratedConfig.hints as any).reservedLabels;
+    if (hints.reservedLabels) {
+      delete hints.reservedLabels;
     }
 
     migratedConfig.hotkeys.mappings = appendMissingHotkeyDeclarations(

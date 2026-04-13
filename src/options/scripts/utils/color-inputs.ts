@@ -207,7 +207,7 @@ export const syncColorInputControl = (input: HTMLInputElement): void => {
 };
 
 export const syncAllColorInputControls = (): void => {
-  colorInputs.forEach(({ input }) => {
-    syncColorInputControl(input);
+  colorInputs.forEach((control) => {
+    syncColorInputControl(control.input);
   });
 };

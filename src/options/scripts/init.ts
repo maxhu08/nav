@@ -83,9 +83,9 @@ const maybeShowPendingExcludeSiteDialog = async (): Promise<void> => {
   }
 
   pendingExcludeSiteDialogPromise = (async () => {
-    const { pendingExcludeSiteUrl } = await getOptionsData();
+    const optionsData = await getOptionsData();
 
-    if (!pendingExcludeSiteUrl) {
+    if (!optionsData.pendingExcludeSiteUrl) {
       return;
     }
 
@@ -97,7 +97,7 @@ const maybeShowPendingExcludeSiteDialog = async (): Promise<void> => {
     let url: URL;
 
     try {
-      url = new URL(pendingExcludeSiteUrl);
+      url = new URL(optionsData.pendingExcludeSiteUrl);
     } catch {
       return;
     }

@@ -11,37 +11,37 @@ import type { HintActionMode, HintTarget } from "~/src/core/utils/hint-mode/shar
 type HintTargetHandler = (target: HintTarget) => boolean;
 
 const directiveHandlers: Record<"erase" | "hide", HintTargetHandler> = {
-  erase: ({ element }) => clearDirectiveTarget(element),
-  hide: ({ element }) => hideDirectiveTarget(element)
+  erase: (target) => clearDirectiveTarget(target.element),
+  hide: (target) => hideDirectiveTarget(target.element)
 };
 
 const modeHandlers: Record<HintActionMode, HintTargetHandler> = {
   "current-tab": (target) => activateDefaultTarget(target),
-  "new-tab": ({ element, linkUrl }) => {
-    if (!linkUrl) {
+  "new-tab": (target) => {
+    if (!target.linkUrl) {
       return false;
     }
 
-    dispatchFocusIndicator(element);
-    window.open(linkUrl, "_blank", "noopener,noreferrer");
+    dispatchFocusIndicator(target.element);
+    window.open(target.linkUrl, "_blank", "noopener,noreferrer");
     return true;
   },
-  "right-click": ({ element }) => {
-    dispatchFocusIndicator(element);
-    dispatchSyntheticRightClickEvents(element);
+  "right-click": (target) => {
+    dispatchFocusIndicator(target.element);
+    dispatchSyntheticRightClickEvents(target.element);
     return true;
   },
-  "yank-link-url": ({ linkUrl }) =>
+  "yank-link-url": (target) =>
     activateClipboardTextTarget(
-      linkUrl,
+      target.linkUrl,
       "Link URL yanked",
       "Could not yank link URL",
       "Clipboard access was denied."
     ),
-  "yank-image": ({ imageUrl }) => activateClipboardImageTarget(imageUrl),
-  "yank-image-url": ({ imageUrl }) =>
+  "yank-image": (target) => activateClipboardImageTarget(target.imageUrl),
+  "yank-image-url": (target) =>
     activateClipboardTextTarget(
-      imageUrl,
+      target.imageUrl,
       "Image URL yanked",
       "Could not yank image URL",
       "Clipboard access was denied."

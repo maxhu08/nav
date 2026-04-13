@@ -221,7 +221,7 @@ const firstScrollableElement = (element: Element | null = null): HTMLElement | n
 
   const children = Array.from(element.children)
     .map((child) => ({ element: child, area: getVisibleArea(child) }))
-    .filter(({ area }) => area > 0)
+    .filter((child) => child.area > 0)
     .sort((a, b) => b.area - a.area);
 
   for (const child of children) {

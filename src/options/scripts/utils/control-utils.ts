@@ -34,9 +34,9 @@ export const showControls = (): void => {
     return;
   }
 
-  const { left, width } = mainEl.getBoundingClientRect();
-  controlsContainerEl.style.left = `${left}px`;
-  controlsContainerEl.style.width = `${width}px`;
+  const rect = mainEl.getBoundingClientRect();
+  controlsContainerEl.style.left = `${rect.left}px`;
+  controlsContainerEl.style.width = `${rect.width}px`;
 
   setControlsVisibility(true);
 };
@@ -50,9 +50,9 @@ const updateFloatingControlsPosition = (): void => {
   controlsContainerPlaceholderEl.style.height = `${height}px`;
 
   controlsContainerEl.style.bottom = `${FLOATING_BOTTOM_OFFSET_PX}px`;
-  const { left, width } = mainEl.getBoundingClientRect();
-  controlsContainerEl.style.left = `${left}px`;
-  controlsContainerEl.style.width = `${width}px`;
+  const rect = mainEl.getBoundingClientRect();
+  controlsContainerEl.style.left = `${rect.left}px`;
+  controlsContainerEl.style.width = `${rect.width}px`;
 };
 
 export const handleControls = (): void => {

@@ -73,7 +73,9 @@ const bindCollapseButton = (collapseButton: HTMLButtonElement, section: HTMLElem
   };
 
   collapseButton.addEventListener("click", () => {
-    if (section.classList.contains("grid")) {
+    const isExpanded = section.classList.contains("grid");
+
+    if (isExpanded) {
       collapseButton.children[0].className = "ri-expand-horizontal-s-line";
       collapseSection(section);
       setExpandedState(false);

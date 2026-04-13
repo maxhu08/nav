@@ -43,7 +43,7 @@ const watchController = createWatchController({
   getActionSequence: keyState.getActionSequence
 });
 
-const { actions, installNavigationScrollTracking, isScrollAction } = createNavigationActions({
+const navigationActions = createNavigationActions({
   findMode,
   hintController,
   watchController
@@ -70,14 +70,14 @@ const setForceNormalMode = (value: boolean): void => {
 };
 
 const handleKeydown = createNavigationKeydownHandler({
-  actions,
+  actions: navigationActions.actions,
   findMode,
   forceNormalMode: {
     isEnabled: forceNormalMode.isEnabled,
     handleKeydownCapture: forceNormalMode.handleKeydownCapture
   },
   hintController,
-  isScrollAction,
+  isScrollAction: navigationActions.isScrollAction,
   keyState,
   onConsumeKeydown: keyboardPriority.handleConsumedKeydown,
   watchController
@@ -88,7 +88,7 @@ const handleFrameActionMessage = (message: unknown): void => {
     return;
   }
 
-  void actions[message.actionName]();
+  void navigationActions.actions[message.actionName]();
 };
 
 const fastConfigSyncDeps = {
@@ -124,7 +124,7 @@ export const initCoreNavigation = (): void => {
 
   isInitialized = true;
 
-  installNavigationScrollTracking();
+  navigationActions.installNavigationScrollTracking();
   keyboardPriority.install();
 
   if (!isOptionsPage()) {

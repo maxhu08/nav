@@ -36,7 +36,7 @@ const SAVE_ERROR_FIELDS = [
 ] as const;
 
 const getFirstUnresolvedEditorErrorPath = (): string | null => {
-  const errorField = SAVE_ERROR_FIELDS.find(({ statusEl }) => hasEditorError(statusEl));
+  const errorField = SAVE_ERROR_FIELDS.find((field) => hasEditorError(field.statusEl));
   return errorField?.path ?? null;
 };
 

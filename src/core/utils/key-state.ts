@@ -132,9 +132,9 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     const currentUrl = window.location.href;
     const activeRules = urlRulesMode === "whitelist" ? urlWhitelistRules : urlBlacklistRules;
 
-    for (const { rule, regex } of activeRules) {
-      if (regex.test(currentUrl)) {
-        return rule;
+    for (const entry of activeRules) {
+      if (entry.regex.test(currentUrl)) {
+        return entry.rule;
       }
     }
 

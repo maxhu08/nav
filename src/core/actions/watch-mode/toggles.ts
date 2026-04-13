@@ -157,6 +157,10 @@ export const toggleWatchCaptionsState = (
     }
   }
 
+  if (captionsOn === null) {
+    captionsOn = !wasCaptionsOn;
+  }
+
   setInternalCaptionsState(deps.captionsStateByVideo, video, captionsOn);
   if (options.toastOnStateChange) {
     deps.showToast?.(captionsOn ? "Captions on" : "Captions off");

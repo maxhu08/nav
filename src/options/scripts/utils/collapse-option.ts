@@ -28,7 +28,9 @@ export const bindCollapseOptionButton = (
   };
 
   collapseButton.addEventListener("click", () => {
-    if (optionSection.classList.contains("grid")) {
+    const isExpanded = optionSection.classList.contains("grid");
+
+    if (isExpanded) {
       collapseButton.children[0].className = "ri-expand-horizontal-s-line";
       collapseOptionSection(optionSection);
       setExpandedState(false);

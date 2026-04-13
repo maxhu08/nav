@@ -131,9 +131,7 @@ function basicToast(content, { description = "", type, action } = {}) {
   updateRichColors();
 
   const t = isAllowedType(type) ? type : "info";
-  const { toast: toastEl } = createToast(content, { description, type: t, action });
-
-  return toastEl;
+  return createToast(content, { description, type: t, action }).toast;
 }
 
 function renderToaster() {
@@ -263,7 +261,7 @@ function createToast(message, { description, type, action } = {}) {
   const expandAlways = list.parentElement.getAttribute("data-expand") === "true";
   const toastPosition = list.parentElement.getAttribute("data-position") || DEFAULT_POSITION;
 
-  const { toast: toastEl, id } = renderToast(list, message, {
+  const renderedToast = renderToast(list, message, {
     description,
     type,
     action,
@@ -287,7 +285,7 @@ function createToast(message, { description, type, action } = {}) {
     }
   }, 16);
 
-  return { toast: toastEl, id };
+  return { toast: renderedToast.toast, id: renderedToast.id };
 }
 
 function renderToast(list, content, { description, type, action, position } = {}) {
