@@ -1,4 +1,8 @@
-import { getPatternScore } from "~/src/core/utils/hint-mode/directive-recognition/shared";
+import {
+  getActionOwnDescriptorText,
+  getPatternScore,
+  isActionableDirectiveCandidate
+} from "~/src/core/utils/hint-mode/directive-recognition/shared";
 
 const HOME_TOKEN_PATTERN = /\bhome(?:page)?\b/i;
 const ROOT_PATH_PATTERN = /^\/$/;
@@ -35,13 +39,18 @@ const getHomeLinkScore = (element: HTMLElement): number => {
 };
 
 export const scoreHomeDirectiveCandidate = (element: HTMLElement): number => {
+  if (!isActionableDirectiveCandidate(element)) {
+    return 0;
+  }
+
+  const descriptorText = getActionOwnDescriptorText(element);
   const homeLabelScore = Math.max(
     getTextContentScore(element.getAttribute("aria-label"), 12),
     getTextContentScore(element.getAttribute("title"), 10),
     getTextContentScore(element.getAttribute("aria-description"), 8),
     getTextContentScore(element.getAttribute("data-tooltip"), 8),
     getTextContentScore(element.getAttribute("alt"), 8),
-    getTextContentScore(element.textContent, 9)
+    getTextContentScore(descriptorText, 9)
   );
   const homeIdentityScore = Math.max(
     getTextContentScore(element.id, 4),

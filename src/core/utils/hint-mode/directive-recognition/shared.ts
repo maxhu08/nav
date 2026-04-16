@@ -28,6 +28,19 @@ export const getJoinedElementText = (values: Array<string | null | undefined>): 
     .trim();
 };
 
+const getAriaLabelledByText = (element: HTMLElement): string => {
+  const labelledBy = element.getAttribute("aria-labelledby")?.trim();
+  if (!labelledBy) {
+    return "";
+  }
+
+  return labelledBy
+    .split(/\s+/)
+    .map((id) => document.getElementById(id)?.textContent?.trim() ?? "")
+    .filter((value) => value.length > 0)
+    .join(" ");
+};
+
 export const getAncestorDescriptorText = (element: HTMLElement, depthLimit = 3): string => {
   const values: string[] = [];
   let current = element.parentElement;
@@ -84,7 +97,7 @@ export const isActionableDirectiveCandidate = (element: HTMLElement): boolean =>
   );
 };
 
-export const getActionDescriptorText = (element: HTMLElement): string => {
+export const getActionOwnDescriptorText = (element: HTMLElement): string => {
   return getJoinedElementText([
     ...getElementTextValues(element, [
       "aria-label",
@@ -95,11 +108,19 @@ export const getActionDescriptorText = (element: HTMLElement): string => {
       "id",
       "class",
       "name",
-      "href"
+      "role",
+      "type",
+      "aria-controls",
+      "aria-haspopup",
+      "alt"
     ]),
-    element.textContent,
-    getAncestorDescriptorText(element)
+    getAriaLabelledByText(element),
+    isButtonLikeDirectiveCandidate(element) ? element.textContent : ""
   ]);
+};
+
+export const getActionDescriptorText = (element: HTMLElement): string => {
+  return getActionOwnDescriptorText(element);
 };
 
 export const getAnchorPathScore = (

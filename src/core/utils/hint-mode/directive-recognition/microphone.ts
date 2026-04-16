@@ -1,7 +1,5 @@
 import {
-  getAncestorDescriptorText,
-  getElementTextValues,
-  getJoinedElementText,
+  getActionOwnDescriptorText,
   getPatternScore,
   isButtonLikeDirectiveCandidate
 } from "~/src/core/utils/hint-mode/directive-recognition/shared";
@@ -14,19 +12,7 @@ export const scoreMicrophoneDirectiveCandidate = (element: HTMLElement): number 
     return 0;
   }
 
-  const descriptorText = getJoinedElementText([
-    ...getElementTextValues(element, [
-      "aria-label",
-      "title",
-      "aria-description",
-      "data-tooltip",
-      "id",
-      "class",
-      "name"
-    ]),
-    element.textContent,
-    getAncestorDescriptorText(element)
-  ]);
+  const descriptorText = getActionOwnDescriptorText(element);
 
   return getPatternScore(descriptorText, MICROPHONE_TOKEN_PATTERN, 18);
 };

@@ -1,5 +1,5 @@
 import {
-  getAncestorDescriptorText,
+  getActionOwnDescriptorText,
   getElementTextValues,
   getJoinedElementText,
   getPatternScore,
@@ -29,19 +29,8 @@ export const scoreAttachDirectiveCandidate = (element: HTMLElement): number => {
   }
 
   const descriptorText = getJoinedElementText([
-    ...getElementTextValues(element, [
-      "aria-label",
-      "title",
-      "aria-description",
-      "data-tooltip",
-      "data-testid",
-      "id",
-      "class",
-      "name",
-      "type"
-    ]),
-    element.textContent,
-    getAncestorDescriptorText(element)
+    getActionOwnDescriptorText(element),
+    element.getAttribute("type")
   ]);
   const labelText = getJoinedElementText(
     getElementTextValues(element, ["aria-label", "title", "aria-description", "data-tooltip"])

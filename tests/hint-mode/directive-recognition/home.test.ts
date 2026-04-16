@@ -28,4 +28,31 @@ describe("home directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("does not treat generic title text as a home action", () => {
+    const fixture = createDomFixture(`
+      <main>
+        <a id="title-link" href="/watch?v=1">alpha home cactus</a>
+        <button id="primary-home" type="button" aria-label="Home">Go</button>
+      </main>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const titleHomeTarget = targets.find(
+        (target) =>
+          target.element.id === "title-link" && target.directiveMatch?.directive === "home"
+      );
+      const primaryHomeTarget = targets.find(
+        (target) =>
+          target.element.id === "primary-home" && target.directiveMatch?.directive === "home"
+      );
+
+      expect(titleHomeTarget).toBeUndefined();
+      expectDirectiveIconMarker(primaryHomeTarget, HINT_HOME_ICON_PATH);
+      expect(primaryHomeTarget?.label).toBe("sd");
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });
