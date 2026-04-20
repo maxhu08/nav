@@ -32,6 +32,16 @@ const TRACKING_SEARCH_PARAM_PREFIXES = [
   "vero_"
 ];
 
+const AMAZON_TRACKING_SEARCH_PARAM_NAMES = new Set([
+  "crid",
+  "dib",
+  "dib_tag",
+  "keywords",
+  "qid",
+  "sprefix",
+  "sr"
+]);
+
 const isTrackingSearchParam = (name: string): boolean => {
   const normalizedName = name.toLowerCase();
 
@@ -39,6 +49,11 @@ const isTrackingSearchParam = (name: string): boolean => {
     TRACKING_SEARCH_PARAM_NAMES.has(normalizedName) ||
     TRACKING_SEARCH_PARAM_PREFIXES.some((prefix) => normalizedName.startsWith(prefix))
   );
+};
+
+const isAmazonTrackingSearchParam = (url: URL, name: string): boolean => {
+  if (!url.hostname.endsWith("amazon.com")) return false;
+  return AMAZON_TRACKING_SEARCH_PARAM_NAMES.has(name.toLowerCase());
 };
 
 export const getNormalizedUrl = (value: string): string => {
@@ -57,7 +72,7 @@ export const getCleanUrl = (value: string): string => {
   const url = new URL(value);
 
   for (const name of Array.from(url.searchParams.keys())) {
-    if (isTrackingSearchParam(name)) {
+    if (isTrackingSearchParam(name) || isAmazonTrackingSearchParam(url, name)) {
       url.searchParams.delete(name);
     }
   }

@@ -25,4 +25,12 @@ describe("url utils", () => {
       "https://example.com?x=1"
     );
   });
+
+  test("getCleanUrl removes Amazon search tracking params and keeps variant params", () => {
+    expect(
+      getCleanUrl(
+        "https://www.amazon.com/dp/PRODUCT123?crid=SEARCH123&dib=opaque-token&dib_tag=se&keywords=generic+hoodie&qid=1234567890&sprefix=generic%2Caps%2C157&sr=8-15&th=1&psc=1"
+      )
+    ).toBe("https://www.amazon.com/dp/PRODUCT123?th=1&psc=1");
+  });
 });
