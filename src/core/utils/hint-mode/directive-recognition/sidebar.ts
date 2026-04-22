@@ -26,6 +26,13 @@ const isYouTubeMastheadGuideButton = (element: HTMLElement): boolean => {
   );
 };
 
+const isYouTubeAskButton = (element: HTMLElement): boolean => {
+  return (
+    element.matches("button-view-model.you-chat-entrypoint-button > button") &&
+    element.getAttribute("aria-label")?.trim().toLowerCase() === "ask"
+  );
+};
+
 const getAriaLabelledByText = (element: HTMLElement): string => {
   const labelledBy = element.getAttribute("aria-labelledby")?.trim();
   if (!labelledBy) {
@@ -78,6 +85,14 @@ export const scoreSidebarDirectiveCandidate = (element: HTMLElement): number => 
 
   if (!buttonLike) {
     return 0;
+  }
+
+  if (isYouTubeAskButton(element)) {
+    return 0;
+  }
+
+  if (isYouTubeMastheadGuideButton(element)) {
+    return MAX_DIRECTIVE_SCORE;
   }
 
   const controlTarget = element.getAttribute("aria-controls");
@@ -140,10 +155,9 @@ export const scoreSidebarDirectiveCandidate = (element: HTMLElement): number => 
   const menuScore = /\b(menu|hamburger)\b/i.test(descriptorText) ? 6 : 0;
   const iconScore = SIDEBAR_ICON_PATTERN.test(descriptorText) ? 4 : 0;
   const actionScore = SIDEBAR_ACTION_PATTERN.test(descriptorText) ? 6 : 0;
-  const guideScore = isYouTubeMastheadGuideButton(element)
-    ? getPatternScore(descriptorText, GUIDE_TOKEN_PATTERN, 10) +
-      (SHELL_CONTEXT_PATTERN.test(ancestorDescriptorText) ? 6 : 0)
-    : 0;
+  const guideScore =
+    getPatternScore(descriptorText, GUIDE_TOKEN_PATTERN, 10) +
+    (SHELL_CONTEXT_PATTERN.test(ancestorDescriptorText) ? 6 : 0);
   const sidebarContextScore =
     SIDEBAR_TOKEN_PATTERN.test(sidebarContainerContextText) ||
     /\bside-nav-menu-item\b/i.test(sidebarContainerContextText)

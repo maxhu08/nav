@@ -29,4 +29,31 @@ describe("chat directive recognition", () => {
       fixture.cleanup();
     }
   });
+
+  test("prefers YouTube ask entry points over generic chat controls", () => {
+    const fixture = createDomFixture(`
+      <ytd-menu-renderer>
+        <button-view-model class="you-chat-entrypoint-button">
+          <button id="youtube-ask-button" aria-label="Ask" type="button">
+            <div>Ask</div>
+          </button>
+        </button-view-model>
+      </ytd-menu-renderer>
+      <main>
+        <a id="assistant-chat" href="/chat" aria-label="Open chat"></a>
+      </main>
+    `);
+
+    try {
+      const targets = buildHintTargets("current-tab", "abcd", 1, false, directiveLabels);
+      const askTarget = targets.find((target) => target.element.id === "youtube-ask-button");
+      const chatTarget = targets.find((target) => target.element.id === "assistant-chat");
+
+      expectDirectiveIconMarker(askTarget, HINT_CHAT_ICON_PATH);
+      expect(askTarget?.label).toBe("ch");
+      expect(chatTarget?.directiveMatch?.directive).not.toBe("chat");
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });
