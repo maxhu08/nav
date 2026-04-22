@@ -2,8 +2,9 @@ import {
   FIND_ARROW_DOWN_ICON_NODES,
   FIND_ARROW_UP_ICON_NODES,
   FIND_CLOSE_ICON_NODES,
+  FIND_EXTERNAL_LINK_ICON_NODES,
+  FIND_PENCIL_ICON_NODES,
   FIND_SEARCH_ICON_NODES,
-  TERMINAL_LINE_ICON_NODES,
   type SvgNodeDefinition
 } from "~/src/lib/inline-icons";
 import {
@@ -81,11 +82,19 @@ export const createFindBar = (): {
   findIcon.setAttribute("data-prompt-icon-kind", "find");
   findIcon.appendChild(createFindIconSvg(FIND_SEARCH_ICON_NODES));
 
-  const barIcon = document.createElement("span");
-  barIcon.setAttribute("data-prompt-icon-kind", "bar");
-  barIcon.appendChild(createFindIconSvg(TERMINAL_LINE_ICON_NODES));
+  const currentTabBarIcon = document.createElement("span");
+  currentTabBarIcon.setAttribute("data-prompt-icon-kind", "current-tab");
+  currentTabBarIcon.appendChild(createFindIconSvg(FIND_SEARCH_ICON_NODES));
 
-  icon.append(findIcon, barIcon);
+  const newTabBarIcon = document.createElement("span");
+  newTabBarIcon.setAttribute("data-prompt-icon-kind", "new-tab");
+  newTabBarIcon.appendChild(createFindIconSvg(FIND_EXTERNAL_LINK_ICON_NODES));
+
+  const editCurrentTabBarIcon = document.createElement("span");
+  editCurrentTabBarIcon.setAttribute("data-prompt-icon-kind", "edit-current-tab");
+  editCurrentTabBarIcon.appendChild(createFindIconSvg(FIND_PENCIL_ICON_NODES));
+
+  icon.append(findIcon, currentTabBarIcon, newTabBarIcon, editCurrentTabBarIcon);
 
   const input = document.createElement("input");
   input.id = FIND_INPUT_ID;

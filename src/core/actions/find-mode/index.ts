@@ -41,7 +41,7 @@ type PromptSession =
     }
   | {
       kind: "bar";
-      target: "current-tab" | "new-tab";
+      mode: "current-tab" | "new-tab" | "edit-current-tab";
     };
 
 const BAR_URL_TEXT_COLOR = "#3b82f6";
@@ -153,6 +153,26 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let findSessionAnchorRange: Range | null = null;
   let promptSession: PromptSession = { kind: "find" };
   let barSearchEngineURL = DEFAULT_BAR_SEARCH_ENGINE_URL;
+
+  const getPromptKindAttribute = (): "find" | "current-tab" | "new-tab" | "edit-current-tab" => {
+    return promptSession.kind === "find" ? "find" : promptSession.mode;
+  };
+
+  const getPromptPlaceholder = (): string => {
+    if (promptSession.kind === "find") {
+      return "find...";
+    }
+
+    if (promptSession.mode === "new-tab") {
+      return "open url or search (new tab)...";
+    }
+
+    if (promptSession.mode === "edit-current-tab") {
+      return "edit current url or search...";
+    }
+
+    return "open url or search...";
+  };
 
   const ensureFindUIReady = (): { bar: HTMLDivElement; input: HTMLInputElement } | null => {
     if (!getFindBar() || !getFindStatus()) {
@@ -271,8 +291,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return;
     }
 
-    bar.setAttribute("data-prompt-kind", promptSession.kind);
-    input.placeholder = promptSession.kind === "find" ? "find..." : "open url or search...";
+    bar.setAttribute("data-prompt-kind", getPromptKindAttribute());
+    input.placeholder = getPromptPlaceholder();
     input.setAttribute(
       "data-url-like",
       promptSession.kind === "bar" && looksLikeUrl(input.value) ? "true" : "false"
@@ -527,7 +547,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     const query = getFindInput()?.value ?? "";
 
     if (promptSession.kind === "bar") {
-      const target = promptSession.target;
+      const target = promptSession.mode === "new-tab" ? "new-tab" : "current-tab";
       const trimmedQuery = query.trim();
 
       if (!trimmedQuery) {
@@ -600,14 +620,17 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       ui.input.select();
       return true;
     },
-    openBarPrompt: (target: "current-tab" | "new-tab", initialValue = ""): boolean => {
+    openBarPrompt: (
+      mode: "current-tab" | "new-tab" | "edit-current-tab",
+      initialValue = ""
+    ): boolean => {
       const ui = ensureFindUIReady();
 
       if (!ui) {
         return false;
       }
 
-      promptSession = { kind: "bar", target };
+      promptSession = { kind: "bar", mode };
       isFindStatusVisible = false;
       findMatches = [];
       currentFindMatchIndex = -1;

@@ -19,7 +19,10 @@ import type { ActionName } from "~/src/utils/hotkeys";
 
 type NavigationActionDeps = {
   findMode: {
-    openBarPrompt: (target: "current-tab" | "new-tab", initialValue?: string) => boolean;
+    openBarPrompt: (
+      mode: "current-tab" | "new-tab" | "edit-current-tab",
+      initialValue?: string
+    ) => boolean;
     openFindPrompt: () => boolean;
     cycleFindMatch: (direction: 1 | -1) => boolean;
   };
@@ -111,7 +114,8 @@ export const createNavigationActions = ({
     "find-mode": findMode.openFindPrompt,
     "bar-mode-current-tab": () => findMode.openBarPrompt("current-tab"),
     "bar-mode-new-tab": () => findMode.openBarPrompt("new-tab"),
-    "bar-mode-edit-current-tab": () => findMode.openBarPrompt("current-tab", window.location.href),
+    "bar-mode-edit-current-tab": () =>
+      findMode.openBarPrompt("edit-current-tab", window.location.href),
     "cycle-match-next": () => findMode.cycleFindMatch(1),
     "cycle-match-prev": () => findMode.cycleFindMatch(-1),
 
