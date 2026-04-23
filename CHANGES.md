@@ -1,9 +1,8 @@
-# Changes in 1.1.7
+# Changes in 1.1.8
 
 in this release:
 
-- add hints.advanced.customSelectors
-- add comment directive
+- improve bar mode
 - improve hint recognition and placement
 - performance improvements
 - bug fixes
