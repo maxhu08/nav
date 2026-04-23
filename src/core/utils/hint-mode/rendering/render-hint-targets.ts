@@ -4,8 +4,11 @@ import {
   positionDeferredChatGptSidebarTargets
 } from "~/src/core/utils/hint-mode/rendering/chatgpt-sidebar-placement";
 import {
+  getChatGptComposerDirectiveCornerRect,
   getChatGptSpecialRowKey,
-  isChatGptHintContext as isChatGptSiteContext
+  getChatGptSpecialRowTop,
+  isChatGptHintContext as isChatGptSiteContext,
+  shouldPositionChatGptComposerDirectiveInCorner
 } from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
 import {
   getYouTubeSpecialRowKey,
@@ -13,6 +16,7 @@ import {
 } from "~/src/core/utils/hint-mode/rendering/sites/youtube";
 import {
   createMarkerPlacementState,
+  positionMarkerElementAtTopLeft,
   positionMarkerElement,
   positionMarkerElementAtTop,
   positionMarkerElementInCenter,
@@ -37,6 +41,17 @@ const getSpecialRowKey = (
 
   if (siteFlags.isChatGpt) {
     return getChatGptSpecialRowKey(target);
+  }
+
+  return null;
+};
+
+const getSpecialRowTop = (
+  target: HintTarget,
+  siteFlags: { isChatGpt: boolean; isYouTube: boolean }
+): number | null => {
+  if (siteFlags.isChatGpt) {
+    return getChatGptSpecialRowTop(target);
   }
 
   return null;
@@ -103,6 +118,17 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
       }
     }
 
+    if (siteFlags.isChatGpt && shouldPositionChatGptComposerDirectiveInCorner(target)) {
+      positionMarkerElementAtTopLeft(
+        target.marker,
+        getChatGptComposerDirectiveCornerRect(target) ?? target.rect,
+        placementState
+      );
+      inputTargetsByElement.set(target.element, target);
+      renderedTargetsByElement.set(target.element, target);
+      continue;
+    }
+
     if (improveThumbnailMarkers && target.isMediaThumbnail && !target.directiveMatch) {
       positionMarkerElementInCenter(target.marker, target.rect, placementState);
       renderedTargetsByElement.set(target.element, target);
@@ -128,6 +154,7 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
     }
 
     if (specialRowKey) {
+      const specialRowTop = getSpecialRowTop(target, siteFlags) ?? target.rect.top;
       const specialRow = specialRows.get(specialRowKey);
 
       if (specialRow) {
@@ -139,7 +166,7 @@ export const renderHintTargets = (targets: HintTarget[], improveThumbnailMarkers
 
         specialRow.lastMarker = target.marker;
       } else {
-        positionMarkerElementAtTop(target.marker, target.rect, target.rect.top, placementState);
+        positionMarkerElementAtTop(target.marker, target.rect, specialRowTop, placementState);
         specialRows.set(specialRowKey, {
           lastMarker: target.marker,
           top: Number.parseFloat(target.marker.style.top) || 0

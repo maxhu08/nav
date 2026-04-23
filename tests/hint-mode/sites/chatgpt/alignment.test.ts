@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { buildHintTargets } from "~/src/core/utils/hint-mode/collection/build-hint-targets";
 import { renderHintTargets } from "~/src/core/utils/hint-mode/rendering/render-hint-targets";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
+import { directiveLabels } from "~/tests/hint-mode/directive-recognition/shared";
 
 const readSiteFixture = (): string => {
   return readFileSync(new URL("./fixture.html", import.meta.url), "utf8");
@@ -166,6 +167,104 @@ describe("ChatGPT site hint marker alignment", () => {
 
       expect(new Set(composerTargets.map((target) => target.marker.style.top))).toEqual(
         new Set(["10px"])
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("pins input and erase directives left and keeps expanded composer controls on one row", () => {
+    const fixture = createDomFixture(`
+      <div class="composer-shell">
+        <form class="group/composer w-full" data-expanded="" data-type="unified-composer">
+          <div data-composer-surface="true">
+            <div class="leading">
+              <button
+                type="button"
+                class="composer-btn"
+                data-testid="composer-plus-btn"
+                aria-label="Add files and more"
+                id="composer-plus-btn"
+              ></button>
+            </div>
+
+            <div class="primary">
+              <div
+                contenteditable="true"
+                translate="no"
+                class="ProseMirror"
+                id="prompt-textarea"
+                role="textbox"
+                aria-multiline="true"
+                aria-label="Chat with ChatGPT"
+              >
+                <p>Hello</p>
+              </div>
+            </div>
+
+            <div data-testid="composer-footer-actions">
+              <button type="button" aria-label="Extended, click to remove"></button>
+              <button type="button" aria-haspopup="menu">Extended</button>
+            </div>
+
+            <div class="trailing">
+              <button aria-label="Start dictation" type="button" class="composer-btn"></button>
+              <button type="button" aria-label="Start Voice" class="composer-submit-button-color"></button>
+            </div>
+          </div>
+        </form>
+      </div>
+    `);
+
+    try {
+      setViewport(1400, 900);
+
+      const plusButton = getRequiredElement<HTMLButtonElement>("#composer-plus-btn");
+      const promptTextarea = getRequiredElement<HTMLElement>("#prompt-textarea");
+      const dictationButton = getRequiredElement<HTMLButtonElement>(
+        "button[aria-label='Start dictation']"
+      );
+      const voiceButton = getRequiredElement<HTMLButtonElement>("button[aria-label='Start Voice']");
+      const removeButton = getRequiredElement<HTMLButtonElement>(
+        "button[aria-label='Extended, click to remove']"
+      );
+      const expandedButton = getRequiredElement<HTMLButtonElement>("button[aria-haspopup='menu']");
+
+      setRect(plusButton, 16, 110, 36, 36);
+      setRect(promptTextarea, 72, 24, 900, 120);
+      setRect(removeButton, 120, 156, 36, 36);
+      setRect(expandedButton, 168, 156, 120, 36);
+      setRect(dictationButton, 1180, 110, 36, 36);
+      setRect(voiceButton, 1232, 110, 36, 36);
+
+      const targets = buildHintTargets("current-tab", "asdfgh", 1, false, directiveLabels);
+      targets.forEach((target) => setMarkerSize(target.marker));
+      renderHintTargets(targets);
+
+      const inputTarget = targets.find(
+        (target) =>
+          target.element === promptTextarea && target.directiveMatch?.directive === "input"
+      );
+      const eraseTarget = targets.find(
+        (target) =>
+          target.element === promptTextarea && target.directiveMatch?.directive === "erase"
+      );
+      const bottomRowElements: HTMLElement[] = [
+        plusButton,
+        removeButton,
+        expandedButton,
+        dictationButton,
+        voiceButton
+      ];
+      const bottomRowTargets = targets.filter((target) =>
+        bottomRowElements.includes(target.element)
+      );
+
+      expect(inputTarget?.marker.style.top).toBe("24px");
+      expect(eraseTarget?.marker.style.top).toBe("24px");
+      expect(inputTarget?.marker.style.left).toBe(bottomRowTargets[0]?.marker.style.left);
+      expect(new Set(bottomRowTargets.map((target) => target.marker.style.top))).toEqual(
+        new Set(["110px"])
       );
     } finally {
       fixture.cleanup();
