@@ -161,7 +161,7 @@ describe("ChatGPT sidebar hint marker placement", () => {
     }
   });
 
-  test("keeps project row markers on the icon, title, and row corner", () => {
+  test("keeps current project row markers on the toggle, title, and row corner", () => {
     const fixture = createDomFixture(`
       <ul class="m-0 list-none p-0">
         <li class="list-none">
@@ -175,14 +175,24 @@ describe("ChatGPT sidebar hint marker placement", () => {
           >
             <div class="flex min-w-0 items-center gap-1.5">
               <div class="flex items-center justify-center icon">
-                <button id="project-toggle" class="icon" data-state="closed" type="button">
-                  <div data-testid="project-folder-icon" style="color: rgb(51, 156, 255);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-label="Folder"></svg>
-                  </div>
+                <button
+                  id="project-toggle"
+                  type="button"
+                  aria-label="Show items"
+                  class="flex h-5 w-5 items-center justify-center"
+                  data-state="closed"
+                >
+                  <span class="relative block h-5 w-5">
+                    <span class="absolute inset-0 flex items-center justify-center scale-100 opacity-100">
+                      <div data-testid="project-folder-icon" style="color: rgb(80, 140, 255);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-label="Project icon"></svg>
+                      </div>
+                    </span>
+                  </span>
                 </button>
               </div>
               <div class="flex min-w-0 grow items-center gap-2.5">
-                <div id="project-title" class="truncate">Project One</div>
+                <div id="project-title" class="truncate">Example Project</div>
               </div>
             </div>
             <div class="trailing highlight text-token-text-tertiary">
@@ -191,7 +201,7 @@ describe("ChatGPT sidebar hint marker placement", () => {
                 tabindex="0"
                 data-trailing-button=""
                 class="__menu-item-trailing-btn"
-                aria-label="Open project options for Project One"
+                aria-label="Open project options for Example Project"
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded="false"
@@ -399,8 +409,12 @@ describe("ChatGPT sidebar hint marker placement", () => {
             <a id="project-row-2" tabindex="0" class="group __menu-item hoverable" data-sidebar-item="true" href="/g/example-project">
               <div class="flex min-w-0 items-center gap-1.5">
                 <div class="flex items-center justify-center icon">
-                  <button id="project-toggle-2" class="icon" data-state="closed" type="button">
-                    <div data-testid="project-folder-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-label="Folder"></svg></div>
+                  <button id="project-toggle-2" type="button" aria-label="Show items" class="flex h-5 w-5 items-center justify-center" data-state="closed">
+                    <span class="relative block h-5 w-5">
+                      <span class="absolute inset-0 flex items-center justify-center scale-100 opacity-100">
+                        <div data-testid="project-folder-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-label="Project icon"></svg></div>
+                      </span>
+                    </span>
                   </button>
                 </div>
                 <div class="flex min-w-0 grow items-center gap-2.5"><div class="truncate">Example Project</div></div>

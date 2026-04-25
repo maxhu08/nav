@@ -362,7 +362,7 @@ const getExpandableAncestor = (element: HTMLElement): HTMLElement | null => {
 };
 
 const isNestedSidebarDisclosureButton = (element: HTMLElement): boolean => {
-  if (!element.matches("button.icon[data-state='open'], button.icon[data-state='closed']")) {
+  if (!element.matches("button[data-state='open'], button[data-state='closed']")) {
     return false;
   }
 
