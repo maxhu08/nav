@@ -28,6 +28,7 @@ import {
   createHintMarkerWithIcon
 } from "~/src/core/utils/hint-mode/rendering/create-marker-element";
 import { renderMarkerLabel } from "~/src/core/utils/hint-mode/rendering/render-marker-label";
+import { isChatGptSidebarOverflowButton } from "~/src/core/utils/hint-mode/rendering/sites/chatgpt";
 import type {
   HintActionMode,
   HintDirectiveLabelMap,
@@ -794,7 +795,11 @@ const shouldScoreDirectiveForElement = (
 };
 
 const isElementCompatibleWithMode = (mode: HintActionMode, element: HTMLElement): boolean => {
-  if (mode === "new-tab" || mode === "yank-link-url") {
+  if (mode === "new-tab") {
+    return !isChatGptSidebarOverflowButton(element) && !!getClosestLinkUrl(element);
+  }
+
+  if (mode === "yank-link-url") {
     return !!getClosestLinkUrl(element);
   }
 

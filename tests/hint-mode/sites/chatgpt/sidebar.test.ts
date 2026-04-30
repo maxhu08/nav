@@ -329,6 +329,58 @@ describe("ChatGPT sidebar hint marker placement", () => {
     }
   });
 
+  test("skips sidebar overflow buttons in new tab mode", () => {
+    const fixture = createDomFixture(`
+      <ul class="m-0 list-none p-0">
+        <li class="list-none">
+          <a
+            id="history-row-new-tab"
+            tabindex="0"
+            class="group __menu-item hoverable"
+            draggable="true"
+            aria-label="Example Thread"
+            data-sidebar-item="true"
+            href="/c/example-thread"
+          >
+            <div class="flex min-w-0 grow items-center gap-2.5">
+              <div class="truncate"><span dir="auto">Example Thread</span></div>
+            </div>
+            <div class="trailing highlight text-token-text-tertiary">
+              <div class="flex items-center gap-2">
+                <button
+                  id="history-options-new-tab"
+                  tabindex="0"
+                  data-trailing-button=""
+                  class="__menu-item-trailing-btn"
+                  data-testid="history-item-0-options"
+                  aria-label="Open conversation options for Example Thread"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                  data-state="closed"
+                >
+                  <div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon"></svg>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    `);
+
+    try {
+      const targets = buildHintTargets("new-tab", "asdf", 1, false);
+
+      expect(targets).toHaveLength(1);
+      expect(targets[0]?.element.id).toBe("history-row-new-tab");
+      expect(targets.some((target) => target.element.id === "history-options-new-tab")).toBe(false);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
   test("keeps popup action menu item markers at the row corner", () => {
     const fixture = createDomFixture(`
       <div role="menu" aria-label="Conversation options">

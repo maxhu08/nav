@@ -155,6 +155,13 @@ export const getChatGptSpecialRowTop = (target: HintTarget): number | null => {
     : target.rect.top;
 };
 
+export const isChatGptSidebarOverflowButton = (element: HTMLElement): boolean => {
+  return (
+    element.matches("button.__menu-item-trailing-btn[data-trailing-button]") &&
+    element.closest("[data-sidebar-item='true']") instanceof HTMLElement
+  );
+};
+
 const isChatGptResponseActionTarget = (element: HTMLElement): boolean => {
   const responseActions = element.closest("[aria-label='Response actions'][role='group']");
 
