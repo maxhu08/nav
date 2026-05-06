@@ -45,7 +45,7 @@ export const renderFindStyles = (params: FindStyleRenderParams): string => {
 .nav-find-suggestion{all:unset;display:grid;grid-template-columns:max-content auto;align-items:center;column-gap:0;width:100%;color:#a1a1aa;cursor:pointer}
 .nav-find-suggestion:hover,.nav-find-suggestion[data-selected="true"]{background:rgba(255,255,255,.08)}
 .nav-find-suggestion:focus-visible{box-shadow:0 0 0 2px rgba(255,255,255,.18)}
-.nav-find-suggestion-icon{display:inline-flex;align-items:center;justify-content:center;width:72px;height:56px;color:#a1a1aa;font-size:28px;line-height:32px}
+.nav-find-suggestion-icon{display:inline-flex;align-items:center;justify-content:center;width:72px;height:56px;color:#a1a1aa;font-size:24px;line-height:32px}
 .nav-find-suggestion-icon svg{width:1em;height:1em;display:block}
 .nav-find-suggestion-value{display:block;min-width:0;font-size:24px;line-height:32px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:12px 0}
 .nav-find-suggestion-char{color:#737373}
