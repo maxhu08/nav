@@ -53,6 +53,8 @@ describe("buildFastConfig", () => {
     config.bar.searchEngineURL = "";
     // @ts-expect-error testing migration fallback for invalid persisted data
     config.bar.search.suggestions = "yes";
+    // @ts-expect-error testing migration fallback for invalid persisted data
+    config.bar.search.history = "yes";
     config.find.color = "";
     const fixture = createDomFixture("");
     installCanvasStub();
@@ -65,6 +67,7 @@ describe("buildFastConfig", () => {
     expect(fastConfig.bar.color).toBe(defaultConfig.bar.color);
     expect(fastConfig.bar.searchEngineURL).toBe(defaultConfig.bar.searchEngineURL);
     expect(fastConfig.bar.search.suggestions).toBe(defaultConfig.bar.search.suggestions);
+    expect(fastConfig.bar.search.history).toBe(defaultConfig.bar.search.history);
     expect(fastConfig.find.color).toBe(defaultConfig.find.color);
   });
 

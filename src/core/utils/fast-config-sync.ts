@@ -8,6 +8,7 @@ type FastConfigSyncDeps = {
   setBarColor: (value: string) => void;
   setBarSearchEngineURL: (value: string) => void;
   setBarSearchSuggestionsEnabled: (value: boolean) => void;
+  setBarSearchHistoryEnabled: (value: boolean) => void;
   setFindColor: (value: string) => void;
   setHintShowCapitalizedLetters: (value: boolean) => void;
   setHintCharset: (value: string) => void;
@@ -32,6 +33,7 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setBarColor(fastConfig.bar.color);
   deps.setBarSearchEngineURL(fastConfig.bar.searchEngineURL);
   deps.setBarSearchSuggestionsEnabled(fastConfig.bar.search.suggestions);
+  deps.setBarSearchHistoryEnabled(fastConfig.bar.search.history);
   deps.setFindColor(fastConfig.find.color);
   deps.setHintShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setHintCharset(fastConfig.hints.charset);

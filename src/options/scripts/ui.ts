@@ -52,6 +52,9 @@ export const [barSearchEngineURLContainerEl, barSearchEngineURLInputEl] =
 export const barSearchSuggestionsCheckboxEl = getElement<HTMLInputElement>(
   "bar-search-suggestions-checkbox"
 );
+export const barSearchHistoryCheckboxEl = getElement<HTMLInputElement>(
+  "bar-search-history-checkbox"
+);
 
 export const [findColorContainerEl, findColorInputEl] = getContainerAndInput("find-color");
 

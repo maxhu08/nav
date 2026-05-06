@@ -28,12 +28,18 @@ import {
   deactivateSiteKeybindIgnore
 } from "~/src/core/utils/ignore-site-keybinds";
 import {
+  FIND_HISTORY_ICON_NODES,
   FIND_GLOBE_ICON_NODES,
   FIND_SEARCH_ICON_NODES,
   type SvgNodeDefinition
 } from "~/src/lib/inline-icons";
 import { DEFAULT_BAR_SEARCH_ENGINE_URL } from "~/src/utils/config";
-import { fetchSearchSuggestions, getBarSuggestionItems } from "./search-suggestions";
+import {
+  type BarSuggestionSeed,
+  fetchHistorySuggestions,
+  fetchSearchSuggestions,
+  getBarSuggestionItems
+} from "./search-suggestions";
 
 type CoreMode = "normal" | "find" | "hint" | "watch";
 
@@ -187,7 +193,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let promptSession: PromptSession = { kind: "find" };
   let barSearchEngineURL = DEFAULT_BAR_SEARCH_ENGINE_URL;
   let barSearchSuggestionsEnabled = true;
-  let barSuggestionValues: string[] = [];
+  let barSearchHistoryEnabled = true;
+  let barSuggestionValues: BarSuggestionSeed[] = [];
   let barSuggestionItems: BarSuggestionItem[] = [];
   let selectedBarSuggestionIndex = 0;
   let pendingBarSuggestionRequestId = 0;
@@ -347,7 +354,13 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       const icon = document.createElement("span");
       icon.className = "nav-find-suggestion-icon";
       icon.appendChild(
-        createSuggestionIconSvg(item.directLink ? FIND_GLOBE_ICON_NODES : FIND_SEARCH_ICON_NODES)
+        createSuggestionIconSvg(
+          item.source === "history"
+            ? FIND_HISTORY_ICON_NODES
+            : item.directLink
+              ? FIND_GLOBE_ICON_NODES
+              : FIND_SEARCH_ICON_NODES
+        )
       );
 
       const value = document.createElement("span");
@@ -379,12 +392,17 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   };
 
   const refreshBarSuggestions = async (query: string, requestId: number): Promise<void> => {
-    const suggestions = await fetchSearchSuggestions(query).catch(() => []);
+    const [searchSuggestions, historySuggestions] = await Promise.all([
+      barSearchSuggestionsEnabled
+        ? fetchSearchSuggestions(query).catch(() => [])
+        : Promise.resolve([]),
+      barSearchHistoryEnabled ? fetchHistorySuggestions(query).catch(() => []) : Promise.resolve([])
+    ]);
     const input = getFindInput();
 
     if (
       promptSession.kind !== "bar" ||
-      !barSearchSuggestionsEnabled ||
+      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled) ||
       requestId !== pendingBarSuggestionRequestId ||
       !input ||
       input.value.trim() !== query
@@ -392,8 +410,15 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return;
     }
 
-    barSuggestionValues = suggestions;
-    barSuggestionItems = getBarSuggestionItems(query, suggestions);
+    barSuggestionValues = [
+      ...searchSuggestions.map((value) => ({
+        value,
+        source: "search" as const,
+        directLink: false
+      })),
+      ...historySuggestions
+    ];
+    barSuggestionItems = getBarSuggestionItems(query, barSuggestionValues);
     selectedBarSuggestionIndex = Math.min(
       selectedBarSuggestionIndex,
       barSuggestionItems.length - 1
@@ -405,7 +430,11 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     clearBarSuggestionRefresh();
     const trimmedValue = value.trim();
 
-    if (promptSession.kind !== "bar" || !barSearchSuggestionsEnabled || !trimmedValue) {
+    if (
+      promptSession.kind !== "bar" ||
+      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled) ||
+      !trimmedValue
+    ) {
       barSuggestionValues = [];
       pendingBarSuggestionRequestId++;
       hideBarSuggestions();
@@ -896,6 +925,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     },
     setBarSearchSuggestionsEnabled: (value: boolean): void => {
       barSearchSuggestionsEnabled = value;
+      syncBarSuggestions(getFindInput()?.value ?? "");
+    },
+    setBarSearchHistoryEnabled: (value: boolean): void => {
+      barSearchHistoryEnabled = value;
       syncBarSuggestions(getFindInput()?.value ?? "");
     },
     isFindModeActive: (): boolean => deps.getMode() === "find",

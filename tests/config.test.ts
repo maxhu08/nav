@@ -41,6 +41,7 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> scroll-up");
       expect(migratedConfig.bar).toEqual(defaultConfig.bar);
       expect(migratedConfig.bar.search.suggestions).toBe(defaultConfig.bar.search.suggestions);
+      expect(migratedConfig.bar.search.history).toBe(defaultConfig.bar.search.history);
       expect(migratedConfig.find).toEqual(defaultConfig.find);
       expect(migratedConfig.hints.directives).toBe(defaultConfig.hints.directives);
       expect(migratedConfig.hints.styling).toBe(defaultConfig.hints.styling);

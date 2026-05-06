@@ -34,6 +34,22 @@ export type FetchSearchSuggestionsResponse = {
   error?: string;
 };
 
+export type HistorySuggestion = {
+  value: string;
+  directLink: boolean;
+};
+
+export type FetchHistorySuggestionsMessage = {
+  type: "fetch-history-suggestions";
+  query: string;
+};
+
+export type FetchHistorySuggestionsResponse = {
+  ok: boolean;
+  suggestions: HistorySuggestion[];
+  error?: string;
+};
+
 export const isFetchImageMessage = (value: unknown): value is FetchImageMessage => {
   if (!value || typeof value !== "object") {
     return false;
@@ -61,4 +77,15 @@ export const isFetchSearchSuggestionsMessage = (
 
   const data = value as Partial<FetchSearchSuggestionsMessage>;
   return data.type === "fetch-search-suggestions" && typeof data.query === "string";
+};
+
+export const isFetchHistorySuggestionsMessage = (
+  value: unknown
+): value is FetchHistorySuggestionsMessage => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const data = value as Partial<FetchHistorySuggestionsMessage>;
+  return data.type === "fetch-history-suggestions" && typeof data.query === "string";
 };

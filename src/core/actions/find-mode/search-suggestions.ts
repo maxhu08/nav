@@ -1,15 +1,23 @@
 import type {
+  FetchHistorySuggestionsMessage,
+  FetchHistorySuggestionsResponse,
   FetchSearchSuggestionsMessage,
-  FetchSearchSuggestionsResponse
+  FetchSearchSuggestionsResponse,
+  HistorySuggestion
 } from "~/src/shared/background-messages";
 
 export const MAX_BAR_SUGGESTIONS = 8;
 
-type BarSuggestionItem = {
+export type BarSuggestionSeed = {
+  value: string;
+  source: "search" | "history";
+  directLink: boolean;
+};
+
+export type BarSuggestionItem = BarSuggestionSeed & {
   value: string;
   matchRanges: boolean[];
   directStartsWithQuery: boolean;
-  directLink: boolean;
 };
 
 const looksLikeUrl = (value: string): boolean => {
@@ -29,19 +37,19 @@ const looksLikeUrl = (value: string): boolean => {
   return /^(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#]|$)/i.test(normalized);
 };
 
-const uniq = (values: string[]): string[] => {
+const uniq = (values: BarSuggestionSeed[]): BarSuggestionSeed[] => {
   const seen = new Set<string>();
-  const output: string[] = [];
+  const output: BarSuggestionSeed[] = [];
 
   for (const value of values) {
-    const trimmedValue = value.trim();
+    const trimmedValue = value.value.trim();
 
     if (!trimmedValue || seen.has(trimmedValue.toLowerCase())) {
       continue;
     }
 
     seen.add(trimmedValue.toLowerCase());
-    output.push(trimmedValue);
+    output.push({ ...value, value: trimmedValue });
   }
 
   return output;
@@ -115,7 +123,7 @@ const getFuzzyMatchRangesFromLowerName = (
 
 export const getBarSuggestionItems = (
   query: string,
-  suggestions: string[]
+  suggestions: BarSuggestionSeed[]
 ): BarSuggestionItem[] => {
   const trimmedQuery = query.trim();
 
@@ -123,18 +131,24 @@ export const getBarSuggestionItems = (
     return [];
   }
 
-  const values = uniq([trimmedQuery, ...suggestions]);
+  const values = uniq([
+    {
+      value: trimmedQuery,
+      source: "search",
+      directLink: looksLikeUrl(trimmedQuery)
+    },
+    ...suggestions
+  ]);
   const queryItem: BarSuggestionItem = {
-    value: trimmedQuery,
+    ...values[0]!,
     matchRanges: Array.from(trimmedQuery, () => true),
-    directStartsWithQuery: true,
-    directLink: looksLikeUrl(trimmedQuery)
+    directStartsWithQuery: true
   };
   const lowerQuery = trimmedQuery.toLowerCase();
   const rankedSuggestions = values
     .slice(1)
     .flatMap((value) => {
-      const lowerValue = value.toLowerCase();
+      const lowerValue = value.value.toLowerCase();
       const matchRanges =
         getContiguousMatchRangesFromLowerName(lowerValue, lowerQuery) ??
         getFuzzyMatchRangesFromLowerName(lowerValue, lowerQuery);
@@ -145,19 +159,23 @@ export const getBarSuggestionItems = (
 
       return [
         {
-          value,
+          ...value,
+          directLink: value.directLink || looksLikeUrl(value.value),
           matchRanges,
-          directStartsWithQuery: lowerValue.startsWith(lowerQuery),
-          directLink: looksLikeUrl(value)
+          directStartsWithQuery: lowerValue.startsWith(lowerQuery)
         } satisfies BarSuggestionItem
       ];
     })
     .sort((a, b) => {
-      return a.directStartsWithQuery === b.directStartsWithQuery
-        ? 0
-        : a.directStartsWithQuery
-          ? -1
-          : 1;
+      if (a.directStartsWithQuery !== b.directStartsWithQuery) {
+        return a.directStartsWithQuery ? -1 : 1;
+      }
+
+      if (a.source !== b.source) {
+        return a.source === "history" ? -1 : 1;
+      }
+
+      return 0;
     });
 
   return [queryItem, ...rankedSuggestions].slice(0, MAX_BAR_SUGGESTIONS);
@@ -174,4 +192,23 @@ export const fetchSearchSuggestions = async (query: string): Promise<string[]> =
   }
 
   return Array.isArray(response.suggestions) ? response.suggestions : [];
+};
+
+export const fetchHistorySuggestions = async (query: string): Promise<BarSuggestionSeed[]> => {
+  const response = await chrome.runtime.sendMessage<
+    FetchHistorySuggestionsMessage,
+    FetchHistorySuggestionsResponse
+  >({ type: "fetch-history-suggestions", query });
+
+  if (!response.ok) {
+    throw new Error(response.error ?? "Failed to fetch history suggestions");
+  }
+
+  return Array.isArray(response.suggestions)
+    ? response.suggestions.map((suggestion: HistorySuggestion) => ({
+        value: suggestion.value,
+        source: "history",
+        directLink: suggestion.directLink
+      }))
+    : [];
 };
