@@ -85,7 +85,10 @@ export const defaultConfig: Config = {
   },
   bar: {
     color: DEFAULT_BAR_COLOR,
-    searchEngineURL: DEFAULT_BAR_SEARCH_ENGINE_URL
+    searchEngineURL: DEFAULT_BAR_SEARCH_ENGINE_URL,
+    search: {
+      suggestions: true
+    }
   },
   find: {
     color: DEFAULT_FIND_COLOR
@@ -124,6 +127,9 @@ export type Config = {
   bar: {
     color: string;
     searchEngineURL: string;
+    search: {
+      suggestions: boolean;
+    };
   };
   find: {
     color: string;

@@ -23,6 +23,17 @@ export type TabCommandResponse = {
   ok: boolean;
 };
 
+export type FetchSearchSuggestionsMessage = {
+  type: "fetch-search-suggestions";
+  query: string;
+};
+
+export type FetchSearchSuggestionsResponse = {
+  ok: boolean;
+  suggestions: string[];
+  error?: string;
+};
+
 export const isFetchImageMessage = (value: unknown): value is FetchImageMessage => {
   if (!value || typeof value !== "object") {
     return false;
@@ -39,4 +50,15 @@ export const isTabCommandMessage = (value: unknown): value is TabCommandMessage 
 
   const data = value as Partial<TabCommandMessage>;
   return data.type === "tab-command" && typeof data.command === "string";
+};
+
+export const isFetchSearchSuggestionsMessage = (
+  value: unknown
+): value is FetchSearchSuggestionsMessage => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const data = value as Partial<FetchSearchSuggestionsMessage>;
+  return data.type === "fetch-search-suggestions" && typeof data.query === "string";
 };

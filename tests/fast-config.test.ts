@@ -51,6 +51,8 @@ describe("buildFastConfig", () => {
     const config = structuredClone(defaultConfig);
     config.bar.color = "";
     config.bar.searchEngineURL = "";
+    // @ts-expect-error testing migration fallback for invalid persisted data
+    config.bar.search.suggestions = "yes";
     config.find.color = "";
     const fixture = createDomFixture("");
     installCanvasStub();
@@ -62,6 +64,7 @@ describe("buildFastConfig", () => {
 
     expect(fastConfig.bar.color).toBe(defaultConfig.bar.color);
     expect(fastConfig.bar.searchEngineURL).toBe(defaultConfig.bar.searchEngineURL);
+    expect(fastConfig.bar.search.suggestions).toBe(defaultConfig.bar.search.suggestions);
     expect(fastConfig.find.color).toBe(defaultConfig.find.color);
   });
 

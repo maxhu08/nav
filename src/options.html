@@ -435,6 +435,24 @@
               />
             </div>
           </div>
+          <div class="grid gap-2">
+            <div class="grid w-full grid-cols-[max-content_auto] place-items-center">
+              <p class="text-base text-white">bar.search.suggestions</p>
+              <div class="ml-auto">
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input id="bar-search-suggestions-checkbox" type="checkbox" value="" class="peer sr-only" aria-label="bar search suggestions" />
+                  <div
+                    class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
+                  ></div>
+                </label>
+              </div>
+            </div>
+            <p class="text-base text-neutral-500">
+              Shows live query suggestions as you type<br /><br />
+              Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to
+              DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data
+            </p>
+          </div>
         </section>
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
           <div class="grid grid-cols-[max-content_auto] items-center gap-2">

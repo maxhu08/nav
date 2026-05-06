@@ -99,6 +99,7 @@ const fastConfigSyncDeps = {
   setForceNormalMode,
   setBarColor: focusIndicator.setBarColor,
   setBarSearchEngineURL: findMode.setBarSearchEngineURL,
+  setBarSearchSuggestionsEnabled: findMode.setBarSearchSuggestionsEnabled,
   setFindColor: focusIndicator.setFindColor,
   setHintShowCapitalizedLetters: hintController.setShowCapitalizedLetters,
   setHintCharset: hintController.setHintCharset,

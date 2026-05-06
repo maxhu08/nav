@@ -48,6 +48,9 @@ export type FastConfig = {
   bar: {
     color: string;
     searchEngineURL: string;
+    search: {
+      suggestions: boolean;
+    };
   };
   find: {
     color: string;
@@ -120,6 +123,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     value?.hotkeys?.prefixes !== null &&
     typeof value?.bar?.color === "string" &&
     typeof value?.bar?.searchEngineURL === "string" &&
+    typeof value?.bar?.search?.suggestions === "boolean" &&
     typeof value?.find?.color === "string" &&
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
@@ -165,6 +169,10 @@ const parseFindColorValue = (value: string): string => {
 const parseBarSearchEngineURLValue = (value: string): string => {
   const normalized = typeof value === "string" ? value.trim() : "";
   return normalized ? normalized : DEFAULT_BAR_SEARCH_ENGINE_URL;
+};
+
+const parseBarSearchSuggestionsValue = (value: boolean): boolean => {
+  return typeof value === "boolean" ? value : true;
 };
 
 const parseMinLabelLengthValue = (value: number): number => {
@@ -335,7 +343,10 @@ export const buildFastConfig = (config: Config): FastConfig => {
     },
     bar: {
       color: parseBarColorValue(config.bar.color),
-      searchEngineURL: parseBarSearchEngineURLValue(config.bar.searchEngineURL)
+      searchEngineURL: parseBarSearchEngineURLValue(config.bar.searchEngineURL),
+      search: {
+        suggestions: parseBarSearchSuggestionsValue(config.bar.search.suggestions)
+      }
     },
     find: {
       color: parseFindColorValue(config.find.color)

@@ -49,6 +49,9 @@ export const hotkeysMappingsStatusEl = getElement<HTMLParagraphElement>("hotkeys
 export const [barColorContainerEl, barColorInputEl] = getContainerAndInput("bar-color");
 export const [barSearchEngineURLContainerEl, barSearchEngineURLInputEl] =
   getContainerAndInput("bar-search-engine-url");
+export const barSearchSuggestionsCheckboxEl = getElement<HTMLInputElement>(
+  "bar-search-suggestions-checkbox"
+);
 
 export const [findColorContainerEl, findColorInputEl] = getContainerAndInput("find-color");
 

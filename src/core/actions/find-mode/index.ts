@@ -11,6 +11,7 @@ import {
   getFindMatchCount,
   getFindNextButton,
   getFindPrevButton,
+  getFindSuggestions,
   getFindStatus,
   getFindStatusText,
   getFindUIRoot,
@@ -26,7 +27,13 @@ import {
   activateSiteKeybindIgnore,
   deactivateSiteKeybindIgnore
 } from "~/src/core/utils/ignore-site-keybinds";
+import {
+  FIND_GLOBE_ICON_NODES,
+  FIND_SEARCH_ICON_NODES,
+  type SvgNodeDefinition
+} from "~/src/lib/inline-icons";
 import { DEFAULT_BAR_SEARCH_ENGINE_URL } from "~/src/utils/config";
+import { fetchSearchSuggestions, getBarSuggestionItems } from "./search-suggestions";
 
 type CoreMode = "normal" | "find" | "hint" | "watch";
 
@@ -45,6 +52,29 @@ type PromptSession =
     };
 
 const BAR_URL_TEXT_COLOR = "#3b82f6";
+
+const createSuggestionIconSvg = (nodes: SvgNodeDefinition[]): SVGSVGElement => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+
+  for (const node of nodes) {
+    const child = document.createElementNS("http://www.w3.org/2000/svg", node.tag);
+
+    for (const [name, value] of Object.entries(node.attributes)) {
+      child.setAttribute(name, value);
+    }
+
+    svg.appendChild(child);
+  }
+
+  return svg;
+};
 
 const looksLikeUrl = (value: string): boolean => {
   const normalized = value.trim();
@@ -124,11 +154,14 @@ type CreateFindModeControllerDeps = {
 type FindUIElements = {
   barActions: HTMLDivElement;
   matchCount: HTMLSpanElement;
+  suggestions: HTMLDivElement;
   statusText: HTMLSpanElement;
   prevButton: HTMLButtonElement;
   nextButton: HTMLButtonElement;
   clearButton: HTMLButtonElement;
 };
+
+type BarSuggestionItem = ReturnType<typeof getBarSuggestionItems>[number];
 
 const getCssHighlights = (): {
   set: (name: string, highlight: unknown) => void;
@@ -153,6 +186,12 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let findSessionAnchorRange: Range | null = null;
   let promptSession: PromptSession = { kind: "find" };
   let barSearchEngineURL = DEFAULT_BAR_SEARCH_ENGINE_URL;
+  let barSearchSuggestionsEnabled = true;
+  let barSuggestionValues: string[] = [];
+  let barSuggestionItems: BarSuggestionItem[] = [];
+  let selectedBarSuggestionIndex = 0;
+  let pendingBarSuggestionRequestId = 0;
+  let barSuggestionRefreshTimeout = 0;
 
   const getPromptKindAttribute = (): "find" | "current-tab" | "new-tab" | "edit-current-tab" => {
     return promptSession.kind === "find" ? "find" : promptSession.mode;
@@ -186,6 +225,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       findUIElements = {
         barActions: barUI.actions,
         matchCount: barUI.matchCount,
+        suggestions: barUI.suggestions,
         statusText: statusUI.statusText,
         prevButton: statusUI.prevButton,
         nextButton: statusUI.nextButton,
@@ -214,6 +254,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
         }
       );
 
+      barUI.input.addEventListener("input", () => {
+        syncBarSuggestions(barUI.input.value);
+      });
+
       syncPromptKind();
       updateFindUICounts();
       syncFindStatusVisibility();
@@ -233,6 +277,191 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     const highlights = getCssHighlights();
     highlights?.delete(FIND_HIGHLIGHT_NAME);
     highlights?.delete(FIND_CURRENT_HIGHLIGHT_NAME);
+  };
+
+  const clearBarSuggestionRefresh = (): void => {
+    if (barSuggestionRefreshTimeout === 0) {
+      return;
+    }
+
+    window.clearTimeout(barSuggestionRefreshTimeout);
+    barSuggestionRefreshTimeout = 0;
+  };
+
+  const hideBarSuggestions = (): void => {
+    const suggestions = getFindSuggestions();
+    const input = getFindInput();
+
+    barSuggestionItems = [];
+    selectedBarSuggestionIndex = 0;
+
+    if (suggestions) {
+      suggestions.replaceChildren();
+      suggestions.setAttribute("data-visible", "false");
+      suggestions.removeAttribute("aria-activedescendant");
+    }
+
+    input?.removeAttribute("aria-activedescendant");
+    input?.setAttribute("aria-expanded", "false");
+  };
+
+  const renderBarSuggestions = (): void => {
+    const suggestions = getFindSuggestions();
+    const input = getFindInput();
+
+    if (!suggestions || !input) {
+      return;
+    }
+
+    if (
+      promptSession.kind !== "bar" ||
+      !barSearchSuggestionsEnabled ||
+      barSuggestionItems.length === 0
+    ) {
+      hideBarSuggestions();
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    selectedBarSuggestionIndex = Math.max(
+      0,
+      Math.min(selectedBarSuggestionIndex, barSuggestionItems.length - 1)
+    );
+
+    for (const [index, item] of barSuggestionItems.entries()) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.id = `nav-find-suggestion-${index}`;
+      button.className = "nav-find-suggestion";
+      button.setAttribute("role", "option");
+      button.setAttribute("data-direct-link", item.directLink ? "true" : "false");
+      button.setAttribute("data-selected", index === selectedBarSuggestionIndex ? "true" : "false");
+      button.setAttribute("aria-selected", index === selectedBarSuggestionIndex ? "true" : "false");
+      button.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+      });
+      button.addEventListener("click", () => {
+        commitBarValue(item.value);
+      });
+
+      const icon = document.createElement("span");
+      icon.className = "nav-find-suggestion-icon";
+      icon.appendChild(
+        createSuggestionIconSvg(item.directLink ? FIND_GLOBE_ICON_NODES : FIND_SEARCH_ICON_NODES)
+      );
+
+      const value = document.createElement("span");
+      value.className = "nav-find-suggestion-value";
+
+      for (const [charIndex, char] of Array.from(item.value).entries()) {
+        const charEl = document.createElement("span");
+        charEl.className = "nav-find-suggestion-char";
+        charEl.setAttribute("data-match", item.matchRanges[charIndex] ? "true" : "false");
+        charEl.textContent = char;
+        value.appendChild(charEl);
+      }
+
+      button.append(icon, value);
+      fragment.appendChild(button);
+    }
+
+    suggestions.replaceChildren(fragment);
+    suggestions.setAttribute("data-visible", "true");
+    suggestions.setAttribute(
+      "aria-activedescendant",
+      `nav-find-suggestion-${selectedBarSuggestionIndex}`
+    );
+    input.setAttribute(
+      "aria-activedescendant",
+      `nav-find-suggestion-${selectedBarSuggestionIndex}`
+    );
+    input.setAttribute("aria-expanded", "true");
+  };
+
+  const refreshBarSuggestions = async (query: string, requestId: number): Promise<void> => {
+    const suggestions = await fetchSearchSuggestions(query).catch(() => []);
+    const input = getFindInput();
+
+    if (
+      promptSession.kind !== "bar" ||
+      !barSearchSuggestionsEnabled ||
+      requestId !== pendingBarSuggestionRequestId ||
+      !input ||
+      input.value.trim() !== query
+    ) {
+      return;
+    }
+
+    barSuggestionValues = suggestions;
+    barSuggestionItems = getBarSuggestionItems(query, suggestions);
+    selectedBarSuggestionIndex = Math.min(
+      selectedBarSuggestionIndex,
+      barSuggestionItems.length - 1
+    );
+    renderBarSuggestions();
+  };
+
+  const syncBarSuggestions = (value: string): void => {
+    clearBarSuggestionRefresh();
+    const trimmedValue = value.trim();
+
+    if (promptSession.kind !== "bar" || !barSearchSuggestionsEnabled || !trimmedValue) {
+      barSuggestionValues = [];
+      pendingBarSuggestionRequestId++;
+      hideBarSuggestions();
+      return;
+    }
+
+    barSuggestionValues = [];
+    barSuggestionItems = getBarSuggestionItems(trimmedValue, barSuggestionValues);
+    selectedBarSuggestionIndex = 0;
+    renderBarSuggestions();
+
+    const requestId = ++pendingBarSuggestionRequestId;
+    barSuggestionRefreshTimeout = window.setTimeout(() => {
+      barSuggestionRefreshTimeout = 0;
+      void refreshBarSuggestions(trimmedValue, requestId);
+    }, 120);
+  };
+
+  const selectBarSuggestion = (direction: 1 | -1): boolean => {
+    if (barSuggestionItems.length === 0) {
+      return false;
+    }
+
+    selectedBarSuggestionIndex =
+      (selectedBarSuggestionIndex + direction + barSuggestionItems.length) %
+      barSuggestionItems.length;
+    renderBarSuggestions();
+    return true;
+  };
+
+  const getSelectedBarSuggestionValue = (): string | null => {
+    return barSuggestionItems[selectedBarSuggestionIndex]?.value ?? null;
+  };
+
+  const commitBarValue = (value: string): boolean => {
+    const target =
+      promptSession.kind === "bar" && promptSession.mode === "new-tab" ? "new-tab" : "current-tab";
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      clearFindSession();
+      return false;
+    }
+
+    const destination =
+      resolveBarNavigationUrl(trimmedValue) ?? resolveSearchUrl(trimmedValue, barSearchEngineURL);
+
+    clearFindSession();
+
+    if (target === "new-tab") {
+      window.open(destination, "_blank", "noopener,noreferrer");
+    } else {
+      window.location.assign(destination);
+    }
+
+    return true;
   };
 
   const getFindCountLabel = (count: number): string => `${count} Matches`;
@@ -266,14 +495,24 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     const prevButton = getFindPrevButton();
     const nextButton = getFindNextButton();
     const clearButton = getFindClearButton();
+    const suggestions = getFindSuggestions();
 
-    if (!barActions || !matchCount || !statusText || !prevButton || !nextButton || !clearButton) {
+    if (
+      !barActions ||
+      !matchCount ||
+      !statusText ||
+      !prevButton ||
+      !nextButton ||
+      !clearButton ||
+      !suggestions
+    ) {
       return null;
     }
 
     findUIElements = {
       barActions,
       matchCount,
+      suggestions,
       statusText,
       prevButton,
       nextButton,
@@ -299,6 +538,13 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     );
     input.style.color =
       promptSession.kind === "bar" && looksLikeUrl(input.value) ? BAR_URL_TEXT_COLOR : "";
+
+    if (promptSession.kind === "bar") {
+      renderBarSuggestions();
+      return;
+    }
+
+    hideBarSuggestions();
   };
 
   const updateFindUICounts = (): void => {
@@ -316,6 +562,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     ui.barActions.setAttribute("data-visible", hasQuery ? "true" : "false");
     ui.barActions.setAttribute("data-prompt-kind", promptSession.kind);
     ui.matchCount.hidden = promptSession.kind !== "find";
+    ui.suggestions.hidden = promptSession.kind !== "bar";
     ui.prevButton.disabled = !hasMatches;
     ui.nextButton.disabled = !hasMatches;
     ui.clearButton.disabled = !hasQuery;
@@ -481,6 +728,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
   const hideFindBar = (): void => {
     getFindBar()?.setAttribute("data-visible", "false");
+    hideBarSuggestions();
 
     if (!isFindStatusVisible) {
       deactivateSiteKeybindIgnore("find");
@@ -510,6 +758,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       setFindQuery("");
     } else {
       updateFindUICounts();
+      syncBarSuggestions("");
     }
     syncPromptKind();
     input.focus();
@@ -526,8 +775,12 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     isFindStatusVisible = false;
     findSessionAnchorRange = null;
     promptSession = { kind: "find" };
+    barSuggestionValues = [];
+    pendingBarSuggestionRequestId++;
+    clearBarSuggestionRefresh();
     deactivateSiteKeybindIgnore("find");
     clearFindHighlights();
+    hideBarSuggestions();
     syncPromptKind();
     updateFindUICounts();
     syncFindStatusVisibility();
@@ -547,26 +800,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     const query = getFindInput()?.value ?? "";
 
     if (promptSession.kind === "bar") {
-      const target = promptSession.mode === "new-tab" ? "new-tab" : "current-tab";
-      const trimmedQuery = query.trim();
-
-      if (!trimmedQuery) {
-        clearFindSession();
-        return false;
-      }
-
-      const destination =
-        resolveBarNavigationUrl(trimmedQuery) ?? resolveSearchUrl(trimmedQuery, barSearchEngineURL);
-
-      clearFindSession();
-
-      if (target === "new-tab") {
-        window.open(destination, "_blank", "noopener,noreferrer");
-      } else {
-        window.location.assign(destination);
-      }
-
-      return true;
+      return commitBarValue(getSelectedBarSuggestionValue() ?? query);
     }
 
     setFindQuery(query);
@@ -612,6 +846,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       promptSession = { kind: "find" };
       ui.input.value = findQuery;
       setFindQuery(ui.input.value);
+      hideBarSuggestions();
       syncPromptKind();
       ui.bar.setAttribute("data-visible", "true");
       activateSiteKeybindIgnore("find");
@@ -637,8 +872,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       clearFindHighlights();
       syncFindStatusVisibility();
       ui.input.value = initialValue;
+      barSuggestionValues = [];
       syncPromptKind();
       updateFindUICounts();
+      syncBarSuggestions(ui.input.value);
       ui.bar.setAttribute("data-visible", "true");
       activateSiteKeybindIgnore("find");
       deps.setMode("find");
@@ -657,11 +894,23 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     setBarSearchEngineURL: (value: string): void => {
       barSearchEngineURL = value || DEFAULT_BAR_SEARCH_ENGINE_URL;
     },
+    setBarSearchSuggestionsEnabled: (value: boolean): void => {
+      barSearchSuggestionsEnabled = value;
+      syncBarSuggestions(getFindInput()?.value ?? "");
+    },
     isFindModeActive: (): boolean => deps.getMode() === "find",
     isFindInputFocused,
     handleFindUIKeydown: (event: KeyboardEvent): boolean => {
       if (!isFindUIElement(event.target) && !isFindInputFocused()) {
         return false;
+      }
+
+      if (promptSession.kind === "bar" && event.key === "ArrowDown") {
+        return selectBarSuggestion(1);
+      }
+
+      if (promptSession.kind === "bar" && event.key === "ArrowUp") {
+        return selectBarSuggestion(-1);
       }
 
       if (event.key === "Enter") {

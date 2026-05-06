@@ -16,6 +16,7 @@ import {
   FIND_NEXT_BUTTON_ID,
   FIND_OVERLAY_ID,
   FIND_PREV_BUTTON_ID,
+  FIND_SUGGESTIONS_ID,
   FIND_STATUS_ID,
   FIND_STATUS_TEXT_ID,
   getFindOverlay
@@ -67,6 +68,7 @@ export const createFindBar = (): {
   input: HTMLInputElement;
   matchCount: HTMLSpanElement;
   clearButton: HTMLButtonElement;
+  suggestions: HTMLDivElement;
 } => {
   const bar = document.createElement("div");
   bar.id = FIND_BAR_ID;
@@ -103,7 +105,8 @@ export const createFindBar = (): {
   input.autocomplete = "off";
   input.placeholder = "find...";
   input.setAttribute("aria-label", "Find in page query");
-  input.setAttribute("aria-controls", FIND_STATUS_ID);
+  input.setAttribute("aria-controls", `${FIND_STATUS_ID} ${FIND_SUGGESTIONS_ID}`);
+  input.setAttribute("aria-autocomplete", "list");
 
   const actions = document.createElement("div");
   actions.className = "nav-find-bar-actions";
@@ -123,9 +126,15 @@ export const createFindBar = (): {
   clearButton.setAttribute("aria-controls", FIND_INPUT_ID);
   clearButton.appendChild(createFindIconSvg(FIND_CLOSE_ICON_NODES));
 
+  const suggestions = document.createElement("div");
+  suggestions.id = FIND_SUGGESTIONS_ID;
+  suggestions.setAttribute("role", "listbox");
+  suggestions.setAttribute("aria-label", "Bar suggestions");
+  suggestions.setAttribute("data-visible", "false");
+
   actions.append(matchCount, clearButton);
-  bar.append(icon, input, actions);
-  return { bar, actions, input, matchCount, clearButton };
+  bar.append(icon, input, actions, suggestions);
+  return { bar, actions, input, matchCount, clearButton, suggestions };
 };
 
 export const createFindStatus = (): {

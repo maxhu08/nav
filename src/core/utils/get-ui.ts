@@ -15,6 +15,7 @@ export const FIND_STYLE_ID = "nav-find-style";
 export const FIND_BAR_ID = "nav-find-bar";
 export const FIND_INPUT_ID = "nav-find-input";
 export const FIND_MATCH_COUNT_ID = "nav-find-match-count";
+export const FIND_SUGGESTIONS_ID = "nav-find-suggestions";
 export const FIND_STATUS_ID = "nav-find-status";
 export const FIND_STATUS_TEXT_ID = "nav-find-status-text";
 export const FIND_PREV_BUTTON_ID = "nav-find-prev";
@@ -35,6 +36,7 @@ export const findStyleParams: FindStyleRenderParams = {
   findStatusId: FIND_STATUS_ID,
   findInputId: FIND_INPUT_ID,
   findMatchCountId: FIND_MATCH_COUNT_ID,
+  findSuggestionsId: FIND_SUGGESTIONS_ID,
   findStatusTextId: FIND_STATUS_TEXT_ID,
   findHighlightName: FIND_HIGHLIGHT_NAME,
   findCurrentHighlightName: FIND_CURRENT_HIGHLIGHT_NAME,
@@ -82,6 +84,9 @@ export const getFindInput = (): HTMLInputElement | null =>
 
 export const getFindMatchCount = (): HTMLSpanElement | null =>
   getFindUIRoot()?.getElementById(FIND_MATCH_COUNT_ID) as HTMLSpanElement | null;
+
+export const getFindSuggestions = (): HTMLDivElement | null =>
+  getFindUIRoot()?.getElementById(FIND_SUGGESTIONS_ID) as HTMLDivElement | null;
 
 export const getFindBarActions = (): HTMLDivElement | null =>
   getFindUIRoot()?.querySelector(".nav-find-bar-actions") as HTMLDivElement | null;

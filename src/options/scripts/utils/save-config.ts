@@ -1,6 +1,7 @@
 import {
   barColorInputEl,
   barSearchEngineURLInputEl,
+  barSearchSuggestionsCheckboxEl,
   findColorInputEl,
   hintsCharsetStatusEl,
   hintsCustomSelectorsStatusEl,
@@ -56,6 +57,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   saveHotkeysSettingsToDraft(draft);
   draft.bar.color = barColorInputEl.value;
   draft.bar.searchEngineURL = barSearchEngineURLInputEl.value;
+  draft.bar.search.suggestions = barSearchSuggestionsCheckboxEl.checked;
   draft.find.color = findColorInputEl.value;
   saveHintsSettingsToDraft(draft);
 
