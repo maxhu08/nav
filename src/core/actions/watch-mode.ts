@@ -61,7 +61,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   };
 
   const reacquireWatchVideo = (): HTMLVideoElement | null => {
-    const nextVideo = pickBestWatchVideo(null);
+    const nextVideo = pickBestWatchVideo(null, true);
     if (!nextVideo) {
       return null;
     }
@@ -176,9 +176,9 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     exitWatchMode,
     toggleVideoControls: (): boolean => {
       const currentVideo = getActiveWatchVideo();
-      const targetVideo = pickBestWatchVideo(null);
+      const targetVideo = pickBestWatchVideo(null, true);
 
-      if (deps.isWatchMode() && currentVideo && currentVideo === targetVideo) {
+      if (deps.isWatchMode() && currentVideo && (!targetVideo || currentVideo === targetVideo)) {
         exitWatchMode();
         return true;
       }

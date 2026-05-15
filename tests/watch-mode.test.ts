@@ -133,4 +133,70 @@ describe("watch mode", () => {
       fixture.cleanup();
     }
   });
+
+  test("keeps watch controls working for an offscreen active video", async () => {
+    const fixture = createDomFixture("<video id='video'></video>");
+
+    try {
+      const { createWatchController } = await import("~/src/core/actions/watch-mode");
+      let mode: "normal" | "watch" = "normal";
+      const watchController = createWatchController({
+        isWatchMode: () => mode === "watch",
+        setMode: (nextMode): void => {
+          mode = nextMode;
+        },
+        getActionSequence: (_, fallback) => fallback
+      });
+
+      const video = document.getElementById("video") as HTMLVideoElement;
+      setVideoRect(video, 0);
+
+      let didRequestFullscreen = false;
+      video.requestFullscreen = () => {
+        didRequestFullscreen = true;
+        return Promise.resolve();
+      };
+
+      expect(watchController.toggleVideoControls()).toBe(true);
+      setVideoRect(video, window.innerHeight + 200);
+
+      expect(watchController.toggleFullscreen()).toBe(true);
+      expect(didRequestFullscreen).toBe(true);
+      expect(String(mode)).toBe("normal");
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("can enter watch mode when only an offscreen video is available", async () => {
+    const fixture = createDomFixture("<video id='video'></video>");
+
+    try {
+      const { createWatchController } = await import("~/src/core/actions/watch-mode");
+      let mode: "normal" | "watch" = "normal";
+      const watchController = createWatchController({
+        isWatchMode: () => mode === "watch",
+        setMode: (nextMode): void => {
+          mode = nextMode;
+        },
+        getActionSequence: (_, fallback) => fallback
+      });
+
+      const video = document.getElementById("video") as HTMLVideoElement;
+      setVideoRect(video, window.innerHeight + 200);
+
+      let didRequestFullscreen = false;
+      video.requestFullscreen = () => {
+        didRequestFullscreen = true;
+        return Promise.resolve();
+      };
+
+      expect(watchController.toggleVideoControls()).toBe(true);
+      expect(String(mode)).toBe("watch");
+      expect(watchController.toggleFullscreen()).toBe(true);
+      expect(didRequestFullscreen).toBe(true);
+    } finally {
+      fixture.cleanup();
+    }
+  });
 });

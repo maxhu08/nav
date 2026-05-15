@@ -54,6 +54,16 @@ export const isVideoVisible = (video: HTMLVideoElement): boolean => {
   return styles.display !== "none" && styles.visibility !== "hidden" && styles.opacity !== "0";
 };
 
+export const isWatchVideoCandidate = (video: HTMLVideoElement): boolean => {
+  const bounds = video.getBoundingClientRect();
+  if (bounds.width < 1 || bounds.height < 1) {
+    return false;
+  }
+
+  const styles = window.getComputedStyle(video);
+  return styles.display !== "none" && styles.visibility !== "hidden" && styles.opacity !== "0";
+};
+
 export const getVideoElementsFromRoot = (root: ParentNode): HTMLVideoElement[] => {
   const videos = new Set<HTMLVideoElement>();
   const visitedRoots = new Set<ParentNode>();

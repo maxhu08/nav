@@ -1,23 +1,33 @@
 import { getDeepActiveElement } from "~/src/core/utils/is-editable-target";
-import { getVideoElementsFromRoot, isVideoVisible } from "~/src/core/actions/watch-mode/shared";
+import {
+  getVideoElementsFromRoot,
+  isVideoVisible,
+  isWatchVideoCandidate
+} from "~/src/core/actions/watch-mode/shared";
 
 export const pickBestWatchVideo = (
-  trackedVideo: HTMLVideoElement | null
+  trackedVideo: HTMLVideoElement | null,
+  allowOffscreen = false
 ): HTMLVideoElement | null => {
   if (trackedVideo && trackedVideo.isConnected) {
     return trackedVideo;
   }
 
   const activeElement = getDeepActiveElement();
-  if (activeElement instanceof HTMLVideoElement && isVideoVisible(activeElement)) {
+  if (
+    activeElement instanceof HTMLVideoElement &&
+    (isVideoVisible(activeElement) || (allowOffscreen && isWatchVideoCandidate(activeElement)))
+  ) {
     return activeElement;
   }
 
-  const visibleVideos = getVideoElementsFromRoot(document).filter(
-    (video): video is HTMLVideoElement => video instanceof HTMLVideoElement && isVideoVisible(video)
+  const videos = getVideoElementsFromRoot(document).filter(
+    (video): video is HTMLVideoElement =>
+      video instanceof HTMLVideoElement &&
+      (isVideoVisible(video) || (allowOffscreen && isWatchVideoCandidate(video)))
   );
 
-  if (visibleVideos.length === 0) {
+  if (videos.length === 0) {
     return null;
   }
 
@@ -31,10 +41,11 @@ export const pickBestWatchVideo = (
     const centerDistance = Math.hypot(centerX - viewportCenterX, centerY - viewportCenterY);
     const centerScore = Math.max(0, 20000 - centerDistance * 60);
     const playingScore = !video.paused && !video.ended ? 1_000_000_000 : 0;
-    return playingScore + areaScore + centerScore;
+    const visibilityScore = isVideoVisible(video) ? 100_000_000 : 0;
+    return playingScore + visibilityScore + areaScore + centerScore;
   };
 
-  const rankedVideos = [...visibleVideos].sort(
+  const rankedVideos = [...videos].sort(
     (left, right) => getVideoScore(right) - getVideoScore(left)
   );
   return rankedVideos[0] ?? null;
