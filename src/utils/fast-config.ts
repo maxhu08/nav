@@ -25,6 +25,7 @@ import {
   parseHintCustomSelectorsValue,
   type HintCustomSelectorRule
 } from "~/src/utils/hint-custom-selectors";
+import { parseBarBookmarksValue, type BarBookmark } from "~/src/utils/bar-bookmarks";
 
 export type FastRule = {
   pattern: string;
@@ -51,6 +52,10 @@ export type FastConfig = {
     search: {
       suggestions: boolean;
       history: boolean;
+      bookmarks: {
+        enabled: boolean;
+        storage: BarBookmark[];
+      };
     };
   };
   find: {
@@ -126,6 +131,11 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.bar?.searchEngineURL === "string" &&
     typeof value?.bar?.search?.suggestions === "boolean" &&
     typeof value?.bar?.search?.history === "boolean" &&
+    typeof value?.bar?.search?.bookmarks?.enabled === "boolean" &&
+    Array.isArray(value?.bar?.search?.bookmarks?.storage) &&
+    value.bar.search.bookmarks.storage.every(
+      (bookmark) => typeof bookmark?.name === "string" && typeof bookmark?.value === "string"
+    ) &&
     typeof value?.find?.color === "string" &&
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
@@ -179,6 +189,10 @@ const parseBarSearchSuggestionsValue = (value: boolean): boolean => {
 
 const parseBarSearchHistoryValue = (value: boolean): boolean => {
   return typeof value === "boolean" ? value : true;
+};
+
+const parseBarSearchBookmarksEnabledValue = (value: boolean): boolean => {
+  return typeof value === "boolean" ? value : false;
 };
 
 const parseMinLabelLengthValue = (value: number): number => {
@@ -352,7 +366,11 @@ export const buildFastConfig = (config: Config): FastConfig => {
       searchEngineURL: parseBarSearchEngineURLValue(config.bar.searchEngineURL),
       search: {
         suggestions: parseBarSearchSuggestionsValue(config.bar.search.suggestions),
-        history: parseBarSearchHistoryValue(config.bar.search.history)
+        history: parseBarSearchHistoryValue(config.bar.search.history),
+        bookmarks: {
+          enabled: parseBarSearchBookmarksEnabledValue(config.bar.search.bookmarks.enabled),
+          storage: parseBarBookmarksValue(config.bar.search.bookmarks.storage)
+        }
       }
     },
     find: {

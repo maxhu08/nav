@@ -1,5 +1,8 @@
 import {
   barColorInputEl,
+  barSearchBookmarksCheckboxEl,
+  barSearchBookmarksStorageStatusEl,
+  barSearchBookmarksStorageTextareaEl,
   barSearchHistoryCheckboxEl,
   barSearchEngineURLInputEl,
   barSearchSuggestionsCheckboxEl,
@@ -31,6 +34,7 @@ const SAVE_ERROR_FIELDS = [
   { path: "rules.urls.blacklist", statusEl: rulesUrlsBlacklistStatusEl },
   { path: "rules.urls.whitelist", statusEl: rulesUrlsWhitelistStatusEl },
   { path: "hotkeys.mappings", statusEl: hotkeysMappingsStatusEl },
+  { path: "bar.search.bookmarks.storage", statusEl: barSearchBookmarksStorageStatusEl },
   { path: "hints.charset", statusEl: hintsCharsetStatusEl },
   { path: "hints.directives", statusEl: hintsReservedLabelsStatusEl },
   { path: "hints.advanced.customSelectors", statusEl: hintsCustomSelectorsStatusEl },
@@ -60,6 +64,8 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   draft.bar.searchEngineURL = barSearchEngineURLInputEl.value;
   draft.bar.search.suggestions = barSearchSuggestionsCheckboxEl.checked;
   draft.bar.search.history = barSearchHistoryCheckboxEl.checked;
+  draft.bar.search.bookmarks.enabled = barSearchBookmarksCheckboxEl.checked;
+  draft.bar.search.bookmarks.storage = barSearchBookmarksStorageTextareaEl.value;
   draft.find.color = findColorInputEl.value;
   saveHintsSettingsToDraft(draft);
 

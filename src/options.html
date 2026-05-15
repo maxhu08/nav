@@ -470,6 +470,37 @@
               History lookups stay on-device and are not sent to us or any third party
             </p>
           </div>
+          <div class="grid gap-2">
+            <div class="grid w-full grid-cols-[max-content_auto] place-items-center">
+              <p class="text-base text-white">bar.search.bookmarks</p>
+              <div class="ml-auto">
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input id="bar-search-bookmarks-checkbox" type="checkbox" value="" class="peer sr-only" aria-label="bar search bookmarks" />
+                  <div
+                    class="peer h-6 w-11 rounded-full bg-neutral-800 outline-none after:absolute after:left-[4px] after:top-[3px] after:aspect-square after:h-[1.15rem] after:rounded-full after:border-none after:bg-neutral-700 after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:bg-white"
+                  ></div>
+                </label>
+              </div>
+            </div>
+            <p class="text-base text-neutral-500">Shows matches from a configurable bookmark list that you manage locally.</p>
+          </div>
+          <div id="bar-search-bookmarks-storage-section" class="hidden gap-2">
+            <p class="text-base text-white">bar.search.bookmarks.storage</p>
+            <p class="text-base text-neutral-500">Use one bookmark per line in the format `"bookmark name": "url"`.</p>
+            <div id="bar-search-bookmarks-storage-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <pre id="bar-search-bookmarks-storage-highlight" aria-hidden="true" class="bar-search-bookmarks-storage-editor-layer"></pre>
+              <textarea
+                id="bar-search-bookmarks-storage-textarea"
+                aria-label="bar search bookmarks storage"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                rows="16"
+                class="bar-search-bookmarks-storage-editor-layer bar-search-bookmarks-storage-textarea w-full resize-none bg-transparent text-base placeholder-neutral-500 outline-none"
+              ></textarea>
+            </div>
+            <p id="bar-search-bookmarks-storage-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+          </div>
         </section>
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
           <div class="grid grid-cols-[max-content_auto] items-center gap-2">

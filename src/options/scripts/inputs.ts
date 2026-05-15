@@ -1,6 +1,9 @@
 import {
   barColorContainerEl,
   barColorInputEl,
+  barSearchBookmarksCheckboxEl,
+  barSearchBookmarksStorageContainerEl,
+  barSearchBookmarksStorageTextareaEl,
   barSearchEngineURLContainerEl,
   barSearchEngineURLInputEl,
   hintsAvoidAdjacentPairsContainerEl,
@@ -35,6 +38,10 @@ import {
   findColorContainerEl,
   findColorInputEl
 } from "~/src/options/scripts/ui";
+import {
+  syncBarSearchBookmarksStorageHighlight,
+  syncBarSearchBookmarksStorageHighlightScroll
+} from "~/src/options/scripts/utils/bar-bookmarks-highlight";
 import { saveAndExportConfig } from "~/src/options/scripts/utils/export-config";
 import { enableEditorTabInsertion } from "~/src/options/scripts/utils/editor-tabs";
 import { importConfigAndSave } from "~/src/options/scripts/utils/import-config";
@@ -58,6 +65,7 @@ import {
   syncHintsReservedLabelsHighlight,
   syncHintsReservedLabelsHighlightScroll
 } from "~/src/options/scripts/utils/hints-inline-highlight";
+import { syncBarSearchBookmarksStorageControls } from "~/src/options/scripts/utils/fill-helpers/fill-bar";
 import {
   syncHintsActivationIndicatorColorControls,
   syncHintsStylingControls
@@ -76,6 +84,7 @@ export const listenToInputs = (): void => {
     rulesUrlsBlacklistTextareaEl,
     rulesUrlsWhitelistTextareaEl,
     hotkeysMappingsTextareaEl,
+    barSearchBookmarksStorageTextareaEl,
     hintsCharsetInputEl,
     hintsReservedLabelsTextareaEl,
     hintsCustomSelectorsTextareaEl,
@@ -174,6 +183,27 @@ export const listenToInputs = (): void => {
 
   barSearchEngineURLInputEl.addEventListener("blur", () => {
     barSearchEngineURLContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  barSearchBookmarksCheckboxEl.addEventListener("input", () => {
+    syncBarSearchBookmarksStorageControls(barSearchBookmarksCheckboxEl.checked);
+  });
+
+  barSearchBookmarksStorageTextareaEl.addEventListener("focus", () => {
+    barSearchBookmarksStorageContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  barSearchBookmarksStorageTextareaEl.addEventListener("input", () => {
+    syncBarSearchBookmarksStorageHighlight();
+    syncBarSearchBookmarksStorageHighlightScroll();
+  });
+
+  barSearchBookmarksStorageTextareaEl.addEventListener("scroll", () => {
+    syncBarSearchBookmarksStorageHighlightScroll();
+  });
+
+  barSearchBookmarksStorageTextareaEl.addEventListener("blur", () => {
+    barSearchBookmarksStorageContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   findColorInputEl.addEventListener("focus", () => {

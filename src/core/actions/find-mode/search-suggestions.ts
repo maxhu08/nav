@@ -1,3 +1,4 @@
+import { type BarBookmark } from "~/src/utils/bar-bookmarks";
 import type {
   FetchHistorySuggestionsMessage,
   FetchHistorySuggestionsResponse,
@@ -10,7 +11,8 @@ export const MAX_BAR_SUGGESTIONS = 8;
 
 export type BarSuggestionSeed = {
   value: string;
-  source: "search" | "history";
+  displayValue: string;
+  source: "search" | "history" | "bookmark";
   directLink: boolean;
 };
 
@@ -131,24 +133,19 @@ export const getBarSuggestionItems = (
     return [];
   }
 
-  const values = uniq([
-    {
-      value: trimmedQuery,
-      source: "search",
-      directLink: looksLikeUrl(trimmedQuery)
-    },
-    ...suggestions
-  ]);
+  const values = uniq(suggestions);
   const queryItem: BarSuggestionItem = {
-    ...values[0]!,
+    value: trimmedQuery,
+    displayValue: trimmedQuery,
+    source: "search",
+    directLink: looksLikeUrl(trimmedQuery),
     matchRanges: Array.from(trimmedQuery, () => true),
     directStartsWithQuery: true
   };
   const lowerQuery = trimmedQuery.toLowerCase();
   const rankedSuggestions = values
-    .slice(1)
     .flatMap((value) => {
-      const lowerValue = value.value.toLowerCase();
+      const lowerValue = value.displayValue.toLowerCase();
       const matchRanges =
         getContiguousMatchRangesFromLowerName(lowerValue, lowerQuery) ??
         getFuzzyMatchRangesFromLowerName(lowerValue, lowerQuery);
@@ -167,6 +164,10 @@ export const getBarSuggestionItems = (
       ];
     })
     .sort((a, b) => {
+      if (a.source !== b.source && (a.source === "bookmark" || b.source === "bookmark")) {
+        return a.source === "bookmark" ? -1 : 1;
+      }
+
       if (a.directStartsWithQuery !== b.directStartsWithQuery) {
         return a.directStartsWithQuery ? -1 : 1;
       }
@@ -178,7 +179,19 @@ export const getBarSuggestionItems = (
       return 0;
     });
 
-  return [queryItem, ...rankedSuggestions].slice(0, MAX_BAR_SUGGESTIONS);
+  const bookmarkSuggestions = rankedSuggestions.filter((item) => item.source === "bookmark");
+  const otherSuggestions = rankedSuggestions.filter((item) => item.source !== "bookmark");
+
+  return [...bookmarkSuggestions, queryItem, ...otherSuggestions].slice(0, MAX_BAR_SUGGESTIONS);
+};
+
+export const getBookmarkSuggestions = (bookmarks: BarBookmark[]): BarSuggestionSeed[] => {
+  return bookmarks.map((bookmark) => ({
+    value: bookmark.value,
+    displayValue: bookmark.name,
+    source: "bookmark",
+    directLink: looksLikeUrl(bookmark.value)
+  }));
 };
 
 export const fetchSearchSuggestions = async (query: string): Promise<string[]> => {
@@ -207,6 +220,7 @@ export const fetchHistorySuggestions = async (query: string): Promise<BarSuggest
   return Array.isArray(response.suggestions)
     ? response.suggestions.map((suggestion: HistorySuggestion) => ({
         value: suggestion.value,
+        displayValue: suggestion.value,
         source: "history",
         directLink: suggestion.directLink
       }))

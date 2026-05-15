@@ -30,6 +30,11 @@ export const [barColorContainerEl, barColorInputEl] = getContainerAndInput("bar-
 export const [barSearchEngineURLContainerEl, barSearchEngineURLInputEl] = getContainerAndInput("bar-search-engine-url");
 export const barSearchSuggestionsCheckboxEl = getElement<HTMLInputElement>("bar-search-suggestions-checkbox");
 export const barSearchHistoryCheckboxEl = getElement<HTMLInputElement>("bar-search-history-checkbox");
+export const barSearchBookmarksCheckboxEl = getElement<HTMLInputElement>("bar-search-bookmarks-checkbox");
+export const barSearchBookmarksStorageSectionEl = getElement<HTMLDivElement>("bar-search-bookmarks-storage-section");
+export const [barSearchBookmarksStorageContainerEl, barSearchBookmarksStorageTextareaEl] = getContainerAndTextarea("bar-search-bookmarks-storage");
+export const barSearchBookmarksStorageHighlightEl = getElement<HTMLPreElement>("bar-search-bookmarks-storage-highlight");
+export const barSearchBookmarksStorageStatusEl = getElement<HTMLParagraphElement>("bar-search-bookmarks-storage-status");
 
 export const [findColorContainerEl, findColorInputEl] = getContainerAndInput("find-color");
 
@@ -72,4 +77,3 @@ export const colorInputs = [
     input: findColorInputEl
   }
 ] as const satisfies Array<{ container: HTMLDivElement; input: HTMLInputElement }>;
-

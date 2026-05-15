@@ -1,4 +1,5 @@
 import { type FastConfig, getFastConfig } from "~/src/utils/fast-config";
+import { type BarBookmark } from "~/src/utils/bar-bookmarks";
 import { type HotkeyMappings } from "~/src/utils/hotkeys";
 
 type FastConfigSyncDeps = {
@@ -9,6 +10,8 @@ type FastConfigSyncDeps = {
   setBarSearchEngineURL: (value: string) => void;
   setBarSearchSuggestionsEnabled: (value: boolean) => void;
   setBarSearchHistoryEnabled: (value: boolean) => void;
+  setBarSearchBookmarksEnabled: (value: boolean) => void;
+  setBarSearchBookmarks: (value: BarBookmark[]) => void;
   setFindColor: (value: string) => void;
   setHintShowCapitalizedLetters: (value: boolean) => void;
   setHintCharset: (value: string) => void;
@@ -34,6 +37,8 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setBarSearchEngineURL(fastConfig.bar.searchEngineURL);
   deps.setBarSearchSuggestionsEnabled(fastConfig.bar.search.suggestions);
   deps.setBarSearchHistoryEnabled(fastConfig.bar.search.history);
+  deps.setBarSearchBookmarksEnabled(fastConfig.bar.search.bookmarks.enabled);
+  deps.setBarSearchBookmarks(fastConfig.bar.search.bookmarks.storage);
   deps.setFindColor(fastConfig.find.color);
   deps.setHintShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setHintCharset(fastConfig.hints.charset);

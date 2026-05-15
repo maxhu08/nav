@@ -88,7 +88,11 @@ export const defaultConfig: Config = {
     searchEngineURL: DEFAULT_BAR_SEARCH_ENGINE_URL,
     search: {
       suggestions: true,
-      history: true
+      history: true,
+      bookmarks: {
+        enabled: false,
+        storage: ""
+      }
     }
   },
   find: {
@@ -131,6 +135,10 @@ export type Config = {
     search: {
       suggestions: boolean;
       history: boolean;
+      bookmarks: {
+        enabled: boolean;
+        storage: string;
+      };
     };
   };
   find: {

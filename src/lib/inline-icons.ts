@@ -107,6 +107,17 @@ export const FIND_HISTORY_ICON_NODES: SvgNodeDefinition[] = [
   }
 ];
 
+export const FIND_BOOKMARK_ICON_NODES: SvgNodeDefinition[] = [
+  {
+    tag: "path",
+    attributes: {
+      d: "M6 3.5C6 2.67157 6.67157 2 7.5 2H16.5C17.3284 2 18 2.67157 18 3.5V22L12 17.8L6 22V3.5ZM8 4V18.116L12 15.316L16 18.116V4H8Z",
+      fill: "currentColor",
+      stroke: "none"
+    }
+  }
+];
+
 export const FIND_EXTERNAL_LINK_ICON_NODES: SvgNodeDefinition[] = [
   {
     tag: "path",

@@ -101,6 +101,8 @@ const fastConfigSyncDeps = {
   setBarSearchEngineURL: findMode.setBarSearchEngineURL,
   setBarSearchSuggestionsEnabled: findMode.setBarSearchSuggestionsEnabled,
   setBarSearchHistoryEnabled: findMode.setBarSearchHistoryEnabled,
+  setBarSearchBookmarksEnabled: findMode.setBarSearchBookmarksEnabled,
+  setBarSearchBookmarks: findMode.setBarSearchBookmarks,
   setFindColor: focusIndicator.setFindColor,
   setHintShowCapitalizedLetters: hintController.setShowCapitalizedLetters,
   setHintCharset: hintController.setHintCharset,

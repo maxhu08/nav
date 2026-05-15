@@ -3,6 +3,8 @@ import { initCoreNavigation } from "~/src/core/navigation";
 import { listenToInputs } from "~/src/options/scripts/inputs";
 import { listenToKeys } from "~/src/options/scripts/keybinds";
 import {
+  barSearchBookmarksStorageContainerEl,
+  barSearchBookmarksStorageTextareaEl,
   hintsAvoidAdjacentPairsContainerEl,
   hintsAvoidAdjacentPairsTextareaEl,
   hintsReservedLabelsContainerEl,
@@ -64,6 +66,10 @@ void getConfig().then((config) => {
   lockTextareaContainerHeight(rulesUrlsBlacklistContainerEl, rulesUrlsBlacklistTextareaEl);
   lockTextareaContainerHeight(rulesUrlsWhitelistContainerEl, rulesUrlsWhitelistTextareaEl);
   lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
+  lockTextareaContainerHeight(
+    barSearchBookmarksStorageContainerEl,
+    barSearchBookmarksStorageTextareaEl
+  );
   lockTextareaContainerHeight(
     hintsAvoidAdjacentPairsContainerEl,
     hintsAvoidAdjacentPairsTextareaEl

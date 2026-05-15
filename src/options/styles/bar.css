@@ -1,0 +1,48 @@
+#bar-search-bookmarks-storage-container {
+  display: grid;
+}
+
+.bar-search-bookmarks-storage-editor-layer {
+  grid-area: 1 / 1;
+  height: 40rem;
+  margin: 0;
+  overflow: auto;
+  padding: 0.25rem 0.5rem;
+  white-space: pre;
+  word-break: normal;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  line-height: 1.5rem;
+}
+
+#bar-search-bookmarks-storage-highlight {
+  pointer-events: none;
+  color: #fafafa;
+}
+
+.bar-search-bookmarks-storage-textarea {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: #fafafa;
+}
+
+.bar-search-bookmarks-storage-textarea::selection {
+  background-color: #ffffff20;
+}
+
+.bar-search-bookmarks-storage-token-name {
+  color: #dcdcaa;
+}
+
+.bar-search-bookmarks-storage-token-separator {
+  color: #737373;
+}
+
+.bar-search-bookmarks-storage-token-url {
+  color: #4ec9b0;
+}
+
+.bar-search-bookmarks-storage-token-invalid {
+  color: #f43f5e;
+}

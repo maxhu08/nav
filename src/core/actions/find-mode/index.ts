@@ -28,17 +28,20 @@ import {
   deactivateSiteKeybindIgnore
 } from "~/src/core/utils/ignore-site-keybinds";
 import {
+  FIND_BOOKMARK_ICON_NODES,
   FIND_HISTORY_ICON_NODES,
   FIND_GLOBE_ICON_NODES,
   FIND_SEARCH_ICON_NODES,
   type SvgNodeDefinition
 } from "~/src/lib/inline-icons";
 import { DEFAULT_BAR_SEARCH_ENGINE_URL } from "~/src/utils/config";
+import { type BarBookmark } from "~/src/utils/bar-bookmarks";
 import {
   type BarSuggestionSeed,
   fetchHistorySuggestions,
   fetchSearchSuggestions,
-  getBarSuggestionItems
+  getBarSuggestionItems,
+  getBookmarkSuggestions
 } from "./search-suggestions";
 
 type CoreMode = "normal" | "find" | "hint" | "watch";
@@ -194,6 +197,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let barSearchEngineURL = DEFAULT_BAR_SEARCH_ENGINE_URL;
   let barSearchSuggestionsEnabled = true;
   let barSearchHistoryEnabled = true;
+  let barSearchBookmarksEnabled = false;
+  let barSearchBookmarks: BarBookmark[] = [];
   let barSuggestionValues: BarSuggestionSeed[] = [];
   let barSuggestionItems: BarSuggestionItem[] = [];
   let selectedBarSuggestionIndex = 0;
@@ -322,7 +327,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     if (
       promptSession.kind !== "bar" ||
-      !barSearchSuggestionsEnabled ||
+      promptSession.mode === "edit-current-tab" ||
       barSuggestionItems.length === 0
     ) {
       hideBarSuggestions();
@@ -355,18 +360,20 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       icon.className = "nav-find-suggestion-icon";
       icon.appendChild(
         createSuggestionIconSvg(
-          item.source === "history"
-            ? FIND_HISTORY_ICON_NODES
-            : item.directLink
-              ? FIND_GLOBE_ICON_NODES
-              : FIND_SEARCH_ICON_NODES
+          item.source === "bookmark"
+            ? FIND_BOOKMARK_ICON_NODES
+            : item.source === "history"
+              ? FIND_HISTORY_ICON_NODES
+              : item.directLink
+                ? FIND_GLOBE_ICON_NODES
+                : FIND_SEARCH_ICON_NODES
         )
       );
 
       const value = document.createElement("span");
       value.className = "nav-find-suggestion-value";
 
-      for (const [charIndex, char] of Array.from(item.value).entries()) {
+      for (const [charIndex, char] of Array.from(item.displayValue).entries()) {
         const charEl = document.createElement("span");
         charEl.className = "nav-find-suggestion-char";
         charEl.setAttribute("data-match", item.matchRanges[charIndex] ? "true" : "false");
@@ -392,6 +399,12 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   };
 
   const refreshBarSuggestions = async (query: string, requestId: number): Promise<void> => {
+    const bookmarkSuggestions =
+      promptSession.kind === "bar" &&
+      promptSession.mode !== "edit-current-tab" &&
+      barSearchBookmarksEnabled
+        ? getBookmarkSuggestions(barSearchBookmarks)
+        : [];
     const [searchSuggestions, historySuggestions] = await Promise.all([
       barSearchSuggestionsEnabled
         ? fetchSearchSuggestions(query).catch(() => [])
@@ -402,7 +415,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     if (
       promptSession.kind !== "bar" ||
-      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled) ||
+      promptSession.mode === "edit-current-tab" ||
+      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled && !barSearchBookmarksEnabled) ||
       requestId !== pendingBarSuggestionRequestId ||
       !input ||
       input.value.trim() !== query
@@ -411,8 +425,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     }
 
     barSuggestionValues = [
+      ...bookmarkSuggestions,
       ...searchSuggestions.map((value) => ({
         value,
+        displayValue: value,
         source: "search" as const,
         directLink: false
       })),
@@ -432,7 +448,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     if (
       promptSession.kind !== "bar" ||
-      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled) ||
+      promptSession.mode === "edit-current-tab" ||
+      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled && !barSearchBookmarksEnabled) ||
       !trimmedValue
     ) {
       barSuggestionValues = [];
@@ -441,7 +458,9 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return;
     }
 
-    barSuggestionValues = [];
+    barSuggestionValues = barSearchBookmarksEnabled
+      ? getBookmarkSuggestions(barSearchBookmarks)
+      : [];
     barSuggestionItems = getBarSuggestionItems(trimmedValue, barSuggestionValues);
     selectedBarSuggestionIndex = 0;
     renderBarSuggestions();
@@ -929,6 +948,14 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     },
     setBarSearchHistoryEnabled: (value: boolean): void => {
       barSearchHistoryEnabled = value;
+      syncBarSuggestions(getFindInput()?.value ?? "");
+    },
+    setBarSearchBookmarksEnabled: (value: boolean): void => {
+      barSearchBookmarksEnabled = value;
+      syncBarSuggestions(getFindInput()?.value ?? "");
+    },
+    setBarSearchBookmarks: (value: BarBookmark[]): void => {
+      barSearchBookmarks = value;
       syncBarSuggestions(getFindInput()?.value ?? "");
     },
     isFindModeActive: (): boolean => deps.getMode() === "find",
