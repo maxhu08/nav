@@ -1,8 +1,8 @@
-# Changes in 1.1.8
+# Changes in 1.1.9
 
 in this release:
 
-- improve bar mode
+- add search, history, and bookmark suggestions for bar mode
 - improve hint recognition and placement
-- performance improvements
+- fix watch mode actions when video is out of view
 - bug fixes
