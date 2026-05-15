@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 set -e
 
-git diff --cached --name-only -z --diff-filter=ACMR -- '*.js' '*.jsx' '*.mjs' '*.cjs' '*.ts' '*.tsx' '*.json' '*.html' |
+git diff --cached --name-only -z --diff-filter=ACMR -- '*.js' '*.jsx' '*.mjs' '*.cjs' '*.ts' '*.tsx' '*.json' '*.html' ':!src/options/scripts/ui.ts' ':!src/popup/ui.ts' |
   xargs -0 -r bunx oxfmt --write --
 
-git diff --cached --name-only -z --diff-filter=ACMR -- '*.js' '*.jsx' '*.mjs' '*.cjs' '*.ts' '*.tsx' '*.json' '*.html' |
+git diff --cached --name-only -z --diff-filter=ACMR -- '*.js' '*.jsx' '*.mjs' '*.cjs' '*.ts' '*.tsx' '*.json' '*.html' ':!src/options/scripts/ui.ts' ':!src/popup/ui.ts' |
   xargs -0 -r git add --
