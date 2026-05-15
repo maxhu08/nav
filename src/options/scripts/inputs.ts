@@ -1,4 +1,7 @@
 import {
+  barSearchBookmarksImportButtonEl,
+  barSearchBookmarksExportAllButtonEl,
+  barSearchBookmarksImportAllButtonEl,
   barColorContainerEl,
   barColorInputEl,
   barSearchBookmarksCheckboxEl,
@@ -42,6 +45,11 @@ import {
   syncBarSearchBookmarksStorageHighlight,
   syncBarSearchBookmarksStorageHighlightScroll
 } from "~/src/options/scripts/utils/bar-bookmarks-highlight";
+import {
+  exportAllBookmarks,
+  importBookmarks,
+  importAllBookmarks
+} from "~/src/options/scripts/utils/bookmark-storage-transfer";
 import { saveAndExportConfig } from "~/src/options/scripts/utils/export-config";
 import { enableEditorTabInsertion } from "~/src/options/scripts/utils/editor-tabs";
 import { importConfigAndSave } from "~/src/options/scripts/utils/import-config";
@@ -187,6 +195,18 @@ export const listenToInputs = (): void => {
 
   barSearchBookmarksCheckboxEl.addEventListener("input", () => {
     syncBarSearchBookmarksStorageControls(barSearchBookmarksCheckboxEl.checked);
+  });
+
+  barSearchBookmarksExportAllButtonEl.addEventListener("click", () => {
+    void exportAllBookmarks();
+  });
+
+  barSearchBookmarksImportButtonEl.addEventListener("click", () => {
+    void importBookmarks();
+  });
+
+  barSearchBookmarksImportAllButtonEl.addEventListener("click", () => {
+    void importAllBookmarks();
   });
 
   barSearchBookmarksStorageTextareaEl.addEventListener("focus", () => {

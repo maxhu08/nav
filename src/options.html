@@ -486,7 +486,7 @@
           </div>
           <div id="bar-search-bookmarks-storage-section" class="hidden gap-2">
             <p class="text-base text-white">bar.search.bookmarks.storage</p>
-            <p class="text-base text-neutral-500">Use one bookmark per line in the format `"bookmark name": "url"`.</p>
+            <p class="text-base text-neutral-500">Use one bookmark per line in the format `"bookmark name": "value"`.</p>
             <div id="bar-search-bookmarks-storage-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
               <pre id="bar-search-bookmarks-storage-highlight" aria-hidden="true" class="bar-search-bookmarks-storage-editor-layer"></pre>
               <textarea
@@ -500,6 +500,17 @@
               ></textarea>
             </div>
             <p id="bar-search-bookmarks-storage-status" role="status" aria-live="polite" class="flex items-center gap-1.5 text-base text-neutral-500"></p>
+            <button id="bar-search-bookmarks-import-button" type="button" class="cursor-pointer rounded-md bg-indigo-500 px-3 py-2 text-base text-white transition hover:bg-indigo-600">
+              import bookmarks
+            </button>
+            <div class="grid grid-cols-2 gap-4">
+              <button id="bar-search-bookmarks-export-all-button" type="button" class="cursor-pointer rounded-md bg-indigo-500 px-3 py-2 text-base text-white transition hover:bg-indigo-600">
+                export all
+              </button>
+              <button id="bar-search-bookmarks-import-all-button" type="button" class="cursor-pointer rounded-md bg-indigo-500 px-3 py-2 text-base text-white transition hover:bg-indigo-600">
+                import all (replace)
+              </button>
+            </div>
           </div>
         </section>
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
