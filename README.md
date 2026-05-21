@@ -41,7 +41,60 @@ Coming soon
 
 ## keyboard bindings
 
+Common default keybinds:
+
+Navigating the Current Page:
+`h` scroll left
+`j` scroll down
+`k` scroll up
+`l` scroll right
+`gg` scroll to top of page
+`G` scroll to bottom of page
+`d` scroll down half a page
+`u` scroll up half a page
+
+Using Hints:
+`f` open hinted target in current tab
+`F` open hinted target in new tab
+
+Tab Actions:
+`t` create new tab
+`x` close current tab
+`r` reload page
+`R` hard reload page
+`J` focus tab to the left
+`K` focus tab to the right
+`yt` duplicate current tab
+`W` move current tab to a new window
+
+Clipboard Actions:
+`yl` copy hinted link URL
+`yi` copy hinted image
+`yI` copy hinted image URL
+`yy` copy current tab URL
+
+History and Pagination:
+`H` go back in history
+`L` go forward in history
+`[` follow previous page link
+`]` follow next page link
+
+Find Mode:
+`/` enter find mode
+`n` next match
+`N` previous match
+
+Watch Mode:
+`w` enter watch mode
+`f` toggle fullscreen
+`e` toggle play/pause
+`l` toggle loop
+`m` toggle mute
+`c` toggle captions
+
 Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x respectively. For shift+x and ctrl-shift-x, just type `X` and `<c-X>`.
+
+Full default mappings:
 
 ```text
 # scroll
@@ -57,14 +110,24 @@ G scroll-to-bottom
 # hints
 f hint-mode-current-tab
 F hint-mode-new-tab
+<a-f> hint-mode-right-click
 
 # tab actions
 t create-new-tab
 x close-current-tab
+<unbound> close-tabs-other
+<unbound> close-tabs-left
+<unbound> close-tabs-right
 r reload-current-tab
 R reload-current-tab-hard
 J tab-go-prev
 K tab-go-next
+g0 first-tab
+g$ last-tab
+<chevronleft><chevronleft> move-tab-left
+<chevronright><chevronright> move-tab-right
+X restore-closed-tab
+^ visit-previous-tab
 yt duplicate-current-tab
 yo duplicate-current-tab-origin
 W move-current-tab-to-new-window
@@ -81,6 +144,11 @@ H history-go-prev
 L history-go-next
 [ follow-prev
 ] follow-next
+
+# bar
+o bar-mode-current-tab
+O bar-mode-new-tab
+ge bar-mode-edit-current-tab
 
 # find
 / find-mode
