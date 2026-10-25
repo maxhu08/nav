@@ -347,7 +347,7 @@ const tokenizeValueTokenAt = (value: string, start: number): { html: string; end
 export const tokenizeCssSelectorValue = (value: string): string => {
   const tokens: string[] = [];
 
-  for (let index = 0; index < value.length; ) {
+  for (let index = 0; index < value.length;) {
     const token = tokenizeSelectorTokenAt(value, index);
     tokens.push(token.html);
     index = token.end;
@@ -361,7 +361,7 @@ const renderCustomCSSValue = (value: string): string => {
   let inBlock = false;
   let context: "selector" | "property" | "value" = "selector";
 
-  for (let index = 0; index < value.length; ) {
+  for (let index = 0; index < value.length;) {
     const char = value[index];
 
     if (value.startsWith("/*", index)) {
