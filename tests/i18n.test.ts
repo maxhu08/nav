@@ -90,17 +90,21 @@ describe("settings language resolution", () => {
 describe("settings translations", () => {
   test("keeps English and translates every supported language", () => {
     expect(getLanguages()).toHaveLength(10);
-    expect(translate("en", "changes saved")).toBe("changes saved");
-    Object.entries(messages).forEach((entry) => {
-      expect(translate(resolveLanguage(entry[0], "en"), "changes saved")).toBe(
-        entry[1]["changes saved"]
-      );
-    });
+    expect(translate("en", "Changes saved.")).toBe("Changes saved.");
+    expect(translate("de", "Changes saved.")).toBe("Änderungen gespeichert.");
+    expect(translate("es", "Changes saved.")).toBe("Cambios guardados.");
+    expect(translate("fr", "Changes saved.")).toBe("Modifications enregistrées.");
+    expect(translate("it", "Changes saved.")).toBe("Modifiche salvate.");
+    expect(translate("ja", "Changes saved.")).toBe("変更を保存しました。");
+    expect(translate("ko", "Changes saved.")).toBe("변경 사항을 저장했습니다.");
+    expect(translate("pt-BR", "Changes saved.")).toBe("Alterações salvas.");
+    expect(translate("ru", "Changes saved.")).toBe("Изменения сохранены.");
+    expect(translate("zh-CN", "Changes saved.")).toBe("更改已保存。");
   });
 
   test("substitutes every occurrence without interpreting values as HTML", () => {
-    expect(translate("de", "{count} bookmarks imported", { count: 2 })).toBe(
-      "2 Lesezeichen importiert"
+    expect(translate("de", "{count} bookmarks imported.", { count: 2 })).toBe(
+      "2 Lesezeichen importiert."
     );
     const message = translate(
       "zh-CN",
@@ -120,11 +124,23 @@ describe("settings translations", () => {
     });
   });
 
+  test("keeps sentence-ending punctuation in every locale", () => {
+    Object.values(messages).forEach((locale) => {
+      Object.entries(locale).forEach((entry) => {
+        if (entry[0].endsWith(".")) expect(entry[1]).toMatch(/[.!?。！？]$/);
+      });
+    });
+  });
+
   test("preserves interpolation placeholders and technical syntax", () => {
     const placeholders = (value: string) =>
       [...value.matchAll(/\{[A-Za-z][A-Za-z0-9]*\}/g)].map((match) => match[0]).sort();
     const tokens = (value: string) =>
-      [...value.matchAll(/https?:\/\/[^\s`]+|(?:NAV|MTAB)_[A-Za-z0-9_.#]+|`[^`]+`|<unbound>|a-z/g)]
+      [
+        ...value.matchAll(
+          /https?:\/\/[^\s`]+|(?:NAV|MTAB)_[A-Za-z0-9_.#]*[A-Za-z0-9_#]|`[^`]+`|<unbound>|a-z/g
+        )
+      ]
         .map((match) => match[0])
         .sort();
 
@@ -189,7 +205,7 @@ describe("settings translations", () => {
   test("translates document text and attributes while preserving whitespace and input values", async () => {
     const fixture = createDomFixture([
       "<p>  save  </p>",
-      '<input aria-label="save options" placeholder="paste here..." value="save">',
+      '<input aria-label="save options" placeholder="Paste here..." value="save">',
       '<button title="save" data-tippy-content="save"></button>',
       '<img alt="nav logo">',
       "<textarea>custom rules and CSS</textarea>"
@@ -200,7 +216,7 @@ describe("settings translations", () => {
       expect(document.documentElement.lang).toBe("de");
       expect(document.querySelector("p")?.textContent).toBe(`  ${de.save}  `);
       expect(document.querySelector("input")?.getAttribute("aria-label")).toBe(de["save options"]);
-      expect(document.querySelector("input")?.placeholder).toBe(de["paste here..."]);
+      expect(document.querySelector("input")?.placeholder).toBe(de["Paste here..."]);
       expect(document.querySelector("input")?.value).toBe("save");
       expect(document.querySelector("button")?.title).toBe(de.save);
       expect(document.querySelector("button")?.dataset.tippyContent).toBe(de.save);
@@ -326,9 +342,9 @@ describe("settings translations", () => {
       await initialize("de");
       const status = document.getElementById("status") as HTMLParagraphElement;
       setEditorStatus(status, false);
-      expect(status.textContent).toBe(de["No errors detected"]);
+      expect(status.textContent).toBe(de["No errors detected."]);
       setEditorStatus(status, [{ code: "invalid", message: '<img src="x">' }]);
-      expect(status.textContent).toContain(de["Contains errors"]);
+      expect(status.textContent).toContain(de["Contains errors."]);
       expect(status.textContent).toContain('<img src="x">');
       expect(status.querySelector("img")).toBeNull();
     } finally {
@@ -376,7 +392,7 @@ describe("settings translations", () => {
         ];
         statuses.forEach((status) => {
           expect(status.dataset.hasError).toBe("true");
-          expect(status.textContent).toContain(t("Contains errors"));
+          expect(status.textContent).toContain(t("Contains errors."));
           expect(status.textContent).not.toMatch(
             /\{(?:line|position|char|directive|label|pattern|key|selector|action|mode|sequence|pair)\}/
           );

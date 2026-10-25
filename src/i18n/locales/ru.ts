@@ -83,16 +83,16 @@ export const ru = {
   "Used when bar input is treated as a search instead of a URL.":
     "Используется, когда текст в строке распознаётся как поисковый запрос, а не URL.",
   "Use `{}` to represent the search query.": "Используйте `{}` для обозначения поискового запроса.",
-  "Example: `https://www.google.com/search?q={}`": "Пример: `https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.": "Пример: `https://www.google.com/search?q={}`.",
   "bar.search.suggestions": "поисковые предложения",
-  "Shows live query suggestions as you type": "Показывает поисковые предложения во время ввода",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "Предложения поступают из общедоступного API автодополнения DuckDuckGo и не основаны на вашей истории поиска. Запросы отправляются браузером напрямую в DuckDuckGo без файлов cookie, учётных записей, идентификаторов расширения и других личных данных",
+  "Shows live query suggestions as you type.": "Показывает поисковые предложения во время ввода.",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "Предложения поступают из общедоступного API автодополнения DuckDuckGo и не основаны на вашей истории поиска. Запросы отправляются браузером напрямую в DuckDuckGo без файлов cookie, учётных записей, идентификаторов расширения и других личных данных.",
   "bar.search.history": "история поиска",
-  "Shows matches from your local browser history for past searches and visited links":
-    "Показывает совпадения из локальной истории поиска и посещённых страниц браузера",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "Поиск по истории выполняется на устройстве и не передаётся нам или третьим лицам",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "Показывает совпадения из локальной истории поиска и посещённых страниц браузера.",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "Поиск по истории выполняется на устройстве и не передаётся нам или третьим лицам.",
   "bar.search.bookmarks": "поиск по закладкам",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Показывает совпадения из настраиваемого списка закладок, хранящегося локально.",
@@ -150,46 +150,45 @@ export const ru = {
   "reset options to default": "сбросить настройки по умолчанию",
   "Include site": "Включить сайт",
   "Exclude site": "Исключить сайт",
-  "This will be added to {path}": "Будет добавлено в {path}",
+  "This will be added to {path}.": "Будет добавлено в {path}.",
   add: "добавить",
   cancel: "отмена",
-  "paste here...": "вставьте сюда...",
   ok: "ОК",
   confirm: "подтвердить",
   reset: "сбросить",
   "Save (Ctrl+S)": "Сохранить (ctrl+s)",
   "Save & export (Ctrl+E)": "Сохранить и экспортировать (ctrl+e)",
   "Import & save (Ctrl+I)": "Импортировать и сохранить (ctrl+i)",
-  "choose color for {field}": "выбрать цвет для {field}",
+  "Choose color for {field}": "Выбрать цвет для {field}",
   "Contains one or more invalid entries.": "Содержит одну или несколько недопустимых записей.",
-  "Contains errors": "Есть ошибки",
-  "No errors detected": "Ошибок не обнаружено",
-  "{path} has unresolved errors, aborting save":
-    "В {path} есть неисправленные ошибки, сохранение отменено",
-  "changes saved": "изменения сохранены",
+  "Contains errors.": "Есть ошибки.",
+  "No errors detected.": "Ошибок не обнаружено.",
+  "{path} has unresolved errors; aborting save.":
+    "В {path} есть неисправленные ошибки, сохранение отменено.",
+  "Changes saved.": "Изменения сохранены.",
   "Input your save. This will overwrite your current config.":
     "Вставьте сохранение. Это перезапишет текущую конфигурацию.",
-  "input was empty, nothing imported": "ввод пуст, ничего не импортировано",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "неверный формат сохранения, ожидается NAV_SAVE_FORMAT_v#.#.#_",
-  "invalid save format": "недопустимый формат сохранения",
-  "invalid config data": "недопустимые данные конфигурации",
+  "Input was empty, nothing imported.": "Ввод пуст, ничего не импортировано.",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "Неверный формат сохранения, ожидается NAV_SAVE_FORMAT_v#.#.#_.",
+  "Invalid save format.": "Недопустимый формат сохранения.",
+  "Invalid config data.": "Недопустимые данные конфигурации.",
   "Config saved & copied to clipboard.": "Конфигурация сохранена и скопирована в буфер обмена.",
   "Could not save config to clipboard.": "Не удалось скопировать конфигурацию в буфер обмена.",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "Сбросить настройки по умолчанию? Это действие нельзя отменить.",
-  "options reset to default": "настройки сброшены по умолчанию",
-  "you selected no, options did not reset": "отменено, настройки не сброшены",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "неверный формат сохранения, ожидается NAV_BOOKMARKS_FORMAT_v#.#.#_ или MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_",
-  "1 bookmark imported": "импортирована 1 закладка",
-  "{count} bookmarks imported": "импортировано закладок: {count}",
-  "1 bookmark copied to clipboard": "1 закладка скопирована в буфер обмена",
-  "{count} bookmarks copied to clipboard": "закладок скопировано в буфер обмена: {count}",
-  "could not copy bookmarks to clipboard": "не удалось скопировать закладки в буфер обмена",
-  "input your bookmarks to import": "введите закладки для импорта",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "введите закладки (ТЕКУЩИЕ ЗАКЛАДКИ БУДУТ ЗАМЕНЕНЫ)",
+  "Options reset to default.": "Настройки сброшены по умолчанию.",
+  "You selected no, options did not reset.": "Отменено, настройки не сброшены.",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "Неверный формат сохранения, ожидается NAV_BOOKMARKS_FORMAT_v#.#.#_ или MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
+  "1 bookmark imported.": "Импортирована 1 закладка.",
+  "{count} bookmarks imported.": "Импортировано закладок: {count}.",
+  "1 bookmark copied to clipboard.": "1 закладка скопирована в буфер обмена.",
+  "{count} bookmarks copied to clipboard.": "Закладок скопировано в буфер обмена: {count}.",
+  "Could not copy bookmarks to clipboard.": "Не удалось скопировать закладки в буфер обмена.",
+  "Input your bookmarks to import.": "Введите закладки для импорта.",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "Введите закладки. Текущие закладки будут заменены.",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     'Поддерживаются NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} и MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. Папки MTAB преобразуются в плоский список.',
   Notifications: "Уведомления",

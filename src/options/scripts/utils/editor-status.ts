@@ -33,7 +33,7 @@ export const setEditorStatus = (
   icon.className = hasError ? "ri-close-line" : "ri-check-line";
 
   const text = document.createElement("span");
-  text.textContent = hasError ? t("Contains errors") : t("No errors detected");
+  text.textContent = hasError ? t("Contains errors.") : t("No errors detected.");
 
   const heading = document.createElement("span");
   heading.className = "inline-flex items-center gap-1.5";

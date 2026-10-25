@@ -9,7 +9,6 @@ type InputDialogOptions = {
   cancelText?: string;
   defaultValue?: string;
   note?: string;
-  variant?: "import";
   fileInput?: {
     text: string;
     accept: string;
@@ -64,7 +63,8 @@ export const showInputDialog = (
   overlay.style.transition = "opacity 160ms ease";
 
   const dialog = document.createElement("div");
-  dialog.className = `w-full max-w-xl rounded-md border-2 ${options.variant === "import" ? "border-emerald-500" : "border-yellow-500"} bg-neutral-900 p-4 text-base shadow-2xl`;
+  dialog.className =
+    "w-full max-w-xl rounded-md border-2 border-yellow-500 bg-neutral-900 p-4 text-base shadow-2xl";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");
   dialog.setAttribute("aria-label", text);
@@ -86,7 +86,7 @@ export const showInputDialog = (
   inputEl.autocomplete = "off";
   inputEl.className =
     "w-full bg-transparent text-base text-white placeholder-neutral-500 outline-none";
-  inputEl.placeholder = options.placeholder ?? t("paste here...");
+  inputEl.placeholder = options.placeholder ?? t("Paste here...");
   inputEl.value = options.defaultValue ?? "";
   inputContainerEl.append(inputEl);
 
@@ -105,7 +105,8 @@ export const showInputDialog = (
 
   const confirmButton = document.createElement("button");
   confirmButton.type = "button";
-  confirmButton.className = `cursor-pointer rounded-md ${options.variant === "import" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-yellow-500 hover:bg-yellow-600"} px-3 py-2 text-base text-white transition`;
+  confirmButton.className =
+    "cursor-pointer rounded-md bg-yellow-500 px-3 py-2 text-base text-white transition hover:bg-yellow-600";
   confirmButton.textContent = options.confirmText ?? t("ok");
 
   actions.append(cancelButton, confirmButton);
@@ -130,7 +131,7 @@ export const showInputDialog = (
     const uploadButton = document.createElement("button");
     uploadButton.type = "button";
     uploadButton.className =
-      "w-full cursor-pointer rounded-md bg-emerald-500 px-3 py-2 text-base text-white transition hover:bg-emerald-600";
+      "w-full cursor-pointer rounded-md bg-yellow-500 px-3 py-2 text-base text-white transition hover:bg-yellow-600";
     uploadButton.textContent = options.fileInput.text;
     uploadButton.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", async () => {
@@ -234,7 +235,7 @@ export const showActionDialog = (text: string, options: ActionDialogOptions): Pr
   overlay.style.transition = "opacity 160ms ease";
 
   const dialog = document.createElement("div");
-  dialog.className = `w-full max-w-xl rounded-md border-2 ${options.variant === "export" ? "border-emerald-500" : "border-rose-500"} bg-neutral-900 p-4 text-base shadow-2xl`;
+  dialog.className = `w-full max-w-xl rounded-md border-2 ${options.variant === "export" ? "border-yellow-500" : "border-rose-500"} bg-neutral-900 p-4 text-base shadow-2xl`;
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");
   dialog.setAttribute("aria-label", text);
@@ -258,7 +259,7 @@ export const showActionDialog = (text: string, options: ActionDialogOptions): Pr
 
   const actionButton = document.createElement("button");
   actionButton.type = "button";
-  actionButton.className = `cursor-pointer rounded-md ${options.variant === "export" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-rose-500 hover:bg-rose-600"} px-3 py-2 text-base text-white transition`;
+  actionButton.className = `cursor-pointer rounded-md ${options.variant === "export" ? "bg-yellow-500 hover:bg-yellow-600" : "bg-rose-500 hover:bg-rose-600"} px-3 py-2 text-base text-white transition`;
   actionButton.textContent = options.actionText ?? t("confirm");
 
   const additionalButton = options.additionalAction ? document.createElement("button") : null;
@@ -556,7 +557,7 @@ export const showPlainTextareaDialog = (
   textareaEl.rows = 10;
   textareaEl.className =
     "w-full resize-none bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none";
-  textareaEl.placeholder = options.placeholder ?? t("paste here...");
+  textareaEl.placeholder = options.placeholder ?? t("Paste here...");
   textareaEl.value = options.defaultValue ?? "";
   textareaContainerEl.append(textareaEl);
 

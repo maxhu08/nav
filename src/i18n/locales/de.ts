@@ -83,16 +83,17 @@ export const de = {
   "Used when bar input is treated as a search instead of a URL.":
     "Wird verwendet, wenn die Eingabe als Suche statt als URL erkannt wird.",
   "Use `{}` to represent the search query.": "Verwende `{}` als Platzhalter für die Suchanfrage.",
-  "Example: `https://www.google.com/search?q={}`": "Beispiel: `https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.":
+    "Beispiel: `https://www.google.com/search?q={}`.",
   "bar.search.suggestions": "Suchvorschläge",
-  "Shows live query suggestions as you type": "Zeigt beim Tippen aktuelle Suchvorschläge",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "Vorschläge stammen aus DuckDuckGos öffentlicher Autovervollständigungs-API, nicht aus deinem Suchverlauf. Anfragen gehen direkt vom Browser an DuckDuckGo und enthalten keine Cookies, Konten, Erweiterungskennungen oder andere persönliche Daten",
+  "Shows live query suggestions as you type.": "Zeigt beim Tippen aktuelle Suchvorschläge.",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "Vorschläge stammen aus DuckDuckGos öffentlicher Autovervollständigungs-API, nicht aus deinem Suchverlauf. Anfragen gehen direkt vom Browser an DuckDuckGo und enthalten keine Cookies, Konten, Erweiterungskennungen oder andere persönliche Daten.",
   "bar.search.history": "Suchverlauf",
-  "Shows matches from your local browser history for past searches and visited links":
-    "Zeigt passende frühere Suchanfragen und besuchte Links aus deinem lokalen Browserverlauf",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "Verlaufsabfragen bleiben auf deinem Gerät und werden weder an uns noch an Dritte gesendet",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "Zeigt passende frühere Suchanfragen und besuchte Links aus deinem lokalen Browserverlauf.",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "Verlaufsabfragen bleiben auf deinem Gerät und werden weder an uns noch an Dritte gesendet.",
   "bar.search.bookmarks": "Lesezeichensuche",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Zeigt Treffer aus einer anpassbaren, lokal verwalteten Lesezeichenliste.",
@@ -150,49 +151,48 @@ export const de = {
   "reset options to default": "Einstellungen auf Standard zurücksetzen",
   "Include site": "Seite einschließen",
   "Exclude site": "Seite ausschließen",
-  "This will be added to {path}": "Wird zu {path} hinzugefügt",
+  "This will be added to {path}.": "Wird zu {path} hinzugefügt.",
   add: "Hinzufügen",
   cancel: "Abbrechen",
-  "paste here...": "Hier einfügen...",
   ok: "OK",
   confirm: "Bestätigen",
   reset: "Zurücksetzen",
   "Save (Ctrl+S)": "Speichern (Strg+S)",
   "Save & export (Ctrl+E)": "Speichern und exportieren (Strg+E)",
   "Import & save (Ctrl+I)": "Importieren und speichern (Strg+I)",
-  "choose color for {field}": "Farbe für {field} wählen",
+  "Choose color for {field}": "Farbe für {field} wählen",
   "Contains one or more invalid entries.": "Enthält mindestens einen ungültigen Eintrag.",
-  "Contains errors": "Enthält Fehler",
-  "No errors detected": "Keine Fehler gefunden",
-  "{path} has unresolved errors, aborting save":
-    "{path} enthält ungelöste Fehler, Speichern abgebrochen",
-  "changes saved": "Änderungen gespeichert",
+  "Contains errors.": "Enthält Fehler.",
+  "No errors detected.": "Keine Fehler gefunden.",
+  "{path} has unresolved errors; aborting save.":
+    "{path} enthält ungelöste Fehler, Speichern abgebrochen.",
+  "Changes saved.": "Änderungen gespeichert.",
   "Input your save. This will overwrite your current config.":
     "Speicherstand einfügen. Dies überschreibt deine aktuelle Konfiguration.",
-  "input was empty, nothing imported": "Eingabe war leer, nichts importiert",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "Falsches Speicherformat, erwartet: NAV_SAVE_FORMAT_v#.#.#_",
-  "invalid save format": "Ungültiges Speicherformat",
-  "invalid config data": "Ungültige Konfigurationsdaten",
+  "Input was empty, nothing imported.": "Eingabe war leer, nichts importiert.",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "Falsches Speicherformat, erwartet: NAV_SAVE_FORMAT_v#.#.#_.",
+  "Invalid save format.": "Ungültiges Speicherformat.",
+  "Invalid config data.": "Ungültige Konfigurationsdaten.",
   "Config saved & copied to clipboard.":
     "Konfiguration gespeichert und in die Zwischenablage kopiert.",
   "Could not save config to clipboard.":
     "Konfiguration konnte nicht in die Zwischenablage kopiert werden.",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "Einstellungen auf Standard zurücksetzen? Dies kann nicht rückgängig gemacht werden.",
-  "options reset to default": "Einstellungen auf Standard zurückgesetzt",
-  "you selected no, options did not reset": "Abgebrochen, Einstellungen nicht zurückgesetzt",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "Falsches Speicherformat, erwartet: NAV_BOOKMARKS_FORMAT_v#.#.#_ oder MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_",
-  "1 bookmark imported": "1 Lesezeichen importiert",
-  "{count} bookmarks imported": "{count} Lesezeichen importiert",
-  "1 bookmark copied to clipboard": "1 Lesezeichen in die Zwischenablage kopiert",
-  "{count} bookmarks copied to clipboard": "{count} Lesezeichen in die Zwischenablage kopiert",
-  "could not copy bookmarks to clipboard":
-    "Lesezeichen konnten nicht in die Zwischenablage kopiert werden",
-  "input your bookmarks to import": "Zu importierende Lesezeichen eingeben",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "Lesezeichen eingeben (DIES ÜBERSCHREIBT DEINE AKTUELLEN LESEZEICHEN)",
+  "Options reset to default.": "Einstellungen auf Standard zurückgesetzt.",
+  "You selected no, options did not reset.": "Abgebrochen, Einstellungen nicht zurückgesetzt.",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "Falsches Speicherformat, erwartet: NAV_BOOKMARKS_FORMAT_v#.#.#_ oder MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
+  "1 bookmark imported.": "1 Lesezeichen importiert.",
+  "{count} bookmarks imported.": "{count} Lesezeichen importiert.",
+  "1 bookmark copied to clipboard.": "1 Lesezeichen in die Zwischenablage kopiert.",
+  "{count} bookmarks copied to clipboard.": "{count} Lesezeichen in die Zwischenablage kopiert.",
+  "Could not copy bookmarks to clipboard.":
+    "Lesezeichen konnten nicht in die Zwischenablage kopiert werden.",
+  "Input your bookmarks to import.": "Zu importierende Lesezeichen eingeben.",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "Lesezeichen eingeben. Dies überschreibt deine aktuellen Lesezeichen.",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     'Akzeptiert NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} und MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB-Ordner werden aufgelöst.',
   Notifications: "Benachrichtigungen",

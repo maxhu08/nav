@@ -99,7 +99,7 @@ const applyImportedBookmarks = async (
   if (bookmarksValue === null) {
     getToastApi()?.error(
       t(
-        "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_"
+        "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_."
       )
     );
     return;
@@ -119,8 +119,8 @@ const applyImportedBookmarks = async (
   const importedBookmarks = parseBarBookmarksValue(bookmarksValue);
   getToastApi()?.success(
     importedBookmarks.length === 1
-      ? t("1 bookmark imported")
-      : t("{count} bookmarks imported", { count: importedBookmarks.length })
+      ? t("1 bookmark imported.")
+      : t("{count} bookmarks imported.", { count: importedBookmarks.length })
   );
 };
 
@@ -133,19 +133,19 @@ export const exportAllBookmarks = async (): Promise<void> => {
     );
     getToastApi()?.success(
       bookmarks.length === 1
-        ? t("1 bookmark copied to clipboard")
-        : t("{count} bookmarks copied to clipboard", { count: bookmarks.length })
+        ? t("1 bookmark copied to clipboard.")
+        : t("{count} bookmarks copied to clipboard.", { count: bookmarks.length })
     );
   } catch {
-    getToastApi()?.error(t("could not copy bookmarks to clipboard"));
+    getToastApi()?.error(t("Could not copy bookmarks to clipboard."));
   }
 };
 
 export const importBookmarks = async (): Promise<void> => {
-  const importedValue = await showInputDialog(t("input your bookmarks to import"), {
+  const importedValue = await showInputDialog(t("Input your bookmarks to import."), {
     confirmText: t("ok"),
     cancelText: t("cancel"),
-    placeholder: t("paste here..."),
+    placeholder: t("Paste here..."),
     note: t(IMPORT_NOTE)
   });
 
@@ -154,7 +154,7 @@ export const importBookmarks = async (): Promise<void> => {
   }
 
   if (importedValue.trim() === "") {
-    getToastApi()?.info(t("input was empty, nothing imported"));
+    getToastApi()?.info(t("Input was empty, nothing imported."));
     return;
   }
 
@@ -163,11 +163,11 @@ export const importBookmarks = async (): Promise<void> => {
 
 export const importAllBookmarks = async (): Promise<void> => {
   const importedValue = await showInputDialog(
-    t("input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)"),
+    t("Input your bookmarks to import. This will overwrite your current bookmarks."),
     {
       confirmText: t("ok"),
       cancelText: t("cancel"),
-      placeholder: t("paste here..."),
+      placeholder: t("Paste here..."),
       note: t(IMPORT_NOTE)
     }
   );
@@ -177,7 +177,7 @@ export const importAllBookmarks = async (): Promise<void> => {
   }
 
   if (importedValue.trim() === "") {
-    getToastApi()?.info(t("input was empty, nothing imported"));
+    getToastApi()?.info(t("Input was empty, nothing imported."));
     return;
   }
 

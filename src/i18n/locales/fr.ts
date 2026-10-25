@@ -84,17 +84,18 @@ export const fr = {
   "Used when bar input is treated as a search instead of a URL.":
     "Utilisée quand la saisie est interprétée comme une recherche plutôt qu’une URL.",
   "Use `{}` to represent the search query.": "Utilisez `{}` pour représenter la recherche.",
-  "Example: `https://www.google.com/search?q={}`": "Exemple : `https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.":
+    "Exemple : `https://www.google.com/search?q={}`.",
   "bar.search.suggestions": "suggestions de recherche",
-  "Shows live query suggestions as you type":
-    "Affiche des suggestions de recherche pendant la saisie",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "Les suggestions proviennent de l’API publique de saisie automatique de DuckDuckGo et non de votre historique personnel. Les requêtes sont envoyées directement du navigateur à DuckDuckGo, sans cookies, comptes, identifiants d’extension ni autres données personnelles",
+  "Shows live query suggestions as you type.":
+    "Affiche des suggestions de recherche pendant la saisie.",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "Les suggestions proviennent de l’API publique de saisie automatique de DuckDuckGo et non de votre historique personnel. Les requêtes sont envoyées directement du navigateur à DuckDuckGo, sans cookies, comptes, identifiants d’extension ni autres données personnelles.",
   "bar.search.history": "historique de recherche",
-  "Shows matches from your local browser history for past searches and visited links":
-    "Affiche les recherches et liens visités correspondants dans l’historique local du navigateur",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "Les recherches dans l’historique restent sur votre appareil et ne sont transmises ni à nous ni à des tiers",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "Affiche les recherches et liens visités correspondants dans l’historique local du navigateur.",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "Les recherches dans l’historique restent sur votre appareil et ne sont transmises ni à nous ni à des tiers.",
   "bar.search.bookmarks": "rechercher dans les favoris",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Affiche les résultats d’une liste de favoris configurable et gérée localement.",
@@ -152,49 +153,48 @@ export const fr = {
   "reset options to default": "rétablir les options par défaut",
   "Include site": "Inclure le site",
   "Exclude site": "Exclure le site",
-  "This will be added to {path}": "Sera ajouté à {path}",
+  "This will be added to {path}.": "Sera ajouté à {path}.",
   add: "ajouter",
   cancel: "annuler",
-  "paste here...": "collez ici...",
   ok: "OK",
   confirm: "confirmer",
   reset: "réinitialiser",
   "Save (Ctrl+S)": "Enregistrer (ctrl+s)",
   "Save & export (Ctrl+E)": "Enregistrer et exporter (ctrl+e)",
   "Import & save (Ctrl+I)": "Importer et enregistrer (ctrl+i)",
-  "choose color for {field}": "choisir la couleur de {field}",
+  "Choose color for {field}": "Choisir la couleur de {field}",
   "Contains one or more invalid entries.": "Contient une ou plusieurs entrées non valides.",
-  "Contains errors": "Contient des erreurs",
-  "No errors detected": "Aucune erreur détectée",
-  "{path} has unresolved errors, aborting save":
-    "{path} contient des erreurs non résolues, enregistrement annulé",
-  "changes saved": "modifications enregistrées",
+  "Contains errors.": "Contient des erreurs.",
+  "No errors detected.": "Aucune erreur détectée.",
+  "{path} has unresolved errors; aborting save.":
+    "{path} contient des erreurs non résolues, enregistrement annulé.",
+  "Changes saved.": "Modifications enregistrées.",
   "Input your save. This will overwrite your current config.":
     "Collez votre sauvegarde. Ceci écrasera votre configuration actuelle.",
-  "input was empty, nothing imported": "la saisie était vide, rien n’a été importé",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "format incorrect, attendu : NAV_SAVE_FORMAT_v#.#.#_",
-  "invalid save format": "format de sauvegarde non valide",
-  "invalid config data": "données de configuration non valides",
+  "Input was empty, nothing imported.": "La saisie était vide, rien n’a été importé.",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "Format incorrect, attendu : NAV_SAVE_FORMAT_v#.#.#_.",
+  "Invalid save format.": "Format de sauvegarde non valide.",
+  "Invalid config data.": "Données de configuration non valides.",
   "Config saved & copied to clipboard.":
     "Configuration enregistrée et copiée dans le presse-papiers.",
   "Could not save config to clipboard.":
     "Impossible de copier la configuration dans le presse-papiers.",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "Rétablir les options par défaut ? Cette action est irréversible.",
-  "options reset to default": "options réinitialisées",
-  "you selected no, options did not reset": "annulé, les options n’ont pas été réinitialisées",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "format incorrect, attendu : NAV_BOOKMARKS_FORMAT_v#.#.#_ ou MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_",
-  "1 bookmark imported": "1 favori importé",
-  "{count} bookmarks imported": "{count} favoris importés",
-  "1 bookmark copied to clipboard": "1 favori copié dans le presse-papiers",
-  "{count} bookmarks copied to clipboard": "{count} favoris copiés dans le presse-papiers",
-  "could not copy bookmarks to clipboard":
-    "impossible de copier les favoris dans le presse-papiers",
-  "input your bookmarks to import": "saisissez les favoris à importer",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "saisissez les favoris (CELA REMPLACERA VOS FAVORIS ACTUELS)",
+  "Options reset to default.": "Options réinitialisées.",
+  "You selected no, options did not reset.": "Annulé, les options n’ont pas été réinitialisées.",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "Format incorrect, attendu : NAV_BOOKMARKS_FORMAT_v#.#.#_ ou MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
+  "1 bookmark imported.": "1 favori importé.",
+  "{count} bookmarks imported.": "{count} favoris importés.",
+  "1 bookmark copied to clipboard.": "1 favori copié dans le presse-papiers.",
+  "{count} bookmarks copied to clipboard.": "{count} favoris copiés dans le presse-papiers.",
+  "Could not copy bookmarks to clipboard.":
+    "Impossible de copier les favoris dans le presse-papiers.",
+  "Input your bookmarks to import.": "Saisissez les favoris à importer.",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "Saisissez les favoris. Cela remplacera vos favoris actuels.",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     'Accepte NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} et MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. Les dossiers MTAB sont convertis en liste simple.',
   Notifications: "Notifications",

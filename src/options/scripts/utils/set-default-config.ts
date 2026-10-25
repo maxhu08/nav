@@ -6,18 +6,18 @@ import { defaultConfig } from "~/src/utils/config";
 import { t } from "~/src/options/scripts/i18n";
 
 export const setDefaultConfig = (): void => {
-  void showActionDialog(t("do you want to reset your options to default? this cannot be undone."), {
+  void showActionDialog(t("Do you want to reset your options to default? This cannot be undone."), {
     cancelText: t("cancel"),
     actionText: t("reset"),
     onAction: async () => {
       const clonedDefaultConfig = structuredClone(defaultConfig);
       fillInputs(clonedDefaultConfig);
       await saveConfigAndFastConfig(false);
-      getToastApi()?.success(t("options reset to default"));
+      getToastApi()?.success(t("Options reset to default."));
     }
   }).then((confirmed) => {
     if (!confirmed) {
-      getToastApi()?.info(t("you selected no, options did not reset"));
+      getToastApi()?.info(t("You selected no, options did not reset."));
     }
   });
 };

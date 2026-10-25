@@ -118,7 +118,9 @@ const initialize = (config: Config, optionsData: OptionsData) => {
         isWhitelistMode ? t("Include site") : t("Exclude site"),
         {
           defaultValue: getManagedWebsiteRuleSnippet(config, url),
-          note: t("This will be added to {path}", { path: `rules.urls.${config.rules.urls.mode}` }),
+          note: t("This will be added to {path}.", {
+            path: `rules.urls.${config.rules.urls.mode}`
+          }),
           confirmText: t("add"),
           cancelText: t("cancel")
         }

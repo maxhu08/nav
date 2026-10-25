@@ -53,7 +53,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   if (unresolvedErrorPath) {
     if (notify) {
       getToastApi()?.error(
-        t("{path} has unresolved errors, aborting save", { path: unresolvedErrorPath })
+        t("{path} has unresolved errors; aborting save.", { path: unresolvedErrorPath })
       );
     }
 
@@ -76,7 +76,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   await setConfigAndFastConfig(config);
 
   if (notify) {
-    getToastApi()?.success(t("changes saved"));
+    getToastApi()?.success(t("Changes saved."));
   }
 
   return config;

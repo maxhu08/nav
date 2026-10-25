@@ -72,7 +72,7 @@ const createColorControl = ({ container, input }: ColorFieldInput): void => {
   previewEl.className = "options-color-picker";
   previewEl.setAttribute(
     "aria-label",
-    t("choose color for {field}", { field: input.getAttribute("aria-label") ?? input.id })
+    t("Choose color for {field}", { field: input.getAttribute("aria-label") ?? input.id })
   );
   previewEl.setAttribute("aria-haspopup", "dialog");
   previewEl.setAttribute("aria-expanded", "false");

@@ -84,17 +84,18 @@ export const it = {
   "Used when bar input is treated as a search instead of a URL.":
     "Usato quando il testo nella barra viene interpretato come ricerca anziché come URL.",
   "Use `{}` to represent the search query.": "Usa `{}` per rappresentare la ricerca.",
-  "Example: `https://www.google.com/search?q={}`": "Esempio: `https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.":
+    "Esempio: `https://www.google.com/search?q={}`.",
   "bar.search.suggestions": "suggerimenti di ricerca",
-  "Shows live query suggestions as you type":
-    "Mostra suggerimenti di ricerca durante la digitazione",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "I suggerimenti provengono dall’API pubblica di completamento automatico di DuckDuckGo e non dalla cronologia personale. Le richieste sono inviate direttamente dal browser a DuckDuckGo senza cookie, account, identificativi dell’estensione o altri dati personali",
+  "Shows live query suggestions as you type.":
+    "Mostra suggerimenti di ricerca durante la digitazione.",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "I suggerimenti provengono dall’API pubblica di completamento automatico di DuckDuckGo e non dalla cronologia personale. Le richieste sono inviate direttamente dal browser a DuckDuckGo senza cookie, account, identificativi dell’estensione o altri dati personali.",
   "bar.search.history": "cronologia di ricerca",
-  "Shows matches from your local browser history for past searches and visited links":
-    "Mostra ricerche e collegamenti visitati corrispondenti nella cronologia locale del browser",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "Le ricerche nella cronologia restano sul dispositivo e non sono inviate a noi o a terzi",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "Mostra ricerche e collegamenti visitati corrispondenti nella cronologia locale del browser.",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "Le ricerche nella cronologia restano sul dispositivo e non sono inviate a noi o a terzi.",
   "bar.search.bookmarks": "cerca nei segnalibri",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Mostra risultati da un elenco di segnalibri configurabile e gestito localmente.",
@@ -152,46 +153,45 @@ export const it = {
   "reset options to default": "ripristina opzioni predefinite",
   "Include site": "Includi sito",
   "Exclude site": "Escludi sito",
-  "This will be added to {path}": "Verrà aggiunto a {path}",
+  "This will be added to {path}.": "Verrà aggiunto a {path}.",
   add: "aggiungi",
   cancel: "annulla",
-  "paste here...": "incolla qui...",
   ok: "OK",
   confirm: "conferma",
   reset: "ripristina",
   "Save (Ctrl+S)": "Salva (ctrl+s)",
   "Save & export (Ctrl+E)": "Salva ed esporta (ctrl+e)",
   "Import & save (Ctrl+I)": "Importa e salva (ctrl+i)",
-  "choose color for {field}": "scegli colore per {field}",
+  "Choose color for {field}": "Scegli colore per {field}",
   "Contains one or more invalid entries.": "Contiene una o più voci non valide.",
-  "Contains errors": "Contiene errori",
-  "No errors detected": "Nessun errore rilevato",
-  "{path} has unresolved errors, aborting save":
-    "{path} contiene errori irrisolti, salvataggio annullato",
-  "changes saved": "modifiche salvate",
+  "Contains errors.": "Contiene errori.",
+  "No errors detected.": "Nessun errore rilevato.",
+  "{path} has unresolved errors; aborting save.":
+    "{path} contiene errori irrisolti, salvataggio annullato.",
+  "Changes saved.": "Modifiche salvate.",
   "Input your save. This will overwrite your current config.":
     "Incolla il tuo salvataggio. Questo sovrascriverà la configurazione attuale.",
-  "input was empty, nothing imported": "input vuoto, nessun dato importato",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "formato errato, previsto NAV_SAVE_FORMAT_v#.#.#_",
-  "invalid save format": "formato di salvataggio non valido",
-  "invalid config data": "dati di configurazione non validi",
+  "Input was empty, nothing imported.": "Input vuoto, nessun dato importato.",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "Formato errato, previsto NAV_SAVE_FORMAT_v#.#.#_.",
+  "Invalid save format.": "Formato di salvataggio non valido.",
+  "Invalid config data.": "Dati di configurazione non validi.",
   "Config saved & copied to clipboard.": "Configurazione salvata e copiata negli appunti.",
   "Could not save config to clipboard.": "Impossibile copiare la configurazione negli appunti.",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "Ripristinare le opzioni predefinite? Questa operazione è irreversibile.",
-  "options reset to default": "opzioni predefinite ripristinate",
-  "you selected no, options did not reset": "annullato, le opzioni non sono state ripristinate",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "formato errato, previsto NAV_BOOKMARKS_FORMAT_v#.#.#_ o MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_",
-  "1 bookmark imported": "1 segnalibro importato",
-  "{count} bookmarks imported": "{count} segnalibri importati",
-  "1 bookmark copied to clipboard": "1 segnalibro copiato negli appunti",
-  "{count} bookmarks copied to clipboard": "{count} segnalibri copiati negli appunti",
-  "could not copy bookmarks to clipboard": "impossibile copiare i segnalibri negli appunti",
-  "input your bookmarks to import": "inserisci i segnalibri da importare",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "inserisci i segnalibri (SOVRASCRIVERÀ QUELLI ATTUALI)",
+  "Options reset to default.": "Opzioni predefinite ripristinate.",
+  "You selected no, options did not reset.": "Annullato, le opzioni non sono state ripristinate.",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "Formato errato, previsto NAV_BOOKMARKS_FORMAT_v#.#.#_ o MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
+  "1 bookmark imported.": "1 segnalibro importato.",
+  "{count} bookmarks imported.": "{count} segnalibri importati.",
+  "1 bookmark copied to clipboard.": "1 segnalibro copiato negli appunti.",
+  "{count} bookmarks copied to clipboard.": "{count} segnalibri copiati negli appunti.",
+  "Could not copy bookmarks to clipboard.": "Impossibile copiare i segnalibri negli appunti.",
+  "Input your bookmarks to import.": "Inserisci i segnalibri da importare.",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "Inserisci i segnalibri. Questa operazione sovrascriverà quelli attuali.",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     'Accetta NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} e MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. Le cartelle MTAB vengono convertite in un elenco semplice.',
   Notifications: "Notifiche",

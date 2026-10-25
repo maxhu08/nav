@@ -81,16 +81,16 @@ export const zhCN = {
   "Used when bar input is treated as a search instead of a URL.":
     "当地址栏输入被识别为搜索而非 URL 时使用。",
   "Use `{}` to represent the search query.": "使用 `{}` 表示搜索内容。",
-  "Example: `https://www.google.com/search?q={}`": "示例：`https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.": "示例：`https://www.google.com/search?q={}`。",
   "bar.search.suggestions": "搜索建议",
-  "Shows live query suggestions as you type": "输入时显示实时搜索建议",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "建议来自 DuckDuckGo 的公共自动补全 API，不基于你的个人搜索历史。请求由浏览器直接发送至 DuckDuckGo，不包含 Cookie、账号、扩展标识符或其他个人数据",
+  "Shows live query suggestions as you type.": "输入时显示实时搜索建议。",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "建议来自 DuckDuckGo 的公共自动补全 API，不基于你的个人搜索历史。请求由浏览器直接发送至 DuckDuckGo，不包含 Cookie、账号、扩展标识符或其他个人数据。",
   "bar.search.history": "搜索历史",
-  "Shows matches from your local browser history for past searches and visited links":
-    "显示本地浏览器历史中匹配的搜索和已访问链接",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "历史查询仅在本机进行，不会发送给我们或任何第三方",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "显示本地浏览器历史中匹配的搜索和已访问链接。",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "历史查询仅在本机进行，不会发送给我们或任何第三方。",
   "bar.search.bookmarks": "搜索书签",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "显示你在本地管理的可配置书签列表中的匹配项。",
@@ -148,45 +148,44 @@ export const zhCN = {
   "reset options to default": "恢复默认设置",
   "Include site": "包含网站",
   "Exclude site": "排除网站",
-  "This will be added to {path}": "将添加到 {path}",
+  "This will be added to {path}.": "将添加到 {path}。",
   add: "添加",
   cancel: "取消",
-  "paste here...": "粘贴到这里...",
   ok: "确定",
   confirm: "确认",
   reset: "重置",
   "Save (Ctrl+S)": "保存（ctrl+s）",
   "Save & export (Ctrl+E)": "保存并导出（ctrl+e）",
   "Import & save (Ctrl+I)": "导入并保存（ctrl+i）",
-  "choose color for {field}": "选择 {field} 的颜色",
+  "Choose color for {field}": "选择 {field} 的颜色",
   "Contains one or more invalid entries.": "包含一个或多个无效条目。",
-  "Contains errors": "存在错误",
-  "No errors detected": "未发现错误",
-  "{path} has unresolved errors, aborting save": "{path} 存在未解决的错误，已取消保存",
-  "changes saved": "更改已保存",
+  "Contains errors.": "存在错误。",
+  "No errors detected.": "未发现错误。",
+  "{path} has unresolved errors; aborting save.": "{path} 存在未解决的错误，已取消保存。",
+  "Changes saved.": "更改已保存。",
   "Input your save. This will overwrite your current config.":
     "输入要导入的配置（这将覆盖当前配置）。",
-  "input was empty, nothing imported": "输入为空，未导入任何内容",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "保存格式错误，应为 NAV_SAVE_FORMAT_v#.#.#_",
-  "invalid save format": "无效的保存格式",
-  "invalid config data": "无效的配置数据",
+  "Input was empty, nothing imported.": "输入为空，未导入任何内容。",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "保存格式错误，应为 NAV_SAVE_FORMAT_v#.#.#_。",
+  "Invalid save format.": "无效的保存格式。",
+  "Invalid config data.": "无效的配置数据。",
   "Config saved & copied to clipboard.": "配置已保存并复制到剪贴板。",
   "Could not save config to clipboard.": "无法将配置复制到剪贴板。",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "确定要恢复默认设置吗？此操作无法撤销。",
-  "options reset to default": "已恢复默认设置",
-  "you selected no, options did not reset": "已取消，设置未重置",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "保存格式错误，应为 NAV_BOOKMARKS_FORMAT_v#.#.#_ 或 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_",
-  "1 bookmark imported": "已导入 1 个书签",
-  "{count} bookmarks imported": "已导入 {count} 个书签",
-  "1 bookmark copied to clipboard": "已复制 1 个书签到剪贴板",
-  "{count} bookmarks copied to clipboard": "已复制 {count} 个书签到剪贴板",
-  "could not copy bookmarks to clipboard": "无法将书签复制到剪贴板",
-  "input your bookmarks to import": "输入要导入的书签",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "输入要导入的书签（这将覆盖当前书签）",
+  "Options reset to default.": "已恢复默认设置。",
+  "You selected no, options did not reset.": "已取消，设置未重置。",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "保存格式错误，应为 NAV_BOOKMARKS_FORMAT_v#.#.#_ 或 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_。",
+  "1 bookmark imported.": "已导入 1 个书签。",
+  "{count} bookmarks imported.": "已导入 {count} 个书签。",
+  "1 bookmark copied to clipboard.": "已复制 1 个书签到剪贴板。",
+  "{count} bookmarks copied to clipboard.": "已复制 {count} 个书签到剪贴板。",
+  "Could not copy bookmarks to clipboard.": "无法将书签复制到剪贴板。",
+  "Input your bookmarks to import.": "输入要导入的书签。",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "输入要导入的书签。这将覆盖当前书签。",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     '支持 NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} 和 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]。MTAB 文件夹会展开为平铺书签。',
   Notifications: "通知",

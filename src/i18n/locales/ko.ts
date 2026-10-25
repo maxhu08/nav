@@ -83,16 +83,16 @@ export const ko = {
   "Used when bar input is treated as a search instead of a URL.":
     "입력이 URL이 아닌 검색으로 처리될 때 사용합니다.",
   "Use `{}` to represent the search query.": "검색어를 나타내려면 `{}`를 사용하세요.",
-  "Example: `https://www.google.com/search?q={}`": "예: `https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.": "예: `https://www.google.com/search?q={}`.",
   "bar.search.suggestions": "검색 제안",
-  "Shows live query suggestions as you type": "입력하는 동안 실시간 검색 제안을 표시합니다",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "검색 제안은 개인 검색 기록이 아닌 DuckDuckGo의 공개 자동 완성 API에서 가져옵니다. 요청은 브라우저에서 DuckDuckGo로 직접 전송되며 쿠키, 계정, 확장 프로그램 식별자 등 개인정보를 포함하지 않습니다",
+  "Shows live query suggestions as you type.": "입력하는 동안 실시간 검색 제안을 표시합니다.",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "검색 제안은 개인 검색 기록이 아닌 DuckDuckGo의 공개 자동 완성 API에서 가져옵니다. 요청은 브라우저에서 DuckDuckGo로 직접 전송되며 쿠키, 계정, 확장 프로그램 식별자 등 개인정보를 포함하지 않습니다.",
   "bar.search.history": "검색 기록",
-  "Shows matches from your local browser history for past searches and visited links":
-    "로컬 브라우저 기록에서 일치하는 검색과 방문 링크를 표시합니다",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "기록 조회는 기기 내에서만 이루어지며 개발자나 제삼자에게 전송하지 않습니다",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "로컬 브라우저 기록에서 일치하는 검색과 방문 링크를 표시합니다.",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "기록 조회는 기기 내에서만 이루어지며 개발자나 제삼자에게 전송하지 않습니다.",
   "bar.search.bookmarks": "북마크 검색",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "로컬에서 관리하는 사용자 지정 북마크 목록의 일치 항목을 표시합니다.",
@@ -150,46 +150,45 @@ export const ko = {
   "reset options to default": "설정을 기본값으로 초기화",
   "Include site": "사이트 포함",
   "Exclude site": "사이트 제외",
-  "This will be added to {path}": "{path}에 추가됩니다",
+  "This will be added to {path}.": "{path}에 추가됩니다.",
   add: "추가",
   cancel: "취소",
-  "paste here...": "여기에 붙여넣기...",
   ok: "확인",
   confirm: "확인",
   reset: "초기화",
   "Save (Ctrl+S)": "저장(ctrl+s)",
   "Save & export (Ctrl+E)": "저장 및 내보내기(ctrl+e)",
   "Import & save (Ctrl+I)": "가져오기 및 저장(ctrl+i)",
-  "choose color for {field}": "{field} 색상 선택",
+  "Choose color for {field}": "{field} 색상 선택",
   "Contains one or more invalid entries.": "잘못된 항목이 하나 이상 있습니다.",
-  "Contains errors": "오류가 있습니다",
-  "No errors detected": "오류가 없습니다",
-  "{path} has unresolved errors, aborting save":
-    "{path}에 해결되지 않은 오류가 있어 저장을 중단합니다",
-  "changes saved": "변경 사항을 저장했습니다",
+  "Contains errors.": "오류가 있습니다.",
+  "No errors detected.": "오류가 없습니다.",
+  "{path} has unresolved errors; aborting save.":
+    "{path}에 해결되지 않은 오류가 있어 저장을 중단합니다.",
+  "Changes saved.": "변경 사항을 저장했습니다.",
   "Input your save. This will overwrite your current config.":
     "가져올 저장 데이터를 입력하세요(현재 설정을 덮어씁니다).",
-  "input was empty, nothing imported": "입력이 비어 있어 가져오지 않았습니다",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "잘못된 저장 형식입니다. NAV_SAVE_FORMAT_v#.#.#_ 형식이 필요합니다",
-  "invalid save format": "잘못된 저장 형식입니다",
-  "invalid config data": "잘못된 설정 데이터입니다",
+  "Input was empty, nothing imported.": "입력이 비어 있어 가져오지 않았습니다.",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "잘못된 저장 형식입니다. NAV_SAVE_FORMAT_v#.#.#_ 형식이 필요합니다.",
+  "Invalid save format.": "잘못된 저장 형식입니다.",
+  "Invalid config data.": "잘못된 설정 데이터입니다.",
   "Config saved & copied to clipboard.": "설정을 저장하고 클립보드에 복사했습니다.",
   "Could not save config to clipboard.": "설정을 클립보드에 복사하지 못했습니다.",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "설정을 기본값으로 초기화할까요? 이 작업은 되돌릴 수 없습니다.",
-  "options reset to default": "설정을 기본값으로 초기화했습니다",
-  "you selected no, options did not reset": "취소했습니다. 설정을 초기화하지 않았습니다",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "잘못된 저장 형식입니다. NAV_BOOKMARKS_FORMAT_v#.#.#_ 또는 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_ 형식이 필요합니다",
-  "1 bookmark imported": "북마크 1개를 가져왔습니다",
-  "{count} bookmarks imported": "북마크 {count}개를 가져왔습니다",
-  "1 bookmark copied to clipboard": "북마크 1개를 클립보드에 복사했습니다",
-  "{count} bookmarks copied to clipboard": "북마크 {count}개를 클립보드에 복사했습니다",
-  "could not copy bookmarks to clipboard": "북마크를 클립보드에 복사할 수 없습니다",
-  "input your bookmarks to import": "가져올 북마크를 입력하세요",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "북마크를 입력하세요 (현재 북마크를 덮어씁니다)",
+  "Options reset to default.": "설정을 기본값으로 초기화했습니다.",
+  "You selected no, options did not reset.": "취소했습니다. 설정을 초기화하지 않았습니다.",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "잘못된 저장 형식입니다. NAV_BOOKMARKS_FORMAT_v#.#.#_ 또는 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_ 형식이 필요합니다.",
+  "1 bookmark imported.": "북마크 1개를 가져왔습니다.",
+  "{count} bookmarks imported.": "북마크 {count}개를 가져왔습니다.",
+  "1 bookmark copied to clipboard.": "북마크 1개를 클립보드에 복사했습니다.",
+  "{count} bookmarks copied to clipboard.": "북마크 {count}개를 클립보드에 복사했습니다.",
+  "Could not copy bookmarks to clipboard.": "북마크를 클립보드에 복사할 수 없습니다.",
+  "Input your bookmarks to import.": "가져올 북마크를 입력하세요.",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "북마크를 입력하세요. 현재 북마크를 덮어씁니다.",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     'NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} 및 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...] 형식을 지원합니다. MTAB 폴더는 단일 목록으로 변환됩니다.',
   Notifications: "알림",

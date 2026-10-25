@@ -83,16 +83,16 @@ export const ja = {
   "Used when bar input is treated as a search instead of a URL.":
     "バーの入力が URL ではなく検索として扱われる場合に使用します。",
   "Use `{}` to represent the search query.": "検索語を表すには `{}` を使用します。",
-  "Example: `https://www.google.com/search?q={}`": "例：`https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.": "例：`https://www.google.com/search?q={}`。",
   "bar.search.suggestions": "検索候補",
-  "Shows live query suggestions as you type": "入力中に検索候補を表示します",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "候補は DuckDuckGo の公開自動補完 API から取得し、個人の検索履歴は使用しません。リクエストはブラウザーから直接 DuckDuckGo に送信され、Cookie、アカウント、拡張機能の識別子などの個人情報は含みません",
+  "Shows live query suggestions as you type.": "入力中に検索候補を表示します。",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "候補は DuckDuckGo の公開自動補完 API から取得し、個人の検索履歴は使用しません。リクエストはブラウザーから直接 DuckDuckGo に送信され、Cookie、アカウント、拡張機能の識別子などの個人情報は含みません。",
   "bar.search.history": "検索履歴",
-  "Shows matches from your local browser history for past searches and visited links":
-    "ブラウザーのローカル履歴から一致する検索や訪問済みリンクを表示します",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "履歴の検索は端末内で行い、開発者や第三者には送信しません",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "ブラウザーのローカル履歴から一致する検索や訪問済みリンクを表示します。",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "履歴の検索は端末内で行い、開発者や第三者には送信しません。",
   "bar.search.bookmarks": "ブックマーク検索",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "ローカルで管理するブックマークリストから一致する項目を表示します。",
@@ -150,47 +150,47 @@ export const ja = {
   "reset options to default": "設定を初期値に戻す",
   "Include site": "サイトを含める",
   "Exclude site": "サイトを除外",
-  "This will be added to {path}": "{path} に追加されます",
+  "This will be added to {path}.": "{path} に追加されます。",
   add: "追加",
   cancel: "キャンセル",
-  "paste here...": "ここに貼り付け...",
   ok: "OK",
   confirm: "確認",
   reset: "リセット",
   "Save (Ctrl+S)": "保存（ctrl+s）",
   "Save & export (Ctrl+E)": "保存してエクスポート（ctrl+e）",
   "Import & save (Ctrl+I)": "インポートして保存（ctrl+i）",
-  "choose color for {field}": "{field} の色を選択",
+  "Choose color for {field}": "{field} の色を選択",
   "Contains one or more invalid entries.": "無効な項目が含まれています。",
-  "Contains errors": "エラーがあります",
-  "No errors detected": "エラーはありません",
-  "{path} has unresolved errors, aborting save":
-    "{path} に未解決のエラーがあるため保存を中止しました",
-  "changes saved": "変更を保存しました",
+  "Contains errors.": "エラーがあります。",
+  "No errors detected.": "エラーはありません。",
+  "{path} has unresolved errors; aborting save.":
+    "{path} に未解決のエラーがあるため保存を中止しました。",
+  "Changes saved.": "変更を保存しました。",
   "Input your save. This will overwrite your current config.":
     "インポートする保存データを入力（現在の設定は上書きされます）。",
-  "input was empty, nothing imported": "入力が空のため何もインポートしませんでした",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "保存形式が正しくありません。NAV_SAVE_FORMAT_v#.#.#_ を使用してください",
-  "invalid save format": "無効な保存形式です",
-  "invalid config data": "無効な設定データです",
+  "Input was empty, nothing imported.": "入力が空のため何もインポートしませんでした。",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "保存形式が正しくありません。NAV_SAVE_FORMAT_v#.#.#_ を使用してください。",
+  "Invalid save format.": "無効な保存形式です。",
+  "Invalid config data.": "無効な設定データです。",
   "Config saved & copied to clipboard.": "設定を保存し、クリップボードにコピーしました。",
   "Could not save config to clipboard.": "設定をクリップボードにコピーできませんでした。",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "設定を初期値に戻しますか？この操作は取り消せません。",
-  "options reset to default": "設定を初期値に戻しました",
-  "you selected no, options did not reset": "キャンセルしました。設定は変更していません",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "保存形式が正しくありません。NAV_BOOKMARKS_FORMAT_v#.#.#_ または MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_ を使用してください",
-  "1 bookmark imported": "ブックマークを 1 件インポートしました",
-  "{count} bookmarks imported": "ブックマークを {count} 件インポートしました",
-  "1 bookmark copied to clipboard": "ブックマークを 1 件クリップボードにコピーしました",
-  "{count} bookmarks copied to clipboard":
-    "ブックマークを {count} 件クリップボードにコピーしました",
-  "could not copy bookmarks to clipboard": "ブックマークをクリップボードにコピーできませんでした",
-  "input your bookmarks to import": "インポートするブックマークを入力してください",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "ブックマークを入力してください（現在のブックマークを上書きします）",
+  "Options reset to default.": "設定を初期値に戻しました。",
+  "You selected no, options did not reset.": "キャンセルしました。設定は変更していません。",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "保存形式が正しくありません。NAV_BOOKMARKS_FORMAT_v#.#.#_ または MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_ を使用してください。",
+  "1 bookmark imported.": "ブックマークを 1 件インポートしました。",
+  "{count} bookmarks imported.": "ブックマークを {count} 件インポートしました。",
+  "1 bookmark copied to clipboard.": "ブックマークを 1 件クリップボードにコピーしました。",
+  "{count} bookmarks copied to clipboard.":
+    "ブックマークを {count} 件クリップボードにコピーしました。",
+  "Could not copy bookmarks to clipboard.":
+    "ブックマークをクリップボードにコピーできませんでした。",
+  "Input your bookmarks to import.": "インポートするブックマークを入力してください。",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "ブックマークを入力してください。現在のブックマークを上書きします。",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     'NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} と MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...] に対応しています。MTAB のフォルダーは平坦なリストに変換されます。',
   Notifications: "通知",

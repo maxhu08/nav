@@ -13,7 +13,6 @@ export const importConfigAndSave = async (): Promise<void> => {
   const dataToImport = await showInputDialog(
     t("Input your save. This will overwrite your current config."),
     {
-      variant: "import",
       placeholder: t("Paste here..."),
       fileInput: {
         text: t("upload config"),
@@ -27,18 +26,18 @@ export const importConfigAndSave = async (): Promise<void> => {
   }
 
   if (dataToImport.trim() === "") {
-    getToastApi()?.info(t("input was empty, nothing imported"));
+    getToastApi()?.info(t("Input was empty, nothing imported."));
     return;
   }
 
   if (!dataToImport.startsWith(SAVE_PREFIX)) {
-    getToastApi()?.error(t("incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_"));
+    getToastApi()?.error(t("Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_."));
     return;
   }
 
   const versionedMatch = dataToImport.match(VERSIONED_SAVE_REGEX);
   if (!versionedMatch) {
-    getToastApi()?.error(t("invalid save format"));
+    getToastApi()?.error(t("Invalid save format."));
     return;
   }
 
@@ -47,7 +46,7 @@ export const importConfigAndSave = async (): Promise<void> => {
   try {
     importedConfig = JSON.parse(versionedMatch[1].trim());
   } catch {
-    getToastApi()?.error(t("invalid config data"));
+    getToastApi()?.error(t("Invalid config data."));
     return;
   }
 
@@ -56,7 +55,7 @@ export const importConfigAndSave = async (): Promise<void> => {
     importedConfig === null ||
     Array.isArray(importedConfig)
   ) {
-    getToastApi()?.error(t("invalid config data"));
+    getToastApi()?.error(t("Invalid config data."));
     return;
   }
 

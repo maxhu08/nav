@@ -83,16 +83,17 @@ export const ptBR = {
   "Used when bar input is treated as a search instead of a URL.":
     "Usada quando a entrada da barra é interpretada como pesquisa em vez de URL.",
   "Use `{}` to represent the search query.": "Use `{}` para representar a consulta de pesquisa.",
-  "Example: `https://www.google.com/search?q={}`": "Exemplo: `https://www.google.com/search?q={}`",
+  "Example: `https://www.google.com/search?q={}`.":
+    "Exemplo: `https://www.google.com/search?q={}`.",
   "bar.search.suggestions": "sugestões de pesquisa",
-  "Shows live query suggestions as you type": "Mostra sugestões de pesquisa enquanto você digita",
-  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
-    "As sugestões vêm da API pública de preenchimento automático do DuckDuckGo, não do seu histórico pessoal. As solicitações são enviadas diretamente do navegador ao DuckDuckGo sem cookies, contas, identificadores da extensão ou outros dados pessoais",
+  "Shows live query suggestions as you type.": "Mostra sugestões de pesquisa enquanto você digita.",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.":
+    "As sugestões vêm da API pública de preenchimento automático do DuckDuckGo, não do seu histórico pessoal. As solicitações são enviadas diretamente do navegador ao DuckDuckGo sem cookies, contas, identificadores da extensão ou outros dados pessoais.",
   "bar.search.history": "histórico de pesquisa",
-  "Shows matches from your local browser history for past searches and visited links":
-    "Mostra pesquisas e links visitados correspondentes no histórico local do navegador",
-  "History lookups stay on-device and are not sent to us or any third party":
-    "As consultas ao histórico ficam no dispositivo e não são enviadas a nós nem a terceiros",
+  "Shows matches from your local browser history for past searches and visited links.":
+    "Mostra pesquisas e links visitados correspondentes no histórico local do navegador.",
+  "History lookups stay on-device and are not sent to us or any third party.":
+    "As consultas ao histórico ficam no dispositivo e não são enviadas a nós nem a terceiros.",
   "bar.search.bookmarks": "pesquisar favoritos",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Mostra resultados de uma lista configurável de favoritos gerenciada localmente.",
@@ -150,50 +151,49 @@ export const ptBR = {
   "reset options to default": "restaurar opções padrão",
   "Include site": "Incluir site",
   "Exclude site": "Excluir site",
-  "This will be added to {path}": "Será adicionado a {path}",
+  "This will be added to {path}.": "Será adicionado a {path}.",
   add: "adicionar",
   cancel: "cancelar",
-  "paste here...": "cole aqui...",
   ok: "OK",
   confirm: "confirmar",
   reset: "restaurar",
   "Save (Ctrl+S)": "Salvar (ctrl+s)",
   "Save & export (Ctrl+E)": "Salvar e exportar (ctrl+e)",
   "Import & save (Ctrl+I)": "Importar e salvar (ctrl+i)",
-  "choose color for {field}": "escolher cor para {field}",
+  "Choose color for {field}": "Escolher cor para {field}",
   "Contains one or more invalid entries.": "Contém uma ou mais entradas inválidas.",
-  "Contains errors": "Contém erros",
-  "No errors detected": "Nenhum erro detectado",
-  "{path} has unresolved errors, aborting save":
-    "{path} contém erros não resolvidos; salvamento cancelado",
-  "changes saved": "alterações salvas",
+  "Contains errors.": "Contém erros.",
+  "No errors detected.": "Nenhum erro detectado.",
+  "{path} has unresolved errors; aborting save.":
+    "{path} contém erros não resolvidos; salvamento cancelado.",
+  "Changes saved.": "Alterações salvas.",
   "Input your save. This will overwrite your current config.":
     "Cole seu backup. Isto vai sobrescrever sua configuração atual.",
-  "input was empty, nothing imported": "a entrada estava vazia; nada foi importado",
-  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
-    "formato incorreto; esperado NAV_SAVE_FORMAT_v#.#.#_",
-  "invalid save format": "formato de salvamento inválido",
-  "invalid config data": "dados de configuração inválidos",
+  "Input was empty, nothing imported.": "A entrada estava vazia; nada foi importado.",
+  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+    "Formato incorreto; esperado NAV_SAVE_FORMAT_v#.#.#_.",
+  "Invalid save format.": "Formato de salvamento inválido.",
+  "Invalid config data.": "Dados de configuração inválidos.",
   "Config saved & copied to clipboard.":
     "Configuração salva e copiada para a área de transferência.",
   "Could not save config to clipboard.":
     "Não foi possível copiar a configuração para a área de transferência.",
-  "do you want to reset your options to default? this cannot be undone.":
+  "Do you want to reset your options to default? This cannot be undone.":
     "Restaurar as opções padrão? Isso não pode ser desfeito.",
-  "options reset to default": "opções padrão restauradas",
-  "you selected no, options did not reset": "cancelado; as opções não foram restauradas",
-  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
-    "formato incorreto; esperado NAV_BOOKMARKS_FORMAT_v#.#.#_ ou MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_",
-  "1 bookmark imported": "1 favorito importado",
-  "{count} bookmarks imported": "{count} favoritos importados",
-  "1 bookmark copied to clipboard": "1 favorito copiado para a área de transferência",
-  "{count} bookmarks copied to clipboard":
-    "{count} favoritos copiados para a área de transferência",
-  "could not copy bookmarks to clipboard":
-    "não foi possível copiar os favoritos para a área de transferência",
-  "input your bookmarks to import": "insira os favoritos para importar",
-  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
-    "insira os favoritos (ISSO SUBSTITUIRÁ SEUS FAVORITOS ATUAIS)",
+  "Options reset to default.": "Opções padrão restauradas.",
+  "You selected no, options did not reset.": "Cancelado; as opções não foram restauradas.",
+  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+    "Formato incorreto; esperado NAV_BOOKMARKS_FORMAT_v#.#.#_ ou MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
+  "1 bookmark imported.": "1 favorito importado.",
+  "{count} bookmarks imported.": "{count} favoritos importados.",
+  "1 bookmark copied to clipboard.": "1 favorito copiado para a área de transferência.",
+  "{count} bookmarks copied to clipboard.":
+    "{count} favoritos copiados para a área de transferência.",
+  "Could not copy bookmarks to clipboard.":
+    "Não foi possível copiar os favoritos para a área de transferência.",
+  "Input your bookmarks to import.": "Insira os favoritos para importar.",
+  "Input your bookmarks to import. This will overwrite your current bookmarks.":
+    "Insira os favoritos. Isso substituirá seus favoritos atuais.",
   'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
     'Aceita NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} e MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. As pastas do MTAB são convertidas em uma lista simples.',
   Notifications: "Notificações",
