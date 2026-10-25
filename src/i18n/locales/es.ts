@@ -1,4 +1,12 @@
 export const es = {
+  Export: "Exportar",
+  "download config": "descargar configuración",
+  "copy to clipboard": "copiar al portapapeles",
+  or: "o",
+  "upload config": "subir configuración",
+  "Could not read file.": "No se pudo leer el archivo.",
+  "Could not export config.": "No se pudo exportar la configuración.",
+  "Paste here...": "Pega aquí...",
   "options ヽ(・ω・*)": "opciones ヽ(・ω・*)",
   options: "opciones",
   "options.language": "idioma",
@@ -150,9 +158,9 @@ export const es = {
   ok: "aceptar",
   confirm: "confirmar",
   reset: "restablecer",
-  "save (ctrl+s)": "guardar (ctrl+s)",
-  "save & export (ctrl+e)": "guardar y exportar (ctrl+e)",
-  "import & save (ctrl+i)": "importar y guardar (ctrl+i)",
+  "Save (Ctrl+S)": "Guardar (ctrl+s)",
+  "Save & export (Ctrl+E)": "Guardar y exportar (ctrl+e)",
+  "Import & save (Ctrl+I)": "Importar y guardar (ctrl+i)",
   "choose color for {field}": "elegir color para {field}",
   "Contains one or more invalid entries.": "Contiene una o más entradas no válidas.",
   "Contains errors": "Contiene errores",
@@ -160,15 +168,15 @@ export const es = {
   "{path} has unresolved errors, aborting save":
     "{path} tiene errores sin resolver; se cancela el guardado",
   "changes saved": "cambios guardados",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "introduce tu configuración (ESTO SOBRESCRIBIRÁ TU CONFIGURACIÓN ACTUAL)",
+  "Input your save. This will overwrite your current config.":
+    "Pega tu configuración guardada. Esto sobrescribirá tu configuración actual.",
   "input was empty, nothing imported": "la entrada estaba vacía; no se importó nada",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "formato incorrecto; se esperaba NAV_SAVE_FORMAT_v#.#.#_",
   "invalid save format": "formato de guardado no válido",
   "invalid config data": "datos de configuración no válidos",
-  "config saved & copied to clipboard": "configuración guardada y copiada al portapapeles",
-  "could not save config to clipboard": "no se pudo copiar la configuración al portapapeles",
+  "Config saved & copied to clipboard.": "Configuración guardada y copiada al portapapeles.",
+  "Could not save config to clipboard.": "No se pudo guardar la configuración en el portapapeles.",
   "do you want to reset your options to default? this cannot be undone.":
     "¿Restablecer las opciones predeterminadas? Esta acción no se puede deshacer.",
   "options reset to default": "opciones restablecidas",

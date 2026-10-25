@@ -1,4 +1,12 @@
 export const ptBR = {
+  Export: "Exportar",
+  "download config": "baixar configuração",
+  "copy to clipboard": "copiar para a área de transferência",
+  or: "ou",
+  "upload config": "enviar configuração",
+  "Could not read file.": "Não foi possível ler o arquivo.",
+  "Could not export config.": "Não foi possível exportar a configuração.",
+  "Paste here...": "Cole aqui...",
   "options ヽ(・ω・*)": "opções ヽ(・ω・*)",
   options: "opções",
   "options.language": "idioma",
@@ -149,9 +157,9 @@ export const ptBR = {
   ok: "OK",
   confirm: "confirmar",
   reset: "restaurar",
-  "save (ctrl+s)": "salvar (ctrl+s)",
-  "save & export (ctrl+e)": "salvar e exportar (ctrl+e)",
-  "import & save (ctrl+i)": "importar e salvar (ctrl+i)",
+  "Save (Ctrl+S)": "Salvar (ctrl+s)",
+  "Save & export (Ctrl+E)": "Salvar e exportar (ctrl+e)",
+  "Import & save (Ctrl+I)": "Importar e salvar (ctrl+i)",
   "choose color for {field}": "escolher cor para {field}",
   "Contains one or more invalid entries.": "Contém uma ou mais entradas inválidas.",
   "Contains errors": "Contém erros",
@@ -159,16 +167,17 @@ export const ptBR = {
   "{path} has unresolved errors, aborting save":
     "{path} contém erros não resolvidos; salvamento cancelado",
   "changes saved": "alterações salvas",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "insira sua configuração (ISSO SUBSTITUIRÁ SUA CONFIGURAÇÃO ATUAL)",
+  "Input your save. This will overwrite your current config.":
+    "Cole seu backup. Isto vai sobrescrever sua configuração atual.",
   "input was empty, nothing imported": "a entrada estava vazia; nada foi importado",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "formato incorreto; esperado NAV_SAVE_FORMAT_v#.#.#_",
   "invalid save format": "formato de salvamento inválido",
   "invalid config data": "dados de configuração inválidos",
-  "config saved & copied to clipboard": "configuração salva e copiada para a área de transferência",
-  "could not save config to clipboard":
-    "não foi possível copiar a configuração para a área de transferência",
+  "Config saved & copied to clipboard.":
+    "Configuração salva e copiada para a área de transferência.",
+  "Could not save config to clipboard.":
+    "Não foi possível copiar a configuração para a área de transferência.",
   "do you want to reset your options to default? this cannot be undone.":
     "Restaurar as opções padrão? Isso não pode ser desfeito.",
   "options reset to default": "opções padrão restauradas",

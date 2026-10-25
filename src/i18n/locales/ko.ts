@@ -1,4 +1,12 @@
 export const ko = {
+  Export: "내보내기",
+  "download config": "설정 다운로드",
+  "copy to clipboard": "클립보드에 복사",
+  or: "또는",
+  "upload config": "설정 업로드",
+  "Could not read file.": "파일을 읽을 수 없습니다.",
+  "Could not export config.": "설정을 내보내지 못했습니다.",
+  "Paste here...": "여기에 붙여넣기...",
   "options ヽ(・ω・*)": "설정 ヽ(・ω・*)",
   options: "설정",
   "options.language": "언어",
@@ -149,9 +157,9 @@ export const ko = {
   ok: "확인",
   confirm: "확인",
   reset: "초기화",
-  "save (ctrl+s)": "저장 (ctrl+s)",
-  "save & export (ctrl+e)": "저장 및 내보내기 (ctrl+e)",
-  "import & save (ctrl+i)": "가져오기 및 저장 (ctrl+i)",
+  "Save (Ctrl+S)": "저장(ctrl+s)",
+  "Save & export (Ctrl+E)": "저장 및 내보내기(ctrl+e)",
+  "Import & save (Ctrl+I)": "가져오기 및 저장(ctrl+i)",
   "choose color for {field}": "{field} 색상 선택",
   "Contains one or more invalid entries.": "잘못된 항목이 하나 이상 있습니다.",
   "Contains errors": "오류가 있습니다",
@@ -159,15 +167,15 @@ export const ko = {
   "{path} has unresolved errors, aborting save":
     "{path}에 해결되지 않은 오류가 있어 저장을 중단합니다",
   "changes saved": "변경 사항을 저장했습니다",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "설정 데이터를 입력하세요 (현재 설정을 덮어씁니다)",
+  "Input your save. This will overwrite your current config.":
+    "가져올 저장 데이터를 입력하세요(현재 설정을 덮어씁니다).",
   "input was empty, nothing imported": "입력이 비어 있어 가져오지 않았습니다",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "잘못된 저장 형식입니다. NAV_SAVE_FORMAT_v#.#.#_ 형식이 필요합니다",
   "invalid save format": "잘못된 저장 형식입니다",
   "invalid config data": "잘못된 설정 데이터입니다",
-  "config saved & copied to clipboard": "설정을 저장하고 클립보드에 복사했습니다",
-  "could not save config to clipboard": "설정을 클립보드에 복사할 수 없습니다",
+  "Config saved & copied to clipboard.": "설정을 저장하고 클립보드에 복사했습니다.",
+  "Could not save config to clipboard.": "설정을 클립보드에 복사하지 못했습니다.",
   "do you want to reset your options to default? this cannot be undone.":
     "설정을 기본값으로 초기화할까요? 이 작업은 되돌릴 수 없습니다.",
   "options reset to default": "설정을 기본값으로 초기화했습니다",

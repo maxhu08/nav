@@ -11,7 +11,15 @@ const VERSIONED_SAVE_REGEX = /^NAV_SAVE_FORMAT_v[^_]+_(.+)$/;
 
 export const importConfigAndSave = async (): Promise<void> => {
   const dataToImport = await showInputDialog(
-    t("input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)")
+    t("Input your save. This will overwrite your current config."),
+    {
+      variant: "import",
+      placeholder: t("Paste here..."),
+      fileInput: {
+        text: t("upload config"),
+        accept: ".txt,text/plain"
+      }
+    }
   );
 
   if (dataToImport === null) {
@@ -39,6 +47,15 @@ export const importConfigAndSave = async (): Promise<void> => {
   try {
     importedConfig = JSON.parse(versionedMatch[1].trim());
   } catch {
+    getToastApi()?.error(t("invalid config data"));
+    return;
+  }
+
+  if (
+    typeof importedConfig !== "object" ||
+    importedConfig === null ||
+    Array.isArray(importedConfig)
+  ) {
     getToastApi()?.error(t("invalid config data"));
     return;
   }

@@ -359,14 +359,14 @@ export const listenToInputs = (): void => {
   });
 
   tippy("#save-button", {
-    content: t("save (ctrl+s)")
+    content: t("Save (Ctrl+S)")
   });
 
   tippy("#export-button", {
-    content: t("save & export (ctrl+e)")
+    content: t("Save & export (Ctrl+E)")
   });
 
   tippy("#import-button", {
-    content: t("import & save (ctrl+i)")
+    content: t("Import & save (Ctrl+I)")
   });
 };

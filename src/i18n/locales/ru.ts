@@ -1,4 +1,12 @@
 export const ru = {
+  Export: "Экспорт",
+  "download config": "скачать конфигурацию",
+  "copy to clipboard": "скопировать в буфер обмена",
+  or: "или",
+  "upload config": "загрузить конфигурацию",
+  "Could not read file.": "Не удалось прочитать файл.",
+  "Could not export config.": "Не удалось экспортировать конфигурацию.",
+  "Paste here...": "Вставьте сюда...",
   "options ヽ(・ω・*)": "настройки ヽ(・ω・*)",
   options: "настройки",
   "options.language": "язык",
@@ -149,9 +157,9 @@ export const ru = {
   ok: "ОК",
   confirm: "подтвердить",
   reset: "сбросить",
-  "save (ctrl+s)": "сохранить (ctrl+s)",
-  "save & export (ctrl+e)": "сохранить и экспортировать (ctrl+e)",
-  "import & save (ctrl+i)": "импортировать и сохранить (ctrl+i)",
+  "Save (Ctrl+S)": "Сохранить (ctrl+s)",
+  "Save & export (Ctrl+E)": "Сохранить и экспортировать (ctrl+e)",
+  "Import & save (Ctrl+I)": "Импортировать и сохранить (ctrl+i)",
   "choose color for {field}": "выбрать цвет для {field}",
   "Contains one or more invalid entries.": "Содержит одну или несколько недопустимых записей.",
   "Contains errors": "Есть ошибки",
@@ -159,15 +167,15 @@ export const ru = {
   "{path} has unresolved errors, aborting save":
     "В {path} есть неисправленные ошибки, сохранение отменено",
   "changes saved": "изменения сохранены",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "введите сохранённую конфигурацию (ТЕКУЩАЯ КОНФИГУРАЦИЯ БУДЕТ ЗАМЕНЕНА)",
+  "Input your save. This will overwrite your current config.":
+    "Вставьте сохранение. Это перезапишет текущую конфигурацию.",
   "input was empty, nothing imported": "ввод пуст, ничего не импортировано",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "неверный формат сохранения, ожидается NAV_SAVE_FORMAT_v#.#.#_",
   "invalid save format": "недопустимый формат сохранения",
   "invalid config data": "недопустимые данные конфигурации",
-  "config saved & copied to clipboard": "конфигурация сохранена и скопирована в буфер обмена",
-  "could not save config to clipboard": "не удалось скопировать конфигурацию в буфер обмена",
+  "Config saved & copied to clipboard.": "Конфигурация сохранена и скопирована в буфер обмена.",
+  "Could not save config to clipboard.": "Не удалось скопировать конфигурацию в буфер обмена.",
   "do you want to reset your options to default? this cannot be undone.":
     "Сбросить настройки по умолчанию? Это действие нельзя отменить.",
   "options reset to default": "настройки сброшены по умолчанию",

@@ -1,4 +1,12 @@
 export const fr = {
+  Export: "Exporter",
+  "download config": "télécharger la configuration",
+  "copy to clipboard": "copier dans le presse-papiers",
+  or: "ou",
+  "upload config": "importer une configuration",
+  "Could not read file.": "Impossible de lire le fichier.",
+  "Could not export config.": "Impossible d’exporter la configuration.",
+  "Paste here...": "Collez ici...",
   "options ヽ(・ω・*)": "options ヽ(・ω・*)",
   options: "options",
   "options.language": "langue",
@@ -151,9 +159,9 @@ export const fr = {
   ok: "OK",
   confirm: "confirmer",
   reset: "réinitialiser",
-  "save (ctrl+s)": "enregistrer (ctrl+s)",
-  "save & export (ctrl+e)": "enregistrer et exporter (ctrl+e)",
-  "import & save (ctrl+i)": "importer et enregistrer (ctrl+i)",
+  "Save (Ctrl+S)": "Enregistrer (ctrl+s)",
+  "Save & export (Ctrl+E)": "Enregistrer et exporter (ctrl+e)",
+  "Import & save (Ctrl+I)": "Importer et enregistrer (ctrl+i)",
   "choose color for {field}": "choisir la couleur de {field}",
   "Contains one or more invalid entries.": "Contient une ou plusieurs entrées non valides.",
   "Contains errors": "Contient des erreurs",
@@ -161,17 +169,17 @@ export const fr = {
   "{path} has unresolved errors, aborting save":
     "{path} contient des erreurs non résolues, enregistrement annulé",
   "changes saved": "modifications enregistrées",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "saisissez votre configuration (CELA REMPLACERA VOTRE CONFIGURATION ACTUELLE)",
+  "Input your save. This will overwrite your current config.":
+    "Collez votre sauvegarde. Ceci écrasera votre configuration actuelle.",
   "input was empty, nothing imported": "la saisie était vide, rien n’a été importé",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "format incorrect, attendu : NAV_SAVE_FORMAT_v#.#.#_",
   "invalid save format": "format de sauvegarde non valide",
   "invalid config data": "données de configuration non valides",
-  "config saved & copied to clipboard":
-    "configuration enregistrée et copiée dans le presse-papiers",
-  "could not save config to clipboard":
-    "impossible de copier la configuration dans le presse-papiers",
+  "Config saved & copied to clipboard.":
+    "Configuration enregistrée et copiée dans le presse-papiers.",
+  "Could not save config to clipboard.":
+    "Impossible de copier la configuration dans le presse-papiers.",
   "do you want to reset your options to default? this cannot be undone.":
     "Rétablir les options par défaut ? Cette action est irréversible.",
   "options reset to default": "options réinitialisées",

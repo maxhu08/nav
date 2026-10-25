@@ -1,4 +1,12 @@
 export const de = {
+  Export: "Exportieren",
+  "download config": "Konfiguration herunterladen",
+  "copy to clipboard": "In die Zwischenablage kopieren",
+  or: "oder",
+  "upload config": "Konfiguration hochladen",
+  "Could not read file.": "Datei konnte nicht gelesen werden.",
+  "Could not export config.": "Konfiguration konnte nicht exportiert werden.",
+  "Paste here...": "Hier einfügen...",
   "options ヽ(・ω・*)": "Einstellungen ヽ(・ω・*)",
   options: "Einstellungen",
   "options.language": "Sprache",
@@ -149,9 +157,9 @@ export const de = {
   ok: "OK",
   confirm: "Bestätigen",
   reset: "Zurücksetzen",
-  "save (ctrl+s)": "Speichern (ctrl+s)",
-  "save & export (ctrl+e)": "Speichern & exportieren (ctrl+e)",
-  "import & save (ctrl+i)": "Importieren & speichern (ctrl+i)",
+  "Save (Ctrl+S)": "Speichern (Strg+S)",
+  "Save & export (Ctrl+E)": "Speichern und exportieren (Strg+E)",
+  "Import & save (Ctrl+I)": "Importieren und speichern (Strg+I)",
   "choose color for {field}": "Farbe für {field} wählen",
   "Contains one or more invalid entries.": "Enthält mindestens einen ungültigen Eintrag.",
   "Contains errors": "Enthält Fehler",
@@ -159,17 +167,17 @@ export const de = {
   "{path} has unresolved errors, aborting save":
     "{path} enthält ungelöste Fehler, Speichern abgebrochen",
   "changes saved": "Änderungen gespeichert",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "Konfiguration eingeben (DIES ÜBERSCHREIBT DEINE AKTUELLE KONFIGURATION)",
+  "Input your save. This will overwrite your current config.":
+    "Speicherstand einfügen. Dies überschreibt deine aktuelle Konfiguration.",
   "input was empty, nothing imported": "Eingabe war leer, nichts importiert",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "Falsches Speicherformat, erwartet: NAV_SAVE_FORMAT_v#.#.#_",
   "invalid save format": "Ungültiges Speicherformat",
   "invalid config data": "Ungültige Konfigurationsdaten",
-  "config saved & copied to clipboard":
-    "Konfiguration gespeichert und in die Zwischenablage kopiert",
-  "could not save config to clipboard":
-    "Konfiguration konnte nicht in die Zwischenablage kopiert werden",
+  "Config saved & copied to clipboard.":
+    "Konfiguration gespeichert und in die Zwischenablage kopiert.",
+  "Could not save config to clipboard.":
+    "Konfiguration konnte nicht in die Zwischenablage kopiert werden.",
   "do you want to reset your options to default? this cannot be undone.":
     "Einstellungen auf Standard zurücksetzen? Dies kann nicht rückgängig gemacht werden.",
   "options reset to default": "Einstellungen auf Standard zurückgesetzt",

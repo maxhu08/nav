@@ -1,4 +1,12 @@
 export const it = {
+  Export: "Esporta",
+  "download config": "scarica configurazione",
+  "copy to clipboard": "copia negli appunti",
+  or: "oppure",
+  "upload config": "carica configurazione",
+  "Could not read file.": "Impossibile leggere il file.",
+  "Could not export config.": "Impossibile esportare la configurazione.",
+  "Paste here...": "Incolla qui...",
   "options ヽ(・ω・*)": "opzioni ヽ(・ω・*)",
   options: "opzioni",
   "options.language": "lingua",
@@ -151,9 +159,9 @@ export const it = {
   ok: "OK",
   confirm: "conferma",
   reset: "ripristina",
-  "save (ctrl+s)": "salva (ctrl+s)",
-  "save & export (ctrl+e)": "salva ed esporta (ctrl+e)",
-  "import & save (ctrl+i)": "importa e salva (ctrl+i)",
+  "Save (Ctrl+S)": "Salva (ctrl+s)",
+  "Save & export (Ctrl+E)": "Salva ed esporta (ctrl+e)",
+  "Import & save (Ctrl+I)": "Importa e salva (ctrl+i)",
   "choose color for {field}": "scegli colore per {field}",
   "Contains one or more invalid entries.": "Contiene una o più voci non valide.",
   "Contains errors": "Contiene errori",
@@ -161,15 +169,15 @@ export const it = {
   "{path} has unresolved errors, aborting save":
     "{path} contiene errori irrisolti, salvataggio annullato",
   "changes saved": "modifiche salvate",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "inserisci la configurazione (SOVRASCRIVERÀ QUELLA ATTUALE)",
+  "Input your save. This will overwrite your current config.":
+    "Incolla il tuo salvataggio. Questo sovrascriverà la configurazione attuale.",
   "input was empty, nothing imported": "input vuoto, nessun dato importato",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "formato errato, previsto NAV_SAVE_FORMAT_v#.#.#_",
   "invalid save format": "formato di salvataggio non valido",
   "invalid config data": "dati di configurazione non validi",
-  "config saved & copied to clipboard": "configurazione salvata e copiata negli appunti",
-  "could not save config to clipboard": "impossibile copiare la configurazione negli appunti",
+  "Config saved & copied to clipboard.": "Configurazione salvata e copiata negli appunti.",
+  "Could not save config to clipboard.": "Impossibile copiare la configurazione negli appunti.",
   "do you want to reset your options to default? this cannot be undone.":
     "Ripristinare le opzioni predefinite? Questa operazione è irreversibile.",
   "options reset to default": "opzioni predefinite ripristinate",

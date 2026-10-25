@@ -1,4 +1,12 @@
 export const ja = {
+  Export: "エクスポート",
+  "download config": "設定をダウンロード",
+  "copy to clipboard": "クリップボードにコピー",
+  or: "または",
+  "upload config": "設定をアップロード",
+  "Could not read file.": "ファイルを読み取れませんでした。",
+  "Could not export config.": "設定をエクスポートできませんでした。",
+  "Paste here...": "ここに貼り付け...",
   "options ヽ(・ω・*)": "設定 ヽ(・ω・*)",
   options: "設定",
   "options.language": "言語",
@@ -149,9 +157,9 @@ export const ja = {
   ok: "OK",
   confirm: "確認",
   reset: "リセット",
-  "save (ctrl+s)": "保存 (ctrl+s)",
-  "save & export (ctrl+e)": "保存してエクスポート (ctrl+e)",
-  "import & save (ctrl+i)": "インポートして保存 (ctrl+i)",
+  "Save (Ctrl+S)": "保存（ctrl+s）",
+  "Save & export (Ctrl+E)": "保存してエクスポート（ctrl+e）",
+  "Import & save (Ctrl+I)": "インポートして保存（ctrl+i）",
   "choose color for {field}": "{field} の色を選択",
   "Contains one or more invalid entries.": "無効な項目が含まれています。",
   "Contains errors": "エラーがあります",
@@ -159,15 +167,15 @@ export const ja = {
   "{path} has unresolved errors, aborting save":
     "{path} に未解決のエラーがあるため保存を中止しました",
   "changes saved": "変更を保存しました",
-  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
-    "設定データを入力してください（現在の設定を上書きします）",
+  "Input your save. This will overwrite your current config.":
+    "インポートする保存データを入力（現在の設定は上書きされます）。",
   "input was empty, nothing imported": "入力が空のため何もインポートしませんでした",
   "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
     "保存形式が正しくありません。NAV_SAVE_FORMAT_v#.#.#_ を使用してください",
   "invalid save format": "無効な保存形式です",
   "invalid config data": "無効な設定データです",
-  "config saved & copied to clipboard": "設定を保存してクリップボードにコピーしました",
-  "could not save config to clipboard": "設定をクリップボードにコピーできませんでした",
+  "Config saved & copied to clipboard.": "設定を保存し、クリップボードにコピーしました。",
+  "Could not save config to clipboard.": "設定をクリップボードにコピーできませんでした。",
   "do you want to reset your options to default? this cannot be undone.":
     "設定を初期値に戻しますか？この操作は取り消せません。",
   "options reset to default": "設定を初期値に戻しました",
