@@ -1,4 +1,4 @@
-import { type OptionsData, getOptionsData, updateOptionsData } from "~/src/utils/options-storage";
+import { type OptionsData, updateOptionsData } from "~/src/utils/options-storage";
 
 const SECTION_EXPANDED_EVENT = "nav:options-section-expanded";
 
@@ -59,21 +59,13 @@ export const newCollapseGroup = (buttonId: string, sectionId: string, expanded: 
   if (!expanded) collapseButton.click();
 };
 
-export const createCollapseGroups = (): Promise<void> => {
-  return getOptionsData().then((optionsData) => {
-    newCollapseGroup(
-      "options-collapse-button",
-      "options-section",
-      optionsData.sectionsExpanded.options
-    );
-    newCollapseGroup("rules-collapse-button", "rules-section", optionsData.sectionsExpanded.rules);
-    newCollapseGroup(
-      "hotkeys-collapse-button",
-      "hotkeys-section",
-      optionsData.sectionsExpanded.hotkeys
-    );
-    newCollapseGroup("hints-collapse-button", "hints-section", optionsData.sectionsExpanded.hints);
-    newCollapseGroup("bar-collapse-button", "bar-section", optionsData.sectionsExpanded.bar);
-    newCollapseGroup("find-collapse-button", "find-section", optionsData.sectionsExpanded.find);
-  });
+export const createCollapseGroups = (optionsData: OptionsData) => {
+  const sectionsExpanded = optionsData.sectionsExpanded;
+
+  newCollapseGroup("options-collapse-button", "options-section", sectionsExpanded.options);
+  newCollapseGroup("rules-collapse-button", "rules-section", sectionsExpanded.rules);
+  newCollapseGroup("hotkeys-collapse-button", "hotkeys-section", sectionsExpanded.hotkeys);
+  newCollapseGroup("hints-collapse-button", "hints-section", sectionsExpanded.hints);
+  newCollapseGroup("bar-collapse-button", "bar-section", sectionsExpanded.bar);
+  newCollapseGroup("find-collapse-button", "find-section", sectionsExpanded.find);
 };

@@ -29,11 +29,11 @@ import {
 import { saveConfigAndFastConfig } from "~/src/options/scripts/utils/save-config";
 import { lockTextareaContainerHeight } from "~/src/options/scripts/utils/ui-helpers";
 import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
-import { getConfig } from "~/src/utils/config";
-import { getOptionsData, updateOptionsData } from "~/src/utils/options-storage";
+import { type Config, getConfig } from "~/src/utils/config";
+import { type OptionsData, getOptionsData, updateOptionsData } from "~/src/utils/options-storage";
 import { initializeI18n, t } from "~/src/options/scripts/i18n";
 
-const initialize = () => {
+const initialize = (config: Config, optionsData: OptionsData) => {
   const logo = document.getElementById("nav-logo") as HTMLImageElement;
 
   logo.classList.add("animate-up-bouncy");
@@ -58,26 +58,24 @@ const initialize = () => {
 
   (document.getElementById("user-agent-text") as HTMLSpanElement).textContent += getUserAgent();
 
-  void createCollapseGroups();
+  createCollapseGroups(optionsData);
   initHintsCustomCSSHighlight();
   initColorInputControls();
 
-  void getConfig().then((config) => {
-    fillInputs(config);
+  fillInputs(config);
 
-    lockTextareaContainerHeight(rulesUrlsBlacklistContainerEl, rulesUrlsBlacklistTextareaEl);
-    lockTextareaContainerHeight(rulesUrlsWhitelistContainerEl, rulesUrlsWhitelistTextareaEl);
-    lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
-    lockTextareaContainerHeight(
-      barSearchBookmarksStorageContainerEl,
-      barSearchBookmarksStorageTextareaEl
-    );
-    lockTextareaContainerHeight(
-      hintsAvoidAdjacentPairsContainerEl,
-      hintsAvoidAdjacentPairsTextareaEl
-    );
-    lockTextareaContainerHeight(hintsReservedLabelsContainerEl, hintsReservedLabelsTextareaEl);
-  });
+  lockTextareaContainerHeight(rulesUrlsBlacklistContainerEl, rulesUrlsBlacklistTextareaEl);
+  lockTextareaContainerHeight(rulesUrlsWhitelistContainerEl, rulesUrlsWhitelistTextareaEl);
+  lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
+  lockTextareaContainerHeight(
+    barSearchBookmarksStorageContainerEl,
+    barSearchBookmarksStorageTextareaEl
+  );
+  lockTextareaContainerHeight(
+    hintsAvoidAdjacentPairsContainerEl,
+    hintsAvoidAdjacentPairsTextareaEl
+  );
+  lockTextareaContainerHeight(hintsReservedLabelsContainerEl, hintsReservedLabelsTextareaEl);
 
   listenToInputs();
   listenToKeys();
@@ -177,6 +175,15 @@ const initialize = () => {
 
     void maybeShowPendingExcludeSiteDialog();
   });
+
+  void document.fonts.ready.finally(() => {
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove("options-initializing");
+      window.dispatchEvent(new Event("options-ready"));
+    });
+  });
 };
 
-void initializeI18n().then(initialize);
+void Promise.all([initializeI18n(), getConfig(), getOptionsData()]).then((data) =>
+  initialize(data[1], data[2])
+);

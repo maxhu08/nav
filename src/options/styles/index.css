@@ -5,3 +5,13 @@
 @import "./hints.css";
 @import "./color-picker.css";
 @import "./custom-css.css";
+
+:root.options-initializing {
+  overflow-anchor: none;
+}
+
+.options-initializing *,
+.options-initializing *::before,
+.options-initializing *::after {
+  transition: none !important;
+}

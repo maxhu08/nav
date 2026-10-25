@@ -285,7 +285,7 @@ describe("settings translations", () => {
           onSave();
         }
       });
-      await createCollapseGroups();
+      createCollapseGroups(await getOptionsData());
       const button = document.getElementById("options-collapse-button") as HTMLButtonElement;
       const section = document.getElementById("options-section")!;
       expect(button).not.toBeNull();
@@ -304,7 +304,7 @@ describe("settings translations", () => {
       expect((await getOptionsData()).sectionsExpanded.options).toBe(false);
 
       fixture.root.innerHTML = html;
-      await createCollapseGroups();
+      createCollapseGroups(await getOptionsData());
       const restored = document.getElementById("options-collapse-button") as HTMLButtonElement;
       expect(restored.getAttribute("aria-expanded")).toBe("false");
       expect(document.getElementById("options-section")?.classList.contains("hidden")).toBe(true);
@@ -403,9 +403,9 @@ describe("settings translations", () => {
     }
   });
 
-  test("initializes settings after translations without top-level await", async () => {
+  test("initializes settings after translations and storage without top-level await", async () => {
     const source = await Bun.file("src/options/scripts/init.ts").text();
-    expect(source).toContain("void initializeI18n().then(initialize);");
+    expect(source).toContain("void Promise.all([initializeI18n(), getConfig(), getOptionsData()])");
     expect(source).not.toMatch(/^await\b/m);
   });
 });
