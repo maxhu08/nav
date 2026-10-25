@@ -170,9 +170,9 @@ export const de = {
   "Input your save. This will overwrite your current config.":
     "Speicherstand einfügen. Dies überschreibt deine aktuelle Konfiguration.",
   "Input was empty, nothing imported.": "Eingabe war leer, nichts importiert.",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "Falsches Speicherformat, erwartet: NAV_SAVE_FORMAT_v#.#.#_.",
-  "Invalid save format.": "Ungültiges Speicherformat.",
+  "Incorrect save format.": "Ungültiges Speicherformat.",
   "Invalid config data.": "Ungültige Konfigurationsdaten.",
   "Config saved & copied to clipboard.":
     "Konfiguration gespeichert und in die Zwischenablage kopiert.",
@@ -182,7 +182,7 @@ export const de = {
     "Einstellungen auf Standard zurücksetzen? Dies kann nicht rückgängig gemacht werden.",
   "Options reset to default.": "Einstellungen auf Standard zurückgesetzt.",
   "You selected no, options did not reset.": "Abgebrochen, Einstellungen nicht zurückgesetzt.",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "Falsches Speicherformat, erwartet: NAV_BOOKMARKS_FORMAT_v#.#.#_ oder MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
   "1 bookmark imported.": "1 Lesezeichen importiert.",
   "{count} bookmarks imported.": "{count} Lesezeichen importiert.",

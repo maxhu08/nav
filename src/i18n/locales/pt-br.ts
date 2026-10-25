@@ -170,9 +170,9 @@ export const ptBR = {
   "Input your save. This will overwrite your current config.":
     "Cole seu backup. Isto vai sobrescrever sua configuração atual.",
   "Input was empty, nothing imported.": "A entrada estava vazia; nada foi importado.",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "Formato incorreto; esperado NAV_SAVE_FORMAT_v#.#.#_.",
-  "Invalid save format.": "Formato de salvamento inválido.",
+  "Incorrect save format.": "Formato de salvamento inválido.",
   "Invalid config data.": "Dados de configuração inválidos.",
   "Config saved & copied to clipboard.":
     "Configuração salva e copiada para a área de transferência.",
@@ -182,7 +182,7 @@ export const ptBR = {
     "Restaurar as opções padrão? Isso não pode ser desfeito.",
   "Options reset to default.": "Opções padrão restauradas.",
   "You selected no, options did not reset.": "Cancelado; as opções não foram restauradas.",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "Formato incorreto; esperado NAV_BOOKMARKS_FORMAT_v#.#.#_ ou MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
   "1 bookmark imported.": "1 favorito importado.",
   "{count} bookmarks imported.": "{count} favoritos importados.",

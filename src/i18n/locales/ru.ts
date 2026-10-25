@@ -169,9 +169,9 @@ export const ru = {
   "Input your save. This will overwrite your current config.":
     "Вставьте сохранение. Это перезапишет текущую конфигурацию.",
   "Input was empty, nothing imported.": "Ввод пуст, ничего не импортировано.",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "Неверный формат сохранения, ожидается NAV_SAVE_FORMAT_v#.#.#_.",
-  "Invalid save format.": "Недопустимый формат сохранения.",
+  "Incorrect save format.": "Недопустимый формат сохранения.",
   "Invalid config data.": "Недопустимые данные конфигурации.",
   "Config saved & copied to clipboard.": "Конфигурация сохранена и скопирована в буфер обмена.",
   "Could not save config to clipboard.": "Не удалось скопировать конфигурацию в буфер обмена.",
@@ -179,7 +179,7 @@ export const ru = {
     "Сбросить настройки по умолчанию? Это действие нельзя отменить.",
   "Options reset to default.": "Настройки сброшены по умолчанию.",
   "You selected no, options did not reset.": "Отменено, настройки не сброшены.",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "Неверный формат сохранения, ожидается NAV_BOOKMARKS_FORMAT_v#.#.#_ или MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
   "1 bookmark imported.": "Импортирована 1 закладка.",
   "{count} bookmarks imported.": "Импортировано закладок: {count}.",

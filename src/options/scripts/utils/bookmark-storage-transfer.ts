@@ -99,7 +99,7 @@ const applyImportedBookmarks = async (
   if (bookmarksValue === null) {
     getToastApi()?.error(
       t(
-        "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_."
+        "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_."
       )
     );
     return;

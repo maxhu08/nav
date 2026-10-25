@@ -45,11 +45,11 @@ export const yankCurrentTabUrl = (): boolean => {
 
   void writeClipboard(currentUrl).then((didCopy) => {
     if (didCopy) {
-      showYankToast("success", "Current tab URL yanked", currentUrl);
+      showYankToast("success", "Current tab URL yanked.", currentUrl);
       return;
     }
 
-    showYankToast("error", "Could not yank current tab URL", "Clipboard access was denied.");
+    showYankToast("error", "Could not yank current tab URL.", "Clipboard access was denied.");
   });
 
   return true;
@@ -60,27 +60,27 @@ export const yankCurrentTabUrlClean = (): boolean => {
 
   void writeClipboard(currentUrl).then((didCopy) => {
     if (didCopy) {
-      showYankToast("success", "Clean current tab URL yanked", currentUrl);
+      showYankToast("success", "Clean current tab URL yanked.", currentUrl);
       return;
     }
 
-    showYankToast("error", "Could not yank clean current tab URL", "Clipboard access was denied.");
+    showYankToast("error", "Could not yank clean current tab URL.", "Clipboard access was denied.");
   });
 
   return true;
 };
 
 export const yankLinkUrl = (): boolean => {
-  showYankToast("error", "Could not yank link URL", "Hint-based selection is unavailable.");
+  showYankToast("error", "Could not yank link URL.", "Hint-based selection is unavailable.");
   return false;
 };
 
 export const yankImage = (): boolean => {
-  showYankToast("error", "Could not yank image", "Hint-based selection is unavailable.");
+  showYankToast("error", "Could not yank image.", "Hint-based selection is unavailable.");
   return false;
 };
 
 export const yankImageUrl = (): boolean => {
-  showYankToast("error", "Could not yank image URL", "Hint-based selection is unavailable.");
+  showYankToast("error", "Could not yank image URL.", "Hint-based selection is unavailable.");
   return false;
 };

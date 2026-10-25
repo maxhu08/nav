@@ -171,9 +171,9 @@ export const es = {
   "Input your save. This will overwrite your current config.":
     "Pega tu configuración guardada. Esto sobrescribirá tu configuración actual.",
   "Input was empty, nothing imported.": "La entrada estaba vacía; no se importó nada.",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "Formato incorrecto; se esperaba NAV_SAVE_FORMAT_v#.#.#_.",
-  "Invalid save format.": "Formato de guardado no válido.",
+  "Incorrect save format.": "Formato de guardado no válido.",
   "Invalid config data.": "Datos de configuración no válidos.",
   "Config saved & copied to clipboard.": "Configuración guardada y copiada al portapapeles.",
   "Could not save config to clipboard.": "No se pudo guardar la configuración en el portapapeles.",
@@ -181,7 +181,7 @@ export const es = {
     "¿Restablecer las opciones predeterminadas? Esta acción no se puede deshacer.",
   "Options reset to default.": "Opciones restablecidas.",
   "You selected no, options did not reset.": "Cancelado; no se restablecieron las opciones.",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "Formato incorrecto; se esperaba NAV_BOOKMARKS_FORMAT_v#.#.#_ o MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
   "1 bookmark imported.": "1 marcador importado.",
   "{count} bookmarks imported.": "{count} marcadores importados.",

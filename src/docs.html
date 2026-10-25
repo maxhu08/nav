@@ -40,7 +40,7 @@
               <a href="#rules-urls-mode">rules.urls.mode</a>
             </p>
             <p class="text-base text-neutral-500">
-              Chooses which URL rules list is active.
+              Controls which URL rules list is enforced at runtime.
               <br /><br />
               `blacklist` blocks matching actions from `rules.urls.blacklist`.
               <br />
@@ -123,8 +123,8 @@
               <span class="text-[#569cd6]">&lt;key-sequence&gt;</span> <span class="text-[#dcdcaa]">&lt;action-name&gt;</span> <br /><br />
               Put one mapping on each line.
               <br /><br />
-              Modifier keys are specified as `&lt;c-x&gt;`, `&lt;m-x&gt;`, and `&lt;a-x&gt;` for ctrl+x, meta+x, and alt+x. Combined modifiers are written like `&lt;c-a-x&gt;` or `&lt;c-m-x&gt;`. Use
-              `&lt;space&gt;` for the space key.
+              Modifier keys are specified as `&lt;c-x&gt;`, `&lt;m-x&gt;`, and `&lt;a-x&gt;` for `ctrl+x`, `meta+x`, and `alt+x`. Combined modifiers are written like `&lt;c-a-x&gt;` or
+              `&lt;c-m-x&gt;`. Use `&lt;space&gt;` for the space key.
               <br /><br />
               Reserved config characters must use named tokens:
               <br />
@@ -136,11 +136,11 @@
               <br /><br />
               Actions run in mode context:
               <br />
-              - normal mode actions work in regular browsing mode.
+              - Normal mode actions work in regular browsing mode.
               <br />
-              - find mode actions (`cycle-match-next`, `cycle-match-prev`) only work while find mode is active.
+              - Find mode actions (`cycle-match-next`, `cycle-match-prev`) only work while find mode is active.
               <br />
-              - watch mode actions (`toggle-fullscreen`, `toggle-play-pause`) only work while watch mode is active.
+              - Watch mode actions (`toggle-fullscreen`, `toggle-play-pause`) only work while watch mode is active.
               <br /><br />
               Default hint bindings are `f`, `F`, and `&lt;a-f&gt;` for current-tab, new-tab, and right-click hint mode.
               <br /><br />
@@ -152,13 +152,13 @@
               <br /><br />
               Action syntax highlighting:
               <br />
-              - <span class="text-[#dcdcaa]">normal mode actions</span> are yellow.
+              - <span class="text-[#dcdcaa]">Normal mode actions</span> are yellow.
               <br />
-              - <span class="text-[#f97316]">find mode actions</span> are orange.
+              - <span class="text-[#f97316]">Find mode actions</span> are orange.
               <br />
-              - <span class="text-[#10b981]">watch mode actions</span> are green.
+              - <span class="text-[#10b981]">Watch mode actions</span> are green.
               <br />
-              - <span class="text-[#f43f5e]">invalid tokens</span> are red.
+              - <span class="text-[#f43f5e]">Invalid tokens</span> are red.
             </p>
           </div>
           <div class="grid gap-2">
@@ -649,7 +649,7 @@
               <br /><br />
               It is especially useful for applications with custom chat inputs, editors, or button-like surfaces that rely on framework-managed click handling instead of standard browser semantics.
               <br /><br />
-              Matching selectors allow Nav to surface those targets in hint mode so they can still be addressed and activated with a click event.
+              Matching selectors allow nav to surface those targets in hint mode so they can still be addressed and activated with a click event.
               <br /><br />
               Rules:
               <br />
@@ -693,7 +693,7 @@
               <a href="#hints-styling">hints.styling</a>
             </p>
             <p class="text-base text-neutral-500">
-              Chooses how hint markers are styled.
+              Use the built-in hint marker look, or switch to editable CSS for full control.
               <br /><br />
               `default` uses the built-in marker look.
               <br />
@@ -723,18 +723,18 @@
             <p id="bar-color" class="text-base text-white">
               <a href="#bar-color">bar.color</a>
             </p>
-            <p class="text-base text-neutral-500">Controls the outline color of the bar prompt.</p>
+            <p class="text-base text-neutral-500">Sets the outline color of the bar prompt UI.</p>
           </div>
           <div class="grid gap-2">
             <p id="bar-search-engine-url" class="text-base text-white">
               <a href="#bar-search-engine-url">bar.searchEngineURL</a>
             </p>
             <p class="text-base text-neutral-500">
-              Used when the bar input is not recognized as a URL.
+              Used when bar input is treated as a search instead of a URL.
               <br /><br />
               Use `{}` to represent the search query.
               <br />
-              Example: `https://www.google.com/search?q={}`
+              Example: `https://www.google.com/search?q={}`.
             </p>
           </div>
           <div class="grid gap-2">
@@ -742,9 +742,9 @@
               <a href="#bar-search-suggestions">bar.search.suggestions</a>
             </p>
             <p class="text-base text-neutral-500">
-              Shows live query suggestions as you type<br /><br />
+              Shows live query suggestions as you type.<br /><br />
               Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to
-              DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data
+              DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data.
             </p>
           </div>
           <div class="grid gap-2">
@@ -752,15 +752,15 @@
               <a href="#bar-search-history">bar.search.history</a>
             </p>
             <p class="text-base text-neutral-500">
-              Shows matches from your local browser history for past searches and visited links<br /><br />
-              History lookups stay on-device and are not sent to us or any third party
+              Shows matches from your local browser history for past searches and visited links.<br /><br />
+              History lookups stay on-device and are not sent to us or any third party.
             </p>
           </div>
           <div class="grid gap-2">
             <p id="bar-search-bookmarks" class="text-base text-white">
               <a href="#bar-search-bookmarks">bar.search.bookmarks</a>
             </p>
-            <p class="text-base text-neutral-500">Enables bookmark-based matches in the bar from the custom storage list below.</p>
+            <p class="text-base text-neutral-500">Shows matches from a configurable bookmark list that you manage locally.</p>
           </div>
           <div class="grid gap-2">
             <p id="bar-search-bookmarks-storage" class="text-base text-white">
@@ -785,7 +785,7 @@
             <p id="find-color" class="text-base text-white">
               <a href="#find-color">find.color</a>
             </p>
-            <p class="text-base text-neutral-500">Controls the outline color of the find bar and the next/prev status widget.</p>
+            <p class="text-base text-neutral-500">Sets the outline color for the find bar and the next/prev widget.</p>
           </div>
         </section>
       </main>

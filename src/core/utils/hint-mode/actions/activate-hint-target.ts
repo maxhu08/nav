@@ -34,16 +34,16 @@ const modeHandlers: Record<HintActionMode, HintTargetHandler> = {
   "yank-link-url": (target) =>
     activateClipboardTextTarget(
       target.linkUrl,
-      "Link URL yanked",
-      "Could not yank link URL",
+      "Link URL yanked.",
+      "Could not yank link URL.",
       "Clipboard access was denied."
     ),
   "yank-image": (target) => activateClipboardImageTarget(target.imageUrl),
   "yank-image-url": (target) =>
     activateClipboardTextTarget(
       target.imageUrl,
-      "Image URL yanked",
-      "Could not yank image URL",
+      "Image URL yanked.",
+      "Could not yank image URL.",
       "Clipboard access was denied."
     )
 };

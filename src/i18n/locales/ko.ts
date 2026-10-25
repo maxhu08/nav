@@ -169,9 +169,9 @@ export const ko = {
   "Input your save. This will overwrite your current config.":
     "가져올 저장 데이터를 입력하세요(현재 설정을 덮어씁니다).",
   "Input was empty, nothing imported.": "입력이 비어 있어 가져오지 않았습니다.",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "잘못된 저장 형식입니다. NAV_SAVE_FORMAT_v#.#.#_ 형식이 필요합니다.",
-  "Invalid save format.": "잘못된 저장 형식입니다.",
+  "Incorrect save format.": "잘못된 저장 형식입니다.",
   "Invalid config data.": "잘못된 설정 데이터입니다.",
   "Config saved & copied to clipboard.": "설정을 저장하고 클립보드에 복사했습니다.",
   "Could not save config to clipboard.": "설정을 클립보드에 복사하지 못했습니다.",
@@ -179,7 +179,7 @@ export const ko = {
     "설정을 기본값으로 초기화할까요? 이 작업은 되돌릴 수 없습니다.",
   "Options reset to default.": "설정을 기본값으로 초기화했습니다.",
   "You selected no, options did not reset.": "취소했습니다. 설정을 초기화하지 않았습니다.",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "잘못된 저장 형식입니다. NAV_BOOKMARKS_FORMAT_v#.#.#_ 또는 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_ 형식이 필요합니다.",
   "1 bookmark imported.": "북마크 1개를 가져왔습니다.",
   "{count} bookmarks imported.": "북마크 {count}개를 가져왔습니다.",

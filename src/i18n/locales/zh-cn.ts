@@ -166,9 +166,9 @@ export const zhCN = {
   "Input your save. This will overwrite your current config.":
     "输入要导入的配置（这将覆盖当前配置）。",
   "Input was empty, nothing imported.": "输入为空，未导入任何内容。",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "保存格式错误，应为 NAV_SAVE_FORMAT_v#.#.#_。",
-  "Invalid save format.": "无效的保存格式。",
+  "Incorrect save format.": "无效的保存格式。",
   "Invalid config data.": "无效的配置数据。",
   "Config saved & copied to clipboard.": "配置已保存并复制到剪贴板。",
   "Could not save config to clipboard.": "无法将配置复制到剪贴板。",
@@ -176,7 +176,7 @@ export const zhCN = {
     "确定要恢复默认设置吗？此操作无法撤销。",
   "Options reset to default.": "已恢复默认设置。",
   "You selected no, options did not reset.": "已取消，设置未重置。",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "保存格式错误，应为 NAV_BOOKMARKS_FORMAT_v#.#.#_ 或 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_。",
   "1 bookmark imported.": "已导入 1 个书签。",
   "{count} bookmarks imported.": "已导入 {count} 个书签。",

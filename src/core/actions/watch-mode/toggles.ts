@@ -74,7 +74,7 @@ export const toggleWatchLoopState = (deps: ToggleDeps, options: ToggleOptions = 
       : video.loop
     : video.loop;
   if (options.toastOnStateChange) {
-    deps.showToast?.(isLooping ? "Loop on" : "Loop off");
+    deps.showToast?.(isLooping ? "Loop on." : "Loop off.");
   }
 
   maybeExitWatchMode(options, deps.exitWatchMode);
@@ -90,7 +90,7 @@ export const toggleWatchMuteState = (deps: ToggleDeps, options: ToggleOptions = 
   deps.showActivationIndicator(video);
   const isMuted = toggleMuteWithFallback(video);
   if (options.toastOnStateChange) {
-    deps.showToast?.(isMuted ? "Video muted" : "Video unmuted");
+    deps.showToast?.(isMuted ? "Video muted." : "Video unmuted.");
   }
 
   maybeExitWatchMode(options, deps.exitWatchMode);
@@ -130,7 +130,7 @@ export const toggleWatchCaptionsState = (
     }
   } else if (!hadTracks) {
     if (options.toastOnStateChange) {
-      deps.showToast?.("Captions unavailable");
+      deps.showToast?.("Captions unavailable.");
       maybeExitWatchMode(options, deps.exitWatchMode);
       return true;
     }
@@ -138,7 +138,7 @@ export const toggleWatchCaptionsState = (
     return false;
   } else if (!toggleWatchVideoTextTracks(video)) {
     if (options.toastOnStateChange) {
-      deps.showToast?.("Captions unavailable");
+      deps.showToast?.("Captions unavailable.");
       maybeExitWatchMode(options, deps.exitWatchMode);
       return true;
     }
@@ -163,7 +163,7 @@ export const toggleWatchCaptionsState = (
 
   setInternalCaptionsState(deps.captionsStateByVideo, video, captionsOn);
   if (options.toastOnStateChange) {
-    deps.showToast?.(captionsOn ? "Captions on" : "Captions off");
+    deps.showToast?.(captionsOn ? "Captions on." : "Captions off.");
   }
 
   maybeExitWatchMode(options, deps.exitWatchMode);

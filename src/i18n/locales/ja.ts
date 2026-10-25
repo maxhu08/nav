@@ -169,9 +169,9 @@ export const ja = {
   "Input your save. This will overwrite your current config.":
     "インポートする保存データを入力（現在の設定は上書きされます）。",
   "Input was empty, nothing imported.": "入力が空のため何もインポートしませんでした。",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "保存形式が正しくありません。NAV_SAVE_FORMAT_v#.#.#_ を使用してください。",
-  "Invalid save format.": "無効な保存形式です。",
+  "Incorrect save format.": "無効な保存形式です。",
   "Invalid config data.": "無効な設定データです。",
   "Config saved & copied to clipboard.": "設定を保存し、クリップボードにコピーしました。",
   "Could not save config to clipboard.": "設定をクリップボードにコピーできませんでした。",
@@ -179,7 +179,7 @@ export const ja = {
     "設定を初期値に戻しますか？この操作は取り消せません。",
   "Options reset to default.": "設定を初期値に戻しました。",
   "You selected no, options did not reset.": "キャンセルしました。設定は変更していません。",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "保存形式が正しくありません。NAV_BOOKMARKS_FORMAT_v#.#.#_ または MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_ を使用してください。",
   "1 bookmark imported.": "ブックマークを 1 件インポートしました。",
   "{count} bookmarks imported.": "ブックマークを {count} 件インポートしました。",

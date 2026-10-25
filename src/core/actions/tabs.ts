@@ -82,7 +82,7 @@ const runTabCommand = (command: TabCommand): boolean => {
 
       const toast = getToastApi();
 
-      toast?.error(`Could not ${TAB_COMMAND_FAILURE_LABELS[command]}`);
+      toast?.error(`Could not ${TAB_COMMAND_FAILURE_LABELS[command]}.`);
     });
   });
 

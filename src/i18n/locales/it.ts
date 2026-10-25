@@ -172,9 +172,9 @@ export const it = {
   "Input your save. This will overwrite your current config.":
     "Incolla il tuo salvataggio. Questo sovrascriverà la configurazione attuale.",
   "Input was empty, nothing imported.": "Input vuoto, nessun dato importato.",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "Formato errato, previsto NAV_SAVE_FORMAT_v#.#.#_.",
-  "Invalid save format.": "Formato di salvataggio non valido.",
+  "Incorrect save format.": "Formato di salvataggio non valido.",
   "Invalid config data.": "Dati di configurazione non validi.",
   "Config saved & copied to clipboard.": "Configurazione salvata e copiata negli appunti.",
   "Could not save config to clipboard.": "Impossibile copiare la configurazione negli appunti.",
@@ -182,7 +182,7 @@ export const it = {
     "Ripristinare le opzioni predefinite? Questa operazione è irreversibile.",
   "Options reset to default.": "Opzioni predefinite ripristinate.",
   "You selected no, options did not reset.": "Annullato, le opzioni non sono state ripristinate.",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "Formato errato, previsto NAV_BOOKMARKS_FORMAT_v#.#.#_ o MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
   "1 bookmark imported.": "1 segnalibro importato.",
   "{count} bookmarks imported.": "{count} segnalibri importati.",

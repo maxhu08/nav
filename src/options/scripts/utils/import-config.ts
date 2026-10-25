@@ -31,13 +31,13 @@ export const importConfigAndSave = async (): Promise<void> => {
   }
 
   if (!dataToImport.startsWith(SAVE_PREFIX)) {
-    getToastApi()?.error(t("Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_."));
+    getToastApi()?.error(t("Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_."));
     return;
   }
 
   const versionedMatch = dataToImport.match(VERSIONED_SAVE_REGEX);
   if (!versionedMatch) {
-    getToastApi()?.error(t("Invalid save format."));
+    getToastApi()?.error(t("Incorrect save format."));
     return;
   }
 

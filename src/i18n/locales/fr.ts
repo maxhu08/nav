@@ -172,9 +172,9 @@ export const fr = {
   "Input your save. This will overwrite your current config.":
     "Collez votre sauvegarde. Ceci écrasera votre configuration actuelle.",
   "Input was empty, nothing imported.": "La saisie était vide, rien n’a été importé.",
-  "Incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
+  "Invalid save format, expected NAV_SAVE_FORMAT_v#.#.#_.":
     "Format incorrect, attendu : NAV_SAVE_FORMAT_v#.#.#_.",
-  "Invalid save format.": "Format de sauvegarde non valide.",
+  "Incorrect save format.": "Format de sauvegarde non valide.",
   "Invalid config data.": "Données de configuration non valides.",
   "Config saved & copied to clipboard.":
     "Configuration enregistrée et copiée dans le presse-papiers.",
@@ -184,7 +184,7 @@ export const fr = {
     "Rétablir les options par défaut ? Cette action est irréversible.",
   "Options reset to default.": "Options réinitialisées.",
   "You selected no, options did not reset.": "Annulé, les options n’ont pas été réinitialisées.",
-  "Incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
+  "Incorrect format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.":
     "Format incorrect, attendu : NAV_BOOKMARKS_FORMAT_v#.#.#_ ou MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_.",
   "1 bookmark imported.": "1 favori importé.",
   "{count} bookmarks imported.": "{count} favoris importés.",

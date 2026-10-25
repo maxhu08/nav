@@ -75,7 +75,7 @@ export const createHintController = ({ setMode }: HintControllerDeps) => {
       toggleKey = options?.toggleKey?.toLowerCase() ?? null;
       hintTargets = rebuildHintTargets(mode);
       if (hintTargets.length === 0) {
-        showHintToastError("No hints available");
+        showHintToastError("No hints available.");
         return false;
       }
 

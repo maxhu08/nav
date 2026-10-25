@@ -31,9 +31,9 @@ export const activateClipboardImageTarget = (imageUrl: string | null): boolean =
 
   void writeClipboardImage(imageUrl).then((didCopy) => {
     if (didCopy) {
-      showHintToastSuccess("Image yanked", imageUrl);
+      showHintToastSuccess("Image yanked.", imageUrl);
     } else {
-      showHintToastError("Could not yank image", "Clipboard access was denied or unsupported.");
+      showHintToastError("Could not yank image.", "Clipboard access was denied or unsupported.");
     }
   });
 
