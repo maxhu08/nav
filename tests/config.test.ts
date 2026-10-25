@@ -7,6 +7,22 @@ import type { ConfigMigrationTestCase } from "~/tests/types";
 
 export const configMigrationTestCases: ConfigMigrationTestCase[] = [
   {
+    desc: "adds the tab search setting to older configs and preserves disabled values",
+    test: () => {
+      const config = structuredClone(defaultConfig);
+      const legacy = {
+        ...config,
+        bar: {
+          ...config.bar,
+          search: { suggestions: false, history: false, bookmarks: config.bar.search.bookmarks }
+        }
+      };
+      expect(migrateOldConfig(legacy, defaultConfig).bar.search.tabs).toBe(true);
+      config.bar.search.tabs = false;
+      expect(migrateOldConfig(config, defaultConfig).bar.search.tabs).toBe(false);
+    }
+  },
+  {
     desc: "returns fallback config when directives are missing",
     test: () => {
       const migratedConfig = migrateOldConfig({}, defaultConfig);
@@ -150,6 +166,7 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-current-tab");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-new-tab");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-edit-current-tab");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-tabs");
     }
   },
   {

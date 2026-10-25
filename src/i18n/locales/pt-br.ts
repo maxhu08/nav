@@ -95,6 +95,10 @@ export const ptBR = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "As consultas ao histórico ficam no dispositivo e não são enviadas a nós nem a terceiros.",
   "bar.search.bookmarks": "pesquisar favoritos",
+  "bar.search.tabs": "pesquisar abas abertas",
+  "bar search tabs": "pesquisar abas na barra",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "Mostra abas abertas correspondentes na barra. Selecionar uma aba alterna para ela em vez de abrir uma cópia. A pesquisa fica no dispositivo.",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Mostra resultados de uma lista configurável de favoritos gerenciada localmente.",
   "bar.search.bookmarks.storage": "lista de favoritos",

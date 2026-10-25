@@ -52,6 +52,7 @@ export type FastConfig = {
     search: {
       suggestions: boolean;
       history: boolean;
+      tabs: boolean;
       bookmarks: {
         enabled: boolean;
         storage: BarBookmark[];
@@ -131,6 +132,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.bar?.searchEngineURL === "string" &&
     typeof value?.bar?.search?.suggestions === "boolean" &&
     typeof value?.bar?.search?.history === "boolean" &&
+    typeof value?.bar?.search?.tabs === "boolean" &&
     typeof value?.bar?.search?.bookmarks?.enabled === "boolean" &&
     Array.isArray(value?.bar?.search?.bookmarks?.storage) &&
     value.bar.search.bookmarks.storage.every(
@@ -367,6 +369,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
       search: {
         suggestions: parseBarSearchSuggestionsValue(config.bar.search.suggestions),
         history: parseBarSearchHistoryValue(config.bar.search.history),
+        tabs: typeof config.bar.search.tabs === "boolean" ? config.bar.search.tabs : true,
         bookmarks: {
           enabled: parseBarSearchBookmarksEnabledValue(config.bar.search.bookmarks.enabled),
           storage: parseBarBookmarksValue(config.bar.search.bookmarks.storage)

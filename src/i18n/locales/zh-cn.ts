@@ -92,6 +92,10 @@ export const zhCN = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "历史查询仅在本机进行，不会发送给我们或任何第三方。",
   "bar.search.bookmarks": "搜索书签",
+  "bar.search.tabs": "搜索已打开的标签页",
+  "bar search tabs": "地址栏搜索标签页",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "在地址栏中显示匹配的已打开标签页。选择标签页会切换到它，而不是重复打开。标签页查询仅在本机进行。",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "显示你在本地管理的可配置书签列表中的匹配项。",
   "bar.search.bookmarks.storage": "书签列表",

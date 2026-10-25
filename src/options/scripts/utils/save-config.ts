@@ -4,6 +4,7 @@ import {
   barSearchBookmarksStorageStatusEl,
   barSearchBookmarksStorageTextareaEl,
   barSearchHistoryCheckboxEl,
+  barSearchTabsCheckboxEl,
   barSearchEngineURLInputEl,
   barSearchSuggestionsCheckboxEl,
   findColorInputEl,
@@ -67,6 +68,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   draft.bar.searchEngineURL = barSearchEngineURLInputEl.value;
   draft.bar.search.suggestions = barSearchSuggestionsCheckboxEl.checked;
   draft.bar.search.history = barSearchHistoryCheckboxEl.checked;
+  draft.bar.search.tabs = barSearchTabsCheckboxEl.checked;
   draft.bar.search.bookmarks.enabled = barSearchBookmarksCheckboxEl.checked;
   draft.bar.search.bookmarks.storage = barSearchBookmarksStorageTextareaEl.value;
   draft.find.color = findColorInputEl.value;

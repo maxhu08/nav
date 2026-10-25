@@ -94,6 +94,10 @@ export const ko = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "기록 조회는 기기 내에서만 이루어지며 개발자나 제삼자에게 전송하지 않습니다.",
   "bar.search.bookmarks": "북마크 검색",
+  "bar.search.tabs": "열린 탭 검색",
+  "bar search tabs": "바에서 탭 검색",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "일치하는 열린 탭을 바에 표시합니다. 탭을 선택하면 중복으로 열지 않고 해당 탭으로 전환합니다. 탭 검색은 기기 내에서만 이루어집니다.",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "로컬에서 관리하는 사용자 지정 북마크 목록의 일치 항목을 표시합니다.",
   "bar.search.bookmarks.storage": "북마크 목록",

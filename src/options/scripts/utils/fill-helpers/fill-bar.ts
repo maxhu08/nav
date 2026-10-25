@@ -5,6 +5,7 @@ import {
   barSearchBookmarksStorageSectionEl,
   barSearchBookmarksStorageTextareaEl,
   barSearchHistoryCheckboxEl,
+  barSearchTabsCheckboxEl,
   barSearchEngineURLInputEl,
   barSearchSuggestionsCheckboxEl
 } from "~/src/options/scripts/ui";
@@ -24,6 +25,7 @@ export const fillBarInputs = (config: Config): void => {
   barSearchEngineURLInputEl.value = config.bar.searchEngineURL;
   barSearchSuggestionsCheckboxEl.checked = config.bar.search.suggestions;
   barSearchHistoryCheckboxEl.checked = config.bar.search.history;
+  barSearchTabsCheckboxEl.checked = config.bar.search.tabs;
   barSearchBookmarksCheckboxEl.checked = config.bar.search.bookmarks.enabled;
   barSearchBookmarksStorageTextareaEl.value = config.bar.search.bookmarks.storage;
   syncBarSearchBookmarksStorageControls(config.bar.search.bookmarks.enabled);

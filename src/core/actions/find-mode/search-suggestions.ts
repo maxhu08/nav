@@ -1,5 +1,8 @@
 import { type BarBookmark } from "~/src/utils/bar-bookmarks";
 import type {
+  BarTab,
+  FetchTabSuggestionsMessage,
+  FetchTabSuggestionsResponse,
   FetchHistorySuggestionsMessage,
   FetchHistorySuggestionsResponse,
   FetchSearchSuggestionsMessage,
@@ -12,7 +15,8 @@ export const MAX_BAR_SUGGESTIONS = 8;
 export type BarSuggestionSeed = {
   value: string;
   displayValue: string;
-  source: "search" | "history" | "bookmark";
+  source: "search" | "history" | "bookmark" | "tab";
+  tabId?: number;
   directLink: boolean;
 };
 
@@ -45,12 +49,13 @@ const uniq = (values: BarSuggestionSeed[]): BarSuggestionSeed[] => {
 
   for (const value of values) {
     const trimmedValue = value.value.trim();
+    const key = value.source === "tab" ? `tab:${value.tabId}` : trimmedValue.toLowerCase();
 
-    if (!trimmedValue || seen.has(trimmedValue.toLowerCase())) {
+    if (!trimmedValue || seen.has(key)) {
       continue;
     }
 
-    seen.add(trimmedValue.toLowerCase());
+    seen.add(key);
     output.push({ ...value, value: trimmedValue });
   }
 
@@ -125,15 +130,16 @@ const getFuzzyMatchRangesFromLowerName = (
 
 export const getBarSuggestionItems = (
   query: string,
-  suggestions: BarSuggestionSeed[]
+  suggestions: BarSuggestionSeed[],
+  tabsOnly = false
 ): BarSuggestionItem[] => {
   const trimmedQuery = query.trim();
 
-  if (!trimmedQuery) {
+  if (!trimmedQuery && !tabsOnly) {
     return [];
   }
 
-  const values = uniq(suggestions);
+  const values = uniq(tabsOnly ? suggestions.filter((item) => item.source === "tab") : suggestions);
   const queryItem: BarSuggestionItem = {
     value: trimmedQuery,
     displayValue: trimmedQuery,
@@ -146,9 +152,10 @@ export const getBarSuggestionItems = (
   const rankedSuggestions = values
     .flatMap((value) => {
       const lowerValue = value.displayValue.toLowerCase();
-      const matchRanges =
-        getContiguousMatchRangesFromLowerName(lowerValue, lowerQuery) ??
-        getFuzzyMatchRangesFromLowerName(lowerValue, lowerQuery);
+      const matchRanges = !trimmedQuery
+        ? Array.from(lowerValue, () => false)
+        : (getContiguousMatchRangesFromLowerName(lowerValue, lowerQuery) ??
+          getFuzzyMatchRangesFromLowerName(lowerValue, lowerQuery));
 
       if (!matchRanges) {
         return [];
@@ -168,6 +175,10 @@ export const getBarSuggestionItems = (
         return a.source === "bookmark" ? -1 : 1;
       }
 
+      if (a.source !== b.source && (a.source === "tab" || b.source === "tab")) {
+        return a.source === "tab" ? -1 : 1;
+      }
+
       if (a.directStartsWithQuery !== b.directStartsWithQuery) {
         return a.directStartsWithQuery ? -1 : 1;
       }
@@ -179,10 +190,31 @@ export const getBarSuggestionItems = (
       return 0;
     });
 
+  if (tabsOnly) return rankedSuggestions.slice(0, MAX_BAR_SUGGESTIONS);
+
   const bookmarkSuggestions = rankedSuggestions.filter((item) => item.source === "bookmark");
   const otherSuggestions = rankedSuggestions.filter((item) => item.source !== "bookmark");
 
   return [...bookmarkSuggestions, queryItem, ...otherSuggestions].slice(0, MAX_BAR_SUGGESTIONS);
+};
+
+export const getTabSuggestions = (tabs: BarTab[]): BarSuggestionSeed[] => {
+  return tabs.map((tab) => ({
+    value: tab.url || tab.title || `Tab ${tab.id}`,
+    displayValue: tab.title ? `${tab.title} — ${tab.url}` : tab.url || `Tab ${tab.id}`,
+    source: "tab",
+    directLink: false,
+    tabId: tab.id
+  }));
+};
+
+export const fetchTabSuggestions = async (): Promise<BarSuggestionSeed[]> => {
+  const response = await chrome.runtime.sendMessage<
+    FetchTabSuggestionsMessage,
+    FetchTabSuggestionsResponse
+  >({ type: "fetch-tab-suggestions" });
+  if (!response.ok) throw new Error(response.error ?? "Failed to fetch open tabs");
+  return getTabSuggestions(response.tabs);
 };
 
 export const getBookmarkSuggestions = (bookmarks: BarBookmark[]): BarSuggestionSeed[] => {

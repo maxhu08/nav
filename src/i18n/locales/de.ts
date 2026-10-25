@@ -95,6 +95,10 @@ export const de = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "Verlaufsabfragen bleiben auf deinem Gerät und werden weder an uns noch an Dritte gesendet.",
   "bar.search.bookmarks": "Lesezeichensuche",
+  "bar.search.tabs": "Offene Tabs durchsuchen",
+  "bar search tabs": "Tabs in der Leiste durchsuchen",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "Zeigt passende offene Tabs in der Leiste. Die Auswahl wechselt zum Tab, statt ihn erneut zu öffnen. Die Suche bleibt auf dem Gerät.",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Zeigt Treffer aus einer anpassbaren, lokal verwalteten Lesezeichenliste.",
   "bar.search.bookmarks.storage": "Lesezeichenliste",

@@ -94,6 +94,10 @@ export const ru = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "Поиск по истории выполняется на устройстве и не передаётся нам или третьим лицам.",
   "bar.search.bookmarks": "поиск по закладкам",
+  "bar.search.tabs": "поиск открытых вкладок",
+  "bar search tabs": "поиск вкладок в строке",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "Показывает подходящие открытые вкладки в строке. Выбор вкладки переключает на неё, а не открывает копию. Поиск выполняется на устройстве.",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Показывает совпадения из настраиваемого списка закладок, хранящегося локально.",
   "bar.search.bookmarks.storage": "список закладок",

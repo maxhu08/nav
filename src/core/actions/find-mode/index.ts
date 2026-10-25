@@ -1,4 +1,6 @@
 import { isEditableTarget, getDeepActiveElement } from "~/src/core/utils/is-editable-target";
+import { getToastApi } from "~/src/core/utils/sonner";
+import type { ActivateTabMessage, TabCommandResponse } from "~/src/shared/background-messages";
 import {
   FIND_BAR_ID,
   FIND_CURRENT_HIGHLIGHT_NAME,
@@ -32,6 +34,7 @@ import {
   FIND_HISTORY_ICON_NODES,
   FIND_GLOBE_ICON_NODES,
   FIND_SEARCH_ICON_NODES,
+  FIND_TABS_ICON_NODES,
   type SvgNodeDefinition
 } from "~/src/lib/inline-icons";
 import { DEFAULT_BAR_SEARCH_ENGINE_URL } from "~/src/utils/config";
@@ -40,6 +43,7 @@ import {
   type BarSuggestionSeed,
   fetchHistorySuggestions,
   fetchSearchSuggestions,
+  fetchTabSuggestions,
   getBarSuggestionItems,
   getBookmarkSuggestions
 } from "./search-suggestions";
@@ -57,7 +61,7 @@ type PromptSession =
     }
   | {
       kind: "bar";
-      mode: "current-tab" | "new-tab" | "edit-current-tab";
+      mode: "current-tab" | "new-tab" | "edit-current-tab" | "tabs";
     };
 
 const BAR_URL_TEXT_COLOR = "#3b82f6";
@@ -197,6 +201,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let barSearchEngineURL = DEFAULT_BAR_SEARCH_ENGINE_URL;
   let barSearchSuggestionsEnabled = true;
   let barSearchHistoryEnabled = true;
+  let barSearchTabsEnabled = true;
   let barSearchBookmarksEnabled = false;
   let barSearchBookmarks: BarBookmark[] = [];
   let barSuggestionValues: BarSuggestionSeed[] = [];
@@ -205,7 +210,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let pendingBarSuggestionRequestId = 0;
   let barSuggestionRefreshTimeout = 0;
 
-  const getPromptKindAttribute = (): "find" | "current-tab" | "new-tab" | "edit-current-tab" => {
+  const getPromptKindAttribute = () => {
     return promptSession.kind === "find" ? "find" : promptSession.mode;
   };
 
@@ -216,6 +221,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     if (promptSession.mode === "new-tab") {
       return "open url or search (new tab)...";
+    }
+
+    if (promptSession.mode === "tabs") {
+      return "search open tabs...";
     }
 
     if (promptSession.mode === "edit-current-tab") {
@@ -347,26 +356,30 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       button.className = "nav-find-suggestion";
       button.setAttribute("role", "option");
       button.setAttribute("data-direct-link", item.directLink ? "true" : "false");
+      button.setAttribute("data-source", item.source);
+      button.title = item.displayValue;
       button.setAttribute("data-selected", index === selectedBarSuggestionIndex ? "true" : "false");
       button.setAttribute("aria-selected", index === selectedBarSuggestionIndex ? "true" : "false");
       button.addEventListener("mousedown", (event) => {
         event.preventDefault();
       });
       button.addEventListener("click", () => {
-        commitBarValue(item.value);
+        commitBarSuggestion(item);
       });
 
       const icon = document.createElement("span");
       icon.className = "nav-find-suggestion-icon";
       icon.appendChild(
         createSuggestionIconSvg(
-          item.source === "bookmark"
-            ? FIND_BOOKMARK_ICON_NODES
-            : item.source === "history"
-              ? FIND_HISTORY_ICON_NODES
-              : item.directLink
-                ? FIND_GLOBE_ICON_NODES
-                : FIND_SEARCH_ICON_NODES
+          item.source === "tab"
+            ? FIND_TABS_ICON_NODES
+            : item.source === "bookmark"
+              ? FIND_BOOKMARK_ICON_NODES
+              : item.source === "history"
+                ? FIND_HISTORY_ICON_NODES
+                : item.directLink
+                  ? FIND_GLOBE_ICON_NODES
+                  : FIND_SEARCH_ICON_NODES
         )
       );
 
@@ -399,24 +412,28 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   };
 
   const refreshBarSuggestions = async (query: string, requestId: number): Promise<void> => {
+    const tabsOnly = promptSession.kind === "bar" && promptSession.mode === "tabs";
     const bookmarkSuggestions =
       promptSession.kind === "bar" &&
       promptSession.mode !== "edit-current-tab" &&
+      !tabsOnly &&
       barSearchBookmarksEnabled
         ? getBookmarkSuggestions(barSearchBookmarks)
         : [];
-    const [searchSuggestions, historySuggestions] = await Promise.all([
-      barSearchSuggestionsEnabled
+    const [searchSuggestions, historySuggestions, tabSuggestions] = await Promise.all([
+      !tabsOnly && barSearchSuggestionsEnabled
         ? fetchSearchSuggestions(query).catch(() => [])
         : Promise.resolve([]),
-      barSearchHistoryEnabled ? fetchHistorySuggestions(query).catch(() => []) : Promise.resolve([])
+      !tabsOnly && barSearchHistoryEnabled
+        ? fetchHistorySuggestions(query).catch(() => [])
+        : Promise.resolve([]),
+      tabsOnly || barSearchTabsEnabled ? fetchTabSuggestions().catch(() => []) : Promise.resolve([])
     ]);
     const input = getFindInput();
 
     if (
       promptSession.kind !== "bar" ||
       promptSession.mode === "edit-current-tab" ||
-      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled && !barSearchBookmarksEnabled) ||
       requestId !== pendingBarSuggestionRequestId ||
       !input ||
       input.value.trim() !== query
@@ -425,6 +442,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     }
 
     barSuggestionValues = [
+      ...tabSuggestions,
       ...bookmarkSuggestions,
       ...searchSuggestions.map((value) => ({
         value,
@@ -434,7 +452,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       })),
       ...historySuggestions
     ];
-    barSuggestionItems = getBarSuggestionItems(query, barSuggestionValues);
+    barSuggestionItems = getBarSuggestionItems(query, barSuggestionValues, tabsOnly);
     selectedBarSuggestionIndex = Math.min(
       selectedBarSuggestionIndex,
       barSuggestionItems.length - 1
@@ -445,12 +463,17 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   const syncBarSuggestions = (value: string): void => {
     clearBarSuggestionRefresh();
     const trimmedValue = value.trim();
+    const tabsOnly = promptSession.kind === "bar" && promptSession.mode === "tabs";
 
     if (
       promptSession.kind !== "bar" ||
       promptSession.mode === "edit-current-tab" ||
-      (!barSearchSuggestionsEnabled && !barSearchHistoryEnabled && !barSearchBookmarksEnabled) ||
-      !trimmedValue
+      (!tabsOnly &&
+        ((!barSearchSuggestionsEnabled &&
+          !barSearchHistoryEnabled &&
+          !barSearchBookmarksEnabled &&
+          !barSearchTabsEnabled) ||
+          !trimmedValue))
     ) {
       barSuggestionValues = [];
       pendingBarSuggestionRequestId++;
@@ -458,14 +481,20 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return;
     }
 
-    barSuggestionValues = barSearchBookmarksEnabled
-      ? getBookmarkSuggestions(barSearchBookmarks)
-      : [];
-    barSuggestionItems = getBarSuggestionItems(trimmedValue, barSuggestionValues);
+    barSuggestionValues = tabsOnly
+      ? barSuggestionValues.filter((item) => item.source === "tab")
+      : barSearchBookmarksEnabled
+        ? getBookmarkSuggestions(barSearchBookmarks)
+        : [];
+    barSuggestionItems = getBarSuggestionItems(trimmedValue, barSuggestionValues, tabsOnly);
     selectedBarSuggestionIndex = 0;
     renderBarSuggestions();
 
     const requestId = ++pendingBarSuggestionRequestId;
+    if (tabsOnly) {
+      void refreshBarSuggestions(trimmedValue, requestId);
+      return;
+    }
     barSuggestionRefreshTimeout = window.setTimeout(() => {
       barSuggestionRefreshTimeout = 0;
       void refreshBarSuggestions(trimmedValue, requestId);
@@ -484,8 +513,20 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     return true;
   };
 
-  const getSelectedBarSuggestionValue = (): string | null => {
-    return barSuggestionItems[selectedBarSuggestionIndex]?.value ?? null;
+  const commitBarSuggestion = (item: BarSuggestionItem): boolean => {
+    if (item.source !== "tab" || typeof item.tabId !== "number") return commitBarValue(item.value);
+
+    clearFindSession();
+    void chrome.runtime
+      .sendMessage<ActivateTabMessage, TabCommandResponse>({
+        type: "activate-tab",
+        tabId: item.tabId
+      })
+      .then((response) => {
+        if (!response.ok) getToastApi()?.error("Could not switch to tab.");
+      })
+      .catch(() => getToastApi()?.error("Could not switch to tab."));
+    return true;
   };
 
   const commitBarValue = (value: string): boolean => {
@@ -580,6 +621,15 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     bar.setAttribute("data-prompt-kind", getPromptKindAttribute());
     input.placeholder = getPromptPlaceholder();
+    bar.setAttribute(
+      "aria-label",
+      promptSession.kind === "find"
+        ? "Find in page"
+        : promptSession.mode === "tabs"
+          ? "Search open tabs"
+          : "Open URL or search"
+    );
+    input.setAttribute("aria-label", input.placeholder);
     input.setAttribute(
       "data-url-like",
       promptSession.kind === "bar" && looksLikeUrl(input.value) ? "true" : "false"
@@ -775,6 +825,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   };
 
   const hideFindBar = (): void => {
+    pendingBarSuggestionRequestId++;
+    clearBarSuggestionRefresh();
     getFindBar()?.setAttribute("data-visible", "false");
     hideBarSuggestions();
 
@@ -848,7 +900,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     const query = getFindInput()?.value ?? "";
 
     if (promptSession.kind === "bar") {
-      return commitBarValue(getSelectedBarSuggestionValue() ?? query);
+      const item = barSuggestionItems[selectedBarSuggestionIndex];
+      if (item) return commitBarSuggestion(item);
+      if (promptSession.mode === "tabs") return false;
+      return commitBarValue(query);
     }
 
     setFindQuery(query);
@@ -904,7 +959,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return true;
     },
     openBarPrompt: (
-      mode: "current-tab" | "new-tab" | "edit-current-tab",
+      mode: "current-tab" | "new-tab" | "edit-current-tab" | "tabs",
       initialValue = ""
     ): boolean => {
       const ui = ensureFindUIReady();
@@ -921,6 +976,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       syncFindStatusVisibility();
       ui.input.value = initialValue;
       barSuggestionValues = [];
+      hideBarSuggestions();
       syncPromptKind();
       updateFindUICounts();
       syncBarSuggestions(ui.input.value);
@@ -950,6 +1006,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       barSearchHistoryEnabled = value;
       syncBarSuggestions(getFindInput()?.value ?? "");
     },
+    setBarSearchTabsEnabled: (value: boolean): void => {
+      barSearchTabsEnabled = value;
+      syncBarSuggestions(getFindInput()?.value ?? "");
+    },
     setBarSearchBookmarksEnabled: (value: boolean): void => {
       barSearchBookmarksEnabled = value;
       syncBarSuggestions(getFindInput()?.value ?? "");
@@ -965,11 +1025,21 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
         return false;
       }
 
-      if (promptSession.kind === "bar" && event.key === "ArrowDown") {
+      if (
+        promptSession.kind === "bar" &&
+        (event.key === "ArrowDown" ||
+          (event.key === "Tab" && !event.shiftKey) ||
+          (event.ctrlKey && event.key === "n"))
+      ) {
         return selectBarSuggestion(1);
       }
 
-      if (promptSession.kind === "bar" && event.key === "ArrowUp") {
+      if (
+        promptSession.kind === "bar" &&
+        (event.key === "ArrowUp" ||
+          (event.key === "Tab" && event.shiftKey) ||
+          (event.ctrlKey && event.key === "p"))
+      ) {
         return selectBarSuggestion(-1);
       }
 

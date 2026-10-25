@@ -30,6 +30,7 @@ export const [barColorContainerEl, barColorInputEl] = getContainerAndInput("bar-
 export const [barSearchEngineURLContainerEl, barSearchEngineURLInputEl] = getContainerAndInput("bar-search-engine-url");
 export const barSearchSuggestionsCheckboxEl = getElement<HTMLInputElement>("bar-search-suggestions-checkbox");
 export const barSearchHistoryCheckboxEl = getElement<HTMLInputElement>("bar-search-history-checkbox");
+export const barSearchTabsCheckboxEl = getElement<HTMLInputElement>("bar-search-tabs-checkbox");
 export const barSearchBookmarksCheckboxEl = getElement<HTMLInputElement>("bar-search-bookmarks-checkbox");
 export const barSearchBookmarksImportButtonEl = getButton("bar-search-bookmarks-import");
 export const barSearchBookmarksExportAllButtonEl = getButton("bar-search-bookmarks-export-all");

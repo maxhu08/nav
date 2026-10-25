@@ -149,6 +149,7 @@ L history-go-next
 o bar-mode-current-tab
 O bar-mode-new-tab
 ge bar-mode-edit-current-tab
+<unbound> bar-mode-tabs
 
 # find
 / find-mode

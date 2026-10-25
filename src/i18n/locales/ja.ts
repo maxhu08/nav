@@ -94,6 +94,10 @@ export const ja = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "履歴の検索は端末内で行い、開発者や第三者には送信しません。",
   "bar.search.bookmarks": "ブックマーク検索",
+  "bar.search.tabs": "開いているタブを検索",
+  "bar search tabs": "バーでタブを検索",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "一致する開いているタブをバーに表示します。選択すると重複して開かず、そのタブに切り替えます。タブの検索は端末内で行われます。",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "ローカルで管理するブックマークリストから一致する項目を表示します。",
   "bar.search.bookmarks.storage": "ブックマークリスト",

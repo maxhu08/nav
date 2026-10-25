@@ -206,6 +206,7 @@
               <p class="text-[#dcdcaa]">bar-mode-current-tab</p>
               <p class="text-[#dcdcaa]">bar-mode-new-tab</p>
               <p class="text-[#dcdcaa]">bar-mode-edit-current-tab</p>
+              <p class="text-[#dcdcaa]">bar-mode-tabs</p>
               <br />
               <p class="text-neutral-500"># in find mode</p>
               <p class="text-[#f97316]">cycle-match-next</p>
@@ -383,6 +384,12 @@
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">bar-mode-edit-current-tab</p>
                 <p class="text-base text-neutral-500">Opens the bar prompt with the current tab URL prefilled for quick editing.</p>
+              </div>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">bar-mode-tabs</p>
+                <p class="text-base text-neutral-500">
+                  Searches open tabs by title or URL across windows. Use Arrow Up/Down or Tab/Shift+Tab to select, Enter to switch to the existing tab, and Escape to cancel.
+                </p>
               </div>
               <p class="text-base text-neutral-500">In find mode:</p>
               <div class="grid gap-1">
@@ -754,6 +761,14 @@
             <p class="text-base text-neutral-500">
               Shows matches from your local browser history for past searches and visited links.<br /><br />
               History lookups stay on-device and are not sent to us or any third party.
+            </p>
+          </div>
+          <div class="grid gap-2">
+            <p id="bar-search-tabs" class="text-base text-white">
+              <a href="#bar-search-tabs">bar.search.tabs</a>
+            </p>
+            <p class="text-base text-neutral-500">
+              Shows matching open tabs in the normal bar. Selecting a tab activates it and focuses its window instead of opening a duplicate. Lookups stay on-device.
             </p>
           </div>
           <div class="grid gap-2">

@@ -41,6 +41,7 @@ export type ActionName =
   | "bar-mode-current-tab"
   | "bar-mode-new-tab"
   | "bar-mode-edit-current-tab"
+  | "bar-mode-tabs"
   | "cycle-match-next"
   | "cycle-match-prev"
   | "watch-mode"
@@ -93,6 +94,7 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "bar-mode-current-tab",
   "bar-mode-new-tab",
   "bar-mode-edit-current-tab",
+  "bar-mode-tabs",
   "cycle-match-next",
   "cycle-match-prev",
   "watch-mode",

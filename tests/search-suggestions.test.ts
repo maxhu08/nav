@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
   getBarSuggestionItems,
-  getBookmarkSuggestions
+  getBookmarkSuggestions,
+  getTabSuggestions
 } from "~/src/core/actions/find-mode/search-suggestions";
 
 describe("bar bookmark suggestions", () => {
@@ -31,5 +32,35 @@ describe("bar bookmark suggestions", () => {
     expect(items[0]?.displayValue).toBe("GitHub");
     expect(items[0]?.value).toBe("https://github.com/");
     expect(items[1]?.displayValue).toBe("gh");
+  });
+});
+
+describe("bar tab suggestions", () => {
+  const tabs = getTabSuggestions([
+    { id: 1, title: "GitHub", url: "https://github.com/nav" },
+    { id: 2, title: "GitHub", url: "https://github.com/nav" },
+    { id: 3, title: "Documentation", url: "https://example.com/docs" }
+  ]);
+
+  test("lists open tabs without a query in tabs-only mode", () => {
+    expect(getBarSuggestionItems("", tabs, true).map((item) => item.tabId)).toEqual([1, 2, 3]);
+  });
+
+  test("matches titles and URLs case-insensitively without merging duplicate tabs", () => {
+    expect(getBarSuggestionItems("GITHUB", tabs, true).map((item) => item.tabId)).toEqual([1, 2]);
+    expect(getBarSuggestionItems("example.com", tabs, true).map((item) => item.tabId)).toEqual([3]);
+  });
+
+  test("never offers a web search in tabs-only mode", () => {
+    expect(getBarSuggestionItems("no matching tab", tabs, true)).toEqual([]);
+    expect(getBarSuggestionItems("github", tabs, true).every((item) => item.source === "tab")).toBe(
+      true
+    );
+  });
+
+  test("keeps the raw query first in the normal bar", () => {
+    const items = getBarSuggestionItems("github", tabs);
+    expect(items[0]?.source).toBe("search");
+    expect(items.slice(1).map((item) => item.tabId)).toEqual([1, 2]);
   });
 });

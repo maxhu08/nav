@@ -96,6 +96,10 @@ export const es = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "Las consultas del historial permanecen en tu dispositivo y no se envían a nosotros ni a terceros.",
   "bar.search.bookmarks": "buscar en marcadores",
+  "bar.search.tabs": "buscar pestañas abiertas",
+  "bar search tabs": "buscar pestañas en la barra",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "Muestra pestañas abiertas coincidentes en la barra. Seleccionar una pestaña cambia a ella en lugar de abrir un duplicado. La búsqueda permanece en el dispositivo.",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Muestra coincidencias de una lista configurable de marcadores que administras localmente.",
   "bar.search.bookmarks.storage": "lista de marcadores",

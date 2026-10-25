@@ -97,6 +97,10 @@ export const fr = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "Les recherches dans l’historique restent sur votre appareil et ne sont transmises ni à nous ni à des tiers.",
   "bar.search.bookmarks": "rechercher dans les favoris",
+  "bar.search.tabs": "rechercher les onglets ouverts",
+  "bar search tabs": "rechercher les onglets dans la barre",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "Affiche les onglets ouverts correspondants dans la barre. Sélectionner un onglet y bascule au lieu d’en ouvrir un doublon. La recherche reste sur l’appareil.",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Affiche les résultats d’une liste de favoris configurable et gérée localement.",
   "bar.search.bookmarks.storage": "liste des favoris",

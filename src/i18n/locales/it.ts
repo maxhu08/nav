@@ -97,6 +97,10 @@ export const it = {
   "History lookups stay on-device and are not sent to us or any third party.":
     "Le ricerche nella cronologia restano sul dispositivo e non sono inviate a noi o a terzi.",
   "bar.search.bookmarks": "cerca nei segnalibri",
+  "bar.search.tabs": "cerca schede aperte",
+  "bar search tabs": "cerca schede nella barra",
+  "Shows matching open tabs in the bar. Selecting a tab switches to it instead of opening a duplicate. Tab lookups stay on-device.":
+    "Mostra nella barra le schede aperte corrispondenti. Selezionare una scheda passa a quella esistente invece di aprirne un duplicato. La ricerca resta sul dispositivo.",
   "Shows matches from a configurable bookmark list that you manage locally.":
     "Mostra risultati da un elenco di segnalibri configurabile e gestito localmente.",
   "bar.search.bookmarks.storage": "elenco dei segnalibri",

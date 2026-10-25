@@ -89,6 +89,7 @@ export const defaultConfig: Config = {
     search: {
       suggestions: true,
       history: true,
+      tabs: true,
       bookmarks: {
         enabled: false,
         storage: ""
@@ -135,6 +136,7 @@ export type Config = {
     search: {
       suggestions: boolean;
       history: boolean;
+      tabs: boolean;
       bookmarks: {
         enabled: boolean;
         storage: string;

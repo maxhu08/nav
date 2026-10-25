@@ -56,6 +56,8 @@ describe("buildFastConfig", () => {
     // @ts-expect-error testing migration fallback for invalid persisted data
     config.bar.search.history = "yes";
     // @ts-expect-error testing migration fallback for invalid persisted data
+    config.bar.search.tabs = "yes";
+    // @ts-expect-error testing migration fallback for invalid persisted data
     config.bar.search.bookmarks.enabled = "yes";
     config.bar.search.bookmarks.storage = `"ok": "notaurl"
 "site": "https://example.com"`;
@@ -72,6 +74,7 @@ describe("buildFastConfig", () => {
     expect(fastConfig.bar.searchEngineURL).toBe(defaultConfig.bar.searchEngineURL);
     expect(fastConfig.bar.search.suggestions).toBe(defaultConfig.bar.search.suggestions);
     expect(fastConfig.bar.search.history).toBe(defaultConfig.bar.search.history);
+    expect(fastConfig.bar.search.tabs).toBe(defaultConfig.bar.search.tabs);
     expect(fastConfig.bar.search.bookmarks.enabled).toBe(
       defaultConfig.bar.search.bookmarks.enabled
     );

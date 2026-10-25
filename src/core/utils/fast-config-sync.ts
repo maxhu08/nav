@@ -10,6 +10,7 @@ type FastConfigSyncDeps = {
   setBarSearchEngineURL: (value: string) => void;
   setBarSearchSuggestionsEnabled: (value: boolean) => void;
   setBarSearchHistoryEnabled: (value: boolean) => void;
+  setBarSearchTabsEnabled: (value: boolean) => void;
   setBarSearchBookmarksEnabled: (value: boolean) => void;
   setBarSearchBookmarks: (value: BarBookmark[]) => void;
   setFindColor: (value: string) => void;
@@ -37,6 +38,7 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setBarSearchEngineURL(fastConfig.bar.searchEngineURL);
   deps.setBarSearchSuggestionsEnabled(fastConfig.bar.search.suggestions);
   deps.setBarSearchHistoryEnabled(fastConfig.bar.search.history);
+  deps.setBarSearchTabsEnabled(fastConfig.bar.search.tabs);
   deps.setBarSearchBookmarksEnabled(fastConfig.bar.search.bookmarks.enabled);
   deps.setBarSearchBookmarks(fastConfig.bar.search.bookmarks.storage);
   deps.setFindColor(fastConfig.find.color);

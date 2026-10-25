@@ -85,6 +85,15 @@ export const FIND_SEARCH_ICON_NODES: SvgNodeDefinition[] = [
   }
 ];
 
+export const FIND_TABS_ICON_NODES: SvgNodeDefinition[] = [
+  {
+    tag: "path",
+    attributes: {
+      d: "M8 3h12a1 1 0 0 1 1 1v12M4 7h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"
+    }
+  }
+];
+
 export const FIND_GLOBE_ICON_NODES: SvgNodeDefinition[] = [
   {
     tag: "path",
