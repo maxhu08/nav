@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="shared/tailwind.css" />
     <link rel="stylesheet" href="shared/shared.css" />
     <script src="docs/scripts/init.ts" type="module" defer></script>
-    <link rel="icon" href="assets/icon.png" type="image/png" />
+    <link rel="icon" href="assets/options-icon.png" type="image/png" />
     <title>docs ヽ(・ω・*)</title>
   </head>
 
@@ -40,11 +40,10 @@
               <a href="#rules-urls-mode">rules.urls.mode</a>
             </p>
             <p class="text-base text-neutral-500">
-              Controls which URL rules list is enforced at runtime.
+              Choose where nav actions are allowed. Only the selected list is used; the other list is ignored.
               <br /><br />
-              `blacklist` blocks matching actions from `rules.urls.blacklist`.
-              <br />
-              `whitelist` only allows matching actions from `rules.urls.whitelist`.
+              <strong class="text-white">blacklist:</strong> Actions are allowed on all websites by default. Use `rules.urls.blacklist` to block sites or restrict their actions. <br /><br />
+              <strong class="text-white">whitelist:</strong> Actions are blocked on all websites by default. Use `rules.urls.whitelist` to allow sites or specific actions.
             </p>
           </div>
           <div class="grid gap-2">
@@ -52,46 +51,56 @@
               <a href="#rules-urls-lists">rules.urls.blacklist / rules.urls.whitelist</a>
             </p>
             <p class="text-base text-neutral-500">
-              These fields define URL-based rules. Both fields use the same syntax, and `rules.urls.mode` decides which one is active.
+              Each rule starts with <code>* &lt;regex-pattern&gt;</code> on its own line. The pattern is a regular expression matched against the full page URL, not just the domain. <br /><br />
+              <strong class="text-white">To block or allow an entire site, use only the pattern line.</strong> No `+` or `-` line is needed.
+            </p>
+            <p class="text-base text-neutral-500">
+              In blacklist mode, a pattern line alone blocks all actions on matching URLs. In whitelist mode, it allows all actions on matching URLs.
               <br /><br />
-              <span class="text-[#569cd6]">*</span> <span class="text-white">&lt;regex-pattern&gt;</span> <br /><br />
-              Starts a new rule block. The `* ` prefix is required before every website regex pattern.
+              Add <code>+ action1 action2</code> below a pattern to allow only the listed actions and block all others. <br /><br />
+              Add <code>- action1 action2</code> below a pattern to block only the listed actions and allow all others.
+            </p>
+            <p class="text-base text-neutral-500">
+              The first matching rule wins. Put more specific patterns before broader ones.
+              <br /><br />
+              Optional action lines behave the same in both modes. Put a single `+` or `-` line immediately below its pattern, with no blank line or comment between them.
+              <br /><br />
+              A `+` or `-` line must contain at least one <a href="#hotkeys-mappings" class="text-blue-500 transition hover:text-blue-600">valid action name</a>. Separate action names with spaces. A
+              standalone `+` or `-` is not valid. <br /><br />
+              Start pattern and action lines at the beginning of the line, without indentation. Blank lines and lines starting with `#` are ignored.
             </p>
             <br />
+            <p class="text-base text-white">Example: allow all actions only on github.com and example.com</p>
+            <p class="text-base text-neutral-500">Select whitelist mode and paste this into `rules.urls.whitelist`:</p>
+            <pre
+              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
+            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/
+<span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>example<span class="text-[#d6b97c]">\.</span>com/</code></pre>
+            <p class="text-base text-neutral-500">All nav actions are allowed on these sites, including their subdomains. All actions remain blocked on other sites.</p>
+            <br />
+            <p class="text-base text-white">Example: block all actions on github.com</p>
+            <p class="text-base text-neutral-500">Select blacklist mode and paste this into `rules.urls.blacklist`:</p>
+            <pre
+              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
+            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/</code></pre>
+            <p class="text-base text-neutral-500">All nav actions are blocked on GitHub and its subdomains. Other sites remain allowed.</p>
+            <br />
+            <p class="text-base text-white">Example: allow only specific actions on github.com</p>
+            <pre
+              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
+            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/
+<span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">hint-mode-current-tab hint-mode-right-click yank-current-tab-url</span></code></pre>
             <p class="text-base text-neutral-500">
-              <span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span> <br /><br />
-              Blocks all actions except the listed action names for URLs matching the regex pattern above.
-              <br /><br />
-              <span class="text-[#c586c0]">-</span> <span class="text-[#dcdcaa]">&lt;action1&gt; &lt;action2&gt; ...</span> <br /><br />
-              Allows all actions except the listed action names for URLs matching the regex pattern above.
-              <br /><br />
-              You can list any number of action names on a `+` or `-` line.
-              <br /><br />
-              A `+` or `-` line must go on the next consecutive line immediately after its `* &lt;regex-pattern&gt;` line.
-              <br /><br />
-              If a rule block contains only `* &lt;regex-pattern&gt;`, all actions are blocked for matching URLs.
-              <br /><br />
-              Separate action names with spaces.
-              <br /><br />
-              Lines starting with # are ignored.
+              In either mode, this allows only the three listed actions on GitHub. Other sites follow the selected mode's default: allowed in blacklist mode, blocked in whitelist mode.
             </p>
             <br />
-            <p class="text-base text-neutral-500">Example:</p>
-            <div class="rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
-              <p>
-                <span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span><span class="text-[#d06969]">https</span><span class="text-[#d6b97c]">?</span
-                ><span class="text-[#d06969]">://</span><span class="text-[#cd9077]">(</span><span class="text-[#d06969]">www</span><span class="text-[#d6b97c]">\.</span
-                ><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">?</span><span class="text-[#d06969]">github</span><span class="text-[#d6b97c]">\.</span
-                ><span class="text-[#d06969]">com/</span><span class="text-[#d6b97c]">.*$</span>
-              </p>
-              <p>
-                <span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">hint-mode-current-tab</span> <span class="text-[#dcdcaa]">hint-mode-right-click</span>
-                <span class="text-[#dcdcaa]">yank-current-tab-url</span>
-              </p>
-            </div>
+            <p class="text-base text-white">Example: block only specific actions on github.com</p>
+            <pre
+              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
+            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/
+<span class="text-[#c586c0]">-</span> <span class="text-[#dcdcaa]">scroll-down scroll-up</span></code></pre>
             <p class="text-base text-neutral-500">
-              In `rules.urls.blacklist`, this blocks every action on GitHub pages except `hint-mode-current-tab`, `hint-mode-right-click`, and `yank-current-tab-url`. In `rules.urls.whitelist`, the
-              same rule would allow only those actions on GitHub pages.
+              In either mode, this blocks `scroll-down` and `scroll-up` on GitHub and allows every other action there. Other sites still follow the selected mode's default.
             </p>
           </div>
           <div class="grid gap-2">

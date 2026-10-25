@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { createKeyState } from "~/src/core/utils/key-state";
 import { defaultConfig } from "~/src/utils/config";
+import { VALID_ACTION_NAMES } from "~/src/utils/hotkeys";
 import { RESERVED_HINT_DIRECTIVES } from "~/src/utils/hint-reserved-label-directives";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 
@@ -16,6 +18,65 @@ const installCanvasStub = (): void => {
 };
 
 describe("buildFastConfig", () => {
+  test.each(["blacklist", "whitelist"] as const)(
+    "applies URL-only rules according to %s mode",
+    async (mode) => {
+      const config = structuredClone(defaultConfig);
+      config.rules.urls.mode = mode;
+      config.rules.urls.blacklist = config.rules.urls.whitelist =
+        "* ^https://example\\.com/matching/\n* ^https://example\\.com/another/";
+      const fixture = createDomFixture("");
+      installCanvasStub();
+
+      try {
+        const { buildFastConfig } = await import("~/src/utils/fast-config");
+        const keyState = createKeyState({ getMode: () => "normal" });
+        keyState.applyUrlRules(buildFastConfig(config).rules.urls);
+
+        for (const path of ["/matching/", "/another/", "/unmatched/"]) {
+          history.replaceState(null, "", path);
+          for (const action of VALID_ACTION_NAMES) {
+            expect(keyState.isActionAllowed(action)).toBe(
+              path === "/unmatched/" ? mode === "blacklist" : mode === "whitelist"
+            );
+          }
+        }
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  );
+
+  test.each(["blacklist", "whitelist"] as const)(
+    "preserves explicit action lists in %s mode",
+    async (mode) => {
+      const config = structuredClone(defaultConfig);
+      config.rules.urls.mode = mode;
+      config.rules.urls.blacklist = config.rules.urls.whitelist =
+        "* ^https://example\\.com/allow/\n+ scroll-down\n* ^https://example\\.com/deny/\n- scroll-down";
+      const fixture = createDomFixture("");
+      installCanvasStub();
+
+      try {
+        const { buildFastConfig } = await import("~/src/utils/fast-config");
+        const keyState = createKeyState({ getMode: () => "normal" });
+        keyState.applyUrlRules(buildFastConfig(config).rules.urls);
+
+        history.replaceState(null, "", "/allow/");
+        for (const action of VALID_ACTION_NAMES) {
+          expect(keyState.isActionAllowed(action)).toBe(action === "scroll-down");
+        }
+
+        history.replaceState(null, "", "/deny/");
+        for (const action of VALID_ACTION_NAMES) {
+          expect(keyState.isActionAllowed(action)).toBe(action !== "scroll-down");
+        }
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  );
+
   test("keeps hotkey mappings empty when the user removes them", async () => {
     const config = structuredClone(defaultConfig);
     config.hotkeys.mappings = "";

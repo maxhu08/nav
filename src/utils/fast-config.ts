@@ -325,7 +325,7 @@ const isValidRegexPattern = (value: string): boolean => {
   }
 };
 
-const parseRulesUrlsValue = (value: string): FastRule[] => {
+const parseRulesUrlsValue = (value: string, mode: FastRule["mode"]): FastRule[] => {
   const urls: FastRule[] = [];
   let previousRule: FastRule | null = null;
 
@@ -348,7 +348,7 @@ const parseRulesUrlsValue = (value: string): FastRule[] => {
 
       previousRule = {
         pattern: rest,
-        mode: "allow",
+        mode,
         actions: {}
       };
       urls.push(previousRule);
@@ -378,8 +378,8 @@ export const buildFastConfig = (config: Config): FastConfig => {
       forceNormalMode: config.rules.forceNormalMode,
       urls: {
         mode: config.rules.urls.mode,
-        blacklist: parseRulesUrlsValue(config.rules.urls.blacklist),
-        whitelist: parseRulesUrlsValue(config.rules.urls.whitelist)
+        blacklist: parseRulesUrlsValue(config.rules.urls.blacklist, "allow"),
+        whitelist: parseRulesUrlsValue(config.rules.urls.whitelist, "deny")
       }
     },
     hotkeys: {
