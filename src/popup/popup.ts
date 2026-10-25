@@ -54,5 +54,3 @@ document.getElementById("exclude-button")?.addEventListener("click", () => {
     openOptionsPage();
   })();
 });
-
-export {};

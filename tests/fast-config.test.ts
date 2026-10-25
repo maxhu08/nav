@@ -77,7 +77,7 @@ describe("buildFastConfig", () => {
     );
     expect(fastConfig.bar.search.bookmarks.storage).toEqual([
       { name: "ok", value: "notaurl" },
-      { name: "site", value: "https://example.com/" }
+      { name: "site", value: "https://example.com" }
     ]);
     expect(fastConfig.find.color).toBe(defaultConfig.find.color);
   });

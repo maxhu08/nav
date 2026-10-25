@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { getFindBar, getFindInput } from "~/src/core/utils/get-ui";
+import { resetSiteKeybindIgnoreForTests } from "~/src/core/utils/ignore-site-keybinds";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 
 const createController = async () => {
@@ -43,6 +44,7 @@ describe("find mode bar prompt", () => {
       expect(getFindInput()?.placeholder).toBe("edit current url or search...");
       expect(getFindInput()?.value).toBe("https://example.com/path");
     } finally {
+      resetSiteKeybindIgnoreForTests();
       Object.defineProperty(globalThis, "CSS", {
         configurable: true,
         writable: true,
