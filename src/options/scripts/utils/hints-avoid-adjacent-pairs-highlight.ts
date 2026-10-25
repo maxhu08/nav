@@ -5,6 +5,7 @@ import {
 } from "~/src/options/scripts/ui";
 import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
+import { t } from "~/src/options/scripts/i18n";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -60,12 +61,15 @@ const renderLine = (
       if (!isValidPair) {
         errors.push({
           code: "invalid-pair",
-          message: `line ${lineNumber}: "${segment}" must be exactly 2 letters (a-z).`
+          message: t('line {line}: "{pair}" must be exactly 2 letters (a-z).', {
+            line: lineNumber,
+            pair: segment
+          })
         });
       } else if (isDuplicate) {
         errors.push({
           code: "duplicate-pair",
-          message: `line ${lineNumber}: "${segment}" is duplicated.`
+          message: t('line {line}: "{pair}" is duplicated.', { line: lineNumber, pair: segment })
         });
       }
     }

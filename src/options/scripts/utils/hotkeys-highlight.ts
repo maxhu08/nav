@@ -6,6 +6,18 @@ import {
 import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { getActionMode, isActionName, parseHotkeyMappingsValue } from "~/src/utils/hotkeys";
+import { t } from "~/src/options/scripts/i18n";
+
+const errorMessages = {
+  "missing-separator": "Missing whitespace separator between key sequence and action name.",
+  "missing-sequence": "Missing key sequence before the action name.",
+  "missing-action": "Missing action name after the key sequence.",
+  "invalid-action": 'Unknown action name. Received "{action}".',
+  "duplicate-sequence-mode":
+    'Sequence is already used by another action in the same mode. Mode "{mode}" already has a binding for "{sequence}".',
+  "missing-action-declaration":
+    'Every action must be declared at least once. Declare "{action}" or set it to "<unbound>".'
+} as const;
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -123,11 +135,16 @@ export const syncHotkeysMappingsHighlight = (): void => {
 
   setEditorStatus(
     hotkeysMappingsStatusEl,
-    parsedMappings.errors.map((error) => ({
-      code: error.code,
-      message:
-        error.lineNumber === null ? error.message : `line ${error.lineNumber}: ${error.message}`
-    }))
+    parsedMappings.errors.map((error) => {
+      const message = t(errorMessages[error.code], error.values);
+      return {
+        code: error.code,
+        message:
+          error.lineNumber === null
+            ? message
+            : t("line {line}: {message}", { line: error.lineNumber, message })
+      };
+    })
   );
 };
 

@@ -2,6 +2,7 @@ import { deepMerge } from "~/src/utils/deep-merge";
 
 export type OptionsData = {
   sectionsExpanded: {
+    options: boolean;
     rules: boolean;
     hotkeys: boolean;
     bar: boolean;
@@ -13,6 +14,7 @@ export type OptionsData = {
 
 export const defaultOptionsData: OptionsData = {
   sectionsExpanded: {
+    options: true,
     rules: true,
     hotkeys: true,
     bar: true,

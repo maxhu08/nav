@@ -25,7 +25,7 @@
     "test": "bun test tests",
     "lint": "oxlint src scripts --deny-warnings",
     "lint:fix": "oxlint src scripts --fix --deny-warnings",
-    "check": "bun run format:check && bun run lint && bun run typecheck",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun run test",
     "prepare": "husky",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

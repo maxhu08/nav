@@ -31,144 +31,152 @@ import { lockTextareaContainerHeight } from "~/src/options/scripts/utils/ui-help
 import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
 import { getConfig } from "~/src/utils/config";
 import { getOptionsData, updateOptionsData } from "~/src/utils/options-storage";
+import { initializeI18n, t } from "~/src/options/scripts/i18n";
 
-const logo = document.getElementById("nav-logo") as HTMLImageElement;
+const initialize = () => {
+  const logo = document.getElementById("nav-logo") as HTMLImageElement;
 
-logo.classList.add("animate-up-bouncy");
+  logo.classList.add("animate-up-bouncy");
 
-logo.addEventListener(
-  "animationend",
-  () => {
-    logo.classList.replace("animate-up-bouncy", "animate-float");
-  },
-  {
-    once: true
-  }
-);
-
-const manifest = chrome.runtime.getManifest();
-const displayVersion =
-  document.documentElement.getAttribute("rc-version-info")?.trim() || manifest.version;
-
-initCoreNavigation();
-
-(document.getElementById("version-number-text") as HTMLSpanElement).textContent += displayVersion;
-
-(document.getElementById("user-agent-text") as HTMLSpanElement).textContent += getUserAgent();
-
-void createCollapseGroups();
-initHintsCustomCSSHighlight();
-initColorInputControls();
-
-void getConfig().then((config) => {
-  fillInputs(config);
-
-  lockTextareaContainerHeight(rulesUrlsBlacklistContainerEl, rulesUrlsBlacklistTextareaEl);
-  lockTextareaContainerHeight(rulesUrlsWhitelistContainerEl, rulesUrlsWhitelistTextareaEl);
-  lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
-  lockTextareaContainerHeight(
-    barSearchBookmarksStorageContainerEl,
-    barSearchBookmarksStorageTextareaEl
+  logo.addEventListener(
+    "animationend",
+    () => {
+      logo.classList.replace("animate-up-bouncy", "animate-float");
+    },
+    {
+      once: true
+    }
   );
-  lockTextareaContainerHeight(
-    hintsAvoidAdjacentPairsContainerEl,
-    hintsAvoidAdjacentPairsTextareaEl
-  );
-  lockTextareaContainerHeight(hintsReservedLabelsContainerEl, hintsReservedLabelsTextareaEl);
-});
 
-listenToInputs();
-listenToKeys();
-handleControls();
+  const manifest = chrome.runtime.getManifest();
+  const displayVersion =
+    document.documentElement.getAttribute("rc-version-info")?.trim() || manifest.version;
 
-let pendingExcludeSiteDialogPromise: Promise<void> | null = null;
+  initCoreNavigation();
 
-const maybeShowPendingExcludeSiteDialog = async (): Promise<void> => {
-  if (pendingExcludeSiteDialogPromise) {
-    return pendingExcludeSiteDialogPromise;
-  }
+  (document.getElementById("version-number-text") as HTMLSpanElement).textContent += displayVersion;
 
-  pendingExcludeSiteDialogPromise = (async () => {
-    const optionsData = await getOptionsData();
+  (document.getElementById("user-agent-text") as HTMLSpanElement).textContent += getUserAgent();
 
-    if (!optionsData.pendingExcludeSiteUrl) {
-      return;
+  void createCollapseGroups();
+  initHintsCustomCSSHighlight();
+  initColorInputControls();
+
+  void getConfig().then((config) => {
+    fillInputs(config);
+
+    lockTextareaContainerHeight(rulesUrlsBlacklistContainerEl, rulesUrlsBlacklistTextareaEl);
+    lockTextareaContainerHeight(rulesUrlsWhitelistContainerEl, rulesUrlsWhitelistTextareaEl);
+    lockTextareaContainerHeight(hotkeysMappingsContainerEl, hotkeysMappingsTextareaEl);
+    lockTextareaContainerHeight(
+      barSearchBookmarksStorageContainerEl,
+      barSearchBookmarksStorageTextareaEl
+    );
+    lockTextareaContainerHeight(
+      hintsAvoidAdjacentPairsContainerEl,
+      hintsAvoidAdjacentPairsTextareaEl
+    );
+    lockTextareaContainerHeight(hintsReservedLabelsContainerEl, hintsReservedLabelsTextareaEl);
+  });
+
+  listenToInputs();
+  listenToKeys();
+  handleControls();
+
+  let pendingExcludeSiteDialogPromise: Promise<void> | null = null;
+
+  const maybeShowPendingExcludeSiteDialog = async (): Promise<void> => {
+    if (pendingExcludeSiteDialogPromise) {
+      return pendingExcludeSiteDialogPromise;
     }
 
-    await updateOptionsData((draft) => ({
-      ...draft,
-      pendingExcludeSiteUrl: null
-    }));
+    pendingExcludeSiteDialogPromise = (async () => {
+      const optionsData = await getOptionsData();
 
-    let url: URL;
+      if (!optionsData.pendingExcludeSiteUrl) {
+        return;
+      }
+
+      await updateOptionsData((draft) => ({
+        ...draft,
+        pendingExcludeSiteUrl: null
+      }));
+
+      let url: URL;
+
+      try {
+        url = new URL(optionsData.pendingExcludeSiteUrl);
+      } catch {
+        return;
+      }
+
+      if (!/^https?:$/.test(url.protocol)) {
+        return;
+      }
+
+      const config = await getConfig();
+      const isWhitelistMode = config.rules.urls.mode === "whitelist";
+      const snippet = await showTextareaDialog(
+        isWhitelistMode ? t("Include site") : t("Exclude site"),
+        {
+          defaultValue: getManagedWebsiteRuleSnippet(config, url),
+          note: t("This will be added to {path}", { path: `rules.urls.${config.rules.urls.mode}` }),
+          confirmText: t("add"),
+          cancelText: t("cancel")
+        }
+      );
+
+      if (snippet === null) {
+        return;
+      }
+
+      const normalizedSnippet = snippet.trim();
+
+      if (!normalizedSnippet) {
+        return;
+      }
+
+      const activeRulesTextareaEl = isWhitelistMode
+        ? rulesUrlsWhitelistTextareaEl
+        : rulesUrlsBlacklistTextareaEl;
+
+      activeRulesTextareaEl.value = [activeRulesTextareaEl.value.trimEnd(), normalizedSnippet]
+        .filter(Boolean)
+        .join("\n");
+      syncRulesUrlsHighlight();
+      syncRulesUrlsHighlightScroll();
+      const activeRulesContainerEl = isWhitelistMode
+        ? rulesUrlsWhitelistContainerEl
+        : rulesUrlsBlacklistContainerEl;
+
+      activeRulesContainerEl.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+      activeRulesTextareaEl.focus();
+      activeRulesTextareaEl.setSelectionRange(
+        activeRulesTextareaEl.value.length,
+        activeRulesTextareaEl.value.length
+      );
+      await saveConfigAndFastConfig();
+    })();
 
     try {
-      url = new URL(optionsData.pendingExcludeSiteUrl);
-    } catch {
-      return;
+      await pendingExcludeSiteDialogPromise;
+    } finally {
+      pendingExcludeSiteDialogPromise = null;
     }
-
-    if (!/^https?:$/.test(url.protocol)) {
-      return;
-    }
-
-    const config = await getConfig();
-    const isWhitelistMode = config.rules.urls.mode === "whitelist";
-    const snippet = await showTextareaDialog(isWhitelistMode ? "Include site" : "Exclude site", {
-      defaultValue: getManagedWebsiteRuleSnippet(config, url),
-      note: `This will be added to rules.urls.${config.rules.urls.mode}`,
-      confirmText: "add",
-      cancelText: "cancel"
-    });
-
-    if (snippet === null) {
-      return;
-    }
-
-    const normalizedSnippet = snippet.trim();
-
-    if (!normalizedSnippet) {
-      return;
-    }
-
-    const activeRulesTextareaEl = isWhitelistMode
-      ? rulesUrlsWhitelistTextareaEl
-      : rulesUrlsBlacklistTextareaEl;
-
-    activeRulesTextareaEl.value = [activeRulesTextareaEl.value.trimEnd(), normalizedSnippet]
-      .filter(Boolean)
-      .join("\n");
-    syncRulesUrlsHighlight();
-    syncRulesUrlsHighlightScroll();
-    const activeRulesContainerEl = isWhitelistMode
-      ? rulesUrlsWhitelistContainerEl
-      : rulesUrlsBlacklistContainerEl;
-
-    activeRulesContainerEl.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-    activeRulesTextareaEl.focus();
-    activeRulesTextareaEl.setSelectionRange(
-      activeRulesTextareaEl.value.length,
-      activeRulesTextareaEl.value.length
-    );
-    await saveConfigAndFastConfig();
-  })();
-
-  try {
-    await pendingExcludeSiteDialogPromise;
-  } finally {
-    pendingExcludeSiteDialogPromise = null;
-  }
-};
-
-void maybeShowPendingExcludeSiteDialog();
-
-chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName !== "local" || !changes.optionsData) {
-    return;
-  }
+  };
 
   void maybeShowPendingExcludeSiteDialog();
-});
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local" || !changes.optionsData) {
+      return;
+    }
+
+    void maybeShowPendingExcludeSiteDialog();
+  });
+};
+
+void initializeI18n().then(initialize);

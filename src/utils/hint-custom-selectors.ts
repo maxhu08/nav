@@ -24,6 +24,7 @@ export type HintCustomSelectorParseError = {
     | "invalid-selector";
   lineNumber: number | null;
   message: string;
+  values?: Record<string, string | number>;
 };
 
 const isValidRegexPattern = (value: string): boolean => {
@@ -117,7 +118,8 @@ export const parseHintCustomSelectorsValue = (
         errors.push({
           code: "invalid-pattern",
           lineNumber,
-          message: `line ${lineNumber}: Invalid regex pattern "${pattern}".`
+          message: `line ${lineNumber}: Invalid regex pattern "${pattern}".`,
+          values: { pattern }
         });
       }
 
@@ -180,7 +182,8 @@ export const parseHintCustomSelectorsValue = (
       errors.push({
         code: "duplicate-key",
         lineNumber,
-        message: `line ${lineNumber}: Duplicate custom selector key "${rawKey}" in the same block.`
+        message: `line ${lineNumber}: Duplicate custom selector key "${rawKey}" in the same block.`,
+        values: { key: rawKey }
       });
     }
 
@@ -188,7 +191,8 @@ export const parseHintCustomSelectorsValue = (
       errors.push({
         code: "invalid-selector",
         lineNumber,
-        message: `line ${lineNumber}: Invalid CSS selector "${selector}".`
+        message: `line ${lineNumber}: Invalid CSS selector "${selector}".`,
+        values: { selector }
       });
     }
 

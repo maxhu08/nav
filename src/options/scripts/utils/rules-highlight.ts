@@ -9,6 +9,7 @@ import {
 import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { isActionName } from "~/src/utils/hotkeys";
+import { t } from "~/src/options/scripts/i18n";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -37,7 +38,7 @@ const createRuleError = (
   message: string
 ): EditorStatusError => ({
   code,
-  message: `line ${lineNumber}: ${message}`
+  message: t("line {line}: {message}", { line: lineNumber, message })
 });
 
 export const tokenizeRegexPattern = (value: string): string => {
@@ -146,7 +147,13 @@ const renderActions = (
     const isValid = isActionName(segment);
     if (!isValid) {
       hasError = true;
-      errors.push(createRuleError("invalid-action", lineNumber, `Invalid action "${segment}".`));
+      errors.push(
+        createRuleError(
+          "invalid-action",
+          lineNumber,
+          t('Invalid action "{action}".', { action: segment })
+        )
+      );
     }
     tokens.push(
       wrapToken(isValid ? "rules-urls-token-action" : "rules-urls-token-invalid", segment)
@@ -156,7 +163,7 @@ const renderActions = (
   if (!hasNonWhitespaceSegment) {
     hasError = true;
     errors.push(
-      createRuleError("missing-action", lineNumber, "Expected at least one action name.")
+      createRuleError("missing-action", lineNumber, t("Expected at least one action name."))
     );
   }
 
@@ -184,7 +191,13 @@ const renderLine = (
     return {
       hasError: true,
       html: wrapToken("rules-urls-token-invalid", line),
-      errors: [createRuleError("invalid-prefix", lineNumber, `Invalid rule prefix "${prefix}".`)]
+      errors: [
+        createRuleError(
+          "invalid-prefix",
+          lineNumber,
+          t('Invalid rule prefix "{prefix}".', { prefix })
+        )
+      ]
     };
   }
 
@@ -198,13 +211,15 @@ const renderLine = (
     const errors: EditorStatusError[] = [];
 
     if (!normalizedPattern) {
-      errors.push(createRuleError("missing-pattern", lineNumber, "Regex pattern cannot be empty."));
+      errors.push(
+        createRuleError("missing-pattern", lineNumber, t("Regex pattern cannot be empty."))
+      );
     } else if (!isValidRegexPattern(normalizedPattern)) {
       errors.push(
         createRuleError(
           "invalid-pattern",
           lineNumber,
-          `Invalid regex pattern "${normalizedPattern}".`
+          t('Invalid regex pattern "{pattern}".', { pattern: normalizedPattern })
         )
       );
     }
@@ -228,7 +243,7 @@ const renderLine = (
         createRuleError(
           "dangling-operator",
           lineNumber,
-          `Operator "${prefix}" must follow a "*" pattern line.`
+          t('Operator "{prefix}" must follow a "*" pattern line.', { prefix })
         )
       ]
     };

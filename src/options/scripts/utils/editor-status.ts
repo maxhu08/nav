@@ -13,7 +13,7 @@ const toStatusErrors = (value: boolean | EditorStatusError[]): EditorStatusError
     return value;
   }
 
-  return value ? [{ code: "invalid", message: "Contains one or more invalid entries." }] : [];
+  return value ? [{ code: "invalid", message: t("Contains one or more invalid entries.") }] : [];
 };
 
 export const setEditorStatus = (
@@ -33,7 +33,7 @@ export const setEditorStatus = (
   icon.className = hasError ? "ri-close-line" : "ri-check-line";
 
   const text = document.createElement("span");
-  text.textContent = hasError ? "Contains errors" : "No errors detected";
+  text.textContent = hasError ? t("Contains errors") : t("No errors detected");
 
   const heading = document.createElement("span");
   heading.className = "inline-flex items-center gap-1.5";
@@ -56,3 +56,4 @@ export const setEditorStatus = (
 
 export const hasEditorError = (element: HTMLParagraphElement): boolean =>
   element.dataset.hasError === "true";
+import { t } from "~/src/options/scripts/i18n";

@@ -6,6 +6,7 @@ import {
 import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
 import { type EditorStatusError, setEditorStatus } from "~/src/options/scripts/utils/editor-status";
 import { parseBarBookmarkLine } from "~/src/utils/bar-bookmarks";
+import { t } from "~/src/options/scripts/i18n";
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -27,7 +28,7 @@ const renderLine = (
       errors: [
         {
           code: "invalid-bookmark",
-          message: `line ${lineNumber}: Expected format "bookmark name": "value".`
+          message: t('line {line}: Expected format "bookmark name": "value".', { line: lineNumber })
         }
       ]
     };

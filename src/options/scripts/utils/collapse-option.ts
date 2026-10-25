@@ -61,6 +61,11 @@ export const newCollapseGroup = (buttonId: string, sectionId: string, expanded: 
 
 export const createCollapseGroups = (): Promise<void> => {
   return getOptionsData().then((optionsData) => {
+    newCollapseGroup(
+      "options-collapse-button",
+      "options-section",
+      optionsData.sectionsExpanded.options
+    );
     newCollapseGroup("rules-collapse-button", "rules-section", optionsData.sectionsExpanded.rules);
     newCollapseGroup(
       "hotkeys-collapse-button",

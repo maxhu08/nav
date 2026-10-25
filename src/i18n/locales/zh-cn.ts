@@ -1,0 +1,238 @@
+export const zhCN = {
+  "options ヽ(・ω・*)": "设置 ヽ(・ω・*)",
+  options: "设置",
+  "options.language": "语言",
+  "options language": "设置语言",
+  "toggle options section": "展开或折叠设置区域",
+  rules: "规则",
+  "rules.urls.mode": "URL 规则模式",
+  "Controls which URL rules list is enforced at runtime.": "控制运行时使用的 URL 规则列表。",
+  blacklist: "黑名单",
+  whitelist: "白名单",
+  "rules.urls.blacklist": "URL 黑名单",
+  See: "请参阅",
+  "for syntax and examples, and": "了解语法和示例，以及",
+  "for valid action names.": "了解有效的操作名称。",
+  "rules.urls.whitelist": "URL 白名单",
+  "rules.forceNormalMode": "强制普通模式",
+  "Keeps nav in normal mode on page load by rejecting automatic focus into editable fields until you manually focus one.":
+    "页面加载时阻止可编辑字段自动获得焦点，使 nav 保持普通模式，直到你手动聚焦字段。",
+  hotkeys: "快捷键",
+  "hotkeys.mappings": "快捷键映射",
+  hints: "提示标签",
+  "hints.showCapitalizedLetters": "显示大写标签",
+  "Changes how hint labels are displayed. The required key presses stay lowercase.":
+    "更改提示标签的显示方式，实际按键仍使用小写字母。",
+  "hints.improveThumbnailMarkers": "增强缩略图标记",
+  "Makes hint markers much easier to see on thumbnail-like media targets by centering them and rendering a larger badge.":
+    "在缩略图等媒体目标上居中显示更大的标记，使提示标签更醒目。",
+  "hints.activationIndicator.enabled": "启用激活指示器",
+  "Shows a temporary activation ring after you open or focus something through hints.":
+    "通过提示标签打开或聚焦目标后，短暂显示激活圆环。",
+  "hints.activationIndicator.color": "激活指示器颜色",
+  "hints.charset": "提示字符集",
+  "Controls which letters are used to generate hint labels. Letters earlier in the charset are prioritized first.":
+    "控制用于生成提示标签的字母，字符集中靠前的字母优先使用。",
+  "This applies to generated (non-reserved) hint labels. Reserved directive labels can still be typed even if they use letters outside this charset.":
+    "此设置适用于自动生成的非保留标签。保留指令标签即使包含字符集之外的字母，也仍可输入。",
+  "Use letters only, with no spaces and no duplicates. Any repeated character, whitespace, or non-letter is treated as an error.":
+    "仅使用字母，不允许空格或重复字符。重复字符、空白字符和非字母均视为错误。",
+  "hints.minLabelLength": "最短标签长度",
+  "Sets the minimum number of characters generated hint labels must use.":
+    "设置自动生成的提示标签的最少字符数。",
+  "hints.avoidAdjacentPairs": "避免相邻字符对",
+  "Lists consecutive character pairs to avoid inside generated hint labels. It is recommended to put hard-to-press character pairs here.":
+    "列出生成提示标签时应避免的相邻字符对，建议填写难以连续按下的组合。",
+  "Separate pairs with spaces or newlines. Entries must be exactly two letters, and `#` starts a comment anywhere on the line.":
+    "使用空格或换行分隔字符对。每项必须恰好包含两个字母，行中任意位置的 `#` 表示注释开始。",
+  "hints.directives": "提示指令",
+  "Sets preferred hint directives for special elements.": "设置特殊元素的首选提示指令。",
+  "for valid directive names.": "了解有效的指令名称。",
+  "Matching directive hints show their directive icon next to the hint label.":
+    "匹配指令的提示会在标签旁显示对应的指令图标。",
+  "Each directive must be on its own line, with exactly one space after `@element` and between labels.":
+    "每条指令必须独占一行，`@element` 后及标签之间必须恰好有一个空格。",
+  "hints.advanced.customSelectors": "自定义选择器",
+  "Adds site-specific selector overrides for hint generation.":
+    "为提示生成添加特定网站的选择器覆盖规则。",
+  "for syntax and examples.": "了解语法和示例。",
+  "Use `* <regex-pattern> {` to start a site block, then one selector per line as `<key> <css-selector>`, and close the block with `}`.":
+    "使用 `* <regex-pattern> {` 开始网站规则块，每行以 `<key> <css-selector>` 格式填写一个选择器，最后用 `}` 结束。",
+  "`<key>` must be letters only and at least as long as `hints.minLabelLength`, or exactly `<auto>` to generate a label automatically.":
+    "`<key>` 必须仅包含字母，长度至少为 `hints.minLabelLength`，或使用 `<auto>` 自动生成标签。",
+  "hints.styling": "提示样式",
+  "Use the built-in hint marker look, or switch to editable CSS for full control.":
+    "使用内置提示样式，或切换到可编辑的 CSS 以完全控制外观。",
+  default: "默认",
+  custom: "自定义",
+  "hints.customCSS": "提示自定义 CSS",
+  bar: "地址栏",
+  "bar.color": "地址栏颜色",
+  "Sets the outline color of the bar prompt UI.": "设置地址栏输入界面的边框颜色。",
+  "bar.searchEngineURL": "搜索引擎 URL",
+  "Used when bar input is treated as a search instead of a URL.":
+    "当地址栏输入被识别为搜索而非 URL 时使用。",
+  "Use `{}` to represent the search query.": "使用 `{}` 表示搜索内容。",
+  "Example: `https://www.google.com/search?q={}`": "示例：`https://www.google.com/search?q={}`",
+  "bar.search.suggestions": "搜索建议",
+  "Shows live query suggestions as you type": "输入时显示实时搜索建议",
+  "Suggestions are sourced from DuckDuckGo's public autocomplete suggestions API and are not based on your personal search history. Requests are sent directly from your browser to DuckDuckGo and do not include cookies, accounts, extension identifiers, or other personal data":
+    "建议来自 DuckDuckGo 的公共自动补全 API，不基于你的个人搜索历史。请求由浏览器直接发送至 DuckDuckGo，不包含 Cookie、账号、扩展标识符或其他个人数据",
+  "bar.search.history": "搜索历史",
+  "Shows matches from your local browser history for past searches and visited links":
+    "显示本地浏览器历史中匹配的搜索和已访问链接",
+  "History lookups stay on-device and are not sent to us or any third party":
+    "历史查询仅在本机进行，不会发送给我们或任何第三方",
+  "bar.search.bookmarks": "搜索书签",
+  "Shows matches from a configurable bookmark list that you manage locally.":
+    "显示你在本地管理的可配置书签列表中的匹配项。",
+  "bar.search.bookmarks.storage": "书签列表",
+  'Use one bookmark per line in the format `"bookmark name": "value"`.':
+    '每行填写一个书签，格式为 `"bookmark name": "value"`。',
+  "import bookmarks": "导入书签",
+  "export all": "全部导出",
+  "import all (replace)": "全部导入（替换）",
+  find: "查找",
+  "find.color": "查找颜色",
+  "Sets the outline color for the find bar and the next/prev widget.":
+    "设置查找栏及上一项/下一项控件的边框颜色。",
+  save: "保存",
+  "save & export": "保存并导出",
+  "import & save": "导入并保存",
+  danger: "危险操作",
+  "reset to default": "恢复默认",
+  "Made with ❤️ by Max Hu et al.": "由 Max Hu 等人用 ❤️ 制作。",
+  "Join the": "加入",
+  "nav logo": "nav 徽标",
+  "toggle rules section": "展开或收起规则部分",
+  "rules urls mode blacklist": "URL 黑名单模式",
+  "rules urls mode whitelist": "URL 白名单模式",
+  "rules urls blacklist": "URL 黑名单",
+  "rules urls whitelist": "URL 白名单",
+  "rules force normal mode": "强制普通模式",
+  "toggle hotkeys section": "展开或收起快捷键部分",
+  "hotkeys mappings": "快捷键映射",
+  "toggle hints section": "展开或收起提示标签部分",
+  "hints show capitalized letters": "显示大写提示标签",
+  "hints improve thumbnail markers": "增强缩略图提示标记",
+  "hints show activation indicator": "显示激活指示器",
+  "hints show activation indicator color": "激活指示器颜色",
+  "hints charset": "提示字符集",
+  "hints min label length": "最短提示标签长度",
+  "hints avoid adjacent pairs": "避免相邻字符对",
+  "hints directives": "提示指令",
+  "hints advanced custom selectors": "提示自定义选择器",
+  "hints styling default": "默认提示样式",
+  "hints styling custom": "自定义提示样式",
+  "hints custom css": "提示自定义 CSS",
+  "toggle bar section": "展开或收起地址栏部分",
+  "bar color": "地址栏颜色",
+  "bar search engine url": "地址栏搜索引擎 URL",
+  "bar search suggestions": "地址栏搜索建议",
+  "bar search history": "地址栏搜索历史",
+  "bar search bookmarks": "地址栏搜索书签",
+  "bar search bookmarks storage": "地址栏书签列表",
+  "toggle find section": "展开或收起查找部分",
+  "find color": "查找颜色",
+  "save options": "保存设置",
+  "save and export options": "保存并导出设置",
+  "import and save options": "导入并保存设置",
+  "reset options to default": "恢复默认设置",
+  "Include site": "包含网站",
+  "Exclude site": "排除网站",
+  "This will be added to {path}": "将添加到 {path}",
+  add: "添加",
+  cancel: "取消",
+  "paste here...": "粘贴到这里...",
+  ok: "确定",
+  confirm: "确认",
+  reset: "重置",
+  "save (ctrl+s)": "保存 (ctrl+s)",
+  "save & export (ctrl+e)": "保存并导出 (ctrl+e)",
+  "import & save (ctrl+i)": "导入并保存 (ctrl+i)",
+  "choose color for {field}": "选择 {field} 的颜色",
+  "Contains one or more invalid entries.": "包含一个或多个无效条目。",
+  "Contains errors": "存在错误",
+  "No errors detected": "未发现错误",
+  "{path} has unresolved errors, aborting save": "{path} 存在未解决的错误，已取消保存",
+  "changes saved": "更改已保存",
+  "input your save (THIS WILL OVERWRITE YOUR CURRENT CONFIG)":
+    "输入要导入的配置（这将覆盖当前配置）",
+  "input was empty, nothing imported": "输入为空，未导入任何内容",
+  "incorrect save format, expected NAV_SAVE_FORMAT_v#.#.#_":
+    "保存格式错误，应为 NAV_SAVE_FORMAT_v#.#.#_",
+  "invalid save format": "无效的保存格式",
+  "invalid config data": "无效的配置数据",
+  "config saved & copied to clipboard": "配置已保存并复制到剪贴板",
+  "could not save config to clipboard": "无法将配置保存到剪贴板",
+  "do you want to reset your options to default? this cannot be undone.":
+    "确定要恢复默认设置吗？此操作无法撤销。",
+  "options reset to default": "已恢复默认设置",
+  "you selected no, options did not reset": "已取消，设置未重置",
+  "incorrect save format, expected NAV_BOOKMARKS_FORMAT_v#.#.#_ or MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_":
+    "保存格式错误，应为 NAV_BOOKMARKS_FORMAT_v#.#.#_ 或 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_",
+  "1 bookmark imported": "已导入 1 个书签",
+  "{count} bookmarks imported": "已导入 {count} 个书签",
+  "1 bookmark copied to clipboard": "已复制 1 个书签到剪贴板",
+  "{count} bookmarks copied to clipboard": "已复制 {count} 个书签到剪贴板",
+  "could not copy bookmarks to clipboard": "无法将书签复制到剪贴板",
+  "input your bookmarks to import": "输入要导入的书签",
+  "input your bookmarks to import (THIS WILL OVERWRITE YOUR CURRENT BOOKMARKS)":
+    "输入要导入的书签（这将覆盖当前书签）",
+  'Accepts NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} and MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]. MTAB folders are flattened.':
+    '支持 NAV_BOOKMARKS_FORMAT_v#.#.#_{"content":"..."} 和 MTAB_USER_USER_DEFINED_BOOKMARKS_FORMAT_v#.#.#_[...]。MTAB 文件夹会展开为平铺书签。',
+  Notifications: "通知",
+  action: "操作",
+  "line {line}: {message}": "第 {line} 行：{message}",
+  'Invalid action "{action}".': "无效的操作“{action}”。",
+  "Expected at least one action name.": "至少需要一个操作名称。",
+  'Invalid rule prefix "{prefix}".': "无效的规则前缀“{prefix}”。",
+  "Regex pattern cannot be empty.": "正则表达式不能为空。",
+  'Invalid regex pattern "{pattern}".': "无效的正则表达式“{pattern}”。",
+  'Operator "{prefix}" must follow a "*" pattern line.':
+    "运算符“{prefix}”必须紧跟在“*”模式行之后。",
+  "position {position}: Spaces are not allowed in hints.charset.":
+    "第 {position} 个字符：hints.charset 中不允许空格。",
+  'position {position}: "{char}" is not a letter a-z.':
+    "第 {position} 个字符：“{char}”不是 a-z 字母。",
+  'position {position}: "{char}" is duplicated.': "第 {position} 个字符：“{char}”重复。",
+  "hints.charset must contain at least 2 unique letters.":
+    "hints.charset 必须至少包含 2 个不同的字母。",
+  "Remove leading or trailing spaces.": "请删除开头或结尾的空格。",
+  'Expected format "@element label1 label2 label3" with single spaces.':
+    "格式应为“@element label1 label2 label3”，使用单个空格分隔。",
+  'Unknown directive "@{directive}". See docs#directive-names for valid directives.':
+    "未知指令“@{directive}”。有效指令请参阅 docs#directive-names。",
+  'Duplicate "@{directive}" directive.': "指令“@{directive}”重复。",
+  'Label "{label}" must contain only letters a-z, or be exactly "<unbound>".':
+    "标签“{label}”必须仅包含 a-z 字母，或为“<unbound>”。",
+  'Label "{label}" must be exactly one character longer than the previous label.':
+    "标签“{label}”必须恰好比前一个标签多一个字符。",
+  'Label "{label}" is duplicated.': "标签“{label}”重复。",
+  'Missing "@{directive}" directive. Use "@{directive} <unbound>" if it should stay unbound.':
+    "缺少“@{directive}”指令。如需保持未绑定，请使用“@{directive} <unbound>”。",
+  'Expected "* <regex-pattern> {".': "应为“* <regex-pattern> {”。",
+  "Unexpected closing brace.": "意外的右花括号。",
+  "Missing closing brace for this block.": "此规则块缺少右花括号。",
+  "Add at least one selector entry to this block.": "请为此规则块添加至少一个选择器。",
+  'Expected "<key> <css-selector>".': "应为“<key> <css-selector>”。",
+  'Key must be letters only and at least as long as hints.minLabelLength, or exactly "<auto>".':
+    "标签必须仅包含字母，长度至少为 hints.minLabelLength，或为“<auto>”。",
+  'Duplicate custom selector key "{key}" in the same block.':
+    "同一规则块中存在重复的自定义选择器标签“{key}”。",
+  'Invalid CSS selector "{selector}".': "无效的 CSS 选择器“{selector}”。",
+  'line {line}: "{pair}" must be exactly 2 letters (a-z).':
+    "第 {line} 行：“{pair}”必须恰好包含 2 个字母（a-z）。",
+  'line {line}: "{pair}" is duplicated.': "第 {line} 行：“{pair}”重复。",
+  'line {line}: Expected format "bookmark name": "value".':
+    "第 {line} 行：格式应为“bookmark name”: “value”。",
+  "Missing whitespace separator between key sequence and action name.":
+    "按键序列和操作名称之间缺少空白分隔符。",
+  "Missing key sequence before the action name.": "操作名称前缺少按键序列。",
+  "Missing action name after the key sequence.": "按键序列后缺少操作名称。",
+  'Unknown action name. Received "{action}".': "未知的操作名称：“{action}”。",
+  'Sequence is already used by another action in the same mode. Mode "{mode}" already has a binding for "{sequence}".':
+    "同一模式中已有其他操作使用此按键序列。模式“{mode}”已绑定“{sequence}”。",
+  'Every action must be declared at least once. Declare "{action}" or set it to "<unbound>".':
+    "每个操作都必须至少声明一次。请声明“{action}”或将其设为“<unbound>”。"
+} as const;

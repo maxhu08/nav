@@ -183,6 +183,7 @@ export type HotkeyMappingError = {
   code: HotkeyMappingErrorCode;
   message: string;
   lineNumber: number | null;
+  values?: Record<string, string | number>;
 };
 
 export type ParsedHotkeyMappings = {
@@ -194,14 +195,16 @@ const addHotkeyMappingError = (
   errors: HotkeyMappingError[],
   code: HotkeyMappingErrorCode,
   lineNumber: number | null,
-  detail?: string
+  detail?: string,
+  values?: Record<string, string | number>
 ): void => {
   const baseMessage = getHotkeyMappingErrorMessage(code);
 
   errors.push({
     code,
     lineNumber,
-    message: detail ? `${baseMessage} ${detail}` : baseMessage
+    message: detail ? `${baseMessage} ${detail}` : baseMessage,
+    values
   });
 };
 
@@ -242,7 +245,13 @@ export const parseHotkeyMappingsValue = (value: string): ParsedHotkeyMappings =>
     }
 
     if (!isActionName(actionCandidate)) {
-      addHotkeyMappingError(errors, "invalid-action", lineNumber, `Received "${actionCandidate}".`);
+      addHotkeyMappingError(
+        errors,
+        "invalid-action",
+        lineNumber,
+        `Received "${actionCandidate}".`,
+        { action: actionCandidate }
+      );
       continue;
     }
 
@@ -260,7 +269,8 @@ export const parseHotkeyMappingsValue = (value: string): ParsedHotkeyMappings =>
         errors,
         "duplicate-sequence-mode",
         lineNumber,
-        `Mode "${mode}" already has a binding for "${sequence}".`
+        `Mode "${mode}" already has a binding for "${sequence}".`,
+        { mode, sequence }
       );
       continue;
     }
@@ -277,7 +287,8 @@ export const parseHotkeyMappingsValue = (value: string): ParsedHotkeyMappings =>
       errors,
       "missing-action-declaration",
       null,
-      `Declare "${actionName}" or set it to "${HOTKEY_UNBOUND_SEQUENCE}".`
+      `Declare "${actionName}" or set it to "${HOTKEY_UNBOUND_SEQUENCE}".`,
+      { action: actionName }
     );
   }
 

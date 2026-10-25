@@ -23,6 +23,7 @@ import { saveRulesSettingsToDraft } from "~/src/options/scripts/utils/save-helpe
 import { type Config, defaultConfig, getConfig } from "~/src/utils/config";
 import { deepMerge } from "~/src/utils/deep-merge";
 import { buildFastConfig } from "~/src/utils/fast-config";
+import { t } from "~/src/options/scripts/i18n";
 
 const setConfigAndFastConfig = (config: Config): Promise<void> => {
   return new Promise((resolve) => {
@@ -51,7 +52,9 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
 
   if (unresolvedErrorPath) {
     if (notify) {
-      getToastApi()?.error(`${unresolvedErrorPath} has unresolved errors, aborting save`);
+      getToastApi()?.error(
+        t("{path} has unresolved errors, aborting save", { path: unresolvedErrorPath })
+      );
     }
 
     return getConfig();
@@ -73,7 +76,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   await setConfigAndFastConfig(config);
 
   if (notify) {
-    getToastApi()?.success("changes saved");
+    getToastApi()?.success(t("changes saved"));
   }
 
   return config;

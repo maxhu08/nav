@@ -37,3 +37,8 @@
   mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");
   -webkit-mask-image: url("../assets/remixicon/expand-horizontal-s-line.svg");
 }
+
+.ri-arrow-down-s-line {
+  mask-image: url("../assets/remixicon/arrow-down-s-line.svg");
+  -webkit-mask-image: url("../assets/remixicon/arrow-down-s-line.svg");
+}

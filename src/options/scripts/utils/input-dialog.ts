@@ -1,5 +1,6 @@
 import { renderRulesUrlsValue } from "~/src/options/scripts/utils/rules-highlight";
 import { getTextareaOverlayHTML } from "~/src/options/scripts/utils/editor-highlight";
+import { t } from "~/src/options/scripts/i18n";
 
 type InputDialogOptions = {
   placeholder?: string;
@@ -72,7 +73,7 @@ export const showInputDialog = (
   inputEl.autocomplete = "off";
   inputEl.className =
     "w-full bg-transparent text-base text-white placeholder-neutral-500 outline-none";
-  inputEl.placeholder = options.placeholder ?? "paste here...";
+  inputEl.placeholder = options.placeholder ?? t("paste here...");
   inputEl.value = options.defaultValue ?? "";
   inputContainerEl.append(inputEl);
 
@@ -87,13 +88,13 @@ export const showInputDialog = (
   cancelButton.type = "button";
   cancelButton.className =
     "cursor-pointer rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700";
-  cancelButton.textContent = options.cancelText ?? "cancel";
+  cancelButton.textContent = options.cancelText ?? t("cancel");
 
   const confirmButton = document.createElement("button");
   confirmButton.type = "button";
   confirmButton.className =
     "cursor-pointer rounded-md bg-yellow-500 px-3 py-2 text-base text-white transition hover:bg-yellow-600";
-  confirmButton.textContent = options.confirmText ?? "ok";
+  confirmButton.textContent = options.confirmText ?? t("ok");
 
   actions.append(cancelButton, confirmButton);
   dialog.append(textEl, inputContainerEl);
@@ -204,13 +205,13 @@ export const showActionDialog = (text: string, options: ActionDialogOptions): Pr
   cancelButton.type = "button";
   cancelButton.className =
     "cursor-pointer rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700";
-  cancelButton.textContent = options.cancelText ?? "cancel";
+  cancelButton.textContent = options.cancelText ?? t("cancel");
 
   const actionButton = document.createElement("button");
   actionButton.type = "button";
   actionButton.className =
     "cursor-pointer rounded-md bg-rose-500 px-3 py-2 text-base text-white transition hover:bg-rose-600";
-  actionButton.textContent = options.actionText ?? "confirm";
+  actionButton.textContent = options.actionText ?? t("confirm");
 
   actions.append(cancelButton, actionButton);
   dialog.append(textEl, actions);
@@ -335,13 +336,13 @@ export const showTextareaDialog = (
   cancelButton.type = "button";
   cancelButton.className =
     "cursor-pointer rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700";
-  cancelButton.textContent = options.cancelText ?? "cancel";
+  cancelButton.textContent = options.cancelText ?? t("cancel");
 
   const confirmButton = document.createElement("button");
   confirmButton.type = "button";
   confirmButton.className =
     "cursor-pointer rounded-md bg-yellow-500 px-3 py-2 text-base text-white transition hover:bg-yellow-600";
-  confirmButton.textContent = options.confirmText ?? "add";
+  confirmButton.textContent = options.confirmText ?? t("add");
 
   actions.append(cancelButton, confirmButton);
   dialog.append(textEl, textareaContainerEl);
@@ -469,7 +470,7 @@ export const showPlainTextareaDialog = (
   textareaEl.rows = 10;
   textareaEl.className =
     "w-full resize-none bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none";
-  textareaEl.placeholder = options.placeholder ?? "paste here...";
+  textareaEl.placeholder = options.placeholder ?? t("paste here...");
   textareaEl.value = options.defaultValue ?? "";
   textareaContainerEl.append(textareaEl);
 
@@ -484,13 +485,13 @@ export const showPlainTextareaDialog = (
   cancelButton.type = "button";
   cancelButton.className =
     "cursor-pointer rounded-md bg-neutral-800 px-3 py-2 text-base text-white transition hover:bg-neutral-700";
-  cancelButton.textContent = options.cancelText ?? "cancel";
+  cancelButton.textContent = options.cancelText ?? t("cancel");
 
   const confirmButton = document.createElement("button");
   confirmButton.type = "button";
   confirmButton.className =
     "cursor-pointer rounded-md bg-emerald-500 px-3 py-2 text-base text-white transition hover:bg-emerald-600";
-  confirmButton.textContent = options.confirmText ?? "ok";
+  confirmButton.textContent = options.confirmText ?? t("ok");
 
   actions.append(cancelButton, confirmButton);
   dialog.append(textEl, textareaContainerEl);

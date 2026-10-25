@@ -86,6 +86,7 @@ import {
 import { saveConfigAndFastConfig } from "~/src/options/scripts/utils/save-config";
 import { setDefaultConfig } from "~/src/options/scripts/utils/set-default-config";
 import { tippy } from "~/src/options/scripts/utils/tooltip";
+import { t } from "~/src/options/scripts/i18n";
 
 export const listenToInputs = (): void => {
   for (const editor of [
@@ -358,14 +359,14 @@ export const listenToInputs = (): void => {
   });
 
   tippy("#save-button", {
-    content: "save (ctrl+s)"
+    content: t("save (ctrl+s)")
   });
 
   tippy("#export-button", {
-    content: "save & export (ctrl+e)"
+    content: t("save & export (ctrl+e)")
   });
 
   tippy("#import-button", {
-    content: "import & save (ctrl+i)"
+    content: t("import & save (ctrl+i)")
   });
 };

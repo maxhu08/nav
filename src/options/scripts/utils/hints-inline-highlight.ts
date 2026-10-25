@@ -21,6 +21,21 @@ import {
   RESERVED_HINT_UNBOUND_LABEL
 } from "~/src/utils/hint-reserved-label-directives";
 import { parseHintCustomSelectorsValue } from "~/src/utils/hint-custom-selectors";
+import { t } from "~/src/options/scripts/i18n";
+
+const selectorErrorMessages = {
+  "invalid-block": 'Expected "* <regex-pattern> {".',
+  "missing-pattern": "Regex pattern cannot be empty.",
+  "invalid-pattern": 'Invalid regex pattern "{pattern}".',
+  "unexpected-closing-brace": "Unexpected closing brace.",
+  "missing-closing-brace": "Missing closing brace for this block.",
+  "empty-block": "Add at least one selector entry to this block.",
+  "invalid-entry": 'Expected "<key> <css-selector>".',
+  "invalid-key":
+    'Key must be letters only and at least as long as hints.minLabelLength, or exactly "<auto>".',
+  "duplicate-key": 'Duplicate custom selector key "{key}" in the same block.',
+  "invalid-selector": 'Invalid CSS selector "{selector}".'
+} as const;
 
 const escapeHtml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -55,17 +70,22 @@ const renderCharsetHighlight = (
       if (isSpace) {
         errors.push({
           code: "space-character",
-          message: `position ${index + 1}: Spaces are not allowed in hints.charset.`
+          message: t("position {position}: Spaces are not allowed in hints.charset.", {
+            position: index + 1
+          })
         });
       } else if (!isValidCharacter) {
         errors.push({
           code: "invalid-character",
-          message: `position ${index + 1}: "${char}" is not a letter a-z.`
+          message: t('position {position}: "{char}" is not a letter a-z.', {
+            position: index + 1,
+            char
+          })
         });
       } else if (isDuplicate) {
         errors.push({
           code: "duplicate-character",
-          message: `position ${index + 1}: "${char}" is duplicated.`
+          message: t('position {position}: "{char}" is duplicated.', { position: index + 1, char })
         });
       }
     }
@@ -77,7 +97,7 @@ const renderCharsetHighlight = (
     hasError = true;
     errors.push({
       code: "insufficient-charset",
-      message: "hints.charset must contain at least 2 unique letters."
+      message: t("hints.charset must contain at least 2 unique letters.")
     });
   }
 
@@ -109,7 +129,10 @@ const renderReservedLabelsHighlight = (
         hasError = true;
         errors.push({
           code: "invalid-spacing",
-          message: `line ${lineNumber}: Remove leading or trailing spaces.`
+          message: t("line {line}: {message}", {
+            line: lineNumber,
+            message: t("Remove leading or trailing spaces.")
+          })
         });
         return wrapToken("hints-reserved-labels-token-invalid", line);
       }
@@ -119,7 +142,10 @@ const renderReservedLabelsHighlight = (
         hasError = true;
         errors.push({
           code: "invalid-format",
-          message: `line ${lineNumber}: Expected format "@element label1 label2 label3" with single spaces.`
+          message: t("line {line}: {message}", {
+            line: lineNumber,
+            message: t('Expected format "@element label1 label2 label3" with single spaces.')
+          })
         });
         return wrapToken("hints-reserved-labels-token-invalid", line);
       }
@@ -133,7 +159,13 @@ const renderReservedLabelsHighlight = (
         hasError = true;
         errors.push({
           code: "invalid-directive",
-          message: `line ${lineNumber}: Unknown directive "@${directiveValue}". See docs#directive-names for valid directives.`
+          message: t("line {line}: {message}", {
+            line: lineNumber,
+            message: t(
+              'Unknown directive "@{directive}". See docs#directive-names for valid directives.',
+              { directive: directiveValue }
+            )
+          })
         });
       }
 
@@ -141,7 +173,10 @@ const renderReservedLabelsHighlight = (
         hasError = true;
         errors.push({
           code: "duplicate-directive",
-          message: `line ${lineNumber}: Duplicate "@${directive}" directive.`
+          message: t("line {line}: {message}", {
+            line: lineNumber,
+            message: t('Duplicate "@{directive}" directive.', { directive })
+          })
         });
       }
       if (directive) {
@@ -174,17 +209,32 @@ const renderReservedLabelsHighlight = (
           if (!isValidLabel) {
             errors.push({
               code: "invalid-label",
-              message: `line ${lineNumber}: Label "${label}" must contain only letters a-z, or be exactly "${RESERVED_HINT_UNBOUND_LABEL}".`
+              message: t("line {line}: {message}", {
+                line: lineNumber,
+                message: t(
+                  'Label "{label}" must contain only letters a-z, or be exactly "<unbound>".',
+                  { label }
+                )
+              })
             });
           } else if (!hasExpectedLength) {
             errors.push({
               code: "invalid-label-length",
-              message: `line ${lineNumber}: Label "${label}" must be exactly one character longer than the previous label.`
+              message: t("line {line}: {message}", {
+                line: lineNumber,
+                message: t(
+                  'Label "{label}" must be exactly one character longer than the previous label.',
+                  { label }
+                )
+              })
             });
           } else if (isDuplicate) {
             errors.push({
               code: "duplicate-label",
-              message: `line ${lineNumber}: Label "${label}" is duplicated.`
+              message: t("line {line}: {message}", {
+                line: lineNumber,
+                message: t('Label "{label}" is duplicated.', { label })
+              })
             });
           }
         }
@@ -211,7 +261,10 @@ const renderReservedLabelsHighlight = (
     hasError = true;
     errors.push({
       code: "missing-directive",
-      message: `Missing "@${directive}" directive. Use "@${directive} <unbound>" if it should stay unbound.`
+      message: t(
+        'Missing "@{directive}" directive. Use "@{directive} <unbound>" if it should stay unbound.',
+        { directive }
+      )
     });
   }
 
@@ -303,7 +356,10 @@ const renderCustomSelectorsHighlight = (
     html,
     errors: parsedValue.errors.map((error) => ({
       code: error.code,
-      message: error.message
+      message: t("line {line}: {message}", {
+        line: error.lineNumber ?? "?",
+        message: t(selectorErrorMessages[error.code], error.values)
+      })
     }))
   };
 };

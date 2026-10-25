@@ -1,5 +1,7 @@
 // @ts-nocheck
 // based off https://github.com/JeanxPereira/sonner-js/blob/main/sonner-js/sonner.js
+import { t as translate } from "~/src/options/scripts/i18n";
+
 const getAsset = (type) => {
   const ICONS = {
     success: `
@@ -115,6 +117,7 @@ const renderToaster = () => {
       id="toaster-list"
       style="--front-toast-height: 0px; --offset: ${VIEWPORT_OFFSET}; --width: ${TOAST_WIDTH}px; --gap: ${GAP}px; ${getPositionStyles(y, x)}">
     </ol>`;
+  document.getElementById("toaster-list").setAttribute("aria-label", translate("Notifications"));
   registerMouseOver();
   registerDelegatedClicks();
 };
@@ -254,10 +257,12 @@ const renderToast = (list, content, { description, type, action, position } = {}
   toastEl.innerHTML = `
     ${asset ? `<div data-icon="">${asset}</div>` : ""}
     <div data-content="">
-      <div data-title="">${content}</div>
-      ${description ? `<div data-description="">${description}</div>` : ""}
+      <div data-title=""></div>
+      ${description ? '<div data-description=""></div>' : ""}
     </div>
     ${actionHtml}`;
+  toastEl.querySelector("[data-title]").textContent = content;
+  if (description) toastEl.querySelector("[data-description]").textContent = description;
   toastEl.classList.add("toast", "text-base");
   updateElementAttributes(toastEl, {
     "data-id": id,
@@ -336,7 +341,7 @@ const registerAction = (action, toastId) => {
   return { ...action, id: actionId, toastId };
 };
 const createActionButton = (actionData) => {
-  const label = actionData.label || "action";
+  const label = actionData.label || translate("action");
   return `
     <button data-toast-action="true" data-action-id="${actionData.id}" type="button">
       ${label}
