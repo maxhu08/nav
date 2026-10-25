@@ -100,8 +100,16 @@ const shouldScroll = (element: Element, direction: ScrollAxis): boolean => {
   }
 
   const computedStyle = window.getComputedStyle(element);
-  const overflowValue = computedStyle.getPropertyValue(`overflow-${direction}`).trim();
-  if (overflowValue === "hidden") {
+  // The body's overflow controls the viewport when the root's overflow is visible.
+  const overflowStyle =
+    element === getScrollingElement() &&
+    computedStyle.overflowX === "visible" &&
+    computedStyle.overflowY === "visible" &&
+    document.body
+      ? window.getComputedStyle(document.body)
+      : computedStyle;
+  const overflowValue = overflowStyle.getPropertyValue(`overflow-${direction}`).trim();
+  if (["hidden", "clip"].includes(overflowValue)) {
     return false;
   }
 
@@ -202,8 +210,8 @@ const firstScrollableElement = (element: Element | null = null): HTMLElement | n
     const scrollingElement = getScrollingElement();
     if (
       scrollingElement &&
-      (canScrollInDirection(scrollingElement, "y", 1) ||
-        canScrollInDirection(scrollingElement, "y", -1))
+      (isScrollableElement(scrollingElement, "y", 1, 1) ||
+        isScrollableElement(scrollingElement, "y", 1, -1))
     ) {
       return scrollingElement;
     }
@@ -215,7 +223,7 @@ const firstScrollableElement = (element: Element | null = null): HTMLElement | n
     return null;
   }
 
-  if (canScrollInDirection(element, "y", 1) || canScrollInDirection(element, "y", -1)) {
+  if (isScrollableElement(element, "y", 1, 1) || isScrollableElement(element, "y", 1, -1)) {
     return element;
   }
 
@@ -277,6 +285,22 @@ const animateScroll = (
 
   if (wouldNotInitiateScroll()) {
     return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  const snap = style.scrollSnapType.split(" ")[0];
+  const blockAxis = style.writingMode === "horizontal-tb" ? "y" : "x";
+  if (
+    snap === direction ||
+    snap === "both" ||
+    snap === (direction === blockAxis ? "block" : "inline")
+  ) {
+    // Let the browser snap once instead of advancing a snap target on every frame.
+    element.scrollBy({
+      [direction === "x" ? "left" : "top"]: amount,
+      behavior: "smooth"
+    });
+    return true;
   }
 
   const activationTime = ++scrollState.time;
@@ -366,7 +390,12 @@ const scrollBy = (
     return false;
   }
 
-  const element = findScrollableElement(baseElement, direction, amount, factor);
+  const element = findScrollableElement(
+    baseElement,
+    direction,
+    amount,
+    typeof amount === "number" ? amount * factor : factor
+  );
   if (!element) {
     return false;
   }
