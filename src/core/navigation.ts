@@ -98,6 +98,7 @@ const fastConfigSyncDeps = {
   },
   setForceNormalMode,
   setBarColor: focusIndicator.setBarColor,
+  setBarTabsColor: focusIndicator.setBarTabsColor,
   setBarSearchEngineURL: findMode.setBarSearchEngineURL,
   setBarSearchSuggestionsEnabled: findMode.setBarSearchSuggestionsEnabled,
   setBarSearchHistoryEnabled: findMode.setBarSearchHistoryEnabled,

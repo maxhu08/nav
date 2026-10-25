@@ -78,6 +78,10 @@ export const es = {
   "hints.customCSS": "CSS personalizado de etiquetas",
   bar: "barra",
   "bar.color": "color de la barra",
+  "bar.tabsColor": "color de la barra de búsqueda de pestañas",
+  "bar tabs color": "color de la barra de búsqueda de pestañas",
+  "Sets the outline color of the tab search bar.":
+    "Establece el color del borde de la barra de búsqueda de pestañas.",
   "Sets the outline color of the bar prompt UI.":
     "Establece el color del borde de la barra de entrada.",
   "bar.searchEngineURL": "URL del buscador",

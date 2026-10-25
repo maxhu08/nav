@@ -78,6 +78,9 @@ export const ko = {
   "hints.customCSS": "힌트 사용자 지정 CSS",
   bar: "입력창",
   "bar.color": "입력창 색상",
+  "bar.tabsColor": "탭 검색창 색상",
+  "bar tabs color": "탭 검색창 색상",
+  "Sets the outline color of the tab search bar.": "탭 검색창의 테두리 색상을 설정합니다.",
   "Sets the outline color of the bar prompt UI.": "입력창의 테두리 색상을 설정합니다.",
   "bar.searchEngineURL": "검색 엔진 URL",
   "Used when bar input is treated as a search instead of a URL.":

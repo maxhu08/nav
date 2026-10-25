@@ -78,6 +78,10 @@ export const fr = {
   "hints.customCSS": "CSS personnalisé des repères",
   bar: "barre",
   "bar.color": "couleur de la barre",
+  "bar.tabsColor": "couleur de la barre de recherche d’onglets",
+  "bar tabs color": "couleur de la barre de recherche d’onglets",
+  "Sets the outline color of the tab search bar.":
+    "Définit la couleur de la bordure de la barre de recherche d’onglets.",
   "Sets the outline color of the bar prompt UI.":
     "Définit la couleur du contour de la barre de saisie.",
   "bar.searchEngineURL": "URL du moteur de recherche",

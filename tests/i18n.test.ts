@@ -168,6 +168,7 @@ describe("settings translations", () => {
         "sadfjklewcmpgh",
         "2",
         "#14b8a6",
+        "#0ea5e9",
         "#eab308",
         "https://duckduckgo.com/?q={}",
         "docs#rules-urls-lists",

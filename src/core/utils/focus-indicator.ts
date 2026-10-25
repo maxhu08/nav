@@ -2,6 +2,7 @@ import { injectStyles } from "~/src/core/utils/inject-styles";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import {
   DEFAULT_BAR_COLOR,
+  DEFAULT_BAR_TABS_COLOR,
   DEFAULT_FIND_COLOR,
   DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR
 } from "~/src/utils/config";
@@ -28,6 +29,7 @@ type FocusIndicatorController = {
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
   setBarColor: (value: string) => void;
+  setBarTabsColor: (value: string) => void;
   setFindColor: (value: string) => void;
   syncFindUIStyles: (
     root: ShadowRoot,
@@ -97,6 +99,7 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
   let showActivationIndicator = true;
   let activationIndicatorColor = DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR;
   let barColor = DEFAULT_BAR_COLOR;
+  let barTabsColor = DEFAULT_BAR_TABS_COLOR;
   let findColor = DEFAULT_FIND_COLOR;
   let findUIRoot: ShadowRoot | null = null;
   let findUIStyleId: string | null = null;
@@ -139,6 +142,7 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
       find: {
         ...findUIStyleParams,
         barOutlineColor: barColor,
+        tabsOutlineColor: barTabsColor,
         findOutlineColor: findColor,
         findHighlightBackgroundColor: colorToRgba(findColor, 0.35),
         findCurrentHighlightBackgroundColor: findColor,
@@ -296,6 +300,10 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     },
     setBarColor: (value: string): void => {
       barColor = value;
+      syncStoredFindUIStyles();
+    },
+    setBarTabsColor: (value: string): void => {
+      barTabsColor = value;
       syncStoredFindUIStyles();
     },
     setFindColor: (value: string): void => {

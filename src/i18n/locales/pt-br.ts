@@ -78,6 +78,10 @@ export const ptBR = {
   "hints.customCSS": "CSS personalizado das dicas",
   bar: "barra",
   "bar.color": "cor da barra",
+  "bar.tabsColor": "cor da barra de pesquisa de abas",
+  "bar tabs color": "cor da barra de pesquisa de abas",
+  "Sets the outline color of the tab search bar.":
+    "Define a cor da borda da barra de pesquisa de abas.",
   "Sets the outline color of the bar prompt UI.": "Define a cor da borda da barra de entrada.",
   "bar.searchEngineURL": "URL do mecanismo de busca",
   "Used when bar input is treated as a search instead of a URL.":

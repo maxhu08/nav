@@ -76,6 +76,9 @@ export const zhCN = {
   "hints.customCSS": "提示自定义 CSS",
   bar: "地址栏",
   "bar.color": "地址栏颜色",
+  "bar.tabsColor": "标签页搜索栏颜色",
+  "bar tabs color": "标签页搜索栏颜色",
+  "Sets the outline color of the tab search bar.": "设置标签页搜索栏的边框颜色。",
   "Sets the outline color of the bar prompt UI.": "设置地址栏输入界面的边框颜色。",
   "bar.searchEngineURL": "搜索引擎 URL",
   "Used when bar input is treated as a search instead of a URL.":

@@ -1,6 +1,7 @@
 import { type Config } from "~/src/utils/config";
 import {
   barColorInputEl,
+  barTabsColorInputEl,
   barSearchBookmarksCheckboxEl,
   barSearchBookmarksStorageSectionEl,
   barSearchBookmarksStorageTextareaEl,
@@ -22,6 +23,7 @@ export const syncBarSearchBookmarksStorageControls = (enabled: boolean): void =>
 
 export const fillBarInputs = (config: Config): void => {
   barColorInputEl.value = config.bar.color;
+  barTabsColorInputEl.value = config.bar.tabsColor;
   barSearchEngineURLInputEl.value = config.bar.searchEngineURL;
   barSearchSuggestionsCheckboxEl.checked = config.bar.search.suggestions;
   barSearchHistoryCheckboxEl.checked = config.bar.search.history;
@@ -32,4 +34,5 @@ export const fillBarInputs = (config: Config): void => {
   syncBarSearchBookmarksStorageHighlight();
   syncBarSearchBookmarksStorageHighlightScroll();
   syncColorInputControl(barColorInputEl);
+  syncColorInputControl(barTabsColorInputEl);
 };

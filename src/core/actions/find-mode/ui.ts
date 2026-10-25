@@ -5,7 +5,6 @@ import {
   FIND_EXTERNAL_LINK_ICON_NODES,
   FIND_PENCIL_ICON_NODES,
   FIND_SEARCH_ICON_NODES,
-  FIND_TABS_ICON_NODES,
   type SvgNodeDefinition
 } from "~/src/lib/inline-icons";
 import {
@@ -99,7 +98,7 @@ export const createFindBar = (): {
 
   const tabsBarIcon = document.createElement("span");
   tabsBarIcon.setAttribute("data-prompt-icon-kind", "tabs");
-  tabsBarIcon.appendChild(createFindIconSvg(FIND_TABS_ICON_NODES));
+  tabsBarIcon.appendChild(createFindIconSvg(FIND_SEARCH_ICON_NODES));
 
   icon.append(findIcon, currentTabBarIcon, newTabBarIcon, editCurrentTabBarIcon, tabsBarIcon);
 

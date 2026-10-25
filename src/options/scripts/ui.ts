@@ -27,6 +27,7 @@ export const hotkeysMappingsHighlightEl = getElement<HTMLPreElement>("hotkeys-ma
 export const hotkeysMappingsStatusEl = getElement<HTMLParagraphElement>("hotkeys-mappings-status");
 
 export const [barColorContainerEl, barColorInputEl] = getContainerAndInput("bar-color");
+export const [barTabsColorContainerEl, barTabsColorInputEl] = getContainerAndInput("bar-tabs-color");
 export const [barSearchEngineURLContainerEl, barSearchEngineURLInputEl] = getContainerAndInput("bar-search-engine-url");
 export const barSearchSuggestionsCheckboxEl = getElement<HTMLInputElement>("bar-search-suggestions-checkbox");
 export const barSearchHistoryCheckboxEl = getElement<HTMLInputElement>("bar-search-history-checkbox");
@@ -75,6 +76,10 @@ export const colorInputs = [
   {
     container: barColorContainerEl,
     input: barColorInputEl
+  },
+  {
+    container: barTabsColorContainerEl,
+    input: barTabsColorInputEl
   },
   {
     container: findColorContainerEl,

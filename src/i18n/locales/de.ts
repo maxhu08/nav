@@ -78,6 +78,9 @@ export const de = {
   "hints.customCSS": "Eigenes Hinweis-CSS",
   bar: "Adressleiste",
   "bar.color": "Leistenfarbe",
+  "bar.tabsColor": "Farbe der Tab-Suchleiste",
+  "bar tabs color": "Farbe der Tab-Suchleiste",
+  "Sets the outline color of the tab search bar.": "Legt die Rahmenfarbe der Tab-Suchleiste fest.",
   "Sets the outline color of the bar prompt UI.": "Legt die Rahmenfarbe der Eingabeleiste fest.",
   "bar.searchEngineURL": "Suchmaschinen-URL",
   "Used when bar input is treated as a search instead of a URL.":

@@ -1,5 +1,6 @@
 import {
   barColorInputEl,
+  barTabsColorInputEl,
   barSearchBookmarksCheckboxEl,
   barSearchBookmarksStorageStatusEl,
   barSearchBookmarksStorageTextareaEl,
@@ -65,6 +66,7 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   saveRulesSettingsToDraft(draft);
   saveHotkeysSettingsToDraft(draft);
   draft.bar.color = barColorInputEl.value;
+  draft.bar.tabsColor = barTabsColorInputEl.value;
   draft.bar.searchEngineURL = barSearchEngineURLInputEl.value;
   draft.bar.search.suggestions = barSearchSuggestionsCheckboxEl.checked;
   draft.bar.search.history = barSearchHistoryCheckboxEl.checked;

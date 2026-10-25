@@ -4,6 +4,8 @@ import {
   barSearchBookmarksImportAllButtonEl,
   barColorContainerEl,
   barColorInputEl,
+  barTabsColorContainerEl,
+  barTabsColorInputEl,
   barSearchBookmarksCheckboxEl,
   barSearchBookmarksStorageContainerEl,
   barSearchBookmarksStorageTextareaEl,
@@ -184,6 +186,14 @@ export const listenToInputs = (): void => {
 
   barColorInputEl.addEventListener("blur", () => {
     barColorContainerEl.classList.replace("border-sky-500", "border-transparent");
+  });
+
+  barTabsColorInputEl.addEventListener("focus", () => {
+    barTabsColorContainerEl.classList.replace("border-transparent", "border-sky-500");
+  });
+
+  barTabsColorInputEl.addEventListener("blur", () => {
+    barTabsColorContainerEl.classList.replace("border-sky-500", "border-transparent");
   });
 
   barSearchEngineURLInputEl.addEventListener("focus", () => {

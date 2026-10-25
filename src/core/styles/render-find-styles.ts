@@ -9,6 +9,7 @@ export type FindStyleRenderParams = {
   findHighlightName: string;
   findCurrentHighlightName: string;
   barOutlineColor: string;
+  tabsOutlineColor: string;
   findOutlineColor: string;
   barUrlTextColor: string;
   findHighlightBackgroundColor: string;
@@ -21,7 +22,8 @@ export const renderFindStyles = (params: FindStyleRenderParams): string => {
 #${params.findOverlayId}{all:initial;position:absolute;inset:0;pointer-events:none}
 #${params.findBarId}{all:initial;position:fixed;top:112px;left:50%;transform:translateX(-50%);z-index:2147483647;display:none;pointer-events:auto;width:min(640px,calc(100vw - 32px));grid-template-columns:72px minmax(0,1fr) max-content;grid-template-rows:56px auto;align-items:center;column-gap:0;border:2px solid ${params.findOutlineColor};border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:24px;line-height:32px;overflow:hidden}
 #${params.findBarId}[data-visible="true"]{display:grid}
-#${params.findBarId}[data-prompt-kind="current-tab"],#${params.findBarId}[data-prompt-kind="new-tab"],#${params.findBarId}[data-prompt-kind="edit-current-tab"],#${params.findBarId}[data-prompt-kind="tabs"]{border-color:${params.barOutlineColor}}
+#${params.findBarId}[data-prompt-kind="current-tab"],#${params.findBarId}[data-prompt-kind="new-tab"],#${params.findBarId}[data-prompt-kind="edit-current-tab"]{border-color:${params.barOutlineColor}}
+#${params.findBarId}[data-prompt-kind="tabs"]{border-color:${params.tabsOutlineColor}}
 #${params.findStatusId}{all:initial;position:fixed;right:24px;bottom:24px;z-index:2147483647;display:none;pointer-events:auto;grid-template-columns:auto max-content max-content;align-items:center;gap:.5rem;padding:10px 12px;border:2px solid ${params.findOutlineColor};border-radius:.5rem;background:#171717;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:20px;line-height:28px}
 #${params.findStatusId}[data-visible="true"]{display:grid}
 #${params.findBarId} *,#${params.findStatusId} *{box-sizing:border-box}

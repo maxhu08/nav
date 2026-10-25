@@ -350,6 +350,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     );
 
     for (const [index, item] of barSuggestionItems.entries()) {
+      const displayValue =
+        item.source === "tab" || looksLikeUrl(item.displayValue)
+          ? item.displayValue.replace(/\/+$/, "")
+          : item.displayValue;
       const button = document.createElement("button");
       button.type = "button";
       button.id = `nav-find-suggestion-${index}`;
@@ -357,7 +361,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       button.setAttribute("role", "option");
       button.setAttribute("data-direct-link", item.directLink ? "true" : "false");
       button.setAttribute("data-source", item.source);
-      button.title = item.displayValue;
+      button.title = displayValue;
       button.setAttribute("data-selected", index === selectedBarSuggestionIndex ? "true" : "false");
       button.setAttribute("aria-selected", index === selectedBarSuggestionIndex ? "true" : "false");
       button.addEventListener("mousedown", (event) => {
@@ -386,7 +390,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       const value = document.createElement("span");
       value.className = "nav-find-suggestion-value";
 
-      for (const [charIndex, char] of Array.from(item.displayValue).entries()) {
+      for (const [charIndex, char] of Array.from(displayValue).entries()) {
         const charEl = document.createElement("span");
         charEl.className = "nav-find-suggestion-char";
         charEl.setAttribute("data-match", item.matchRanges[charIndex] ? "true" : "false");

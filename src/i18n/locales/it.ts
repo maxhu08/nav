@@ -78,6 +78,10 @@ export const it = {
   "hints.customCSS": "CSS personalizzato delle etichette",
   bar: "barra",
   "bar.color": "colore della barra",
+  "bar.tabsColor": "colore della barra di ricerca delle schede",
+  "bar tabs color": "colore della barra di ricerca delle schede",
+  "Sets the outline color of the tab search bar.":
+    "Imposta il colore del bordo della barra di ricerca delle schede.",
   "Sets the outline color of the bar prompt UI.":
     "Imposta il colore del bordo della barra di inserimento.",
   "bar.searchEngineURL": "URL del motore di ricerca",

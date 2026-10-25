@@ -50,6 +50,7 @@ describe("buildFastConfig", () => {
   test("falls back to default bar and find options when values are invalid", async () => {
     const config = structuredClone(defaultConfig);
     config.bar.color = "";
+    config.bar.tabsColor = "";
     config.bar.searchEngineURL = "";
     // @ts-expect-error testing migration fallback for invalid persisted data
     config.bar.search.suggestions = "yes";
@@ -71,6 +72,7 @@ describe("buildFastConfig", () => {
     fixture.cleanup();
 
     expect(fastConfig.bar.color).toBe(defaultConfig.bar.color);
+    expect(fastConfig.bar.tabsColor).toBe(defaultConfig.bar.tabsColor);
     expect(fastConfig.bar.searchEngineURL).toBe(defaultConfig.bar.searchEngineURL);
     expect(fastConfig.bar.search.suggestions).toBe(defaultConfig.bar.search.suggestions);
     expect(fastConfig.bar.search.history).toBe(defaultConfig.bar.search.history);

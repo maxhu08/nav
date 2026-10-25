@@ -1,5 +1,6 @@
 import {
   DEFAULT_BAR_COLOR,
+  DEFAULT_BAR_TABS_COLOR,
   DEFAULT_BAR_SEARCH_ENGINE_URL,
   DEFAULT_FIND_COLOR,
   DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
@@ -48,6 +49,7 @@ export type FastConfig = {
   };
   bar: {
     color: string;
+    tabsColor: string;
     searchEngineURL: string;
     search: {
       suggestions: boolean;
@@ -129,6 +131,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hotkeys?.prefixes === "object" &&
     value?.hotkeys?.prefixes !== null &&
     typeof value?.bar?.color === "string" &&
+    typeof value?.bar?.tabsColor === "string" &&
     typeof value?.bar?.searchEngineURL === "string" &&
     typeof value?.bar?.search?.suggestions === "boolean" &&
     typeof value?.bar?.search?.history === "boolean" &&
@@ -174,6 +177,12 @@ const parseActivationIndicatorColorValue = (value: string): string => {
 
 const parseBarColorValue = (value: string): string => {
   return normalizeCssColor(value.trim()) || DEFAULT_BAR_COLOR;
+};
+
+const parseBarTabsColorValue = (value: string): string => {
+  return value.trim()
+    ? normalizeCssColor(value.trim()) || DEFAULT_BAR_TABS_COLOR
+    : DEFAULT_BAR_TABS_COLOR;
 };
 
 const parseFindColorValue = (value: string): string => {
@@ -365,6 +374,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
     },
     bar: {
       color: parseBarColorValue(config.bar.color),
+      tabsColor: parseBarTabsColorValue(config.bar.tabsColor),
       searchEngineURL: parseBarSearchEngineURLValue(config.bar.searchEngineURL),
       search: {
         suggestions: parseBarSearchSuggestionsValue(config.bar.search.suggestions),

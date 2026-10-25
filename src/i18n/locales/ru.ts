@@ -78,6 +78,9 @@ export const ru = {
   "hints.customCSS": "пользовательский CSS подсказок",
   bar: "строка ввода",
   "bar.color": "цвет строки ввода",
+  "bar.tabsColor": "цвет строки поиска вкладок",
+  "bar tabs color": "цвет строки поиска вкладок",
+  "Sets the outline color of the tab search bar.": "Задаёт цвет рамки строки поиска вкладок.",
   "Sets the outline color of the bar prompt UI.": "Задаёт цвет рамки строки ввода.",
   "bar.searchEngineURL": "URL поисковой системы",
   "Used when bar input is treated as a search instead of a URL.":

@@ -54,6 +54,7 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 
 export const DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR = "#eab308";
 export const DEFAULT_BAR_COLOR = "#14b8a6";
+export const DEFAULT_BAR_TABS_COLOR = "#0ea5e9";
 export const DEFAULT_FIND_COLOR = "#eab308";
 export const DEFAULT_BAR_SEARCH_ENGINE_URL = "https://duckduckgo.com/?q={}";
 
@@ -85,6 +86,7 @@ export const defaultConfig: Config = {
   },
   bar: {
     color: DEFAULT_BAR_COLOR,
+    tabsColor: DEFAULT_BAR_TABS_COLOR,
     searchEngineURL: DEFAULT_BAR_SEARCH_ENGINE_URL,
     search: {
       suggestions: true,
@@ -132,6 +134,7 @@ export type Config = {
   };
   bar: {
     color: string;
+    tabsColor: string;
     searchEngineURL: string;
     search: {
       suggestions: boolean;

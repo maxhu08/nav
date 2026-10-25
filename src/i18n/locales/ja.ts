@@ -78,6 +78,9 @@ export const ja = {
   "hints.customCSS": "ヒントのカスタム CSS",
   bar: "バー",
   "bar.color": "バーの色",
+  "bar.tabsColor": "タブ検索バーの色",
+  "bar tabs color": "タブ検索バーの色",
+  "Sets the outline color of the tab search bar.": "タブ検索バーの枠線の色を設定します。",
   "Sets the outline color of the bar prompt UI.": "入力バーの枠線の色を設定します。",
   "bar.searchEngineURL": "検索エンジンの URL",
   "Used when bar input is treated as a search instead of a URL.":
