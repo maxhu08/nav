@@ -7,7 +7,9 @@ export type WatchControllerDeps = {
       | "toggle-play-pause"
       | "toggle-loop"
       | "toggle-mute"
-      | "toggle-captions",
+      | "toggle-captions"
+      | "decrease-speed"
+      | "increase-speed",
     fallback: string
   ) => string;
 };

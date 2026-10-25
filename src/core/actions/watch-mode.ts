@@ -19,7 +19,6 @@ export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
   let watchRouteKey = window.location.href;
   let isWaitingForWatchVideoRefresh = false;
-  let watchShowCapitalizedLetters = false;
   const captionsStateByVideo = new WeakMap<HTMLVideoElement, boolean>();
   let lastWatchToastMessage = "";
   let lastWatchToastAt = 0;
@@ -27,7 +26,6 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
   const overlay = createWatchOverlayController({
     getActionSequence: deps.getActionSequence,
-    getShowCapitalizedLetters: () => watchShowCapitalizedLetters,
     getVideoMutedState
   });
 
@@ -133,11 +131,18 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     captionsStateByVideo
   };
 
+  const changeSpeed = (amount: number): boolean => {
+    const video = getActiveWatchVideo();
+    if (!video) {
+      return false;
+    }
+
+    video.playbackRate = Math.min(16, Math.max(0.25, video.playbackRate + amount));
+    syncWatchHintsOverlay();
+    return true;
+  };
+
   return {
-    setWatchShowCapitalizedLetters: (value: boolean): void => {
-      watchShowCapitalizedLetters = value;
-      overlay.invalidateRender();
-    },
     syncWatchHintsOverlay,
     handleWatchMediaStateChange: (): void => {
       if (!deps.isWatchMode()) {
@@ -163,17 +168,27 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       syncWatchHintsOverlay();
     },
     getWatchActionSequences: (): Record<
-      "toggle-fullscreen" | "toggle-play-pause" | "toggle-loop" | "toggle-mute" | "toggle-captions",
+      | "toggle-fullscreen"
+      | "toggle-play-pause"
+      | "toggle-loop"
+      | "toggle-mute"
+      | "toggle-captions"
+      | "decrease-speed"
+      | "increase-speed",
       string
     > => ({
       "toggle-fullscreen": deps.getActionSequence("toggle-fullscreen", "f"),
       "toggle-play-pause": deps.getActionSequence("toggle-play-pause", "e"),
       "toggle-loop": deps.getActionSequence("toggle-loop", "l"),
       "toggle-mute": deps.getActionSequence("toggle-mute", "m"),
-      "toggle-captions": deps.getActionSequence("toggle-captions", "c")
+      "toggle-captions": deps.getActionSequence("toggle-captions", "c"),
+      "decrease-speed": deps.getActionSequence("decrease-speed", "j"),
+      "increase-speed": deps.getActionSequence("increase-speed", "k")
     }),
     isWatchModeActive: (): boolean => getActiveWatchVideo() !== null,
     exitWatchMode,
+    decreaseSpeed: (): boolean => changeSpeed(-0.25),
+    increaseSpeed: (): boolean => changeSpeed(0.25),
     toggleVideoControls: (): boolean => {
       const currentVideo = getActiveWatchVideo();
       const targetVideo = pickBestWatchVideo(null, true);

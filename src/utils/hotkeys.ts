@@ -49,7 +49,9 @@ export type ActionName =
   | "toggle-play-pause"
   | "toggle-loop"
   | "toggle-mute"
-  | "toggle-captions";
+  | "toggle-captions"
+  | "decrease-speed"
+  | "increase-speed";
 
 export const VALID_ACTION_NAMES = new Set<ActionName>([
   "scroll-down",
@@ -102,7 +104,9 @@ export const VALID_ACTION_NAMES = new Set<ActionName>([
   "toggle-play-pause",
   "toggle-loop",
   "toggle-mute",
-  "toggle-captions"
+  "toggle-captions",
+  "decrease-speed",
+  "increase-speed"
 ]);
 
 export const HOTKEY_UNBOUND_SEQUENCE = "<unbound>";
@@ -121,7 +125,9 @@ const WATCH_MODE_ACTION_NAMES = new Set<ActionName>([
   "toggle-play-pause",
   "toggle-loop",
   "toggle-mute",
-  "toggle-captions"
+  "toggle-captions",
+  "decrease-speed",
+  "increase-speed"
 ]);
 
 export const getActionMode = (actionName: ActionName): HotkeyActionMode => {

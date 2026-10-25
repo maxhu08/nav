@@ -1,5 +1,6 @@
 import type { FastConfig, FastRule } from "~/src/utils/fast-config";
 import type { ActionName, HotkeyActionMode, HotkeyMappings } from "~/src/utils/hotkeys";
+import { HOTKEY_UNBOUND_SEQUENCE } from "~/src/utils/hotkeys";
 
 const KEY_SEQUENCE_TIMEOUT_MS = 1000;
 
@@ -15,7 +16,9 @@ type WatchActionName =
   | "toggle-play-pause"
   | "toggle-loop"
   | "toggle-mute"
-  | "toggle-captions";
+  | "toggle-captions"
+  | "decrease-speed"
+  | "increase-speed";
 type KeyStateMode = "normal" | "find" | "hint" | "watch";
 
 type CreateKeyStateDeps = {
@@ -304,14 +307,14 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     hasAllowedActionMappings,
     resolveCount,
     isActionAllowed,
-    getActionSequence: (actionName: WatchActionName, fallback: string): string => {
+    getActionSequence: (actionName: WatchActionName): string => {
       const sequences = Object.entries(keyActions)
         .filter((entry): entry is [string, NonNullable<HotkeyMappings[string]>] => !!entry[1])
         .filter(([, candidateActions]) => candidateActions.watch === actionName)
         .map(([sequence]) => sequence)
         .sort((left, right) => left.length - right.length);
 
-      return sequences[0] ?? fallback;
+      return sequences[0] ?? HOTKEY_UNBOUND_SEQUENCE;
     },
     getActionName: (keyToken: string): KeyParseResult => {
       if (isCountKey(keyToken) && hasAllowedActionMappings()) {
@@ -362,9 +365,10 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     ): KeyParseResult => {
       const nextSequence = `${pendingSequence}${keyToken}`;
 
-      const directMatch = (Object.entries(sequences) as [WatchActionName, string][]).find(
-        ([, sequence]) => nextSequence === sequence
+      const bindings = (Object.entries(sequences) as [WatchActionName, string][]).filter(
+        ([, sequence]) => sequence !== HOTKEY_UNBOUND_SEQUENCE
       );
+      const directMatch = bindings.find(([, sequence]) => nextSequence === sequence);
 
       if (directMatch) {
         clearPendingSequence();
@@ -376,9 +380,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
         };
       }
 
-      const hasLongerMatch = Object.values(sequences).some((sequence) =>
-        sequence.startsWith(nextSequence)
-      );
+      const hasLongerMatch = bindings.some(([, sequence]) => sequence.startsWith(nextSequence));
 
       if (hasLongerMatch) {
         startPendingSequence(nextSequence);

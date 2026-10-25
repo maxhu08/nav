@@ -44,6 +44,8 @@ type NavigationActionDeps = {
     toggleLoop: () => boolean;
     toggleMute: () => boolean;
     toggleCaptions: () => boolean;
+    decreaseSpeed: () => boolean;
+    increaseSpeed: () => boolean;
   };
 };
 
@@ -126,7 +128,9 @@ export const createNavigationActions = ({
     "toggle-play-pause": watchController.togglePlayPause,
     "toggle-loop": watchController.toggleLoop,
     "toggle-mute": watchController.toggleMute,
-    "toggle-captions": watchController.toggleCaptions
+    "toggle-captions": watchController.toggleCaptions,
+    "decrease-speed": watchController.decreaseSpeed,
+    "increase-speed": watchController.increaseSpeed
   };
 
   return {

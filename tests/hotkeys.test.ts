@@ -53,7 +53,9 @@ describe("parseHotkeyMappingsValue", () => {
 <unbound> toggle-play-pause
 <unbound> toggle-loop
 <unbound> toggle-mute
-<unbound> toggle-captions`);
+<unbound> toggle-captions
+<unbound> decrease-speed
+<unbound> increase-speed`);
 
     expect(parsed.errors).toEqual([]);
     expect(parsed.mappings).toEqual({
@@ -89,5 +91,20 @@ describe("parseHotkeyMappingsValue", () => {
           error.message.includes('Declare "scroll-up" or set it to "<unbound>".')
       )
     ).toBe(true);
+  });
+
+  test("allows speed bindings to share j/k with normal-mode scrolling", () => {
+    const parsed = parseHotkeyMappingsValue(`j scroll-down
+k scroll-up
+j decrease-speed
+k increase-speed`);
+
+    expect(parsed.errors.filter((error) => error.code !== "missing-action-declaration")).toEqual(
+      []
+    );
+    expect(parsed.mappings).toEqual({
+      j: { normal: "scroll-down", watch: "decrease-speed" },
+      k: { normal: "scroll-up", watch: "increase-speed" }
+    });
   });
 });

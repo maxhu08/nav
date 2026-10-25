@@ -4,6 +4,9 @@ import {
   WATCH_LOOP_ICON_PATH,
   WATCH_PAUSE_ICON_PATH,
   WATCH_PLAY_ICON_PATH,
+  WATCH_PROHIBITED_ICON_PATH,
+  WATCH_REWIND_ICON_PATH,
+  WATCH_SPEED_ICON_PATH,
   WATCH_VOLUME_MUTE_ICON_PATH,
   WATCH_VOLUME_UP_ICON_PATH
 } from "~/src/lib/inline-icons";
@@ -17,22 +20,24 @@ import {
   type WatchActionTileOptions
 } from "~/src/core/actions/watch-mode/shared";
 import { getDocumentStyleRoot, upsertStyle } from "~/src/core/utils/inject-styles";
+import { HOTKEY_UNBOUND_SEQUENCE } from "~/src/utils/hotkeys";
 
 type ActionSequenceName =
   | "toggle-fullscreen"
   | "toggle-play-pause"
   | "toggle-loop"
   | "toggle-mute"
-  | "toggle-captions";
+  | "toggle-captions"
+  | "decrease-speed"
+  | "increase-speed";
 
 type WatchOverlayControllerDeps = {
   getActionSequence: (actionName: ActionSequenceName, fallback: string) => string;
-  getShowCapitalizedLetters: () => boolean;
   getVideoMutedState: (video: HTMLVideoElement) => boolean;
 };
 
 const renderWatchOverlayStyles = (): string => {
-  return `#${WATCH_HINTS_ID}{position:fixed;left:0;top:0;transform:translate(-50%,-50%);display:none;pointer-events:none;z-index:2147483646;color:#f5f5f5;text-transform:lowercase;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.5)}#${WATCH_HINTS_ID}[data-visible="true"]{display:block}#${WATCH_HINTS_ID} [data-watch-grid="true"]{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-areas:"fullscreen fullscreen fullscreen pause pause pause" "mute mute captions captions loop loop";column-gap:12px;row-gap:12px;width:188px;max-width:100%;align-items:stretch}#${WATCH_HINTS_ID} [${MARKER_STYLE_ATTRIBUTE}="true"][${MARKER_VARIANT_STYLE_ATTRIBUTE}="watch-action"]{display:inline-flex;align-items:center;justify-content:center;position:static;left:auto;top:auto;transform:none;text-shadow:none;letter-spacing:0;line-height:1;box-sizing:border-box;min-width:0;overflow:hidden}#${WATCH_HINTS_ID} [data-watch-tile="true"]{gap:.45em;width:100%;padding:10px}#${WATCH_HINTS_ID} [data-watch-tile="true"][data-watch-compact="false"]{flex-direction:column;aspect-ratio:1/1;border-radius:12px}#${WATCH_HINTS_ID} [data-watch-tile="true"][data-watch-compact="true"]{flex-direction:row;height:48px;border-radius:8px}#${WATCH_HINTS_ID} [data-watch-area="fullscreen"]{grid-area:fullscreen}#${WATCH_HINTS_ID} [data-watch-area="pause"]{grid-area:pause}#${WATCH_HINTS_ID} [data-watch-area="mute"]{grid-area:mute}#${WATCH_HINTS_ID} [data-watch-area="captions"]{grid-area:captions}#${WATCH_HINTS_ID} [data-watch-area="loop"]{grid-area:loop}#${WATCH_HINTS_ID} [data-watch-icon="true"]{flex:0 0 auto;color:#000;opacity:.95}#${WATCH_HINTS_ID} [data-watch-label="true"]{display:inline-flex;align-items:center;justify-content:center;gap:.08em;font-size:15px;font-weight:800;line-height:1;text-shadow:none}#${WATCH_HINTS_ID} [${LETTER_STYLE_ATTRIBUTE}="typed"]{color:inherit}`;
+  return `#${WATCH_HINTS_ID}{position:fixed;left:0;top:0;transform:translate(-50%,-50%);display:none;pointer-events:none;z-index:2147483646;color:#f5f5f5;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.5)}#${WATCH_HINTS_ID}[data-visible="true"]{display:block}#${WATCH_HINTS_ID} [data-watch-grid="true"]{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-areas:"fullscreen fullscreen fullscreen pause pause pause" "mute mute captions captions loop loop" "slower slower speed speed faster faster";column-gap:12px;row-gap:12px;width:188px;max-width:100%;align-items:stretch}#${WATCH_HINTS_ID} [${MARKER_STYLE_ATTRIBUTE}="true"][${MARKER_VARIANT_STYLE_ATTRIBUTE}="watch-action"]{display:inline-flex;align-items:center;justify-content:center;position:static;left:auto;top:auto;transform:none;text-shadow:none;letter-spacing:0;line-height:1;box-sizing:border-box;min-width:0;overflow:hidden}#${WATCH_HINTS_ID} [data-watch-tile="true"]{gap:.45em;width:100%;padding:10px}#${WATCH_HINTS_ID} [data-watch-tile="true"][data-watch-compact="false"]{flex-direction:column;aspect-ratio:1/1;border-radius:12px}#${WATCH_HINTS_ID} [data-watch-tile="true"][data-watch-compact="true"]{flex-direction:row;height:48px;border-radius:8px}#${WATCH_HINTS_ID} [data-watch-area="fullscreen"]{grid-area:fullscreen}#${WATCH_HINTS_ID} [data-watch-area="pause"]{grid-area:pause}#${WATCH_HINTS_ID} [data-watch-area="mute"]{grid-area:mute}#${WATCH_HINTS_ID} [data-watch-area="captions"]{grid-area:captions}#${WATCH_HINTS_ID} [data-watch-area="loop"]{grid-area:loop}#${WATCH_HINTS_ID} [data-watch-area="slower"]{grid-area:slower}#${WATCH_HINTS_ID} [data-watch-area="faster"]{grid-area:faster}#${WATCH_HINTS_ID} [data-watch-speed="true"]{grid-area:speed;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:12px}#${WATCH_HINTS_ID} [data-watch-icon="true"]{flex:0 0 auto;color:#000;opacity:.95}#${WATCH_HINTS_ID} [data-watch-label="true"]{display:inline-flex;align-items:center;justify-content:center;gap:.08em;font-size:15px;font-weight:800;line-height:1;text-shadow:none;text-transform:none}#${WATCH_HINTS_ID} [${LETTER_STYLE_ATTRIBUTE}="typed"]{color:inherit}`;
 };
 
 const getWatchHintsOverlay = (): HTMLDivElement => {
@@ -75,7 +80,6 @@ const createWatchActionGrid = (): HTMLDivElement => {
 
 export const createWatchOverlayController = ({
   getActionSequence,
-  getShowCapitalizedLetters,
   getVideoMutedState
 }: WatchOverlayControllerDeps) => {
   let watchOverlayRenderKey = "";
@@ -84,9 +88,13 @@ export const createWatchOverlayController = ({
     const label = document.createElement("span");
     label.setAttribute("data-watch-label", "true");
 
-    const display = getShowCapitalizedLetters() ? sequence.toUpperCase() : sequence.toLowerCase();
+    if (sequence === HOTKEY_UNBOUND_SEQUENCE) {
+      label.setAttribute("aria-label", "Unbound");
+      label.append(createWatchIcon(WATCH_PROHIBITED_ICON_PATH, 15));
+      return label;
+    }
 
-    for (const char of Array.from(display)) {
+    for (const char of Array.from(sequence)) {
       const letter = document.createElement("span");
       letter.textContent = char;
       letter.setAttribute(LETTER_STYLE_ATTRIBUTE, "pending");
@@ -96,20 +104,14 @@ export const createWatchOverlayController = ({
     return label;
   };
 
-  const createWatchActionTile = ({
-    iconPath,
-    sequence,
-    compact = false
-  }: WatchActionTileOptions): HTMLDivElement => {
+  const createWatchActionTile = (options: WatchActionTileOptions): HTMLDivElement => {
     const tile = document.createElement("div");
     tile.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
     tile.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, "watch-action");
     tile.setAttribute("data-watch-tile", "true");
-    tile.setAttribute("data-watch-compact", compact ? "true" : "false");
-    tile.append(
-      createWatchIcon(iconPath, compact ? WATCH_SMALL_ICON_SIZE_PX : WATCH_LARGE_ICON_SIZE_PX),
-      createWatchLabel(sequence)
-    );
+    tile.setAttribute("data-watch-compact", options.compact ? "true" : "false");
+    const size = options.compact ? WATCH_SMALL_ICON_SIZE_PX : WATCH_LARGE_ICON_SIZE_PX;
+    tile.append(createWatchIcon(options.iconPath, size), createWatchLabel(options.sequence));
     return tile;
   };
 
@@ -164,7 +166,38 @@ export const createWatchOverlayController = ({
     });
     loopTile.setAttribute("data-watch-area", "loop");
 
-    grid.append(fullscreenTile, pauseTile, muteTile, captionsTile, loopTile);
+    const slowerTile = createWatchActionTile({
+      iconPath: WATCH_REWIND_ICON_PATH,
+      sequence: getActionSequence("decrease-speed", "j"),
+      compact: true
+    });
+    slowerTile.setAttribute("data-watch-area", "slower");
+
+    const speed = document.createElement("span");
+    speed.setAttribute(MARKER_STYLE_ATTRIBUTE, "true");
+    speed.setAttribute(MARKER_VARIANT_STYLE_ATTRIBUTE, "watch-action");
+    speed.setAttribute("data-watch-tile", "true");
+    speed.setAttribute("data-watch-compact", "true");
+    speed.setAttribute("data-watch-speed", "true");
+    speed.textContent = `${video.playbackRate.toFixed(2)}×`;
+
+    const fasterTile = createWatchActionTile({
+      iconPath: WATCH_SPEED_ICON_PATH,
+      sequence: getActionSequence("increase-speed", "k"),
+      compact: true
+    });
+    fasterTile.setAttribute("data-watch-area", "faster");
+
+    grid.append(
+      fullscreenTile,
+      pauseTile,
+      muteTile,
+      captionsTile,
+      loopTile,
+      slowerTile,
+      speed,
+      fasterTile
+    );
     overlay.append(grid);
   };
 
@@ -174,9 +207,6 @@ export const createWatchOverlayController = ({
       if (overlay instanceof HTMLDivElement) {
         overlay.setAttribute("data-visible", "false");
       }
-    },
-    invalidateRender: (): void => {
-      watchOverlayRenderKey = "";
     },
     showOverlay: (video: HTMLVideoElement): void => {
       const overlay = getWatchHintsOverlay();
@@ -191,7 +221,9 @@ export const createWatchOverlayController = ({
         loopSequence,
         muteSequence,
         captionsSequence,
-        getShowCapitalizedLetters() ? "caps" : "lower",
+        getActionSequence("decrease-speed", "j"),
+        getActionSequence("increase-speed", "k"),
+        video.playbackRate,
         video.paused || video.ended ? "paused" : "playing",
         getVideoMutedState(video) ? "muted" : "unmuted"
       ].join("|");

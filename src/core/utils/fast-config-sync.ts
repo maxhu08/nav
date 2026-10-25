@@ -25,7 +25,6 @@ type FastConfigSyncDeps = {
   setHintAvoidAdjacentPairs: (value: FastConfig["hints"]["avoidAdjacentPairs"]) => void;
   setHintDirectiveLabels: (value: FastConfig["hints"]["directives"]) => void;
   setHintCustomSelectors: (value: FastConfig["hints"]["customSelectors"]) => void;
-  setWatchShowCapitalizedLetters: (value: boolean) => void;
   setShowActivationIndicator: (value: boolean) => void;
   setActivationIndicatorColor: (value: string) => void;
   syncFocusStyles: () => void;
@@ -56,14 +55,13 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setHintAvoidAdjacentPairs(fastConfig.hints.avoidAdjacentPairs);
   deps.setHintDirectiveLabels(fastConfig.hints.directives);
   deps.setHintCustomSelectors(fastConfig.hints.customSelectors);
-  deps.setWatchShowCapitalizedLetters(fastConfig.hints.showCapitalizedLetters);
   deps.setShowActivationIndicator(fastConfig.hints.activationIndicator.enabled);
   deps.setActivationIndicatorColor(fastConfig.hints.activationIndicator.color);
   deps.syncFocusStyles();
   deps.syncHintStyles();
   deps.syncHintMarkers();
-  deps.syncWatchHintsOverlay();
   deps.applyHotkeyMappings(fastConfig.hotkeys.mappings, fastConfig.hotkeys.prefixes);
+  deps.syncWatchHintsOverlay();
 };
 
 export const syncFastConfig = (deps: FastConfigSyncDeps): void => {

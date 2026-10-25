@@ -16,7 +16,13 @@ type KeyStateDeps = {
   getWatchActionName: (
     keyToken: string,
     actionSequences: Record<
-      "toggle-fullscreen" | "toggle-play-pause" | "toggle-loop" | "toggle-mute" | "toggle-captions",
+      | "toggle-fullscreen"
+      | "toggle-play-pause"
+      | "toggle-loop"
+      | "toggle-mute"
+      | "toggle-captions"
+      | "decrease-speed"
+      | "increase-speed",
       string
     >
   ) => {
@@ -64,7 +70,13 @@ type KeydownHandlerDeps = {
   watchController: {
     exitWatchMode: () => void;
     getWatchActionSequences: () => Record<
-      "toggle-fullscreen" | "toggle-play-pause" | "toggle-loop" | "toggle-mute" | "toggle-captions",
+      | "toggle-fullscreen"
+      | "toggle-play-pause"
+      | "toggle-loop"
+      | "toggle-mute"
+      | "toggle-captions"
+      | "decrease-speed"
+      | "increase-speed",
       string
     >;
     isWatchModeActive: () => boolean;
@@ -73,6 +85,8 @@ type KeydownHandlerDeps = {
     toggleWatchLoop: () => boolean;
     toggleWatchMute: () => boolean;
     toggleWatchPlayPause: () => boolean;
+    decreaseSpeed: () => boolean;
+    increaseSpeed: () => boolean;
   };
 };
 
@@ -223,6 +237,14 @@ export const createNavigationKeydownHandler = ({
       return true;
     }
     if (action.actionName === "toggle-captions" && watchController.toggleWatchCaptions()) {
+      consumeKeydownEvent(event);
+      return true;
+    }
+    if (action.actionName === "decrease-speed" && watchController.decreaseSpeed()) {
+      consumeKeydownEvent(event);
+      return true;
+    }
+    if (action.actionName === "increase-speed" && watchController.increaseSpeed()) {
       consumeKeydownEvent(event);
       return true;
     }

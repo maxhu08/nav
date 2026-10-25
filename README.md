@@ -163,6 +163,8 @@ e toggle-play-pause # requires watch mode
 l toggle-loop # requires watch mode
 m toggle-mute # requires watch mode
 c toggle-captions # requires watch mode
+j decrease-speed # requires watch mode
+k increase-speed # requires watch mode
 ```
 
 ## star-history

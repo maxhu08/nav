@@ -67,6 +67,7 @@ export const registerRuntimeListeners = ({
   document.addEventListener("play", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("pause", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("ended", watchController.handleWatchMediaStateChange, true);
+  document.addEventListener("ratechange", watchController.handleWatchMediaStateChange, true);
 
   try {
     const originalPushState = history.pushState;

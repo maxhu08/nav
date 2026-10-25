@@ -116,9 +116,13 @@ describe("keyboard priority", () => {
             "toggle-play-pause": "e",
             "toggle-loop": "l",
             "toggle-mute": "m",
-            "toggle-captions": "c"
+            "toggle-captions": "c",
+            "decrease-speed": "j",
+            "increase-speed": "k"
           }),
           isWatchModeActive: () => false,
+          decreaseSpeed: () => false,
+          increaseSpeed: () => false,
           toggleFullscreen: () => false,
           toggleWatchCaptions: () => false,
           toggleWatchLoop: () => false,
@@ -192,9 +196,13 @@ describe("keyboard priority", () => {
             "toggle-play-pause": "e",
             "toggle-loop": "l",
             "toggle-mute": "m",
-            "toggle-captions": "c"
+            "toggle-captions": "c",
+            "decrease-speed": "j",
+            "increase-speed": "k"
           }),
           isWatchModeActive: () => false,
+          decreaseSpeed: () => false,
+          increaseSpeed: () => false,
           toggleFullscreen: () => false,
           toggleWatchCaptions: () => false,
           toggleWatchLoop: () => false,
@@ -290,9 +298,13 @@ describe("keyboard priority", () => {
             "toggle-play-pause": "e",
             "toggle-loop": "l",
             "toggle-mute": "m",
-            "toggle-captions": "c"
+            "toggle-captions": "c",
+            "decrease-speed": "j",
+            "increase-speed": "k"
           }),
           isWatchModeActive: () => false,
+          decreaseSpeed: () => false,
+          increaseSpeed: () => false,
           toggleFullscreen: () => false,
           toggleWatchCaptions: () => false,
           toggleWatchLoop: () => false,
@@ -356,9 +368,13 @@ describe("keyboard priority", () => {
             "toggle-play-pause": "e",
             "toggle-loop": "l",
             "toggle-mute": "m",
-            "toggle-captions": "c"
+            "toggle-captions": "c",
+            "decrease-speed": "j",
+            "increase-speed": "k"
           }),
           isWatchModeActive: () => false,
+          decreaseSpeed: () => false,
+          increaseSpeed: () => false,
           toggleFullscreen: () => false,
           toggleWatchCaptions: () => false,
           toggleWatchLoop: () => false,

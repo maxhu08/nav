@@ -11,7 +11,9 @@ const FRAME_PROXY_ACTIONS = new Set<ActionName>([
   "toggle-play-pause",
   "toggle-loop",
   "toggle-mute",
-  "toggle-captions"
+  "toggle-captions",
+  "decrease-speed",
+  "increase-speed"
 ]);
 
 export const isFrameActionMessage = (value: unknown): value is FrameActionMessage => {
