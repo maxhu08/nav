@@ -57,6 +57,8 @@ export const DEFAULT_BAR_COLOR = "#14b8a6";
 export const DEFAULT_BAR_TABS_COLOR = "#0ea5e9";
 export const DEFAULT_FIND_COLOR = "#eab308";
 export const DEFAULT_BAR_SEARCH_ENGINE_URL = "https://duckduckgo.com/?q={}";
+export const DEFAULT_PROMPT_WIDTH = 40;
+export const DEFAULT_PROMPT_TEXT_SIZE = 1;
 
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
@@ -87,6 +89,8 @@ export const defaultConfig: Config = {
   bar: {
     color: DEFAULT_BAR_COLOR,
     tabsColor: DEFAULT_BAR_TABS_COLOR,
+    width: DEFAULT_PROMPT_WIDTH,
+    textSize: DEFAULT_PROMPT_TEXT_SIZE,
     searchEngineURL: DEFAULT_BAR_SEARCH_ENGINE_URL,
     search: {
       suggestions: true,
@@ -99,7 +103,9 @@ export const defaultConfig: Config = {
     }
   },
   find: {
-    color: DEFAULT_FIND_COLOR
+    color: DEFAULT_FIND_COLOR,
+    width: DEFAULT_PROMPT_WIDTH,
+    textSize: DEFAULT_PROMPT_TEXT_SIZE
   },
   hints: {
     showCapitalizedLetters: false,
@@ -135,6 +141,8 @@ export type Config = {
   bar: {
     color: string;
     tabsColor: string;
+    width: number;
+    textSize: number;
     searchEngineURL: string;
     search: {
       suggestions: boolean;
@@ -148,6 +156,8 @@ export type Config = {
   };
   find: {
     color: string;
+    width: number;
+    textSize: number;
   };
   hints: {
     showCapitalizedLetters: boolean;

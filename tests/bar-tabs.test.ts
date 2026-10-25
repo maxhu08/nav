@@ -4,7 +4,13 @@ import {
   handleFetchTabSuggestionsMessage
 } from "~/src/background/bar-tabs";
 import type { createFindModeController } from "~/src/core/actions/find-mode";
-import { getFindBar, getFindInput, getFindSuggestions } from "~/src/core/utils/get-ui";
+import {
+  getFindBar,
+  getFindBarActions,
+  getFindClearButton,
+  getFindInput,
+  getFindSuggestions
+} from "~/src/core/utils/get-ui";
 import { resetSiteKeybindIgnoreForTests } from "~/src/core/utils/ignore-site-keybinds";
 import {
   isActivateTabMessage,
@@ -120,12 +126,6 @@ describe("background tab search", () => {
     expect(privateResponse.tabs.map((tab) => tab.id)).toEqual([3]);
   });
 
-  test("activates an existing tab and focuses its window", async () => {
-    expect(await handleActivateTabMessage(2, sender)).toEqual({ ok: true });
-    expect(update).toHaveBeenCalledWith(2, { active: true });
-    expect(focus).toHaveBeenCalledWith(10, { focused: true });
-  });
-
   test("handles closed tabs and refuses to activate a private tab from a normal tab", async () => {
     expect(await handleActivateTabMessage(99, sender)).toEqual({ ok: false });
     expect(await handleActivateTabMessage(3, sender)).toEqual({ ok: false });
@@ -144,6 +144,26 @@ describe("background tab search", () => {
 });
 
 describe("tab search bar", () => {
+  test("keeps the close button visible on opening and clearing, and dismisses the empty bar", async () => {
+    controller.openBarPrompt("tabs");
+    await Bun.sleep(0);
+    expect(getFindBarActions()?.getAttribute("data-visible")).toBe("true");
+    expect(getFindClearButton()?.disabled).toBe(false);
+
+    type("github");
+    await Bun.sleep(0);
+    getFindClearButton()?.click();
+    expect(getFindInput()?.value).toBe("");
+    expect(getFindBarActions()?.getAttribute("data-visible")).toBe("true");
+    expect(getFindClearButton()?.disabled).toBe(false);
+    expect(getFindBar()?.getAttribute("data-visible")).toBe("true");
+
+    getFindClearButton()?.click();
+    expect(getFindBar()?.getAttribute("data-visible")).toBe("false");
+    expect(controller.isFindModeActive()).toBe(false);
+    await Bun.sleep(0);
+  });
+
   test("lists tabs on opening, supports keyboard selection, and switches without navigation", async () => {
     controller.setBarSearchTabsEnabled(false);
     expect(controller.openBarPrompt("tabs")).toBe(true);

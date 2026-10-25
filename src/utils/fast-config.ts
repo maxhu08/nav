@@ -3,6 +3,8 @@ import {
   DEFAULT_BAR_TABS_COLOR,
   DEFAULT_BAR_SEARCH_ENGINE_URL,
   DEFAULT_FIND_COLOR,
+  DEFAULT_PROMPT_WIDTH,
+  DEFAULT_PROMPT_TEXT_SIZE,
   DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR,
   DEFAULT_HINT_CUSTOM_CSS,
   type Config,
@@ -50,6 +52,8 @@ export type FastConfig = {
   bar: {
     color: string;
     tabsColor: string;
+    width: number;
+    textSize: number;
     searchEngineURL: string;
     search: {
       suggestions: boolean;
@@ -63,6 +67,8 @@ export type FastConfig = {
   };
   find: {
     color: string;
+    width: number;
+    textSize: number;
   };
   hints: {
     showCapitalizedLetters: boolean;
@@ -132,6 +138,8 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     value?.hotkeys?.prefixes !== null &&
     typeof value?.bar?.color === "string" &&
     typeof value?.bar?.tabsColor === "string" &&
+    typeof value?.bar?.width === "number" &&
+    typeof value?.bar?.textSize === "number" &&
     typeof value?.bar?.searchEngineURL === "string" &&
     typeof value?.bar?.search?.suggestions === "boolean" &&
     typeof value?.bar?.search?.history === "boolean" &&
@@ -142,6 +150,8 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
       (bookmark) => typeof bookmark?.name === "string" && typeof bookmark?.value === "string"
     ) &&
     typeof value?.find?.color === "string" &&
+    typeof value?.find?.width === "number" &&
+    typeof value?.find?.textSize === "number" &&
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
     typeof value?.hints?.improveThumbnailMarkers === "boolean" &&
     typeof value?.hints?.minLabelLength === "number" &&
@@ -187,6 +197,10 @@ const parseBarTabsColorValue = (value: string): string => {
 
 const parseFindColorValue = (value: string): string => {
   return normalizeCssColor(value.trim()) || DEFAULT_FIND_COLOR;
+};
+
+const parsePromptSize = (value: number, fallback: number): number => {
+  return Number.isFinite(value) && value > 0 ? value : fallback;
 };
 
 const parseBarSearchEngineURLValue = (value: string): string => {
@@ -375,6 +389,8 @@ export const buildFastConfig = (config: Config): FastConfig => {
     bar: {
       color: parseBarColorValue(config.bar.color),
       tabsColor: parseBarTabsColorValue(config.bar.tabsColor),
+      width: parsePromptSize(config.bar.width, DEFAULT_PROMPT_WIDTH),
+      textSize: parsePromptSize(config.bar.textSize, DEFAULT_PROMPT_TEXT_SIZE),
       searchEngineURL: parseBarSearchEngineURLValue(config.bar.searchEngineURL),
       search: {
         suggestions: parseBarSearchSuggestionsValue(config.bar.search.suggestions),
@@ -387,7 +403,9 @@ export const buildFastConfig = (config: Config): FastConfig => {
       }
     },
     find: {
-      color: parseFindColorValue(config.find.color)
+      color: parseFindColorValue(config.find.color),
+      width: parsePromptSize(config.find.width, DEFAULT_PROMPT_WIDTH),
+      textSize: parsePromptSize(config.find.textSize, DEFAULT_PROMPT_TEXT_SIZE)
     },
     hints: {
       showCapitalizedLetters: config.hints.showCapitalizedLetters,

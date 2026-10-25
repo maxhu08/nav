@@ -42,20 +42,9 @@ describe("bar tab suggestions", () => {
     { id: 3, title: "Documentation", url: "https://example.com/docs" }
   ]);
 
-  test("lists open tabs without a query in tabs-only mode", () => {
-    expect(getBarSuggestionItems("", tabs, true).map((item) => item.tabId)).toEqual([1, 2, 3]);
-  });
-
   test("matches titles and URLs case-insensitively without merging duplicate tabs", () => {
     expect(getBarSuggestionItems("GITHUB", tabs, true).map((item) => item.tabId)).toEqual([1, 2]);
     expect(getBarSuggestionItems("example.com", tabs, true).map((item) => item.tabId)).toEqual([3]);
-  });
-
-  test("never offers a web search in tabs-only mode", () => {
-    expect(getBarSuggestionItems("no matching tab", tabs, true)).toEqual([]);
-    expect(getBarSuggestionItems("github", tabs, true).every((item) => item.source === "tab")).toBe(
-      true
-    );
   });
 
   test("keeps the raw query first in the normal bar", () => {

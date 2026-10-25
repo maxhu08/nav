@@ -6,6 +6,14 @@ import {
   barColorInputEl,
   barTabsColorContainerEl,
   barTabsColorInputEl,
+  barWidthContainerEl,
+  barWidthInputEl,
+  barTextSizeContainerEl,
+  barTextSizeInputEl,
+  findWidthContainerEl,
+  findWidthInputEl,
+  findTextSizeContainerEl,
+  findTextSizeInputEl,
   barSearchBookmarksCheckboxEl,
   barSearchBookmarksStorageContainerEl,
   barSearchBookmarksStorageTextareaEl,
@@ -183,6 +191,20 @@ export const listenToInputs = (): void => {
   barColorInputEl.addEventListener("focus", () => {
     barColorContainerEl.classList.replace("border-transparent", "border-sky-500");
   });
+
+  for (const field of [
+    { container: barWidthContainerEl, input: barWidthInputEl },
+    { container: barTextSizeContainerEl, input: barTextSizeInputEl },
+    { container: findWidthContainerEl, input: findWidthInputEl },
+    { container: findTextSizeContainerEl, input: findTextSizeInputEl }
+  ]) {
+    field.input.addEventListener("focus", () => {
+      field.container.classList.replace("border-transparent", "border-sky-500");
+    });
+    field.input.addEventListener("blur", () => {
+      field.container.classList.replace("border-sky-500", "border-transparent");
+    });
+  }
 
   barColorInputEl.addEventListener("blur", () => {
     barColorContainerEl.classList.replace("border-sky-500", "border-transparent");

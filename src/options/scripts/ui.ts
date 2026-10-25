@@ -28,6 +28,8 @@ export const hotkeysMappingsStatusEl = getElement<HTMLParagraphElement>("hotkeys
 
 export const [barColorContainerEl, barColorInputEl] = getContainerAndInput("bar-color");
 export const [barTabsColorContainerEl, barTabsColorInputEl] = getContainerAndInput("bar-tabs-color");
+export const [barWidthContainerEl, barWidthInputEl] = getContainerAndInput("bar-width");
+export const [barTextSizeContainerEl, barTextSizeInputEl] = getContainerAndInput("bar-text-size");
 export const [barSearchEngineURLContainerEl, barSearchEngineURLInputEl] = getContainerAndInput("bar-search-engine-url");
 export const barSearchSuggestionsCheckboxEl = getElement<HTMLInputElement>("bar-search-suggestions-checkbox");
 export const barSearchHistoryCheckboxEl = getElement<HTMLInputElement>("bar-search-history-checkbox");
@@ -42,6 +44,8 @@ export const barSearchBookmarksStorageHighlightEl = getElement<HTMLPreElement>("
 export const barSearchBookmarksStorageStatusEl = getElement<HTMLParagraphElement>("bar-search-bookmarks-storage-status");
 
 export const [findColorContainerEl, findColorInputEl] = getContainerAndInput("find-color");
+export const [findWidthContainerEl, findWidthInputEl] = getContainerAndInput("find-width");
+export const [findTextSizeContainerEl, findTextSizeInputEl] = getContainerAndInput("find-text-size");
 
 export const hintsShowCapitalizedLettersCheckboxEl = getElement<HTMLInputElement>("hints-show-capitalized-letters-checkbox");
 export const hintsImproveThumbnailMarkersCheckboxEl = getElement<HTMLInputElement>("hints-improve-thumbnail-markers-checkbox");

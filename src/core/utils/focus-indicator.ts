@@ -4,6 +4,8 @@ import {
   DEFAULT_BAR_COLOR,
   DEFAULT_BAR_TABS_COLOR,
   DEFAULT_FIND_COLOR,
+  DEFAULT_PROMPT_WIDTH,
+  DEFAULT_PROMPT_TEXT_SIZE,
   DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR
 } from "~/src/utils/config";
 import {
@@ -31,6 +33,8 @@ type FocusIndicatorController = {
   setBarColor: (value: string) => void;
   setBarTabsColor: (value: string) => void;
   setFindColor: (value: string) => void;
+  setBarSize: (width: number, fontSize: number) => void;
+  setFindSize: (width: number, fontSize: number) => void;
   syncFindUIStyles: (
     root: ShadowRoot,
     findStyleId: string,
@@ -101,6 +105,8 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
   let barColor = DEFAULT_BAR_COLOR;
   let barTabsColor = DEFAULT_BAR_TABS_COLOR;
   let findColor = DEFAULT_FIND_COLOR;
+  let barSize = { width: DEFAULT_PROMPT_WIDTH, fontSize: DEFAULT_PROMPT_TEXT_SIZE };
+  let findSize = { width: DEFAULT_PROMPT_WIDTH, fontSize: DEFAULT_PROMPT_TEXT_SIZE };
   let findUIRoot: ShadowRoot | null = null;
   let findUIStyleId: string | null = null;
   let findUIStyleParams: FindStyleRenderParams | null = null;
@@ -144,6 +150,10 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
         barOutlineColor: barColor,
         tabsOutlineColor: barTabsColor,
         findOutlineColor: findColor,
+        barWidth: barSize.width,
+        barFontSize: barSize.fontSize,
+        findWidth: findSize.width,
+        findFontSize: findSize.fontSize,
         findHighlightBackgroundColor: colorToRgba(findColor, 0.35),
         findCurrentHighlightBackgroundColor: findColor,
         findHighlightTextColor: "#000000"
@@ -308,6 +318,14 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     },
     setFindColor: (value: string): void => {
       findColor = value;
+      syncStoredFindUIStyles();
+    },
+    setBarSize: (width: number, fontSize: number): void => {
+      barSize = { width, fontSize };
+      syncStoredFindUIStyles();
+    },
+    setFindSize: (width: number, fontSize: number): void => {
+      findSize = { width, fontSize };
       syncStoredFindUIStyles();
     },
     syncFindUIStyles: (

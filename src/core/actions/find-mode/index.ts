@@ -661,13 +661,14 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     const hasMatches = findMatches.length > 0;
     const hasQuery = (getFindInput()?.value ?? "").length > 0;
-    ui.barActions.setAttribute("data-visible", hasQuery ? "true" : "false");
+    ui.barActions.setAttribute("data-visible", "true");
     ui.barActions.setAttribute("data-prompt-kind", promptSession.kind);
-    ui.matchCount.hidden = promptSession.kind !== "find";
+    ui.matchCount.hidden = promptSession.kind !== "find" || !hasQuery;
     ui.suggestions.hidden = promptSession.kind !== "bar";
     ui.prevButton.disabled = !hasMatches;
     ui.nextButton.disabled = !hasMatches;
-    ui.clearButton.disabled = !hasQuery;
+    ui.clearButton.disabled = false;
+    ui.clearButton.setAttribute("aria-label", hasQuery ? "Clear find input" : "Close bar");
   };
 
   const applyFindHighlights = (): void => {
@@ -854,6 +855,11 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   const clearFindInput = (): void => {
     const input = getFindInput();
     if (!input) {
+      return;
+    }
+
+    if (input.value.length === 0) {
+      exitFindMode();
       return;
     }
 

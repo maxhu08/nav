@@ -454,6 +454,25 @@
             </div>
           </div>
           <div class="grid gap-2">
+            <p class="text-base text-white">bar.width</p>
+            <div id="bar-width-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input id="bar-width-input" type="number" min="0" step="any" aria-label="bar width" class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none" />
+            </div>
+          </div>
+          <div class="grid gap-2">
+            <p class="text-base text-white">bar.textSize</p>
+            <div id="bar-text-size-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input
+                id="bar-text-size-input"
+                type="number"
+                min="0"
+                step="any"
+                aria-label="bar text size"
+                class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
+              />
+            </div>
+          </div>
+          <div class="grid gap-2">
             <p class="text-base text-white">bar.searchEngineURL</p>
             <p class="text-base text-neutral-500">
               Used when bar input is treated as a search instead of a URL.
@@ -578,6 +597,25 @@
           <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
         </div>
         <section id="find-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p class="text-base text-white">find.width</p>
+            <div id="find-width-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input id="find-width-input" type="number" min="0" step="any" aria-label="find width" class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none" />
+            </div>
+          </div>
+          <div class="grid gap-2">
+            <p class="text-base text-white">find.textSize</p>
+            <div id="find-text-size-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <input
+                id="find-text-size-input"
+                type="number"
+                min="0"
+                step="any"
+                aria-label="find text size"
+                class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
+              />
+            </div>
+          </div>
           <div class="grid gap-2">
             <p class="text-base text-white">find.color</p>
             <p class="text-base text-neutral-500">Sets the outline color for the find bar and the next/prev widget.</p>

@@ -1,6 +1,10 @@
 import {
   barColorInputEl,
   barTabsColorInputEl,
+  barWidthInputEl,
+  barTextSizeInputEl,
+  findWidthInputEl,
+  findTextSizeInputEl,
   barSearchBookmarksCheckboxEl,
   barSearchBookmarksStorageStatusEl,
   barSearchBookmarksStorageTextareaEl,
@@ -31,6 +35,12 @@ const setConfigAndFastConfig = (config: Config): Promise<void> => {
   return new Promise((resolve) => {
     chrome.storage.local.set({ config, fastConfig: buildFastConfig(config) }, () => resolve());
   });
+};
+
+const readPromptSize = (input: HTMLInputElement, fallback: number): number => {
+  return Number.isFinite(input.valueAsNumber) && input.valueAsNumber > 0
+    ? input.valueAsNumber
+    : fallback;
 };
 
 const SAVE_ERROR_FIELDS = [
@@ -67,6 +77,8 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   saveHotkeysSettingsToDraft(draft);
   draft.bar.color = barColorInputEl.value;
   draft.bar.tabsColor = barTabsColorInputEl.value;
+  draft.bar.width = readPromptSize(barWidthInputEl, defaultConfig.bar.width);
+  draft.bar.textSize = readPromptSize(barTextSizeInputEl, defaultConfig.bar.textSize);
   draft.bar.searchEngineURL = barSearchEngineURLInputEl.value;
   draft.bar.search.suggestions = barSearchSuggestionsCheckboxEl.checked;
   draft.bar.search.history = barSearchHistoryCheckboxEl.checked;
@@ -74,6 +86,8 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   draft.bar.search.bookmarks.enabled = barSearchBookmarksCheckboxEl.checked;
   draft.bar.search.bookmarks.storage = barSearchBookmarksStorageTextareaEl.value;
   draft.find.color = findColorInputEl.value;
+  draft.find.width = readPromptSize(findWidthInputEl, defaultConfig.find.width);
+  draft.find.textSize = readPromptSize(findTextSizeInputEl, defaultConfig.find.textSize);
   saveHintsSettingsToDraft(draft);
 
   const config = deepMerge(structuredClone(defaultConfig), draft);

@@ -727,6 +727,17 @@
         </div>
         <section id="bar-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
+            <p id="bar-width" class="text-base text-white"><a href="#bar-width">bar.width</a></p>
+            <p class="text-base text-neutral-500">Unitless width for the URL/search and tab-search bars. Each unit is 16px, capped to fit the viewport.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="bar-text-size" class="text-base text-white"><a href="#bar-text-size">bar.textSize</a></p>
+            <p class="text-base text-neutral-500">
+              Unitless text size for the bar and its suggestions. Uses responsive scaling: value × 16px × 0.4 below 768px, × 0.75 from 768px, and × 1 from 1024px. Internal pixel sizing keeps the
+              result independent of a site's root font size.
+            </p>
+          </div>
+          <div class="grid gap-2">
             <p id="bar-color" class="text-base text-white">
               <a href="#bar-color">bar.color</a>
             </p>
@@ -802,6 +813,14 @@
           <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
         </div>
         <section id="find-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="find-width" class="text-base text-white"><a href="#find-width">find.width</a></p>
+            <p class="text-base text-neutral-500">Unitless width of the find bar. Each unit is 16px, capped to fit the viewport. Does not change the next/previous match widget.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="find-text-size" class="text-base text-white"><a href="#find-text-size">find.textSize</a></p>
+            <p class="text-base text-neutral-500">Unitless text size of the find bar. Uses the same responsive scaling as bar.textSize. Does not change page text or the next/previous match widget.</p>
+          </div>
           <div class="grid gap-2">
             <p id="find-color" class="text-base text-white">
               <a href="#find-color">find.color</a>

@@ -51,6 +51,10 @@ describe("buildFastConfig", () => {
     const config = structuredClone(defaultConfig);
     config.bar.color = "";
     config.bar.tabsColor = "";
+    config.bar.width = -1;
+    config.bar.textSize = Number.NaN;
+    config.find.width = Number.POSITIVE_INFINITY;
+    config.find.textSize = 0;
     config.bar.searchEngineURL = "";
     // @ts-expect-error testing migration fallback for invalid persisted data
     config.bar.search.suggestions = "yes";
@@ -73,6 +77,10 @@ describe("buildFastConfig", () => {
 
     expect(fastConfig.bar.color).toBe(defaultConfig.bar.color);
     expect(fastConfig.bar.tabsColor).toBe(defaultConfig.bar.tabsColor);
+    expect(fastConfig.bar.width).toBe(defaultConfig.bar.width);
+    expect(fastConfig.bar.textSize).toBe(defaultConfig.bar.textSize);
+    expect(fastConfig.find.width).toBe(defaultConfig.find.width);
+    expect(fastConfig.find.textSize).toBe(defaultConfig.find.textSize);
     expect(fastConfig.bar.searchEngineURL).toBe(defaultConfig.bar.searchEngineURL);
     expect(fastConfig.bar.search.suggestions).toBe(defaultConfig.bar.search.suggestions);
     expect(fastConfig.bar.search.history).toBe(defaultConfig.bar.search.history);
@@ -85,6 +93,26 @@ describe("buildFastConfig", () => {
       { name: "site", value: "https://example.com" }
     ]);
     expect(fastConfig.find.color).toBe(defaultConfig.find.color);
+  });
+
+  test("preserves independent fractional bar and find sizes", async () => {
+    const config = structuredClone(defaultConfig);
+    config.bar.width = 48.5;
+    config.bar.textSize = 2.25;
+    config.find.width = 32.5;
+    config.find.textSize = 1.25;
+    const fixture = createDomFixture("");
+    installCanvasStub();
+    const { buildFastConfig } = await import("~/src/utils/fast-config");
+
+    const fastConfig = buildFastConfig(config);
+
+    fixture.cleanup();
+
+    expect(fastConfig.bar.width).toBe(48.5);
+    expect(fastConfig.bar.textSize).toBe(2.25);
+    expect(fastConfig.find.width).toBe(32.5);
+    expect(fastConfig.find.textSize).toBe(1.25);
   });
 
   test("parses valid custom hint selectors into fastConfig", async () => {

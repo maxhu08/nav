@@ -2,6 +2,17 @@
   box-shadow: 0 0 23px rgba(0, 0, 0, 0.5);
 }
 
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .controls-hidden {
   visibility: hidden;
   pointer-events: none;
