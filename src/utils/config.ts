@@ -57,8 +57,8 @@ export const DEFAULT_BAR_COLOR = "#14b8a6";
 export const DEFAULT_BAR_TABS_COLOR = "#0ea5e9";
 export const DEFAULT_FIND_COLOR = "#eab308";
 export const DEFAULT_BAR_SEARCH_ENGINE_URL = "https://duckduckgo.com/?q={}";
-export const DEFAULT_PROMPT_WIDTH = 40;
-export const DEFAULT_PROMPT_TEXT_SIZE = 1;
+export const DEFAULT_PROMPT_WIDTH = 60;
+export const DEFAULT_PROMPT_TEXT_SIZE = 1.5;
 
 export const getConfig = (): Promise<Config> => {
   return new Promise((resolve) => {
