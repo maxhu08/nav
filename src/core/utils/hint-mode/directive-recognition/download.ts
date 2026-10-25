@@ -6,12 +6,15 @@ import {
 
 const DOWNLOAD_TOKEN_PATTERN = /\b(download|export)\b/i;
 
-export const scoreDownloadDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreDownloadDirectiveCandidate = (
+  element: HTMLElement,
+  descriptor?: string
+): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
 
-  const descriptorText = getActionDescriptorText(element);
+  const descriptorText = descriptor ?? getActionDescriptorText(element);
   const downloadAttributeScore = element.hasAttribute("download") ? 10 : 0;
 
   return getPatternScore(descriptorText, DOWNLOAD_TOKEN_PATTERN, 18) + downloadAttributeScore;

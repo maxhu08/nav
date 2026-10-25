@@ -9,7 +9,10 @@ import {
 const CANCEL_TOKEN_PATTERN = /\b(cancel|close|dismiss|never mind)\b/i;
 const SIDEBAR_CONTEXT_PATTERN = /\b(sidebar|drawer|slideover|panel|navigation|nav)\b/i;
 
-export const scoreCancelDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreCancelDirectiveCandidate = (
+  element: HTMLElement,
+  descriptor?: string
+): number => {
   if (!isButtonLikeDirectiveCandidate(element)) {
     return 0;
   }
@@ -24,5 +27,5 @@ export const scoreCancelDirectiveCandidate = (element: HTMLElement): number => {
     return 0;
   }
 
-  return getPatternScore(getActionDescriptorText(element), CANCEL_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), CANCEL_TOKEN_PATTERN, 18);
 };

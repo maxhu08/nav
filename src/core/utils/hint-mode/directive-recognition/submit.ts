@@ -6,7 +6,10 @@ import {
 
 const SUBMIT_TOKEN_PATTERN = /\b(submit|send|post|confirm|continue|done|apply)\b/i;
 
-export const scoreSubmitDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreSubmitDirectiveCandidate = (
+  element: HTMLElement,
+  descriptor?: string
+): number => {
   if (!isButtonLikeDirectiveCandidate(element)) {
     return 0;
   }
@@ -15,6 +18,7 @@ export const scoreSubmitDirectiveCandidate = (element: HTMLElement): number => {
     element instanceof HTMLInputElement && element.type.toLowerCase() === "submit" ? 10 : 0;
 
   return (
-    getPatternScore(getActionDescriptorText(element), SUBMIT_TOKEN_PATTERN, 18) + submitTypeScore
+    getPatternScore(descriptor ?? getActionDescriptorText(element), SUBMIT_TOKEN_PATTERN, 18) +
+    submitTypeScore
   );
 };

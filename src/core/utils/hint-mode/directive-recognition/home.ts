@@ -38,12 +38,12 @@ const getHomeLinkScore = (element: HTMLElement): number => {
   return 0;
 };
 
-export const scoreHomeDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreHomeDirectiveCandidate = (element: HTMLElement, descriptor?: string): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
 
-  const descriptorText = getActionOwnDescriptorText(element);
+  const descriptorText = descriptor ?? getActionOwnDescriptorText(element);
   const homeLabelScore = Math.max(
     getTextContentScore(element.getAttribute("aria-label"), 12),
     getTextContentScore(element.getAttribute("title"), 10),

@@ -6,10 +6,13 @@ import {
 
 const DISLIKE_TOKEN_PATTERN = /\b(dislike|downvote|thumbs\s*down)\b/i;
 
-export const scoreDislikeDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreDislikeDirectiveCandidate = (
+  element: HTMLElement,
+  descriptor?: string
+): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
 
-  return getPatternScore(getActionDescriptorText(element), DISLIKE_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), DISLIKE_TOKEN_PATTERN, 18);
 };

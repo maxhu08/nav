@@ -6,12 +6,13 @@ export const updateVisibleTargets = (
   typedPrefix: string,
   showCapitalizedLetters: boolean
 ): HintTarget[] => {
-  const matches = targets.filter((target) => target.label.startsWith(typedPrefix));
+  const matches: HintTarget[] = [];
 
   for (const target of targets) {
-    const isVisible = matches.includes(target);
+    const isVisible = target.label.startsWith(typedPrefix);
     target.marker.setAttribute("data-visible", isVisible ? "true" : "false");
     if (isVisible) {
+      matches.push(target);
       renderMarkerLabel(target.marker, target.label, typedPrefix.length, showCapitalizedLetters);
     }
   }

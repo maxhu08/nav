@@ -16,7 +16,7 @@ const isYouTubeAskButton = (element: HTMLElement): boolean => {
   return element.getAttribute("aria-label")?.trim().toLowerCase() === "ask";
 };
 
-export const scoreChatDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreChatDirectiveCandidate = (element: HTMLElement, descriptor?: string): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
@@ -25,5 +25,5 @@ export const scoreChatDirectiveCandidate = (element: HTMLElement): number => {
     return MAX_DIRECTIVE_SCORE;
   }
 
-  return getPatternScore(getActionDescriptorText(element), CHAT_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), CHAT_TOKEN_PATTERN, 18);
 };

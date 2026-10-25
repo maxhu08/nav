@@ -7,7 +7,7 @@ import {
 const COPY_TOKEN_PATTERN = /\b(copy|duplicate|clone|clipboard)\b/i;
 const MAX_DIRECTIVE_SCORE = 9999;
 
-export const scoreCopyDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreCopyDirectiveCandidate = (element: HTMLElement, descriptor?: string): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
@@ -25,5 +25,5 @@ export const scoreCopyDirectiveCandidate = (element: HTMLElement): number => {
     }
   }
 
-  return getPatternScore(getActionDescriptorText(element), COPY_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), COPY_TOKEN_PATTERN, 18);
 };

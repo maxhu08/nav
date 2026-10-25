@@ -13,6 +13,7 @@ import {
   isEditableInputCandidate,
   getElementTextValues,
   getJoinedElementText,
+  getActionOwnDescriptorText,
   isButtonLikeDirectiveCandidate
 } from "~/src/core/utils/hint-mode/directive-recognition/shared";
 import { getClosestLinkUrl } from "~/src/core/utils/hint-mode/collection/get-closest-link-url";
@@ -932,6 +933,9 @@ export const buildHintTargets = (
     targetsByElement.set(element, target);
 
     if (activeDirectiveScorerEntries.length > 0) {
+      const descriptor = isActionableDirectiveCandidate(element)
+        ? getActionOwnDescriptorText(element)
+        : undefined;
       for (const [directive, scorer] of activeDirectiveScorerEntries) {
         const currentMatch = directiveMatches.get(directive);
         if (currentMatch?.score === MAX_DIRECTIVE_SCORE) {
@@ -942,7 +946,7 @@ export const buildHintTargets = (
           continue;
         }
 
-        const score = scorer(element);
+        const score = scorer(element, descriptor);
 
         if (score > 0 && (!currentMatch || score > currentMatch.score)) {
           directiveMatches.set(directive, {

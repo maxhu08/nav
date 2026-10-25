@@ -9,7 +9,7 @@ import {
 const SHARE_TOKEN_PATTERN = /\b(share|forward|invite|send\s+to)\b/i;
 const SIDEBAR_CONTEXT_PATTERN = /\b(sidebar|drawer|slideover|panel|navigation|nav)\b/i;
 
-export const scoreShareDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreShareDirectiveCandidate = (element: HTMLElement, descriptor?: string): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
@@ -24,5 +24,5 @@ export const scoreShareDirectiveCandidate = (element: HTMLElement): number => {
     return 0;
   }
 
-  return getPatternScore(getActionDescriptorText(element), SHARE_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), SHARE_TOKEN_PATTERN, 18);
 };

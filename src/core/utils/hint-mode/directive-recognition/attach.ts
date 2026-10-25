@@ -12,7 +12,10 @@ const COMPOSER_PLUS_PATTERN = /\bcomposer[-\s]?plus\b/i;
 const GENERIC_ACTION_MENU_PATTERN = /\b(more actions|more options|options|overflow|menu)\b/i;
 const MAX_DIRECTIVE_SCORE = 9999;
 
-export const scoreAttachDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreAttachDirectiveCandidate = (
+  element: HTMLElement,
+  descriptor?: string
+): number => {
   if (!isButtonLikeDirectiveCandidate(element)) {
     return 0;
   }
@@ -29,7 +32,7 @@ export const scoreAttachDirectiveCandidate = (element: HTMLElement): number => {
   }
 
   const descriptorText = getJoinedElementText([
-    getActionOwnDescriptorText(element),
+    descriptor ?? getActionOwnDescriptorText(element),
     element.getAttribute("type")
   ]);
   const labelText = getJoinedElementText(

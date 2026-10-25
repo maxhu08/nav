@@ -7,10 +7,13 @@ import {
 const COMMENT_TOKEN_PATTERN =
   /\b(comment|comments|reply|replies|discussion|discussions|thread|threads|respond|response)\b/i;
 
-export const scoreCommentDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreCommentDirectiveCandidate = (
+  element: HTMLElement,
+  descriptor?: string
+): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
 
-  return getPatternScore(getActionDescriptorText(element), COMMENT_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), COMMENT_TOKEN_PATTERN, 18);
 };

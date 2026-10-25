@@ -1,4 +1,4 @@
-export type DirectiveScorer = (element: HTMLElement) => number;
+export type DirectiveScorer = (element: HTMLElement, descriptor?: string) => number;
 
 const EDITABLE_INPUT_TYPES = new Set([
   "",

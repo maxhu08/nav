@@ -510,10 +510,19 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return false;
     }
 
+    const previousIndex = selectedBarSuggestionIndex;
     selectedBarSuggestionIndex =
       (selectedBarSuggestionIndex + direction + barSuggestionItems.length) %
       barSuggestionItems.length;
-    renderBarSuggestions();
+    const suggestions = getFindSuggestions();
+    for (const index of [previousIndex, selectedBarSuggestionIndex]) {
+      const selected = index === selectedBarSuggestionIndex ? "true" : "false";
+      suggestions?.children[index]?.setAttribute("data-selected", selected);
+      suggestions?.children[index]?.setAttribute("aria-selected", selected);
+    }
+    const id = `nav-find-suggestion-${selectedBarSuggestionIndex}`;
+    suggestions?.setAttribute("aria-activedescendant", id);
+    getFindInput()?.setAttribute("aria-activedescendant", id);
     return true;
   };
 
@@ -671,6 +680,19 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     ui.clearButton.setAttribute("aria-label", hasQuery ? "Clear find input" : "Close bar");
   };
 
+  const applyCurrentFindHighlight = (): void => {
+    const highlights = getCssHighlights();
+    highlights?.delete(FIND_CURRENT_HIGHLIGHT_NAME);
+    if (!highlights || typeof Highlight === "undefined") {
+      return;
+    }
+
+    const currentMatch = findMatches[currentFindMatchIndex];
+    if (currentMatch) {
+      highlights.set(FIND_CURRENT_HIGHLIGHT_NAME, new Highlight(currentMatch.range.cloneRange()));
+    }
+  };
+
   const applyFindHighlights = (): void => {
     clearFindHighlights();
 
@@ -678,20 +700,11 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       return;
     }
 
-    const highlights = getCssHighlights();
-    if (!highlights) {
-      return;
-    }
-
-    highlights.set(
+    getCssHighlights()?.set(
       FIND_HIGHLIGHT_NAME,
       new Highlight(...findMatches.map((match) => match.range.cloneRange()))
     );
-
-    const currentMatch = findMatches[currentFindMatchIndex];
-    if (currentMatch) {
-      highlights.set(FIND_CURRENT_HIGHLIGHT_NAME, new Highlight(currentMatch.range.cloneRange()));
-    }
+    applyCurrentFindHighlight();
   };
 
   const isFindableTextContainer = (element: HTMLElement | null): element is HTMLElement => {
@@ -742,17 +755,21 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const matches: FindMatch[] = [];
+    const containers = new Map<HTMLElement, boolean>();
     let currentNode = walker.nextNode();
 
     while (currentNode) {
       if (currentNode instanceof Text) {
         const parentElement = currentNode.parentElement;
+        const text = currentNode.textContent ?? "";
+        regex.lastIndex = 0;
+        let match = regex.exec(text);
 
-        if (isFindableTextContainer(parentElement)) {
-          const text = currentNode.textContent ?? "";
-          let match = regex.exec(text);
+        if (match && parentElement) {
+          const findable = containers.get(parentElement) ?? isFindableTextContainer(parentElement);
+          containers.set(parentElement, findable);
 
-          while (match) {
+          while (findable && match) {
             if (!match[0]) {
               break;
             }
@@ -770,8 +787,6 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
             match = regex.exec(text);
           }
-
-          regex.lastIndex = 0;
         }
       }
 
@@ -814,7 +829,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     });
 
     updateFindUICounts();
-    applyFindHighlights();
+    applyCurrentFindHighlight();
   };
 
   const setFindQuery = (query: string): void => {

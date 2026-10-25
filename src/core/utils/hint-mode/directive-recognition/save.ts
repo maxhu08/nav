@@ -6,10 +6,10 @@ import {
 
 const SAVE_TOKEN_PATTERN = /\b(save|bookmark|favorite|favourite|keep)\b/i;
 
-export const scoreSaveDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreSaveDirectiveCandidate = (element: HTMLElement, descriptor?: string): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
 
-  return getPatternScore(getActionDescriptorText(element), SAVE_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), SAVE_TOKEN_PATTERN, 18);
 };

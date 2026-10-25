@@ -6,10 +6,10 @@ import {
 
 const LIKE_TOKEN_PATTERN = /\b(like|upvote|thumbs\s*up|favorite|favourite)\b/i;
 
-export const scoreLikeDirectiveCandidate = (element: HTMLElement): number => {
+export const scoreLikeDirectiveCandidate = (element: HTMLElement, descriptor?: string): number => {
   if (!isActionableDirectiveCandidate(element)) {
     return 0;
   }
 
-  return getPatternScore(getActionDescriptorText(element), LIKE_TOKEN_PATTERN, 18);
+  return getPatternScore(descriptor ?? getActionDescriptorText(element), LIKE_TOKEN_PATTERN, 18);
 };

@@ -201,6 +201,33 @@ describe("tab search bar", () => {
     expect(send.mock.calls.every((call) => call[0].type === "fetch-tab-suggestions")).toBe(true);
   });
 
+  test("reuses suggestion rows while updating selection, accessibility, and wraparound", async () => {
+    controller.openBarPrompt("tabs");
+    await Bun.sleep(0);
+    const suggestions = getFindSuggestions()!;
+    const rows = Array.from(suggestions.children);
+    const icon = rows[0]!.querySelector("svg");
+
+    for (const selected of [1, 0, 1]) {
+      expect(key("ArrowDown")).toBe(true);
+      expect(Array.from(suggestions.children)).toEqual(rows);
+      expect(suggestions.children[0]!.querySelector("svg") === icon).toBe(true);
+      expect(rows.map((row) => row.getAttribute("data-selected"))).toEqual(
+        selected === 0 ? ["true", "false"] : ["false", "true"]
+      );
+      expect(rows.map((row) => row.getAttribute("aria-selected"))).toEqual(
+        selected === 0 ? ["true", "false"] : ["false", "true"]
+      );
+      expect(suggestions.getAttribute("aria-activedescendant")).toBe(rows[selected]!.id);
+      expect(getFindInput()?.getAttribute("aria-activedescendant")).toBe(rows[selected]!.id);
+    }
+
+    expect(key("ArrowUp")).toBe(true);
+    expect(key("Enter")).toBe(true);
+    await Bun.sleep(0);
+    expect(update).toHaveBeenCalledWith(2, { active: true });
+  });
+
   for (const mode of ["current-tab", "new-tab"] as const) {
     test(`switches to a tab result instead of opening a duplicate in ${mode} mode`, async () => {
       controller.setBarSearchSuggestionsEnabled(false);
