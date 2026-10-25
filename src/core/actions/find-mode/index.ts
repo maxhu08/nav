@@ -837,7 +837,9 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     if (!isFindStatusVisible) {
       deactivateSiteKeybindIgnore("find");
-      deps.setMode("normal");
+      if (deps.getMode() === "find") {
+        deps.setMode("normal");
+      }
     }
   };
 
