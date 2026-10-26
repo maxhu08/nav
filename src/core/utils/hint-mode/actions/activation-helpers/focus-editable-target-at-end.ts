@@ -8,7 +8,7 @@ export const focusEditableTargetAtEnd = (element: HTMLElement): boolean => {
 
     focusTargetElement(element);
 
-    if (typeof element.setSelectionRange === "function") {
+    if (element.selectionStart !== null) {
       const caretPosition = element.value.length;
       element.setSelectionRange(caretPosition, caretPosition);
     }

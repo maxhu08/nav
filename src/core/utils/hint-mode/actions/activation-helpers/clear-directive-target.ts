@@ -14,7 +14,7 @@ export const clearDirectiveTarget = (element: HTMLElement): boolean => {
     element.value = "";
     dispatchTextInputEvents(element);
     focusTargetElement(element);
-    if (typeof element.setSelectionRange === "function") {
+    if (element.selectionStart !== null) {
       element.setSelectionRange(0, 0);
     }
     return true;

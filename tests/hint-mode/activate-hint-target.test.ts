@@ -81,6 +81,48 @@ describe("activateHintTarget", () => {
     }
   });
 
+  test.each(["email", "number", "password", "search", "tel", "text", "url"])(
+    "focuses and erases %s inputs without requiring selection support",
+    async (type) => {
+      const fixture = createDomFixture(`<input id='field' type='${type}' value='123' />`);
+
+      try {
+        const { activateHintTarget } =
+          await import("~/src/core/utils/hint-mode/actions/activate-hint-target");
+
+        const field = document.getElementById("field") as HTMLInputElement;
+        const receivedEvents: string[] = [];
+
+        field.addEventListener("input", () => receivedEvents.push("input"));
+        field.addEventListener("change", () => receivedEvents.push("change"));
+
+        expect(activateHintTarget("current-tab", createHintTarget(field))).toBe(true);
+        expect(document.activeElement).toBe(field);
+        expect(field.value).toBe("123");
+        if (field.selectionStart !== null) {
+          expect(field.selectionStart).toBe(field.value.length);
+          expect(field.selectionEnd).toBe(field.value.length);
+        }
+
+        expect(
+          activateHintTarget("current-tab", {
+            ...createHintTarget(field),
+            directiveMatch: { directive: "erase", label: "er" }
+          })
+        ).toBe(true);
+        expect(document.activeElement).toBe(field);
+        expect(field.value).toBe("");
+        expect(receivedEvents).toEqual(["input", "change"]);
+        if (field.selectionStart !== null) {
+          expect(field.selectionStart).toBe(0);
+          expect(field.selectionEnd).toBe(0);
+        }
+      } finally {
+        fixture.cleanup();
+      }
+    }
+  );
+
   test("dispatches right click events for right click hint mode", async () => {
     const fixture = createDomFixture(
       "<button id='trigger' type='button' aria-haspopup='menu'>Open menu</button>"
