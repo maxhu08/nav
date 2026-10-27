@@ -65,8 +65,7 @@ l toggle-loop # requires watch mode
 m toggle-mute # requires watch mode
 c toggle-captions # requires watch mode
 j decrease-speed # requires watch mode
-k increase-speed # requires watch mode
-`.trim();
+k increase-speed # requires watch mode`;
 
 export const DEFAULT_HINT_CHARSET = "sldkfjeiomwu";
 
@@ -77,8 +76,7 @@ dd ee ff ii jj kk ll mm oo ss uu ww
 sw ws de ed ki ik lo ol jm mj ju uj mu um
 
 # other
-ou uo lu ul
-`.trim();
+ou uo lu ul`;
 
 export const DEFAULT_HINT_DIRECTIVES = `@input kj kjf kjfd
 @erase er

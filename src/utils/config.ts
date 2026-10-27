@@ -49,8 +49,7 @@ export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 
 [data-nav-hint-marker-letter="typed"] {
   color: var(--nav-hint-marker-typed-color);
-}
-`;
+}`;
 
 export const DEFAULT_HINT_ACTIVATION_INDICATOR_COLOR = "#eab308";
 export const DEFAULT_BAR_COLOR = "#14b8a6";
