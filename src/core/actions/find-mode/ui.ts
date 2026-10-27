@@ -45,15 +45,12 @@ const createFindIconSvg = (nodes: SvgNodeDefinition[]): SVGSVGElement => {
   return svg;
 };
 
-export const createFindOverlay = (
-  injectFindUIStyles: (root: ShadowRoot) => void
-): { overlay: HTMLDivElement; existed: boolean } => {
+export const createFindOverlay = (): { overlay: HTMLDivElement; existed: boolean } => {
   const existingOverlay = getFindOverlay();
   const overlay = existingOverlay ?? document.createElement("div");
   overlay.id = FIND_OVERLAY_ID;
 
-  const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
-  injectFindUIStyles(root);
+  if (!overlay.shadowRoot) overlay.attachShadow({ mode: "open" });
 
   if (!existingOverlay) {
     ensureOverlayRoot().append(overlay);

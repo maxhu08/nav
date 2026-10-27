@@ -32,6 +32,10 @@ import { getUserAgent } from "~/src/options/scripts/utils/user-agent";
 import { type Config, getConfig } from "~/src/utils/config";
 import { type OptionsData, getOptionsData, updateOptionsData } from "~/src/utils/options-storage";
 import { initializeI18n, t } from "~/src/options/scripts/i18n";
+import {
+  barStylingControls,
+  findStylingControls
+} from "~/src/options/scripts/utils/prompt-styling";
 
 const initialize = (config: Config, optionsData: OptionsData) => {
   const logo = document.getElementById("nav-logo") as HTMLImageElement;
@@ -60,6 +64,8 @@ const initialize = (config: Config, optionsData: OptionsData) => {
 
   createCollapseGroups(optionsData);
   initHintsCustomCSSHighlight();
+  barStylingControls.init();
+  findStylingControls.init();
   initColorInputControls();
 
   fillInputs(config);

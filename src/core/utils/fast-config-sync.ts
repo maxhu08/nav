@@ -10,6 +10,7 @@ type FastConfigSyncDeps = {
   setBarTabsColor: (value: string) => void;
   setBarSize: (width: number, fontSize: number) => void;
   setFindSize: (width: number, fontSize: number) => void;
+  setPromptCSS: (bar: string, find: string) => void;
   setBarSearchEngineURL: (value: string) => void;
   setBarSearchSuggestionsEnabled: (value: boolean) => void;
   setBarSearchHistoryEnabled: (value: boolean) => void;
@@ -40,6 +41,7 @@ const applyFastConfig = (fastConfig: FastConfig, deps: FastConfigSyncDeps): void
   deps.setBarTabsColor(fastConfig.bar.tabsColor);
   deps.setBarSize(fastConfig.bar.width, fastConfig.bar.textSize);
   deps.setFindSize(fastConfig.find.width, fastConfig.find.textSize);
+  deps.setPromptCSS(fastConfig.bar.css, fastConfig.find.css);
   deps.setBarSearchEngineURL(fastConfig.bar.searchEngineURL);
   deps.setBarSearchSuggestionsEnabled(fastConfig.bar.search.suggestions);
   deps.setBarSearchHistoryEnabled(fastConfig.bar.search.history);

@@ -16,6 +16,7 @@ import {
 } from "~/src/core/utils/get-ui";
 import type { FindStyleRenderParams } from "~/src/core/styles/render-find-styles";
 import { getDocumentStyleRoot, upsertStyle } from "~/src/core/utils/inject-styles";
+import { DEFAULT_BAR_CUSTOM_CSS, DEFAULT_FIND_CUSTOM_CSS } from "~/src/utils/prompt-css";
 
 const FOCUS_OVERLAY_DURATION_MS = 1000;
 const FOCUS_OVERLAY_HIDE_MS = 920;
@@ -35,6 +36,7 @@ type FocusIndicatorController = {
   setFindColor: (value: string) => void;
   setBarSize: (width: number, fontSize: number) => void;
   setFindSize: (width: number, fontSize: number) => void;
+  setPromptCSS: (bar: string, find: string) => void;
   syncFindUIStyles: (
     root: ShadowRoot,
     findStyleId: string,
@@ -107,6 +109,8 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
   let findColor = DEFAULT_FIND_COLOR;
   let barSize = { width: DEFAULT_PROMPT_WIDTH, fontSize: DEFAULT_PROMPT_TEXT_SIZE };
   let findSize = { width: DEFAULT_PROMPT_WIDTH, fontSize: DEFAULT_PROMPT_TEXT_SIZE };
+  let barCSS = DEFAULT_BAR_CUSTOM_CSS;
+  let findCSS = DEFAULT_FIND_CUSTOM_CSS;
   let findUIRoot: ShadowRoot | null = null;
   let findUIStyleId: string | null = null;
   let findUIStyleParams: FindStyleRenderParams | null = null;
@@ -147,6 +151,8 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
       findStyleId: findUIStyleId,
       find: {
         ...findUIStyleParams,
+        barCSS,
+        findCSS,
         barOutlineColor: barColor,
         tabsOutlineColor: barTabsColor,
         findOutlineColor: findColor,
@@ -326,6 +332,11 @@ export const createFocusIndicatorController = (): FocusIndicatorController => {
     },
     setFindSize: (width: number, fontSize: number): void => {
       findSize = { width, fontSize };
+      syncStoredFindUIStyles();
+    },
+    setPromptCSS: (bar: string, find: string): void => {
+      barCSS = bar;
+      findCSS = find;
       syncStoredFindUIStyles();
     },
     syncFindUIStyles: (

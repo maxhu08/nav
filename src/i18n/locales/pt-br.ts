@@ -1,4 +1,20 @@
 export const ptBR = {
+  "bar.styling": "Estilo da barra",
+  "bar.customCSS": "CSS personalizado da barra",
+  "find.styling": "Estilo da busca",
+  "find.customCSS": "CSS personalizado da busca",
+  "bar styling default": "Estilo padrão da barra",
+  "bar styling custom": "Estilo personalizado da barra",
+  "bar custom css": "CSS personalizado da barra",
+  "find styling default": "Estilo padrão da busca",
+  "find styling custom": "Estilo personalizado da busca",
+  "find custom css": "CSS personalizado da busca",
+  "Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.":
+    "Edite [data-nav-hint-marker] para alterar as cores, fontes e espaçamento das dicas.",
+  "Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.":
+    "Use :scope para a barra, #nav-find-input para o campo de entrada e .nav-find-suggestion para as sugestões.",
+  "Use :scope for the find bar and widget, and --nav-find-match-background for match colors.":
+    "Use :scope para a barra de busca e o controle, e --nav-find-match-background para as cores dos resultados.",
   Export: "Exportar",
   "download config": "baixar configuração",
   "copy to clipboard": "copiar para a área de transferência",

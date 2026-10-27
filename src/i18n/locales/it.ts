@@ -1,4 +1,20 @@
 export const it = {
+  "bar.styling": "Stile della barra",
+  "bar.customCSS": "CSS personalizzato della barra",
+  "find.styling": "Stile della ricerca",
+  "find.customCSS": "CSS personalizzato della ricerca",
+  "bar styling default": "Stile predefinito della barra",
+  "bar styling custom": "Stile personalizzato della barra",
+  "bar custom css": "CSS personalizzato della barra",
+  "find styling default": "Stile predefinito della ricerca",
+  "find styling custom": "Stile personalizzato della ricerca",
+  "find custom css": "CSS personalizzato della ricerca",
+  "Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.":
+    "Modifica [data-nav-hint-marker] per cambiare colori, caratteri e spaziatura delle etichette.",
+  "Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.":
+    "Usa :scope per la barra, #nav-find-input per il campo di input e .nav-find-suggestion per i suggerimenti.",
+  "Use :scope for the find bar and widget, and --nav-find-match-background for match colors.":
+    "Usa :scope per la barra di ricerca e il controllo, e --nav-find-match-background per i colori delle corrispondenze.",
   Export: "Esporta",
   "download config": "scarica configurazione",
   "copy to clipboard": "copia negli appunti",

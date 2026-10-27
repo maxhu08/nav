@@ -5,6 +5,7 @@ import {
   DEFAULT_HOTKEY_MAPPINGS
 } from "~/src/utils/config-defaults";
 import { migrateOldConfig } from "~/src/utils/migrate-config";
+import { DEFAULT_BAR_CUSTOM_CSS, DEFAULT_FIND_CUSTOM_CSS } from "~/src/utils/prompt-css";
 
 export const DEFAULT_HINT_CUSTOM_CSS = `/* Hint marker styling */
 :root {
@@ -86,6 +87,8 @@ export const defaultConfig: Config = {
     mappings: DEFAULT_HOTKEY_MAPPINGS
   },
   bar: {
+    styling: "default",
+    customCSS: DEFAULT_BAR_CUSTOM_CSS,
     color: DEFAULT_BAR_COLOR,
     tabsColor: DEFAULT_BAR_TABS_COLOR,
     width: DEFAULT_PROMPT_WIDTH,
@@ -102,6 +105,8 @@ export const defaultConfig: Config = {
     }
   },
   find: {
+    styling: "default",
+    customCSS: DEFAULT_FIND_CUSTOM_CSS,
     color: DEFAULT_FIND_COLOR,
     width: DEFAULT_PROMPT_WIDTH,
     textSize: DEFAULT_PROMPT_TEXT_SIZE
@@ -138,6 +143,8 @@ export type Config = {
     mappings: string;
   };
   bar: {
+    styling: "default" | "custom";
+    customCSS: string;
     color: string;
     tabsColor: string;
     width: number;
@@ -154,6 +161,8 @@ export type Config = {
     };
   };
   find: {
+    styling: "default" | "custom";
+    customCSS: string;
     color: string;
     width: number;
     textSize: number;

@@ -1,4 +1,20 @@
 export const zhCN = {
+  "bar.styling": "地址栏样式",
+  "bar.customCSS": "地址栏自定义 CSS",
+  "find.styling": "查找样式",
+  "find.customCSS": "查找自定义 CSS",
+  "bar styling default": "地址栏默认样式",
+  "bar styling custom": "地址栏自定义样式",
+  "bar custom css": "地址栏自定义 CSS",
+  "find styling default": "查找默认样式",
+  "find styling custom": "查找自定义样式",
+  "find custom css": "查找自定义 CSS",
+  "Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.":
+    "编辑 [data-nav-hint-marker] 来更改提示的颜色、字体和间距。",
+  "Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.":
+    "使用 :scope 选择地址栏，#nav-find-input 选择输入框，.nav-find-suggestion 选择建议。",
+  "Use :scope for the find bar and widget, and --nav-find-match-background for match colors.":
+    "使用 :scope 设置查找栏和控件的样式，使用 --nav-find-match-background 设置匹配项的背景色。",
   Export: "导出",
   "download config": "下载配置",
   "copy to clipboard": "复制到剪贴板",

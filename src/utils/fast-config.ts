@@ -29,6 +29,7 @@ import {
   type HintCustomSelectorRule
 } from "~/src/utils/hint-custom-selectors";
 import { parseBarBookmarksValue, type BarBookmark } from "~/src/utils/bar-bookmarks";
+import { DEFAULT_BAR_CUSTOM_CSS, DEFAULT_FIND_CUSTOM_CSS } from "~/src/utils/prompt-css";
 
 export type FastRule = {
   pattern: string;
@@ -50,6 +51,7 @@ export type FastConfig = {
     prefixes: Partial<Record<string, true>>;
   };
   bar: {
+    css: string;
     color: string;
     tabsColor: string;
     width: number;
@@ -66,6 +68,7 @@ export type FastConfig = {
     };
   };
   find: {
+    css: string;
     color: string;
     width: number;
     textSize: number;
@@ -137,6 +140,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
     typeof value?.hotkeys?.prefixes === "object" &&
     value?.hotkeys?.prefixes !== null &&
     typeof value?.bar?.color === "string" &&
+    typeof value?.bar?.css === "string" &&
     typeof value?.bar?.tabsColor === "string" &&
     typeof value?.bar?.width === "number" &&
     typeof value?.bar?.textSize === "number" &&
@@ -150,6 +154,7 @@ const isFastConfigShapeValid = (value: FastConfig | undefined): value is FastCon
       (bookmark) => typeof bookmark?.name === "string" && typeof bookmark?.value === "string"
     ) &&
     typeof value?.find?.color === "string" &&
+    typeof value?.find?.css === "string" &&
     typeof value?.find?.width === "number" &&
     typeof value?.find?.textSize === "number" &&
     typeof value?.hints?.showCapitalizedLetters === "boolean" &&
@@ -387,6 +392,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
       prefixes: createHotkeyPrefixes(mappings)
     },
     bar: {
+      css: config.bar.styling === "custom" ? config.bar.customCSS : DEFAULT_BAR_CUSTOM_CSS,
       color: parseBarColorValue(config.bar.color),
       tabsColor: parseBarTabsColorValue(config.bar.tabsColor),
       width: parsePromptSize(config.bar.width, DEFAULT_PROMPT_WIDTH),
@@ -403,6 +409,7 @@ export const buildFastConfig = (config: Config): FastConfig => {
       }
     },
     find: {
+      css: config.find.styling === "custom" ? config.find.customCSS : DEFAULT_FIND_CUSTOM_CSS,
       color: parseFindColorValue(config.find.color),
       width: parsePromptSize(config.find.width, DEFAULT_PROMPT_WIDTH),
       textSize: parsePromptSize(config.find.textSize, DEFAULT_PROMPT_TEXT_SIZE)

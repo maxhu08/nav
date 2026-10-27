@@ -1,4 +1,20 @@
 export const ko = {
+  "bar.styling": "바 스타일",
+  "bar.customCSS": "바 사용자 지정 CSS",
+  "find.styling": "찾기 스타일",
+  "find.customCSS": "찾기 사용자 지정 CSS",
+  "bar styling default": "바 기본 스타일",
+  "bar styling custom": "바 사용자 지정 스타일",
+  "bar custom css": "바 사용자 지정 CSS",
+  "find styling default": "찾기 기본 스타일",
+  "find styling custom": "찾기 사용자 지정 스타일",
+  "find custom css": "찾기 사용자 지정 CSS",
+  "Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.":
+    "[data-nav-hint-marker]를 편집하여 힌트의 색상, 글꼴, 간격을 변경하세요.",
+  "Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.":
+    "바에는 :scope, 입력란에는 #nav-find-input, 추천 항목에는 .nav-find-suggestion을 사용하세요.",
+  "Use :scope for the find bar and widget, and --nav-find-match-background for match colors.":
+    "찾기 바와 위젯에는 :scope를, 일치 항목의 색상에는 --nav-find-match-background를 사용하세요.",
   Export: "내보내기",
   "download config": "설정 다운로드",
   "copy to clipboard": "클립보드에 복사",

@@ -746,6 +746,26 @@
         </div>
         <section id="bar-section" class="mb-20 grid grid-flow-row gap-4">
           <div class="grid gap-2">
+            <p id="bar-styling" class="text-base text-white"><a href="#bar-styling">bar.styling</a></p>
+            <p class="text-base text-neutral-500">
+              Choose `default` for the built-in appearance or `custom` to use `bar.customCSS`. Switching back to default preserves your custom CSS. Save to apply changes to open pages.
+            </p>
+          </div>
+          <div class="grid gap-2">
+            <p id="bar-custom-css" class="text-base text-white"><a href="#bar-custom-css">bar.customCSS</a></p>
+            <p class="text-base text-neutral-500">
+              Replaces the Bar appearance while retaining its essential layout and interaction rules. The editor starts with the built-in stylesheet. CSS is scoped to Bar mode, including URL/search
+              prompts, tab search, and suggestions, inside the isolated UI. Custom prompt themes use CSS `@scope`, supported by Chrome 118+ and Firefox 146+.
+              <br /><br />
+              Use `:scope` for the prompt, `#nav-find-input` for its input, `.nav-find-suggestion` for suggestion rows, and `.nav-find-suggestion[data-selected="true"]` for the selected suggestion.
+              Use `:scope[data-prompt-kind="tabs"]` to target tab search separately. Media queries and pseudo-classes work normally within the scope.
+              <br /><br />
+              The starter CSS uses `--nav-prompt-color`, `--nav-prompt-width`, and `--nav-prompt-text-size` so the existing controls remain active. Dimensions are provided in pixels;
+              `--nav-prompt-font-scale` preserves responsive text sizing. Explicit CSS values override these variables. An empty custom stylesheet removes the visual theme rather than restoring the
+              default.
+            </p>
+          </div>
+          <div class="grid gap-2">
             <p id="bar-width" class="text-base text-white"><a href="#bar-width">bar.width</a></p>
             <p class="text-base text-neutral-500">Unitless width for the URL/search and tab-search bars. Each unit is 16px, capped to fit the viewport.</p>
           </div>
@@ -832,6 +852,30 @@
           <div class="h-[1px] flex-grow rounded-md bg-neutral-500"></div>
         </div>
         <section id="find-section" class="mb-20 grid grid-flow-row gap-4">
+          <div class="grid gap-2">
+            <p id="find-styling" class="text-base text-white"><a href="#find-styling">find.styling</a></p>
+            <p class="text-base text-neutral-500">Choose `default` for the built-in appearance or `custom` to use `find.customCSS`. Switching back to default preserves your custom CSS.</p>
+          </div>
+          <div class="grid gap-2">
+            <p id="find-custom-css" class="text-base text-white"><a href="#find-custom-css">find.customCSS</a></p>
+            <p class="text-base text-neutral-500">
+              Replaces the Find appearance independently of Bar mode. Use `:scope` for both the prompt and next/previous widget, `:scope#nav-find-bar` for just the prompt, or `:scope#nav-find-status`
+              for just the widget. The widget keeps its Find styling even while a Bar prompt is open. As with Bar, the starter CSS uses the existing appearance controls through CSS variables.
+              <br /><br />
+              Set `--nav-find-match-background`, `--nav-find-current-match-background`, and `--nav-find-match-color` on `:scope` to change normal-match backgrounds, the current-match background, and
+              match text. These values are read from the next/previous widget when settings are applied, so set them on `:scope` or `:scope#nav-find-status`, not only on the prompt. Invalid colors
+              fall back to the built-in match colors. Only resolved colors are applied to the webpage; the custom stylesheet itself stays inside the UI.
+            </p>
+            <pre class="overflow-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
+/* Add after the starter CSS. */
+:scope {
+  background: #202430;
+  border-radius: 12px;
+  --nav-find-match-background: #554400;
+  --nav-find-current-match-background: #ffcc00;
+  --nav-find-match-color: #ffffff;
+}</pre>
+          </div>
           <div class="grid gap-2">
             <p id="find-width" class="text-base text-white"><a href="#find-width">find.width</a></p>
             <p class="text-base text-neutral-500">Unitless width of the find bar. Each unit is 16px, capped to fit the viewport. Does not change the next/previous match widget.</p>

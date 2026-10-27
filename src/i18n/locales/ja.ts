@@ -1,4 +1,20 @@
 export const ja = {
+  "bar.styling": "バーのスタイル",
+  "bar.customCSS": "バーのカスタム CSS",
+  "find.styling": "検索のスタイル",
+  "find.customCSS": "検索のカスタム CSS",
+  "bar styling default": "バーの標準スタイル",
+  "bar styling custom": "バーのカスタムスタイル",
+  "bar custom css": "バーのカスタム CSS",
+  "find styling default": "検索の標準スタイル",
+  "find styling custom": "検索のカスタムスタイル",
+  "find custom css": "検索のカスタム CSS",
+  "Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.":
+    "[data-nav-hint-marker] を編集すると、ヒントの色・フォント・間隔を変更できます。",
+  "Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.":
+    "バーには :scope、入力欄には #nav-find-input、候補には .nav-find-suggestion を使います。",
+  "Use :scope for the find bar and widget, and --nav-find-match-background for match colors.":
+    "検索バーとウィジェットには :scope、一致箇所の色には --nav-find-match-background を使います。",
   Export: "エクスポート",
   "download config": "設定をダウンロード",
   "copy to clipboard": "クリップボードにコピー",

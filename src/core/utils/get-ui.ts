@@ -1,6 +1,7 @@
 import { getExtensionNamespace } from "~/src/utils/extension-id";
 import type { FindStyleRenderParams } from "~/src/core/styles/render-find-styles";
 import { getDocumentStyleRoot, upsertStyle } from "~/src/core/utils/inject-styles";
+import { DEFAULT_BAR_CUSTOM_CSS, DEFAULT_FIND_CUSTOM_CSS } from "~/src/utils/prompt-css";
 
 const extensionNamespace = getExtensionNamespace();
 const OVERLAY_ROOT_STYLE_ID = `nav-${extensionNamespace}-overlay-style`;
@@ -31,7 +32,6 @@ export const WATCH_STYLE_ID = "nav-watch-style";
 export const WATCH_POSITION_STYLE_ID = "nav-watch-position-style";
 
 export const findStyleParams: FindStyleRenderParams = {
-  findOverlayId: FIND_OVERLAY_ID,
   findBarId: FIND_BAR_ID,
   findStatusId: FIND_STATUS_ID,
   findInputId: FIND_INPUT_ID,
@@ -48,6 +48,8 @@ export const findStyleParams: FindStyleRenderParams = {
   findWidth: 40,
   findFontSize: 1,
   barUrlTextColor: "#3b82f6",
+  barCSS: DEFAULT_BAR_CUSTOM_CSS,
+  findCSS: DEFAULT_FIND_CUSTOM_CSS,
   findHighlightBackgroundColor: "rgba(234, 179, 8, 0.35)",
   findCurrentHighlightBackgroundColor: "#eab308",
   findHighlightTextColor: "#000000"

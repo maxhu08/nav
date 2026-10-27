@@ -13,6 +13,7 @@ import {
   barSearchSuggestionsCheckboxEl
 } from "~/src/options/scripts/ui";
 import { syncColorInputControl } from "~/src/options/scripts/utils/color-inputs";
+import { barStylingControls } from "~/src/options/scripts/utils/prompt-styling";
 import {
   syncBarSearchBookmarksStorageHighlight,
   syncBarSearchBookmarksStorageHighlightScroll
@@ -24,6 +25,7 @@ export const syncBarSearchBookmarksStorageControls = (enabled: boolean): void =>
 };
 
 export const fillBarInputs = (config: Config): void => {
+  barStylingControls.fill(config.bar);
   barColorInputEl.value = config.bar.color;
   barTabsColorInputEl.value = config.bar.tabsColor;
   barWidthInputEl.value = config.bar.width.toString();

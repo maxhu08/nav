@@ -236,12 +236,13 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
   const ensureFindUIReady = (): { bar: HTMLDivElement; input: HTMLInputElement } | null => {
     if (!getFindBar() || !getFindStatus()) {
-      const overlay = createFindOverlay(deps.injectFindUIStyles).overlay;
+      const overlay = createFindOverlay().overlay;
       const root = overlay.shadowRoot ?? overlay.attachShadow({ mode: "open" });
       const barUI = createFindBar();
       const statusUI = createFindStatus();
 
       root.append(barUI.bar, statusUI.status);
+      deps.injectFindUIStyles(root);
 
       findUIElements = {
         barActions: barUI.actions,

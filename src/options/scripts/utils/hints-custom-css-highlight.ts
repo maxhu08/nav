@@ -456,45 +456,47 @@ const renderCustomCSSValue = (value: string): string => {
   return tokens.join("");
 };
 
-const syncCustomCSSMetrics = (): void => {
-  const computedStyle = window.getComputedStyle(hintsCustomCSSTextareaEl);
+export const createCustomCSSHighlight = (
+  textarea: HTMLTextAreaElement,
+  highlight: HTMLPreElement
+) => {
+  const metrics = (): void => {
+    const style = window.getComputedStyle(textarea);
+    highlight.style.padding = style.padding;
+    highlight.style.font = style.font;
+    highlight.style.letterSpacing = style.letterSpacing;
+    highlight.style.lineHeight = style.lineHeight;
+    highlight.style.tabSize = style.tabSize;
+    highlight.style.whiteSpace = style.whiteSpace;
+  };
 
-  hintsCustomCSSHighlightEl.style.padding = computedStyle.padding;
-  hintsCustomCSSHighlightEl.style.font = computedStyle.font;
-  hintsCustomCSSHighlightEl.style.letterSpacing = computedStyle.letterSpacing;
-  hintsCustomCSSHighlightEl.style.lineHeight = computedStyle.lineHeight;
-  hintsCustomCSSHighlightEl.style.tabSize = computedStyle.tabSize;
-  hintsCustomCSSHighlightEl.style.whiteSpace = computedStyle.whiteSpace;
+  const scroll = (): void => {
+    highlight.scrollTop = textarea.scrollTop;
+    highlight.scrollLeft = textarea.scrollLeft;
+  };
+
+  const refresh = (): void => {
+    metrics();
+    highlight.innerHTML = getTextareaOverlayHTML(
+      textarea.value,
+      renderCustomCSSValue(textarea.value.length > 0 ? textarea.value : " ")
+    );
+    scroll();
+  };
+
+  return {
+    refresh,
+    scroll,
+    init: (): void => {
+      refresh();
+      textarea.addEventListener("input", refresh);
+      textarea.addEventListener("scroll", scroll);
+      window.addEventListener("resize", metrics);
+    }
+  };
 };
 
-const syncCustomCSSHighlight = (): void => {
-  const value = hintsCustomCSSTextareaEl.value;
-  hintsCustomCSSHighlightEl.innerHTML = getTextareaOverlayHTML(
-    value,
-    renderCustomCSSValue(value.length > 0 ? value : " ")
-  );
-};
-
-export const syncHintsCustomCSSHighlightScroll = (): void => {
-  hintsCustomCSSHighlightEl.scrollTop = hintsCustomCSSTextareaEl.scrollTop;
-  hintsCustomCSSHighlightEl.scrollLeft = hintsCustomCSSTextareaEl.scrollLeft;
-};
-
-export const initHintsCustomCSSHighlight = (): void => {
-  syncCustomCSSMetrics();
-  syncCustomCSSHighlight();
-  syncHintsCustomCSSHighlightScroll();
-
-  hintsCustomCSSTextareaEl.addEventListener("input", () => {
-    syncCustomCSSHighlight();
-    syncHintsCustomCSSHighlightScroll();
-  });
-  hintsCustomCSSTextareaEl.addEventListener("scroll", syncHintsCustomCSSHighlightScroll);
-  window.addEventListener("resize", syncCustomCSSMetrics);
-};
-
-export const refreshHintsCustomCSSHighlight = (): void => {
-  syncCustomCSSMetrics();
-  syncCustomCSSHighlight();
-  syncHintsCustomCSSHighlightScroll();
-};
+const hints = createCustomCSSHighlight(hintsCustomCSSTextareaEl, hintsCustomCSSHighlightEl);
+export const syncHintsCustomCSSHighlightScroll = hints.scroll;
+export const initHintsCustomCSSHighlight = hints.init;
+export const refreshHintsCustomCSSHighlight = hints.refresh;

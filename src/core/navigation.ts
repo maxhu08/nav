@@ -101,6 +101,7 @@ const fastConfigSyncDeps = {
   setBarTabsColor: focusIndicator.setBarTabsColor,
   setBarSize: focusIndicator.setBarSize,
   setFindSize: focusIndicator.setFindSize,
+  setPromptCSS: focusIndicator.setPromptCSS,
   setBarSearchEngineURL: findMode.setBarSearchEngineURL,
   setBarSearchSuggestionsEnabled: findMode.setBarSearchSuggestionsEnabled,
   setBarSearchHistoryEnabled: findMode.setBarSearchHistoryEnabled,

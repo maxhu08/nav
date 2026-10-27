@@ -1,4 +1,20 @@
 export const ru = {
+  "bar.styling": "Стиль панели",
+  "bar.customCSS": "Пользовательский CSS панели",
+  "find.styling": "Стиль поиска",
+  "find.customCSS": "Пользовательский CSS поиска",
+  "bar styling default": "Стандартный стиль панели",
+  "bar styling custom": "Пользовательский стиль панели",
+  "bar custom css": "Пользовательский CSS панели",
+  "find styling default": "Стандартный стиль поиска",
+  "find styling custom": "Пользовательский стиль поиска",
+  "find custom css": "Пользовательский CSS поиска",
+  "Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.":
+    "Измените [data-nav-hint-marker], чтобы настроить цвета, шрифты и отступы подсказок.",
+  "Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.":
+    "Используйте :scope для панели, #nav-find-input для поля ввода и .nav-find-suggestion для предложений.",
+  "Use :scope for the find bar and widget, and --nav-find-match-background for match colors.":
+    "Используйте :scope для панели поиска и виджета, а --nav-find-match-background для цветов совпадений.",
   Export: "Экспорт",
   "download config": "скачать конфигурацию",
   "copy to clipboard": "скопировать в буфер обмена",

@@ -369,7 +369,6 @@
           </div>
           <div class="grid gap-2">
             <p class="text-base text-white">hints.styling</p>
-            <p class="text-base text-neutral-500">Use the built-in hint marker look, or switch to editable CSS for full control.</p>
             <div class="grid grid-cols-2 gap-2 text-base">
               <button
                 id="hints-styling-default-button"
@@ -393,6 +392,7 @@
           </div>
           <div id="hints-custom-css-section" class="hidden gap-2">
             <p class="text-base text-white">hints.customCSS</p>
+            <p class="text-base text-neutral-500">Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.</p>
             <div id="hints-custom-css-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
               <div class="custom-css-editor">
                 <pre id="hints-custom-css-highlight" aria-hidden="true" class="custom-css-highlight"></pre>
@@ -585,6 +585,48 @@
               </button>
             </div>
           </div>
+          <div class="grid gap-2">
+            <p class="text-base text-white">bar.styling</p>
+            <div class="grid grid-cols-2 gap-2 text-base">
+              <button
+                id="bar-styling-default-button"
+                type="button"
+                aria-label="bar styling default"
+                aria-pressed="true"
+                class="rounded-md bg-yellow-500 py-2 outline-none transition hover:bg-yellow-600"
+              >
+                <span class="text-white">default</span>
+              </button>
+              <button
+                id="bar-styling-custom-button"
+                type="button"
+                aria-label="bar styling custom"
+                aria-pressed="false"
+                class="rounded-md bg-neutral-800 py-2 outline-none transition hover:bg-neutral-700"
+              >
+                <span class="text-white">custom</span>
+              </button>
+            </div>
+          </div>
+          <div id="bar-custom-css-section" class="hidden gap-2">
+            <p class="text-base text-white">bar.customCSS</p>
+            <p class="text-base text-neutral-500">Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.</p>
+            <div id="bar-custom-css-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <div class="custom-css-editor">
+                <pre id="bar-custom-css-highlight" aria-hidden="true" class="custom-css-highlight"></pre>
+                <textarea
+                  id="bar-custom-css-textarea"
+                  aria-label="bar custom css"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  wrap="off"
+                  rows="16"
+                  class="custom-css-textarea w-full resize-none bg-transparent text-white placeholder-neutral-500 outline-none"
+                ></textarea>
+              </div>
+            </div>
+          </div>
         </section>
         <div class="mb-4 grid grid-cols-[1fr_max-content_1fr] items-center gap-2">
           <div class="grid grid-cols-[max-content_auto] items-center gap-2">
@@ -630,6 +672,48 @@
                 class="w-full bg-transparent px-2 py-1 text-base text-white placeholder-neutral-500 outline-none"
                 placeholder="#eab308"
               />
+            </div>
+          </div>
+          <div class="grid gap-2">
+            <p class="text-base text-white">find.styling</p>
+            <div class="grid grid-cols-2 gap-2 text-base">
+              <button
+                id="find-styling-default-button"
+                type="button"
+                aria-label="find styling default"
+                aria-pressed="true"
+                class="rounded-md bg-yellow-500 py-2 outline-none transition hover:bg-yellow-600"
+              >
+                <span class="text-white">default</span>
+              </button>
+              <button
+                id="find-styling-custom-button"
+                type="button"
+                aria-label="find styling custom"
+                aria-pressed="false"
+                class="rounded-md bg-neutral-800 py-2 outline-none transition hover:bg-neutral-700"
+              >
+                <span class="text-white">custom</span>
+              </button>
+            </div>
+          </div>
+          <div id="find-custom-css-section" class="hidden gap-2">
+            <p class="text-base text-white">find.customCSS</p>
+            <p class="text-base text-neutral-500">Use :scope for the find bar and widget, and --nav-find-match-background for match colors.</p>
+            <div id="find-custom-css-container" class="w-full rounded-md border-2 border-transparent bg-neutral-800 p-1 text-base">
+              <div class="custom-css-editor">
+                <pre id="find-custom-css-highlight" aria-hidden="true" class="custom-css-highlight"></pre>
+                <textarea
+                  id="find-custom-css-textarea"
+                  aria-label="find custom css"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  wrap="off"
+                  rows="16"
+                  class="custom-css-textarea w-full resize-none bg-transparent text-white placeholder-neutral-500 outline-none"
+                ></textarea>
+              </div>
             </div>
           </div>
         </section>

@@ -1,4 +1,20 @@
 export const de = {
+  "bar.styling": "Leistengestaltung",
+  "bar.customCSS": "Eigenes Leisten-CSS",
+  "find.styling": "Suchgestaltung",
+  "find.customCSS": "Eigenes Such-CSS",
+  "bar styling default": "Standardgestaltung der Leiste",
+  "bar styling custom": "Eigene Leistengestaltung",
+  "bar custom css": "Eigenes Leisten-CSS",
+  "find styling default": "Standardgestaltung der Suche",
+  "find styling custom": "Eigene Suchgestaltung",
+  "find custom css": "Eigenes Such-CSS",
+  "Edit [data-nav-hint-marker] to change hint colors, fonts, and spacing.":
+    "Bearbeite [data-nav-hint-marker], um Farben, Schrift und Abstände der Hinweise zu ändern.",
+  "Use :scope for the bar, #nav-find-input for its input, and .nav-find-suggestion for suggestions.":
+    "Verwende :scope für die Leiste, #nav-find-input für ihr Eingabefeld und .nav-find-suggestion für Vorschläge.",
+  "Use :scope for the find bar and widget, and --nav-find-match-background for match colors.":
+    "Verwende :scope für Suchleiste und Widget sowie --nav-find-match-background für die Trefferfarben.",
   Export: "Exportieren",
   "download config": "Konfiguration herunterladen",
   "copy to clipboard": "In die Zwischenablage kopieren",

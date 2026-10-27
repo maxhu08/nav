@@ -30,6 +30,10 @@ import { type Config, defaultConfig, getConfig } from "~/src/utils/config";
 import { deepMerge } from "~/src/utils/deep-merge";
 import { buildFastConfig } from "~/src/utils/fast-config";
 import { t } from "~/src/options/scripts/i18n";
+import {
+  barStylingControls,
+  findStylingControls
+} from "~/src/options/scripts/utils/prompt-styling";
 
 const setConfigAndFastConfig = (config: Config): Promise<void> => {
   return new Promise((resolve) => {
@@ -75,6 +79,8 @@ export const saveConfigAndFastConfig = async (notify: boolean = true): Promise<C
   const draft = await getConfig();
   saveRulesSettingsToDraft(draft);
   saveHotkeysSettingsToDraft(draft);
+  barStylingControls.save(draft.bar);
+  findStylingControls.save(draft.find);
   draft.bar.color = barColorInputEl.value;
   draft.bar.tabsColor = barTabsColorInputEl.value;
   draft.bar.width = readPromptSize(barWidthInputEl, defaultConfig.bar.width);

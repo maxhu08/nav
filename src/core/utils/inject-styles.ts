@@ -1,4 +1,8 @@
-import { renderFindStyles, type FindStyleRenderParams } from "~/src/core/styles/render-find-styles";
+import {
+  renderFindStyles,
+  renderFindHighlightStyles,
+  type FindStyleRenderParams
+} from "~/src/core/styles/render-find-styles";
 import {
   renderFocusStyles,
   type FocusStyleRenderParams
@@ -43,12 +47,51 @@ export const getDocumentStyleRoot = (): HTMLElement => {
   return document.head ?? document.documentElement;
 };
 
+// Resolve colors inside the isolated UI; never copy user CSS into the webpage.
+const resolveFindHighlightColors = (
+  root: ShadowRoot,
+  params: FindStyleRenderParams
+): FindStyleRenderParams => {
+  const status = root.getElementById(params.findStatusId);
+  if (!status) return params;
+
+  const styles = getComputedStyle(status);
+  const probe = document.createElement("span");
+  status.append(probe);
+
+  const color = (property: string, fallback: string): string => {
+    probe.style.removeProperty("color");
+    probe.style.setProperty("color", styles.getPropertyValue(property).trim(), "important");
+    if (!probe.style.color) return fallback;
+    return getComputedStyle(probe).color || fallback;
+  };
+
+  const resolved = {
+    ...params,
+    findHighlightBackgroundColor: color(
+      "--nav-find-match-background",
+      params.findHighlightBackgroundColor
+    ),
+    findCurrentHighlightBackgroundColor: color(
+      "--nav-find-current-match-background",
+      params.findCurrentHighlightBackgroundColor
+    ),
+    findHighlightTextColor: color("--nav-find-match-color", params.findHighlightTextColor)
+  };
+  probe.remove();
+  return resolved;
+};
+
 export const injectStyles = (params: InjectStylesParams): void => {
   upsertStyle(getDocumentStyleRoot(), params.focusStyleId, renderFocusStyles(params.focus));
 
   if (params.findStyleId && params.find && params.findRoot) {
     const findCss = renderFindStyles(params.find);
     upsertStyle(params.findRoot, params.findStyleId, findCss);
-    upsertStyle(getDocumentStyleRoot(), `${params.findStyleId}-global`, findCss);
+    const highlights = renderFindHighlightStyles(
+      resolveFindHighlightColors(params.findRoot, params.find)
+    );
+    upsertStyle(params.findRoot, `${params.findStyleId}-highlights`, highlights);
+    upsertStyle(getDocumentStyleRoot(), `${params.findStyleId}-global`, highlights);
   }
 };
