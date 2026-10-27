@@ -27,6 +27,8 @@ export const lockTextareaContainerHeight = (
   textarea: HTMLTextAreaElement
 ): void => {
   const syncHeight = () => {
+    if (container.classList.contains("expanded-editor-input")) return;
+
     if (!container.isConnected || !textarea.isConnected) {
       return;
     }

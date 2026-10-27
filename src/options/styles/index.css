@@ -5,6 +5,7 @@
 @import "./hints.css";
 @import "./color-picker.css";
 @import "./custom-css.css";
+@import "./expanded-editor.css";
 
 :root.options-initializing {
   overflow-anchor: none;

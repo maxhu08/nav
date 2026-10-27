@@ -1,4 +1,6 @@
 export const it = {
+  "expand editor": "espandi editor",
+  "close editor": "chiudi editor",
   "bar.styling": "Stile della barra",
   "bar.customCSS": "CSS personalizzato della barra",
   "find.styling": "Stile della ricerca",

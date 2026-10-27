@@ -1,4 +1,6 @@
 export const de = {
+  "expand editor": "Editor vergrößern",
+  "close editor": "Editor schließen",
   "bar.styling": "Leistengestaltung",
   "bar.customCSS": "Eigenes Leisten-CSS",
   "find.styling": "Suchgestaltung",

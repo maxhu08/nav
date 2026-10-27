@@ -1,4 +1,6 @@
 export const ru = {
+  "expand editor": "развернуть редактор",
+  "close editor": "закрыть редактор",
   "bar.styling": "Стиль панели",
   "bar.customCSS": "Пользовательский CSS панели",
   "find.styling": "Стиль поиска",

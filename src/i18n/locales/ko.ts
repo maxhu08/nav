@@ -1,4 +1,6 @@
 export const ko = {
+  "expand editor": "편집기 확대",
+  "close editor": "편집기 닫기",
   "bar.styling": "바 스타일",
   "bar.customCSS": "바 사용자 지정 CSS",
   "find.styling": "찾기 스타일",

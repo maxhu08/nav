@@ -1,4 +1,6 @@
 export const ptBR = {
+  "expand editor": "expandir editor",
+  "close editor": "fechar editor",
   "bar.styling": "Estilo da barra",
   "bar.customCSS": "CSS personalizado da barra",
   "find.styling": "Estilo da busca",

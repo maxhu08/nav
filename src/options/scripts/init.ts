@@ -20,6 +20,7 @@ import { createCollapseGroups } from "~/src/options/scripts/utils/collapse-optio
 import { initColorInputControls } from "~/src/options/scripts/utils/color-inputs";
 import { handleControls } from "~/src/options/scripts/utils/control-utils";
 import { fillInputs } from "~/src/options/scripts/utils/fill-inputs";
+import { initExpandedEditors } from "~/src/options/scripts/utils/expanded-editor";
 import { initHintsCustomCSSHighlight } from "~/src/options/scripts/utils/hints-custom-css-highlight";
 import { showTextareaDialog } from "~/src/options/scripts/utils/input-dialog";
 import {
@@ -56,6 +57,7 @@ const initialize = (config: Config, optionsData: OptionsData) => {
   const displayVersion =
     document.documentElement.getAttribute("rc-version-info")?.trim() || manifest.version;
 
+  initExpandedEditors();
   initCoreNavigation();
 
   (document.getElementById("version-number-text") as HTMLSpanElement).textContent += displayVersion;

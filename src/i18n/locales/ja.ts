@@ -1,4 +1,6 @@
 export const ja = {
+  "expand editor": "エディターを拡大",
+  "close editor": "エディターを閉じる",
   "bar.styling": "バーのスタイル",
   "bar.customCSS": "バーのカスタム CSS",
   "find.styling": "検索のスタイル",

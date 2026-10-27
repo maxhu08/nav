@@ -1,4 +1,6 @@
 export const zhCN = {
+  "expand editor": "展开编辑器",
+  "close editor": "关闭编辑器",
   "bar.styling": "地址栏样式",
   "bar.customCSS": "地址栏自定义 CSS",
   "find.styling": "查找样式",
