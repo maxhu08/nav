@@ -5,6 +5,7 @@ import type { ActionHandler } from "~/src/core/navigation/shared";
 import type { ActionName } from "~/src/utils/hotkeys";
 
 type KeyStateDeps = {
+  hasPendingState: () => boolean;
   clearPendingCount: () => void;
   clearPendingState: () => void;
   getActionName: (keyToken: string) => {
@@ -37,6 +38,11 @@ type KeyStateDeps = {
 };
 
 type KeydownHandlerDeps = {
+  onExitTyping: (target: HTMLElement) => void;
+  visualController: {
+    isActive: () => boolean;
+    exit: (escape?: boolean) => void;
+  };
   actions: Record<ActionName, ActionHandler>;
   findMode: {
     handleFindUIKeydown: (event: KeyboardEvent) => boolean;
@@ -127,6 +133,8 @@ const getHintToggleKey = (matchedSequence: string | null): string | null => {
 };
 
 export const createNavigationKeydownHandler = ({
+  onExitTyping,
+  visualController,
   actions,
   findMode,
   forceNormalMode,
@@ -146,6 +154,14 @@ export const createNavigationKeydownHandler = ({
       keyState.clearPendingCount();
       return true;
     }
+
+    if (
+      (actionName === "visual-mode" ||
+        actionName === "visual-line-mode" ||
+        actionName === "visual-restore") &&
+      watchController.isWatchModeActive()
+    )
+      watchController.exitWatchMode();
 
     const hintToggleKey = getHintToggleKey(matchedSequence);
     const didHandle =
@@ -284,7 +300,27 @@ export const createNavigationKeydownHandler = ({
   };
 
   return (event: KeyboardEvent): void => {
+    if (event.isComposing || event.keyCode === 229) return;
+
     forceNormalMode.handleKeydownCapture(event);
+
+    if (visualController.isActive()) {
+      if (event.key === "Escape" || getKeyToken(event) === "<c-[>") {
+        if (keyState.hasPendingState()) keyState.clearPendingState();
+        else visualController.exit(true);
+      } else if (!keyState.hasAllowedActionMappings()) {
+        visualController.exit();
+        return;
+      } else {
+        const token = getKeyToken(event);
+        if (token) {
+          const action = keyState.getActionName(token);
+          if (action.actionName) actions[action.actionName](keyState.resolveCount());
+        }
+      }
+      consumeKeydownEvent(event);
+      return;
+    }
 
     if (hintController.isHintModeActive()) {
       keyState.clearPendingState();
@@ -309,28 +345,33 @@ export const createNavigationKeydownHandler = ({
       return;
     }
 
-    if (!keyState.hasAllowedActionMappings()) {
-      if (watchController.isWatchModeActive()) {
-        watchController.exitWatchMode();
-      }
-      if (findMode.isFindModeActive()) {
-        findMode.exitFindMode();
-      }
-
-      keyState.clearPendingState();
-      return;
-    }
-
     if (isKeydownFromEditableTarget(event)) {
       if (findMode.handleFindUIKeydown(event)) {
         consumeKeydownEvent(event);
         return;
       }
 
-      if (handleEscapeModes(event)) {
+      const target = getDeepActiveElement();
+      if (
+        keyState.hasAllowedActionMappings() &&
+        (event.key === "Escape" || getKeyToken(event) === "<c-[>") &&
+        target instanceof HTMLElement &&
+        isEditableTarget(target)
+      ) {
+        onExitTyping(target);
+        target.blur();
+        keyState.clearPendingState();
+        consumeKeydownEvent(event);
         return;
       }
 
+      keyState.clearPendingState();
+      return;
+    }
+
+    if (!keyState.hasAllowedActionMappings()) {
+      if (watchController.isWatchModeActive()) watchController.exitWatchMode();
+      if (findMode.isFindModeActive()) findMode.exitFindMode();
       keyState.clearPendingState();
       return;
     }

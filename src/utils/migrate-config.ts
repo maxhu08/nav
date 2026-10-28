@@ -1,4 +1,5 @@
 import { deepMerge } from "~/src/utils/deep-merge";
+import { DEFAULT_VISUAL_HOTKEY_MAPPINGS } from "~/src/utils/config-defaults";
 import type { Config } from "~/src/utils/config";
 import {
   getActionMode,
@@ -54,6 +55,19 @@ const ensurePromptOptions = (config: Config, fallbackConfig: Config): void => {
   config.find ??= structuredClone(fallbackConfig.find);
 };
 
+const removeTypingExitOptions = (config: Config): void => {
+  const hotkeys = config.hotkeys as Config["hotkeys"] & { insertSequenceTimeout?: unknown };
+  delete hotkeys.insertSequenceTimeout;
+  hotkeys.mappings = hotkeys.mappings
+    .split("\n")
+    .flatMap((line) => {
+      if (line.trim() === "# required insert mode") return [];
+      const match = line.match(/^\s*\S+\s+exit-insert-mode\s*(#.*)?$/);
+      return match ? (match[1] ? [match[1]] : []) : [line];
+    })
+    .join("\n");
+};
+
 const appendMissingHotkeyDeclarations = (mappings: string): string => {
   const declaredActions = new Set<string>();
   const declaredSequenceModes = new Set<string>();
@@ -86,6 +100,12 @@ const appendMissingHotkeyDeclarations = (mappings: string): string => {
   const missingDeclarations = Array.from(VALID_ACTION_NAMES)
     .filter((actionName) => !declaredActions.has(actionName))
     .map((actionName) => {
+      if (getActionMode(actionName) === "visual") {
+        const defaults = DEFAULT_VISUAL_HOTKEY_MAPPINGS.split("\n")
+          .filter((line) => line.endsWith(` ${actionName}`))
+          .filter((line) => !declaredSequenceModes.has(`visual:${line.split(" ")[0]}`));
+        if (defaults.length) return defaults.join("\n");
+      }
       if (
         actionName === "hint-mode-right-click" &&
         !declaredSequenceModes.has(`${getActionMode(actionName)}:<a-f>`)
@@ -179,9 +199,12 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
     return structuredClone(fallbackConfig);
   }
 
+  removeTypingExitOptions(migratedConfig);
+
   // if config before v1.0.4
   if (!hasForceNormalModeOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+    removeTypingExitOptions(migratedConfig);
     migrateHintActivationIndicatorOptions(migratedConfig);
     ensurePromptOptions(migratedConfig, fallbackConfig);
     migratedConfig.hotkeys.mappings = appendMissingHotkeyDeclarations(
@@ -206,6 +229,7 @@ export const migrateOldConfig = (config: unknown, fallbackConfig: Config): Confi
   // if config before v1.1.4
   if (!hasDirectivesOption(config)) {
     const migratedConfig = deepMerge(structuredClone(fallbackConfig), config);
+    removeTypingExitOptions(migratedConfig);
     const hints = migratedConfig.hints as LegacyHintsConfig;
     migrateHintActivationIndicatorOptions(migratedConfig);
     ensurePromptOptions(migratedConfig, fallbackConfig);

@@ -1,4 +1,5 @@
 import { isEditableTarget, getDeepActiveElement } from "~/src/core/utils/is-editable-target";
+import type { CoreMode } from "~/src/core/navigation/shared";
 import { getToastApi } from "~/src/core/utils/sonner";
 import type { ActivateTabMessage, TabCommandResponse } from "~/src/shared/background-messages";
 import {
@@ -47,8 +48,6 @@ import {
   getBarSuggestionItems,
   getBookmarkSuggestions
 } from "./search-suggestions";
-
-type CoreMode = "normal" | "find" | "hint" | "watch";
 
 type FindMatch = {
   range: Range;
@@ -197,6 +196,8 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
   let isFindStatusVisible = false;
   let findUIElements: FindUIElements | null = null;
   let findSessionAnchorRange: Range | null = null;
+  let visualReturn: ((range: Range | null) => void) | null = null;
+  let visualQuery = "";
   let promptSession: PromptSession = { kind: "find" };
   let barSearchEngineURL = DEFAULT_BAR_SEARCH_ENGINE_URL;
   let barSearchSuggestionsEnabled = true;
@@ -543,20 +544,15 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     return true;
   };
 
-  const commitBarValue = (value: string): boolean => {
-    const target =
-      promptSession.kind === "bar" && promptSession.mode === "new-tab" ? "new-tab" : "current-tab";
+  const navigateText = (value: string, target: "current-tab" | "new-tab"): boolean => {
     const trimmedValue = value.trim();
 
     if (!trimmedValue) {
-      clearFindSession();
       return false;
     }
 
     const destination =
       resolveBarNavigationUrl(trimmedValue) ?? resolveSearchUrl(trimmedValue, barSearchEngineURL);
-
-    clearFindSession();
 
     if (target === "new-tab") {
       window.open(destination, "_blank", "noopener,noreferrer");
@@ -565,6 +561,13 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     }
 
     return true;
+  };
+
+  const commitBarValue = (value: string): boolean => {
+    const target =
+      promptSession.kind === "bar" && promptSession.mode === "new-tab" ? "new-tab" : "current-tab";
+    clearFindSession();
+    return navigateText(value, target);
   };
 
   const getFindCountLabel = (count: number): string => `${count} Matches`;
@@ -916,7 +919,39 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     deps.setMode("normal");
   };
 
+  const getCurrentFindRange = (): Range | null => {
+    const match = findMatches[currentFindMatchIndex];
+    const range = match?.range;
+    return match?.element.isConnected &&
+      range?.startContainer.isConnected &&
+      range.endContainer.isConnected
+      ? range.cloneRange()
+      : null;
+  };
+
+  const suspendForVisual = (): void => {
+    isFindStatusVisible = false;
+    syncFindStatusVisibility();
+    hideFindBar();
+    clearFindHighlights();
+    deactivateSiteKeybindIgnore("find");
+    getFindInput()?.blur();
+  };
+
+  const finishVisualFind = (range: Range | null): void => {
+    const callback = visualReturn;
+    visualReturn = null;
+    suspendForVisual();
+    deps.setMode("normal");
+    callback?.(range);
+  };
+
   const exitFindMode = (): void => {
+    if (visualReturn) {
+      setFindQuery(visualQuery);
+      finishVisualFind(null);
+      return;
+    }
     clearFindSession();
 
     if (document.activeElement instanceof HTMLElement) {
@@ -935,6 +970,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     }
 
     setFindQuery(query);
+    if (visualReturn) {
+      finishVisualFind(getCurrentFindRange());
+      return true;
+    }
     hideFindBar();
 
     if (query.length === 0) {
@@ -952,6 +991,22 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     return true;
   };
 
+  const openFindPrompt = (): boolean => {
+    const ui = ensureFindUIReady();
+    if (!ui) return false;
+    promptSession = { kind: "find" };
+    ui.input.value = findQuery;
+    setFindQuery(ui.input.value);
+    hideBarSuggestions();
+    syncPromptKind();
+    ui.bar.setAttribute("data-visible", "true");
+    activateSiteKeybindIgnore("find");
+    deps.setMode("find");
+    ui.input.focus();
+    ui.input.select();
+    return true;
+  };
+
   const cycleFindMatch = (direction: 1 | -1): boolean => {
     if (findQuery.length === 0 || findMatches.length === 0) {
       return false;
@@ -959,7 +1014,7 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
 
     currentFindMatchIndex =
       (currentFindMatchIndex + direction + findMatches.length) % findMatches.length;
-    focusCurrentFindMatch();
+    if (deps.getMode() === "find") focusCurrentFindMatch();
     return true;
   };
 
@@ -967,25 +1022,17 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
     ensureFindUI: (): void => {
       ensureFindUIReady();
     },
-    openFindPrompt: (): boolean => {
-      const ui = ensureFindUIReady();
-
-      if (!ui) {
-        return false;
-      }
-
-      promptSession = { kind: "find" };
-      ui.input.value = findQuery;
-      setFindQuery(ui.input.value);
-      hideBarSuggestions();
-      syncPromptKind();
-      ui.bar.setAttribute("data-visible", "true");
-      activateSiteKeybindIgnore("find");
-      deps.setMode("find");
-      ui.input.focus();
-      ui.input.select();
+    openFindPrompt,
+    openVisualFind: (callback: (range: Range | null) => void): boolean => {
+      visualQuery = findQuery;
+      findSessionAnchorRange = getSelectionAnchorRange();
+      if (!openFindPrompt()) return false;
+      visualReturn = callback;
       return true;
     },
+    getCurrentFindRange,
+    suspendForVisual,
+    navigateText,
     openBarPrompt: (
       mode: "current-tab" | "new-tab" | "edit-current-tab" | "tabs",
       initialValue = ""
@@ -1020,7 +1067,10 @@ export const createFindModeController = (deps: CreateFindModeControllerDeps) => 
       activateSiteKeybindIgnore("find");
       setFindQuery(query);
     },
-    hideFindBar,
+    hideFindBar: (): void => {
+      if (visualReturn) exitFindMode();
+      else hideFindBar();
+    },
     exitFindMode,
     cycleFindMatch,
     setBarSearchEngineURL: (value: string): void => {

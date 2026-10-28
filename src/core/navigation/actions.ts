@@ -16,8 +16,10 @@ import { FIND_STYLE_ID, FOCUS_INDICATOR_EVENT, findStyleParams } from "~/src/cor
 import type { FindStyleRenderParams } from "~/src/core/styles/render-find-styles";
 import { createScrollActionSet, type ActionHandler } from "~/src/core/navigation/shared";
 import type { ActionName } from "~/src/utils/hotkeys";
+import type { VisualActions } from "~/src/core/actions/visual-mode";
 
 type NavigationActionDeps = {
+  visualController: { actions: VisualActions };
   findMode: {
     openBarPrompt: (
       mode: "current-tab" | "new-tab" | "edit-current-tab" | "tabs",
@@ -54,6 +56,7 @@ type FindModeStylesDeps = {
 };
 
 export const createNavigationActions = ({
+  visualController,
   findMode,
   hintController,
   watchController
@@ -64,6 +67,7 @@ export const createNavigationActions = ({
 } => {
   const scrollActions = createScrollActionSet();
   const actions: Record<ActionName, ActionHandler> = {
+    ...visualController.actions,
     // scroll
     "scroll-down": scrollDown,
     "scroll-half-page-down": scrollHalfPageDown,

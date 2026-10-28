@@ -31,6 +31,7 @@ Coming soon
 - ⚡️ Fast & Lightweight
 - ⌨️ Vim Style Keyboard Navigation
 - 🔎 In-Page Find Mode
+- 📝 Caret, Visual, and Visual-Line Text Selection
 - 🔗 Link Hints
 - 🖼️ Image Hints and Yank Actions
 - 📋 Clipboard Actions for Links, Images, and Tab URLs
@@ -92,6 +93,13 @@ Watch Mode:
 `m` toggle mute
 `c` toggle captions
 
+Text Selection:
+`v` enter caret mode, or visual mode with an existing selection
+`V` enter visual-line mode
+`gv` restore the last visual selection
+`c` switch to caret mode
+`y`, Enter copy selected text and exit
+
 Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x respectively. For shift+x and ctrl-shift-x, just type `X` and `<c-X>`.
 
 Full default mappings:
@@ -107,7 +115,7 @@ u scroll-half-page-up
 gg scroll-to-top
 G scroll-to-bottom
 
-# hints
+# hint entry
 f hint-mode-current-tab
 F hint-mode-new-tab
 <a-f> hint-mode-right-click
@@ -145,26 +153,75 @@ L history-go-next
 [ follow-prev
 ] follow-next
 
-# bar
+# bar entry
 o bar-mode-current-tab
 O bar-mode-new-tab
 ge bar-mode-edit-current-tab
 T bar-mode-tabs
 
-# find
+# find entry
 / find-mode
-n cycle-match-next # requires find mode
-N cycle-match-prev # requires find mode
 
-# watch
+# required find mode
+n cycle-match-next
+N cycle-match-prev
+
+# watch entry
 w watch-mode
-f toggle-fullscreen # requires watch mode
-e toggle-play-pause # requires watch mode
-l toggle-loop # requires watch mode
-m toggle-mute # requires watch mode
-c toggle-captions # requires watch mode
-j decrease-speed # requires watch mode
-k increase-speed # requires watch mode
+
+# required watch mode
+f toggle-fullscreen
+e toggle-play-pause
+l toggle-loop
+m toggle-mute
+c toggle-captions
+j decrease-speed
+k increase-speed
+
+# visual entry
+v visual-mode
+V visual-line-mode
+gv visual-restore
+
+# required visual mode
+h visual-left
+<left> visual-left
+l visual-right
+<right> visual-right
+j visual-down
+<down> visual-down
+k visual-up
+<up> visual-up
+w visual-word-forward
+W visual-word-forward
+b visual-word-backward
+B visual-word-backward
+e visual-word-end
+) visual-sentence-forward
+( visual-sentence-backward
+} visual-paragraph-forward
+{ visual-paragraph-backward
+0 visual-line-start
+$ visual-line-end
+gg visual-document-start
+G visual-document-end
+aw visual-select-word
+iw visual-select-inner-word
+as visual-select-sentence
+o visual-reverse
+c visual-caret
+v visual-character
+V visual-line
+y visual-yank
+<enter> visual-yank
+Y visual-yank-line
+p visual-open-current-tab
+P visual-open-new-tab
+/ visual-find
+n visual-find-next
+N visual-find-prev
+<c-e> visual-scroll-down
+<c-y> visual-scroll-up
 ```
 
 ## star-history

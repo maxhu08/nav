@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
+import type { CoreMode } from "~/src/core/navigation/shared";
 import type { createFindModeController } from "~/src/core/actions/find-mode";
 import {
   FIND_CURRENT_HIGHLIGHT_NAME,
@@ -52,7 +53,7 @@ beforeEach(async () => {
       : [new DOMRect(0, 0, 100, 20)]) as unknown as DOMRectList;
   };
   styles = spyOn(window, "getComputedStyle");
-  let mode: "normal" | "find" | "hint" | "watch" = "normal";
+  let mode: CoreMode = "normal";
   const module = await import("~/src/core/actions/find-mode");
   controller = module.createFindModeController({
     getMode: () => mode,

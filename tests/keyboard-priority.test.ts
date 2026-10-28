@@ -83,6 +83,8 @@ describe("keyboard priority", () => {
 
       let navActionCount = 0;
       const handleKeydown = createNavigationKeydownHandler({
+        onExitTyping: () => {},
+        visualController: { isActive: () => false, exit: () => {} },
         actions: {
           "scroll-down": () => {
             navActionCount += 1;
@@ -165,6 +167,8 @@ describe("keyboard priority", () => {
 
       const receivedKeys: string[] = [];
       const handleKeydown = createNavigationKeydownHandler({
+        onExitTyping: () => {},
+        visualController: { isActive: () => false, exit: () => {} },
         actions: {
           "yank-current-tab-url": () => true,
           "yank-link-url": () => true
@@ -244,6 +248,8 @@ describe("keyboard priority", () => {
       let getActionNameCount = 0;
       const handledKeys: string[] = [];
       const handleKeydown = createNavigationKeydownHandler({
+        onExitTyping: () => {},
+        visualController: { isActive: () => false, exit: () => {} },
         actions: {} as never,
         findMode: {
           handleFindUIKeydown: () => false,
@@ -267,6 +273,7 @@ describe("keyboard priority", () => {
         },
         isScrollAction: () => false,
         keyState: {
+          hasPendingState: () => false,
           clearPendingCount: () => {},
           clearPendingState: () => {
             clearPendingStateCount += 1;
@@ -335,6 +342,8 @@ describe("keyboard priority", () => {
 
       let navActionCount = 0;
       const handleKeydown = createNavigationKeydownHandler({
+        onExitTyping: () => {},
+        visualController: { isActive: () => false, exit: () => {} },
         actions: {
           "scroll-down": () => {
             navActionCount += 1;

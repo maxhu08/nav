@@ -108,17 +108,21 @@ function shouldProxyToastToTop(action) {
   }
 }
 
-function tryProxyToastToTop(content, { description = "", type } = {}) {
+function tryProxyToastToTop(content, { description = "", type, duration } = {}) {
   const toastType = isAllowedType(type) ? type : "info";
   return sendToastProxyMessage({
     content,
     description,
+    duration,
     toastType
   });
 }
 
-function basicToast(content, { description = "", type, action } = {}) {
-  if (shouldProxyToastToTop(action) && tryProxyToastToTop(content, { description, type })) {
+function basicToast(content, { description = "", type, action, duration = TOAST_LIFETIME } = {}) {
+  if (
+    shouldProxyToastToTop(action) &&
+    tryProxyToastToTop(content, { description, type, duration })
+  ) {
     return null;
   }
 
@@ -131,7 +135,7 @@ function basicToast(content, { description = "", type, action } = {}) {
   updateRichColors();
 
   const t = isAllowedType(type) ? type : "info";
-  return createToast(content, { description, type: t, action }).toast;
+  return createToast(content, { description, type: t, action, duration }).toast;
 }
 
 function renderToaster() {
@@ -256,7 +260,7 @@ function registerDelegatedClicks() {
   });
 }
 
-function createToast(message, { description, type, action } = {}) {
+function createToast(message, { description, type, action, duration } = {}) {
   const list = getToasterList();
   const expandAlways = list.parentElement.getAttribute("data-expand") === "true";
   const toastPosition = list.parentElement.getAttribute("data-position") || DEFAULT_POSITION;
@@ -265,12 +269,13 @@ function createToast(message, { description, type, action } = {}) {
     description,
     type,
     action,
+    duration,
     position: toastPosition
   });
 
   setTimeout(() => {
-    if (list.children.length > 0) {
-      const el = list.children[0];
+    if (renderedToast.toast.isConnected) {
+      const el = renderedToast.toast;
       const height = el.getBoundingClientRect().height;
 
       el.setAttribute("data-mounted", "true");
@@ -288,7 +293,7 @@ function createToast(message, { description, type, action } = {}) {
   return { toast: renderedToast.toast, id: renderedToast.id };
 }
 
-function renderToast(list, content, { description, type, action, position } = {}) {
+function renderToast(list, content, { description, type, action, position, duration } = {}) {
   const toastEl = document.createElement("li");
   const id = genid();
   const count = list.children.length;
@@ -309,6 +314,7 @@ function renderToast(list, content, { description, type, action, position } = {}
 
   updateElementAttributes(toastEl, {
     "data-id": id,
+    "data-duration": `${Number.isFinite(duration) && duration > 0 ? duration : TOAST_LIFETIME}`,
     "data-type": t,
     "data-position": position || "bottom-right",
     "data-removed": "false",
@@ -368,7 +374,11 @@ function refreshProperties() {
 }
 
 function registerRemoveTimeout(el) {
-  const tid = setTimeout(() => removeElement(el), TOAST_LIFETIME);
+  clearRemoveTimeout(el);
+  const tid = setTimeout(
+    () => removeElement(el),
+    Number(el.getAttribute("data-duration")) || TOAST_LIFETIME
+  );
   el.setAttribute("data-remove-tid", `${tid}`);
 }
 
@@ -433,7 +443,8 @@ function registerToastProxyListener() {
     ensureToastWrapper();
     basicToast(payload.content, {
       description: typeof payload.description === "string" ? payload.description : "",
-      type: payload.toastType
+      type: payload.toastType,
+      duration: payload.duration
     });
   });
 }

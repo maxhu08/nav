@@ -3,6 +3,7 @@ import type { ActionName } from "~/src/utils/hotkeys";
 export type ToastType = "success" | "info" | "warning" | "error";
 
 export type ToastPayload = {
+  duration?: number;
   content: string;
   description?: string;
   toastType?: ToastType;
@@ -51,6 +52,10 @@ export const normalizeToastPayload = (value: unknown): ToastPayload | null => {
   }
 
   return {
+    duration:
+      typeof data.duration === "number" && Number.isFinite(data.duration) && data.duration > 0
+        ? data.duration
+        : undefined,
     content: data.content,
     description: typeof data.description === "string" ? data.description : "",
     toastType: isToastType(data.toastType) ? data.toastType : "info"

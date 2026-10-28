@@ -1,4 +1,44 @@
+export const VISUAL_ACTION_NAMES = [
+  "visual-left",
+  "visual-right",
+  "visual-down",
+  "visual-up",
+  "visual-word-forward",
+  "visual-word-backward",
+  "visual-word-end",
+  "visual-sentence-forward",
+  "visual-sentence-backward",
+  "visual-paragraph-forward",
+  "visual-paragraph-backward",
+  "visual-line-start",
+  "visual-line-end",
+  "visual-document-start",
+  "visual-document-end",
+  "visual-select-word",
+  "visual-select-inner-word",
+  "visual-select-sentence",
+  "visual-reverse",
+  "visual-caret",
+  "visual-character",
+  "visual-line",
+  "visual-yank",
+  "visual-yank-line",
+  "visual-open-current-tab",
+  "visual-open-new-tab",
+  "visual-find",
+  "visual-find-next",
+  "visual-find-prev",
+  "visual-scroll-down",
+  "visual-scroll-up"
+] as const;
+
+export type VisualActionName = (typeof VISUAL_ACTION_NAMES)[number];
+
 export type ActionName =
+  | VisualActionName
+  | "visual-mode"
+  | "visual-line-mode"
+  | "visual-restore"
   | "scroll-down"
   | "scroll-up"
   | "scroll-left"
@@ -54,6 +94,10 @@ export type ActionName =
   | "increase-speed";
 
 export const VALID_ACTION_NAMES = new Set<ActionName>([
+  ...VISUAL_ACTION_NAMES,
+  "visual-mode",
+  "visual-line-mode",
+  "visual-restore",
   "scroll-down",
   "scroll-up",
   "scroll-left",
@@ -115,7 +159,7 @@ export const isActionName = (value: string): value is ActionName => {
   return VALID_ACTION_NAMES.has(value as ActionName);
 };
 
-export type HotkeyActionMode = "normal" | "find" | "watch";
+export type HotkeyActionMode = "normal" | "find" | "watch" | "visual";
 
 export type HotkeyMappings = Partial<Record<string, Partial<Record<HotkeyActionMode, ActionName>>>>;
 
@@ -131,6 +175,9 @@ const WATCH_MODE_ACTION_NAMES = new Set<ActionName>([
 ]);
 
 export const getActionMode = (actionName: ActionName): HotkeyActionMode => {
+  if ((VISUAL_ACTION_NAMES as readonly string[]).includes(actionName)) {
+    return "visual";
+  }
   if (FIND_MODE_ACTION_NAMES.has(actionName)) {
     return "find";
   }

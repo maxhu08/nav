@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseHotkeyMappingsValue } from "~/src/utils/hotkeys";
+import { parseHotkeyMappingsValue, VISUAL_ACTION_NAMES } from "~/src/utils/hotkeys";
 
 describe("parseHotkeyMappingsValue", () => {
   test("treats <unbound> actions as declared without creating bindings", () => {
@@ -55,7 +55,11 @@ describe("parseHotkeyMappingsValue", () => {
 <unbound> toggle-mute
 <unbound> toggle-captions
 <unbound> decrease-speed
-<unbound> increase-speed`);
+<unbound> increase-speed
+<unbound> visual-mode
+<unbound> visual-line-mode
+<unbound> visual-restore
+${VISUAL_ACTION_NAMES.map((action) => `<unbound> ${action}`).join("\n")}`);
 
     expect(parsed.errors).toEqual([]);
     expect(parsed.mappings).toEqual({

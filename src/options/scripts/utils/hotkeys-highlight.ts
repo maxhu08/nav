@@ -31,6 +31,7 @@ const getActionClassName = (actionName: string): string => {
   }
 
   const mode = getActionMode(actionName);
+  if (mode === "visual") return "hotkeys-mappings-token-action-visual";
 
   if (mode === "watch") {
     return "hotkeys-mappings-token-action-watch";

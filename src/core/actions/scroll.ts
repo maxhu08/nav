@@ -422,6 +422,27 @@ const scrollTo = (direction: ScrollAxis, pos: number | "max"): boolean => {
   return animateScroll(element, direction, amount);
 };
 
+export const scrollRangeIntoView = (range: Range): void => {
+  const node = range.startContainer;
+  let element = node instanceof Element ? node : node.parentElement;
+  while (element) {
+    if (element instanceof HTMLElement) {
+      const rect = range.getBoundingClientRect();
+      const viewport = element === getScrollingElement();
+      const bounds = element.getBoundingClientRect();
+      const top = viewport ? 0 : bounds.top + element.clientTop;
+      const left = viewport ? 0 : bounds.left + element.clientLeft;
+      const bottom = top + (viewport ? window.innerHeight : element.clientHeight);
+      const right = left + (viewport ? window.innerWidth : element.clientWidth);
+      const y = rect.top < top ? rect.top - top : Math.max(0, rect.bottom - bottom);
+      const x = rect.left < left ? rect.left - left : Math.max(0, rect.right - right);
+      if (y && shouldScroll(element, "y")) performScroll(element, "y", y);
+      if (x && shouldScroll(element, "x")) performScroll(element, "x", x);
+    }
+    element = getContainingElement(element);
+  }
+};
+
 export const installScrollTracking = (): void => {
   resetScrollState();
 

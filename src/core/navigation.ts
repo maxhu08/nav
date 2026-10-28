@@ -1,12 +1,13 @@
 import { createFindModeController } from "~/src/core/actions/find-mode";
 import { createHintController } from "~/src/core/actions/hint-mode";
 import { createWatchController } from "~/src/core/actions/watch-mode";
+import { createVisualModeController } from "~/src/core/actions/visual-mode";
 import { createStorageChangeHandler, syncFastConfig } from "~/src/core/utils/fast-config-sync";
 import { createFocusIndicatorController } from "~/src/core/utils/focus-indicator";
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import { createKeyState } from "~/src/core/utils/key-state";
 import { subscribeToFrameActionMessages } from "~/src/core/utils/runtime-bridge";
-import { ensureToastWrapper } from "~/src/core/utils/sonner";
+import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 import { createNavigationActions, createFindModeStylesBridge } from "~/src/core/navigation/actions";
 import { isFrameActionMessage } from "~/src/core/navigation/frame-actions";
 import { createForceNormalModeController } from "~/src/core/navigation/force-normal-mode";
@@ -14,7 +15,6 @@ import { registerRuntimeListeners } from "~/src/core/navigation/init-listeners";
 import { createNavigationKeydownHandler } from "~/src/core/navigation/keydown";
 import { createKeyboardPriorityController } from "~/src/core/navigation/keyboard-priority";
 import { createModeController } from "~/src/core/navigation/shared";
-import { type FastConfig } from "~/src/utils/fast-config";
 
 let isInitialized = false;
 
@@ -43,7 +43,15 @@ const watchController = createWatchController({
   getActionSequence: keyState.getActionSequence
 });
 
+const visualController = createVisualModeController({
+  getMode: modeController.getMode,
+  setMode: modeController.setMode,
+  clearPendingState: keyState.clearPendingState,
+  findMode
+});
+
 const navigationActions = createNavigationActions({
+  visualController,
   findMode,
   hintController,
   watchController
@@ -66,10 +74,19 @@ const forceNormalMode = createForceNormalModeController({
 });
 
 const setForceNormalMode = (value: boolean): void => {
+  if (value && visualController.isActive()) visualController.exit();
   forceNormalMode.setForceNormalMode(value);
 };
 
 const handleKeydown = createNavigationKeydownHandler({
+  onExitTyping: (target) => {
+    visualController.rememberEditableTarget(target);
+    if (findMode.isFindModeActive()) findMode.exitFindMode();
+    if (watchController.isWatchModeActive()) watchController.exitWatchMode();
+    modeController.setMode("normal");
+    getToastApi()?.info("Normal mode", { duration: 1000 });
+  },
+  visualController,
   actions: navigationActions.actions,
   findMode,
   forceNormalMode: {
@@ -93,9 +110,7 @@ const handleFrameActionMessage = (message: unknown): void => {
 
 const fastConfigSyncDeps = {
   applyHotkeyMappings: keyState.applyHotkeyMappings,
-  applyUrlRules: (rules: FastConfig["rules"]["urls"]): void => {
-    keyState.applyUrlRules(rules);
-  },
+  applyUrlRules: keyState.applyUrlRules,
   setForceNormalMode,
   setBarColor: focusIndicator.setBarColor,
   setBarTabsColor: focusIndicator.setBarTabsColor,

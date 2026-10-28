@@ -1,6 +1,7 @@
 import type { FastConfig, FastRule } from "~/src/utils/fast-config";
 import type { ActionName, HotkeyActionMode, HotkeyMappings } from "~/src/utils/hotkeys";
 import { HOTKEY_UNBOUND_SEQUENCE } from "~/src/utils/hotkeys";
+import type { CoreMode } from "~/src/core/navigation/shared";
 
 const KEY_SEQUENCE_TIMEOUT_MS = 1000;
 
@@ -19,13 +20,21 @@ type WatchActionName =
   | "toggle-captions"
   | "decrease-speed"
   | "increase-speed";
-type KeyStateMode = "normal" | "find" | "hint" | "watch";
 
 type CreateKeyStateDeps = {
-  getMode: () => KeyStateMode;
+  getMode: () => CoreMode;
 };
 
 const normalizeBaseKey = (key: string): string | null => {
+  const named: Record<string, string> = {
+    ArrowLeft: "<left>",
+    ArrowRight: "<right>",
+    ArrowDown: "<down>",
+    ArrowUp: "<up>",
+    Enter: "<enter>",
+    Escape: "<escape>"
+  };
+  if (named[key]) return named[key];
   if (key === " ") {
     return "<space>";
   }
@@ -73,8 +82,11 @@ export const getKeyToken = (event: KeyboardEvent): string | null => {
     modifiers.push("a");
   }
 
+  if (event.shiftKey && event.key.length > 1) modifiers.push("s");
+
   if (modifiers.length > 0) {
-    return `<${modifiers.join("-")}-${normalizedKey}>`;
+    const base = normalizedKey.startsWith("<") ? normalizedKey.slice(1, -1) : normalizedKey;
+    return `<${modifiers.join("-")}-${base}>`;
   }
 
   return normalizedKey;
@@ -164,6 +176,10 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
 
   const getActiveModes = (): HotkeyActionMode[] => {
     const mode = deps.getMode();
+
+    if (mode === "caret" || mode === "visual" || mode === "visual-line") {
+      return ["visual"];
+    }
 
     if (mode === "find") {
       return ["find", "normal"];
@@ -304,6 +320,7 @@ export const createKeyState = (deps: CreateKeyStateDeps) => {
     },
     clearPendingCount,
     clearPendingState,
+    hasPendingState: (): boolean => !!pendingSequence || !!pendingCount,
     hasAllowedActionMappings,
     resolveCount,
     isActionAllowed,

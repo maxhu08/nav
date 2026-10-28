@@ -108,7 +108,7 @@ const isHintCustomSelectorShapeValid = (value: unknown): value is HintCustomSele
   });
 };
 
-const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch"];
+const HOTKEY_ACTION_MODES: HotkeyActionMode[] = ["normal", "find", "watch", "visual"];
 const isHotkeyMappingsShapeValid = (value: unknown): value is HotkeyMappings => {
   if (typeof value !== "object" || value === null) {
     return false;

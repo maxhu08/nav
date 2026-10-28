@@ -72,33 +72,50 @@
             <br />
             <p class="text-base text-white">Example: allow all actions only on github.com and example.com</p>
             <p class="text-base text-neutral-500">Select whitelist mode and paste this into `rules.urls.whitelist`:</p>
-            <pre
-              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
-            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/
-<span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>example<span class="text-[#d6b97c]">\.</span>com/</code></pre>
+            <pre class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"><code
+              class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span
+                class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span
+                class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span
+                class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span
+                class="text-[#d6b97c]">\.</span>com/
+              <span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span
+                class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span
+                class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span
+                class="text-[#d6b97c]">*</span>example<span class="text-[#d6b97c]">\.</span>com/</code></pre>
             <p class="text-base text-neutral-500">All nav actions are allowed on these sites, including their subdomains. All actions remain blocked on other sites.</p>
             <br />
             <p class="text-base text-white">Example: block all actions on github.com</p>
             <p class="text-base text-neutral-500">Select blacklist mode and paste this into `rules.urls.blacklist`:</p>
-            <pre
-              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
-            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/</code></pre>
+            <pre class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"><code
+              class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span
+                class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span
+                class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span
+                class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span
+                class="text-[#d6b97c]">\.</span>com/</code></pre>
             <p class="text-base text-neutral-500">All nav actions are blocked on GitHub and its subdomains. Other sites remain allowed.</p>
             <br />
             <p class="text-base text-white">Example: allow only specific actions on github.com</p>
-            <pre
-              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
-            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/
-<span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">hint-mode-current-tab hint-mode-right-click yank-current-tab-url</span></code></pre>
+            <pre class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"><code
+              class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span
+                class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span
+                class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span
+                class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span
+                class="text-[#d6b97c]">\.</span>com/
+              <span class="text-[#c586c0]">+</span> <span class="text-[#dcdcaa]">hint-mode-current-tab
+                hint-mode-right-click yank-current-tab-url</span></code></pre>
             <p class="text-base text-neutral-500">
               In either mode, this allows only the three listed actions on GitHub. Other sites follow the selected mode's default: allowed in blacklist mode, blocked in whitelist mode.
             </p>
             <br />
             <p class="text-base text-white">Example: block only specific actions on github.com</p>
-            <pre
-              class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"
-            ><code class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span class="text-[#d6b97c]">\.</span>com/
-<span class="text-[#c586c0]">-</span> <span class="text-[#dcdcaa]">scroll-down scroll-up</span></code></pre>
+            <pre class="overflow-x-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500"><code
+              class="text-[#d06969]"><span class="text-[#569cd6]">*</span> <span
+                class="text-[#d6b97c]">^</span>https<span class="text-[#d6b97c]">?</span>://<span
+                class="text-[#cd9077]">(</span><span class="text-[#d6b97c]">[a-z0-9-]+\.</span><span
+                class="text-[#cd9077]">)</span><span class="text-[#d6b97c]">*</span>github<span
+                class="text-[#d6b97c]">\.</span>com/
+              <span class="text-[#c586c0]">-</span> <span class="text-[#dcdcaa]">scroll-down scroll-up</span></code>
+          </pre>
             <p class="text-base text-neutral-500">
               In either mode, this blocks `scroll-down` and `scroll-up` on GitHub and allows every other action there. Other sites still follow the selected mode's default.
             </p>
@@ -150,6 +167,10 @@
               - Find mode actions (`cycle-match-next`, `cycle-match-prev`) only work while find mode is active.
               <br />
               - Watch mode actions (`toggle-fullscreen`, `toggle-play-pause`) only work while watch mode is active.
+              <br />
+              - Visual actions share one keymap across caret, visual, and visual-line modes. Normal-mode actions do not fall through while selecting text.
+              <br />
+              - Escape and Ctrl-[ leave typing in editable fields. These keys are fixed; ordinary typing is never buffered.
               <br /><br />
               Default hint bindings are `f`, `F`, and `&lt;a-f&gt;` for current-tab, new-tab, and right-click hint mode.
               <br /><br />
@@ -167,6 +188,8 @@
               <br />
               - <span class="text-[#10b981]">Watch mode actions</span> are green.
               <br />
+              - <span class="text-[#c084fc]">Visual mode actions</span> are purple.
+              <br />
               - <span class="text-[#f43f5e]">Invalid tokens</span> are red.
             </p>
           </div>
@@ -176,6 +199,9 @@
               <p class="text-neutral-500"># in normal mode</p>
               <p class="text-[#dcdcaa]">watch-mode</p>
               <p class="text-[#dcdcaa]">find-mode</p>
+              <p class="text-[#dcdcaa]">visual-mode</p>
+              <p class="text-[#dcdcaa]">visual-line-mode</p>
+              <p class="text-[#dcdcaa]">visual-restore</p>
               <p class="text-[#dcdcaa]">scroll-left</p>
               <p class="text-[#dcdcaa]">scroll-down</p>
               <p class="text-[#dcdcaa]">scroll-up</p>
@@ -229,9 +255,84 @@
               <p class="text-[#10b981]">toggle-captions</p>
               <p class="text-[#10b981]">decrease-speed</p>
               <p class="text-[#10b981]">increase-speed</p>
+              <br />
+              <p class="text-neutral-500"># in caret, visual, and visual-line modes</p>
+              <p class="text-[#c084fc]">visual-left</p>
+              <p class="text-[#c084fc]">visual-right</p>
+              <p class="text-[#c084fc]">visual-down</p>
+              <p class="text-[#c084fc]">visual-up</p>
+              <p class="text-[#c084fc]">visual-word-forward</p>
+              <p class="text-[#c084fc]">visual-word-backward</p>
+              <p class="text-[#c084fc]">visual-word-end</p>
+              <p class="text-[#c084fc]">visual-sentence-forward</p>
+              <p class="text-[#c084fc]">visual-sentence-backward</p>
+              <p class="text-[#c084fc]">visual-paragraph-forward</p>
+              <p class="text-[#c084fc]">visual-paragraph-backward</p>
+              <p class="text-[#c084fc]">visual-line-start</p>
+              <p class="text-[#c084fc]">visual-line-end</p>
+              <p class="text-[#c084fc]">visual-document-start</p>
+              <p class="text-[#c084fc]">visual-document-end</p>
+              <p class="text-[#c084fc]">visual-select-word</p>
+              <p class="text-[#c084fc]">visual-select-inner-word</p>
+              <p class="text-[#c084fc]">visual-select-sentence</p>
+              <p class="text-[#c084fc]">visual-reverse</p>
+              <p class="text-[#c084fc]">visual-caret</p>
+              <p class="text-[#c084fc]">visual-character</p>
+              <p class="text-[#c084fc]">visual-line</p>
+              <p class="text-[#c084fc]">visual-yank</p>
+              <p class="text-[#c084fc]">visual-yank-line</p>
+              <p class="text-[#c084fc]">visual-open-current-tab</p>
+              <p class="text-[#c084fc]">visual-open-new-tab</p>
+              <p class="text-[#c084fc]">visual-find</p>
+              <p class="text-[#c084fc]">visual-find-next</p>
+              <p class="text-[#c084fc]">visual-find-prev</p>
+              <p class="text-[#c084fc]">visual-scroll-down</p>
+              <p class="text-[#c084fc]">visual-scroll-up</p>
             </div>
             <div class="grid gap-4">
               <p class="text-base text-neutral-500">In normal mode:</p>
+              <div class="grid gap-1">
+                <p class="text-base text-[#dcdcaa]">visual-mode / visual-line-mode / visual-restore</p>
+                <p class="text-base text-neutral-500">
+                  Defaults: `v`, `V`, and `gv`. Enter characterwise or whole-rendered-line selection, or restore the last visual selection on this page. Without a usable selection, entry falls back to
+                  caret mode: move to a starting point, then press `v` or `V`. Automatic placement prefers substantial visible text and falls back to short text on sparse pages. Restore refuses
+                  changed text/endpoints or a changed page URL. Existing configs receive these entry actions as `&lt;unbound&gt;`, with the mode-local bindings populated automatically.
+                </p>
+              </div>
+              <div id="visual-mode" class="grid gap-2">
+                <p class="text-base text-[#c084fc]">In caret, visual, and visual-line modes:</p>
+                <p class="text-base text-neutral-500">
+                  In Chromium, leave typing with Escape or Ctrl-[, then press `v` or `V` to select inside that same input or textarea. Clicking elsewhere or changing the field invalidates the saved
+                  selection. Mode changes show a brief toast instead of a persistent overlay.
+                </p>
+                <p class="text-base text-neutral-500">
+                  The same keys move a one-character caret, extend a characterwise selection, or extend whole rendered lines. These are text-selection modes, not editors. Keys typed in inputs and
+                  contenteditable fields remain native until a selection mode is active. Editable-field movement depends on browser support; Firefox does not move input/textarea selections through the
+                  native selection API.
+                </p>
+                <p class="text-base text-neutral-500">
+                  `visual-left/right/down/up`: `h/l/j/k` and arrows. `visual-word-forward/backward/end`: `w/b/e`; `W/B` alias `w/b`. `visual-line-start/end`: `0/$`. `visual-document-start/end`:
+                  `gg/G`. `visual-sentence-forward/backward`: `)/(`. `visual-paragraph-forward/backward`: `}/{`. Counts such as `3w` repeat movement. Sentence/paragraph fallbacks in Firefox are
+                  approximate.
+                </p>
+                <p class="text-base text-neutral-500">
+                  `visual-select-word/sentence`: `aw/as`, select the current word or sentence. `visual-select-inner-word`: `iw`, the current word or punctuation/whitespace run without surrounding
+                  whitespace; counts include separators between words. `visual-reverse`: `o`, swap which endpoint moves.
+                </p>
+                <p class="text-base text-neutral-500">
+                  `visual-character`: `v`, characterwise selection. `visual-line`: `V`, whole rendered lines. `visual-caret`: `c`, collapse to a one-character caret. Escape (or `Ctrl-[`) clears
+                  pending input first, otherwise exits. Escape normally collapses to the moving endpoint, other exits to the anchor; selections present on initial user entry are retained. Clicking a
+                  focusable element also exits.
+                </p>
+                <p class="text-base text-neutral-500">
+                  `visual-yank`: `y` or unmodified Enter, copy and exit. `visual-yank-line`: `Y`, select and copy line(s), including a following newline. `visual-open-current-tab/new-tab`: `p/P`, copy
+                  and open a URL or search the selected text using your configured search engine.
+                </p>
+                <p class="text-base text-neutral-500">
+                  `visual-find`: `/`, open find and return to visual mode when finished; cancel restores the previous selection. `visual-find-next/prev`: `n/N`, select another match instead of
+                  extending to it. `visual-scroll-down/up`: `Ctrl-e/Ctrl-y`, scroll without moving the selection.
+                </p>
+              </div>
               <div class="grid gap-1">
                 <p class="text-base text-[#dcdcaa]">scroll-left</p>
                 <p class="text-base text-neutral-500">Scrolls left in the current scrollable area.</p>
@@ -867,14 +968,14 @@
               fall back to the built-in match colors. Only resolved colors are applied to the webpage; the custom stylesheet itself stays inside the UI.
             </p>
             <pre class="overflow-auto rounded-md bg-neutral-800 p-3 font-mono text-base text-neutral-500">
-/* Add after the starter CSS. */
-:scope {
-  background: #202430;
-  border-radius: 12px;
-  --nav-find-match-background: #554400;
-  --nav-find-current-match-background: #ffcc00;
-  --nav-find-match-color: #ffffff;
-}</pre>
+            /* Add after the starter CSS. */
+            :scope {
+            background: #202430;
+            border-radius: 12px;
+            --nav-find-match-background: #554400;
+            --nav-find-current-match-background: #ffcc00;
+            --nav-find-match-color: #ffffff;
+            }</pre>
           </div>
           <div class="grid gap-2">
             <p id="find-width" class="text-base text-white"><a href="#find-width">find.width</a></p>

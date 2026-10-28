@@ -47,6 +47,8 @@ describe("watch mode", () => {
 
       let scrolls = 0;
       const handleKeydown = createNavigationKeydownHandler({
+        onExitTyping: () => {},
+        visualController: { isActive: () => false, exit: () => {} },
         actions: {
           "scroll-down": () => {
             scrolls += 1;
@@ -155,15 +157,11 @@ describe("watch mode", () => {
       expect(controller.toggleVideoControls()).toBe(true);
       expect(document.querySelectorAll('[data-watch-label="true"] svg')).toHaveLength(0);
 
-      keyState.applyHotkeyMappings(
-        parseHotkeyMappingsValue(
-          DEFAULT_HOTKEY_MAPPINGS.replace(
-            /^\S+ (.+ # requires watch mode)$/gm,
-            `${HOTKEY_UNBOUND_SEQUENCE} $1`
-          )
-        ).mappings,
-        {}
-      );
+      const mappings = parseHotkeyMappingsValue(DEFAULT_HOTKEY_MAPPINGS).mappings;
+      for (const binding of Object.values(mappings)) {
+        if (binding) delete binding.watch;
+      }
+      keyState.applyHotkeyMappings(mappings, {});
       controller.syncWatchHintsOverlay();
 
       const labels = document.querySelectorAll('[data-watch-label="true"]');

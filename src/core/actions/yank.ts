@@ -1,29 +1,6 @@
 import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
 import { getCleanUrl, getNormalizedUrl } from "~/src/utils/url";
-
-const writeClipboard = async (text: string): Promise<boolean> => {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.setAttribute("readonly", "true");
-    textarea.style.position = "fixed";
-    textarea.style.top = "-9999px";
-    textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
-
-    textarea.focus();
-    textarea.select();
-
-    try {
-      return document.execCommand("copy");
-    } finally {
-      textarea.remove();
-    }
-  }
-};
+import { writeClipboardText } from "~/src/core/utils/hint-mode/actions/write-clipboard-text";
 
 const getNormalizedCurrentUrl = (): string => getNormalizedUrl(window.location.href);
 const getCleanCurrentUrl = (): string => getCleanUrl(window.location.href);
@@ -43,7 +20,7 @@ const showYankToast = (type: "success" | "error", message: string, description: 
 export const yankCurrentTabUrl = (): boolean => {
   const currentUrl = getNormalizedCurrentUrl();
 
-  void writeClipboard(currentUrl).then((didCopy) => {
+  void writeClipboardText(currentUrl).then((didCopy) => {
     if (didCopy) {
       showYankToast("success", "Current tab URL yanked.", currentUrl);
       return;
@@ -58,7 +35,7 @@ export const yankCurrentTabUrl = (): boolean => {
 export const yankCurrentTabUrlClean = (): boolean => {
   const currentUrl = getCleanCurrentUrl();
 
-  void writeClipboard(currentUrl).then((didCopy) => {
+  void writeClipboardText(currentUrl).then((didCopy) => {
     if (didCopy) {
       showYankToast("success", "Clean current tab URL yanked.", currentUrl);
       return;

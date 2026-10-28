@@ -1,4 +1,4 @@
-type SiteKeybindIgnoreOwner = "find" | "hints" | "watch";
+type SiteKeybindIgnoreOwner = "find" | "hints" | "watch" | "visual";
 
 const activeOwners = new Set<SiteKeybindIgnoreOwner>();
 

@@ -58,6 +58,7 @@ const installDomGlobals = (window: JSDOM["window"]): (() => void) => {
     ["ShadowRoot", domWindow.ShadowRoot],
     ["SVGElement", domWindow.SVGElement],
     ["CustomEvent", domWindow.CustomEvent],
+    ["InputEvent", domWindow.InputEvent],
     ["MutationObserver", domWindow.MutationObserver],
     ["DOMRect", domWindow.DOMRect],
     ["getComputedStyle", window.getComputedStyle.bind(window)]

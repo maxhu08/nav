@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import type { CoreMode } from "~/src/core/navigation/shared";
 import {
   handleActivateTabMessage,
   handleFetchTabSuggestionsMessage
@@ -84,7 +85,7 @@ beforeEach(async () => {
       windows: { update: focus }
     }
   });
-  let mode: "normal" | "find" | "hint" | "watch" = "normal";
+  let mode: CoreMode = "normal";
   const { createFindModeController } = await import("~/src/core/actions/find-mode");
   controller = createFindModeController({
     getMode: () => mode,

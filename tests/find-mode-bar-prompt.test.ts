@@ -1,11 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import type { CoreMode } from "~/src/core/navigation/shared";
 import { getFindBar, getFindInput } from "~/src/core/utils/get-ui";
 import { resetSiteKeybindIgnoreForTests } from "~/src/core/utils/ignore-site-keybinds";
 import { createDomFixture } from "~/tests/helpers/dom-fixture";
 
 const createController = async () => {
   const { createFindModeController } = await import("~/src/core/actions/find-mode");
-  let mode: "normal" | "find" | "hint" | "watch" = "normal";
+  let mode: CoreMode = "normal";
 
   return createFindModeController({
     getMode: () => mode,
