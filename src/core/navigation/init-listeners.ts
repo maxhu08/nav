@@ -68,6 +68,9 @@ export const registerRuntimeListeners = ({
   document.addEventListener("pause", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("ended", watchController.handleWatchMediaStateChange, true);
   document.addEventListener("ratechange", watchController.handleWatchMediaStateChange, true);
+  document.addEventListener("loadstart", watchController.handleWatchMediaStateChange, true);
+  document.addEventListener("loadedmetadata", watchController.handleWatchMediaStateChange, true);
+  document.addEventListener("playing", watchController.handleWatchMediaStateChange, true);
 
   try {
     const originalPushState = history.pushState;
@@ -93,7 +96,9 @@ export const registerRuntimeListeners = ({
   });
   watchDomObserver.observe(document.documentElement, {
     childList: true,
-    subtree: true
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["src"]
   });
   document.addEventListener("mousedown", (event) => {
     if (!isFindUIElement(event.target)) {

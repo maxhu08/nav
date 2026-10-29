@@ -15,10 +15,27 @@ import {
 } from "~/src/core/actions/watch-mode/toggles";
 import { pickBestWatchVideo } from "~/src/core/actions/watch-mode/video-state";
 
+const getWatchVideoSource = (video: HTMLVideoElement) => {
+  // Prefer declared sources: currentSrc can still refer to the previous video during loading.
+  return (
+    video.srcObject ??
+    (video.src ||
+      Array.from(
+        video.querySelectorAll<HTMLSourceElement>("source[src]"),
+        (source) => source.src
+      ).join("\n") ||
+      video.currentSrc)
+  );
+};
+
 export const createWatchController = (deps: WatchControllerDeps) => {
   let watchVideoElement: HTMLVideoElement | null = null;
+  let watchVideoSource: ReturnType<typeof getWatchVideoSource> = "";
   let watchRouteKey = window.location.href;
-  let isWaitingForWatchVideoRefresh = false;
+  let speedState: {
+    video: HTMLVideoElement;
+    source: ReturnType<typeof getWatchVideoSource>;
+  } | null = null;
   const captionsStateByVideo = new WeakMap<HTMLVideoElement, boolean>();
   let lastWatchToastMessage = "";
   let lastWatchToastAt = 0;
@@ -37,6 +54,25 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     );
   };
 
+  const syncWatchVideoSpeed = (video: HTMLVideoElement | null): void => {
+    if (!speedState || !video) {
+      return;
+    }
+
+    const source = getWatchVideoSource(video);
+    // Players can temporarily clear their source between loads.
+    if (video === speedState.video && !source) {
+      return;
+    }
+
+    const changed =
+      video !== speedState.video || (speedState.source !== "" && source !== speedState.source);
+    speedState = { video, source };
+    if (changed) {
+      video.playbackRate = 1;
+    }
+  };
+
   const getTrackedWatchVideo = (): HTMLVideoElement | null => {
     if (watchVideoElement && watchVideoElement.isConnected) {
       return watchVideoElement;
@@ -53,25 +89,13 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     }
 
     watchRouteKey = nextRouteKey;
-    watchVideoElement = null;
-    isWaitingForWatchVideoRefresh = true;
     return true;
-  };
-
-  const reacquireWatchVideo = (): HTMLVideoElement | null => {
-    const nextVideo = pickBestWatchVideo(null, true);
-    if (!nextVideo) {
-      return null;
-    }
-
-    watchVideoElement = nextVideo;
-    isWaitingForWatchVideoRefresh = false;
-    return nextVideo;
   };
 
   const exitWatchMode = (): void => {
     deps.setMode("normal");
-    isWaitingForWatchVideoRefresh = false;
+    watchVideoElement = null;
+    watchVideoSource = "";
     deactivateSiteKeybindIgnore("watch");
     overlay.hideOverlay();
   };
@@ -81,19 +105,26 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return null;
     }
 
-    refreshWatchRouteKey();
-
-    if (isWaitingForWatchVideoRefresh) {
-      return reacquireWatchVideo();
+    const video = refreshWatchRouteKey() ? pickBestWatchVideo(null, true) : getTrackedWatchVideo();
+    if (!video) {
+      exitWatchMode();
+      return null;
     }
 
-    const trackedVideo = getTrackedWatchVideo();
-    if (trackedVideo) {
-      return trackedVideo;
+    syncWatchVideoSpeed(video);
+    const source = getWatchVideoSource(video);
+    if (
+      video !== watchVideoElement ||
+      (source !== "" && watchVideoSource !== "" && source !== watchVideoSource)
+    ) {
+      exitWatchMode();
+      return null;
     }
 
-    exitWatchMode();
-    return null;
+    if (source !== "") {
+      watchVideoSource = source;
+    }
+    return video;
   };
 
   const showWatchToggleToast = (message: string): void => {
@@ -123,6 +154,16 @@ export const createWatchController = (deps: WatchControllerDeps) => {
     overlay.showOverlay(video);
   };
 
+  const syncWatchMediaState = (): void => {
+    if (deps.isWatchMode()) {
+      syncWatchHintsOverlay();
+    }
+
+    if (!deps.isWatchMode() && speedState) {
+      syncWatchVideoSpeed(pickBestWatchVideo(null, true));
+    }
+  };
+
   const toggleDeps = {
     getVideo: getActiveWatchVideo,
     showActivationIndicator: showWatchActivationIndicator,
@@ -137,6 +178,7 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       return false;
     }
 
+    speedState = { video, source: getWatchVideoSource(video) };
     video.playbackRate = Math.min(16, Math.max(0.25, video.playbackRate + amount));
     syncWatchHintsOverlay();
     return true;
@@ -144,29 +186,15 @@ export const createWatchController = (deps: WatchControllerDeps) => {
 
   return {
     syncWatchHintsOverlay,
-    handleWatchMediaStateChange: (): void => {
-      if (!deps.isWatchMode()) {
-        return;
-      }
-
-      syncWatchHintsOverlay();
-    },
+    handleWatchMediaStateChange: syncWatchMediaState,
     handleWatchRouteChange: (): void => {
       if (!deps.isWatchMode()) {
         watchRouteKey = window.location.href;
-        return;
       }
 
-      refreshWatchRouteKey();
-      syncWatchHintsOverlay();
+      syncWatchMediaState();
     },
-    handleWatchDomMutation: (): void => {
-      if (!deps.isWatchMode() || !isWaitingForWatchVideoRefresh) {
-        return;
-      }
-
-      syncWatchHintsOverlay();
-    },
+    handleWatchDomMutation: syncWatchMediaState,
     getWatchActionSequences: (): Record<
       | "toggle-fullscreen"
       | "toggle-play-pause"
@@ -203,8 +231,8 @@ export const createWatchController = (deps: WatchControllerDeps) => {
       }
 
       watchVideoElement = targetVideo;
+      watchVideoSource = getWatchVideoSource(targetVideo);
       watchRouteKey = window.location.href;
-      isWaitingForWatchVideoRefresh = false;
       deps.setMode("watch");
       activateSiteKeybindIgnore("watch");
       targetVideo.focus({ preventScroll: true });

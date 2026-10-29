@@ -1,4 +1,6 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import type { createWatchController } from "~/src/core/actions/watch-mode";
+import { WATCH_HINTS_ID } from "~/src/core/utils/get-ui";
 import {
   activateSiteKeybindIgnore,
   deactivateSiteKeybindIgnore,
@@ -20,6 +22,197 @@ const setVideoRect = (video: HTMLVideoElement, top: number): void => {
   const rect = new DOMRect(0, top, 640, 360);
   video.getBoundingClientRect = (): DOMRect => rect;
 };
+
+describe("watch playback speed lifecycle", () => {
+  let fixture: ReturnType<typeof createDomFixture>;
+  let controller: ReturnType<typeof createWatchController>;
+  let video: HTMLVideoElement;
+  let mode: "normal" | "watch";
+
+  beforeEach(async () => {
+    fixture = createDomFixture("<video src='/first.mp4'></video>");
+    mode = "normal";
+    const module = await import("~/src/core/actions/watch-mode");
+    controller = module.createWatchController({
+      isWatchMode: () => mode === "watch",
+      setMode: (value) => {
+        mode = value;
+      },
+      getActionSequence: (_, fallback) => fallback
+    });
+    video = document.querySelector("video")!;
+    setVideoRect(video, 0);
+    controller.toggleVideoControls();
+  });
+
+  afterEach(() => {
+    resetSiteKeybindIgnoreForTests();
+    fixture.cleanup();
+  });
+
+  test("resets a reused SPA player when its source changes, not when its URL changes", () => {
+    controller.increaseSpeed();
+    history.pushState({}, "", "/watch/second");
+    controller.handleWatchRouteChange();
+    expect(video.playbackRate).toBe(1.25);
+
+    video.src = "/second.mp4";
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1);
+    expect(document.getElementById(WATCH_HINTS_ID)?.getAttribute("data-visible")).toBe("false");
+    expect(mode).toBe("normal");
+  });
+
+  test("resets the next source after exiting watch mode without resetting the current video", () => {
+    controller.increaseSpeed();
+    controller.exitWatchMode();
+    expect(video.playbackRate).toBe(1.25);
+
+    history.pushState({}, "", "/watch/second");
+    controller.handleWatchRouteChange();
+    expect(video.playbackRate).toBe(1.25);
+    video.src = "/second.mp4";
+    controller.handleWatchMediaStateChange();
+    expect(video.playbackRate).toBe(1);
+    expect(mode).toBe("normal");
+  });
+
+  for (const active of [true, false]) {
+    test(`resets a replacement player with watch mode ${active ? "active" : "inactive"}`, () => {
+      controller.increaseSpeed();
+      if (!active) controller.exitWatchMode();
+      video.remove();
+      controller.handleWatchDomMutation();
+
+      const next = document.createElement("video");
+      next.src = "/second.mp4";
+      next.playbackRate = 1.25;
+      setVideoRect(next, 0);
+      fixture.root.append(next);
+      controller.handleWatchDomMutation();
+
+      expect(next.playbackRate).toBe(1);
+      expect(mode).toBe("normal");
+      expect(document.getElementById(WATCH_HINTS_ID)?.getAttribute("data-visible")).toBe("false");
+    });
+  }
+
+  test("preserves speed for timestamps, seeks, and repeated media events on the same video", () => {
+    controller.increaseSpeed();
+    history.replaceState({}, "", "/watch/first?t=30#player");
+    controller.handleWatchRouteChange();
+    video.currentTime = 30;
+    controller.handleWatchMediaStateChange();
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1.25);
+    expect(mode).toBe("watch");
+    expect(document.getElementById(WATCH_HINTS_ID)?.getAttribute("data-visible")).toBe("true");
+  });
+
+  test("resets once per new source and allows subsequent speed adjustments", () => {
+    controller.increaseSpeed();
+    video.src = "/second.mp4";
+    controller.handleWatchMediaStateChange();
+    expect(video.playbackRate).toBe(1);
+    controller.toggleVideoControls();
+    controller.increaseSpeed();
+    controller.handleWatchMediaStateChange();
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1.25);
+
+    video.src = "/third.mp4";
+    controller.handleWatchMediaStateChange();
+    expect(video.playbackRate).toBe(1);
+  });
+
+  test("does not mistake temporary source removal for another video", () => {
+    controller.increaseSpeed();
+    video.removeAttribute("src");
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1.25);
+    video.src = "/first.mp4";
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1.25);
+    video.src = "/second.mp4";
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1);
+  });
+
+  test("leaves site-selected speeds alone until Nav changes speed", () => {
+    video.playbackRate = 1.75;
+    video.src = "/second.mp4";
+    controller.handleWatchMediaStateChange();
+    expect(video.playbackRate).toBe(1.75);
+  });
+
+  test("does not reset twice when currentSrc catches up to the declared source", () => {
+    controller.increaseSpeed();
+    Object.defineProperty(video, "currentSrc", {
+      configurable: true,
+      value: "https://example.com/first.mp4"
+    });
+    video.src = "/second.mp4";
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1);
+    controller.toggleVideoControls();
+    controller.increaseSpeed();
+    Object.defineProperty(video, "currentSrc", { value: "https://example.com/second.mp4" });
+    controller.handleWatchMediaStateChange();
+    expect(video.playbackRate).toBe(1.25);
+  });
+
+  test("keeps the active watch target when unrelated videos become better candidates", () => {
+    controller.increaseSpeed();
+    const other = document.createElement("video");
+    other.src = "/other.mp4";
+    other.playbackRate = 1.75;
+    Object.defineProperty(other, "paused", { value: false });
+    setVideoRect(other, 0);
+    fixture.root.append(other);
+    video.blur();
+    controller.handleWatchMediaStateChange();
+    controller.handleWatchDomMutation();
+    expect(video.playbackRate).toBe(1.25);
+    expect(other.playbackRate).toBe(1.75);
+  });
+
+  test("exits watch mode on a new source even if Nav never changed speed", () => {
+    const keys: string[] = [];
+    document.addEventListener("keydown", (event) => keys.push(event.key));
+    video.src = "/second.mp4";
+    controller.handleWatchMediaStateChange();
+    expect(mode).toBe("normal");
+    expect(document.getElementById(WATCH_HINTS_ID)?.getAttribute("data-visible")).toBe("false");
+    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "j", bubbles: true }));
+    expect(keys).toEqual(["j"]);
+  });
+
+  test("exits watch mode on a replacement player even if Nav never changed speed", () => {
+    const next = document.createElement("video");
+    setVideoRect(next, 0);
+    video.replaceWith(next);
+    controller.handleWatchDomMutation();
+    expect(mode).toBe("normal");
+    expect(document.getElementById(WATCH_HINTS_ID)?.getAttribute("data-visible")).toBe("false");
+  });
+
+  test("keeps the overlay hidden until watch mode is explicitly enabled again", () => {
+    controller.increaseSpeed();
+    video.src = "/second.mp4";
+    controller.handleWatchMediaStateChange();
+    controller.handleWatchDomMutation();
+    controller.syncWatchHintsOverlay();
+    controller.handleWatchMediaStateChange();
+    expect(controller.isWatchModeActive()).toBe(false);
+    expect(controller.increaseSpeed()).toBe(false);
+    expect(document.getElementById(WATCH_HINTS_ID)?.getAttribute("data-visible")).toBe("false");
+
+    expect(controller.toggleVideoControls()).toBe(true);
+    expect(controller.isWatchModeActive()).toBe(true);
+    expect(document.getElementById(WATCH_HINTS_ID)?.getAttribute("data-visible")).toBe("true");
+    expect(document.querySelector('[data-watch-speed="true"]')?.textContent).toBe("1.00×");
+  });
+});
 
 describe("watch mode", () => {
   test("adjusts speed with j/k without scrolling or exiting watch mode", async () => {
@@ -266,7 +459,7 @@ describe("watch mode", () => {
     }
   });
 
-  test("reacquires a new video after spa navigation", async () => {
+  test("requires re-enabling watch mode on a new video after spa navigation", async () => {
     const fixture = createDomFixture("<video id='first-video'></video>");
 
     try {
@@ -309,6 +502,9 @@ describe("watch mode", () => {
       document.body.append(secondVideo);
       watchController.handleWatchDomMutation();
 
+      expect(String(mode)).toBe("normal");
+      expect(watchController.toggleFullscreen()).toBe(false);
+      expect(watchController.toggleVideoControls()).toBe(true);
       expect(watchController.toggleFullscreen()).toBe(true);
       expect(didRequestFullscreenOnFirstVideo).toBe(false);
       expect(didRequestFullscreenOnSecondVideo).toBe(true);
