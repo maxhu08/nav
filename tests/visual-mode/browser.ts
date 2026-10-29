@@ -306,6 +306,19 @@ run("native input selection restores saved offsets and direction", () => {
   equal(input.selectionEnd, 5);
   equal(input.selectionDirection, "backward");
 });
+run("automatic visual exits return to normal mode without a toast", () => {
+  for (const cause of ["programmatic", "click", "pagehide"]) {
+    const f = fixture('<p id="text">alpha beta</p><button id="button">Focus</button>');
+    f.select(0, 1);
+    f.visual.actions["visual-mode"]();
+    const count = document.querySelectorAll("[data-sonner-toaster] > li").length;
+    if (cause === "click") document.getElementById("button")!.click();
+    else if (cause === "pagehide") window.dispatchEvent(new Event("pagehide"));
+    else f.visual.exit();
+    equal(f.mode.getMode(), "normal");
+    equal(document.querySelectorAll("[data-sonner-toaster] > li").length, count);
+  }
+});
 
 const runtime = (f: ReturnType<typeof fixture>, bindings = DEFAULT_HOTKEY_MAPPINGS) => {
   const keys = createKeyState({ getMode: f.mode.getMode });
@@ -390,6 +403,32 @@ const runAsync = async (name: string, test: () => Promise<void>): Promise<void> 
   }
 };
 
+await runAsync("Escape and Ctrl-[ notify once when exiting visual or caret mode", async () => {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  for (const mode of ["caret", "visual", "visual-line"]) {
+    for (const key of ["Escape", "["]) {
+      const f = fixture();
+      const r = runtime(f);
+      try {
+        if (mode !== "caret") f.select(0, 1);
+        f.visual.actions[mode === "visual-line" ? "visual-line-mode" : "visual-mode"]();
+        equal(f.mode.getMode(), mode);
+        const count = document.querySelectorAll("[data-sonner-toaster] > li").length;
+        await press(key, { ctrlKey: key === "[" });
+        equal(f.mode.getMode(), "normal");
+        equal(document.querySelectorAll("[data-sonner-toaster] > li").length, count + 1);
+        check(
+          document.querySelector("[data-sonner-toaster] > li")?.textContent?.includes("Normal mode")
+        );
+        await press(key, { ctrlKey: key === "[" });
+        equal(document.querySelectorAll("[data-sonner-toaster] > li").length, count + 1);
+      } finally {
+        r.close();
+      }
+    }
+  }
+});
+
 await runAsync(
   "Escape and Ctrl-[ then v resume native input/textarea selection through keyboard routing",
   async () => {
@@ -405,8 +444,10 @@ await runAsync(
           const input = document.getElementById("field") as HTMLInputElement | HTMLTextAreaElement;
           input.focus();
           input.setSelectionRange(0, 0);
+          const count = document.querySelectorAll("[data-sonner-toaster] > li").length;
           await press(key, { ctrlKey: key === "[" });
           check(document.activeElement !== input);
+          equal(document.querySelectorAll("[data-sonner-toaster] > li").length, count);
           await press("v");
           equal(f.mode.getMode(), "visual");
           equal(document.activeElement, input);

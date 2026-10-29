@@ -106,7 +106,7 @@ export const createVisualModeController = (deps: VisualDeps) => {
     return true;
   };
   const exit = (escape = false, click = false): void => {
-    if (leave(escape, click)) notify("normal");
+    if (leave(escape, click) && escape) notify("normal");
   };
   const handleClick = (event: MouseEvent): void => {
     if (

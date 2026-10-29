@@ -7,7 +7,7 @@ import { createFocusIndicatorController } from "~/src/core/utils/focus-indicator
 import { getDeepActiveElement, isEditableTarget } from "~/src/core/utils/is-editable-target";
 import { createKeyState } from "~/src/core/utils/key-state";
 import { subscribeToFrameActionMessages } from "~/src/core/utils/runtime-bridge";
-import { ensureToastWrapper, getToastApi } from "~/src/core/utils/sonner";
+import { ensureToastWrapper } from "~/src/core/utils/sonner";
 import { createNavigationActions, createFindModeStylesBridge } from "~/src/core/navigation/actions";
 import { isFrameActionMessage } from "~/src/core/navigation/frame-actions";
 import { createForceNormalModeController } from "~/src/core/navigation/force-normal-mode";
@@ -84,7 +84,6 @@ const handleKeydown = createNavigationKeydownHandler({
     if (findMode.isFindModeActive()) findMode.exitFindMode();
     if (watchController.isWatchModeActive()) watchController.exitWatchMode();
     modeController.setMode("normal");
-    getToastApi()?.info("Normal mode", { duration: 1000 });
   },
   visualController,
   actions: navigationActions.actions,
