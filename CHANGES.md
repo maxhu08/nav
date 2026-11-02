@@ -1,7 +1,6 @@
-# Changes in 1.2.1
+# Changes in 1.2.2
 
 in this release:
 
-- add option for custom css on bar and find elements
-- add visual selection modes
-- improve editors in options page
+- add hint-mode-background-tab
+- bug fixes
