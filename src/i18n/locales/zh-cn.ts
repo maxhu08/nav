@@ -1,4 +1,5 @@
 export const zhCN = {
+  "Could not open background tab.": "无法在后台打开标签页。",
   "expand editor": "展开编辑器",
   "close editor": "关闭编辑器",
   "bar.styling": "地址栏样式",

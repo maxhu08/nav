@@ -23,6 +23,11 @@ export type TabCommandResponse = {
   ok: boolean;
 };
 
+export type OpenBackgroundTabMessage = {
+  type: "open-background-tab";
+  url: string;
+};
+
 export type FetchSearchSuggestionsMessage = {
   type: "fetch-search-suggestions";
   query: string;
@@ -78,6 +83,12 @@ export const isFetchImageMessage = (value: unknown): value is FetchImageMessage 
 
   const data = value as Partial<FetchImageMessage>;
   return data.type === "fetch-image" && typeof data.url === "string";
+};
+
+export const isOpenBackgroundTabMessage = (value: unknown): value is OpenBackgroundTabMessage => {
+  if (!value || typeof value !== "object") return false;
+  const data = value as Partial<OpenBackgroundTabMessage>;
+  return data.type === "open-background-tab" && typeof data.url === "string" && data.url.length > 0;
 };
 
 export const isFetchTabSuggestionsMessage = (

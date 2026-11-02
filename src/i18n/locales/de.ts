@@ -1,4 +1,5 @@
 export const de = {
+  "Could not open background tab.": "Der Tab konnte nicht im Hintergrund geöffnet werden.",
   "expand editor": "Editor vergrößern",
   "close editor": "Editor schließen",
   "bar.styling": "Leistengestaltung",

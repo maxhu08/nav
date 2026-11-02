@@ -6,6 +6,7 @@ import {
 import { handleFetchImageMessage } from "~/src/background/fetch-image";
 import { handleFetchHistorySuggestionsMessage } from "~/src/background/fetch-history-suggestions";
 import { handleFetchSearchSuggestionsMessage } from "~/src/background/fetch-search-suggestions";
+import { handleOpenBackgroundTabMessage } from "~/src/background/open-background-tab";
 import { handleTabCommandMessage } from "~/src/background/tab-commands";
 import {
   isActivateTabMessage,
@@ -13,12 +14,18 @@ import {
   isFetchImageMessage,
   isFetchHistorySuggestionsMessage,
   isFetchSearchSuggestionsMessage,
+  isOpenBackgroundTabMessage,
   isTabCommandMessage
 } from "~/src/shared/background-messages";
 
 registerRuntimeBridge();
 
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+  if (isOpenBackgroundTabMessage(message)) {
+    void handleOpenBackgroundTabMessage(message.url, sender).then(sendResponse);
+    return true;
+  }
+
   if (isFetchTabSuggestionsMessage(message)) {
     void handleFetchTabSuggestionsMessage(sender).then(sendResponse);
     return true;

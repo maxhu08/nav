@@ -1,4 +1,5 @@
 export const fr = {
+  "Could not open background tab.": "Impossible d’ouvrir l’onglet en arrière-plan.",
   "expand editor": "agrandir l’éditeur",
   "close editor": "fermer l’éditeur",
   "bar.styling": "Style de la barre",

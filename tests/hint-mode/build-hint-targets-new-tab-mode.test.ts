@@ -33,7 +33,7 @@ const expectExternalLinkIconMarker = (
   );
 };
 
-describe("buildHintTargets new tab mode", () => {
+describe.each(["new-tab", "background-tab"] as const)("buildHintTargets %s mode", (mode) => {
   test("only includes targets with link urls", () => {
     const fixture = createDomFixture(`
       <main>
@@ -43,7 +43,7 @@ describe("buildHintTargets new tab mode", () => {
     `);
 
     try {
-      const targets = buildHintTargets("new-tab", "abcd", 1, false);
+      const targets = buildHintTargets(mode, "abcd", 1, false);
 
       expect(targets).toHaveLength(1);
       expect(targets[0]?.element.id).toBe("docs-link");
@@ -63,10 +63,32 @@ describe("buildHintTargets new tab mode", () => {
     `);
 
     try {
-      const [target] = buildHintTargets("new-tab", "abcd", 1, false, directiveLabels);
+      const [target] = buildHintTargets(mode, "abcd", 1, false, directiveLabels);
 
       expect(target?.directiveMatch?.directive).toBe("download");
       expectExternalLinkIconMarker(target);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("only includes custom selector targets with link urls", () => {
+    const fixture = createDomFixture(
+      '<a id="link" href="/docs">Docs</a><div id="plain">Plain</div>'
+    );
+    try {
+      const targets = buildHintTargets(mode, "abcd", 1, false, undefined, [], {}, false, [
+        {
+          pattern: ".*",
+          entries: [
+            { key: "zz", selector: "#plain" },
+            { key: "yy", selector: "#link" }
+          ]
+        }
+      ]);
+      expect(targets).toHaveLength(1);
+      expect(targets[0]?.element.id).toBe("link");
+      expect(targets[0]?.label).toBe("yy");
     } finally {
       fixture.cleanup();
     }
@@ -85,7 +107,7 @@ describe("buildHintTargets new tab mode", () => {
       setRect(thumbnailLink as HTMLElement, 100, 200, 200, 120);
       setRect(thumbnailImage as HTMLElement, 100, 200, 200, 120);
 
-      const [target] = buildHintTargets("new-tab", "abcd", 1, false, undefined, [], {}, true);
+      const [target] = buildHintTargets(mode, "abcd", 1, false, undefined, [], {}, true);
 
       expect(target?.isMediaThumbnail).toBe(true);
       expect(target?.marker.getAttribute(MARKER_VARIANT_ATTRIBUTE)).toBe("thumbnail");

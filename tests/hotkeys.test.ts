@@ -1,7 +1,20 @@
 import { describe, expect, test } from "bun:test";
 import { parseHotkeyMappingsValue, VISUAL_ACTION_NAMES } from "~/src/utils/hotkeys";
+import { DEFAULT_HOTKEY_MAPPINGS } from "~/src/utils/config-defaults";
 
 describe("parseHotkeyMappingsValue", () => {
+  test("leaves background tab hints unbound by default and accepts a custom binding", () => {
+    expect(DEFAULT_HOTKEY_MAPPINGS).toContain("<unbound> hint-mode-background-tab");
+    const parsed = parseHotkeyMappingsValue(
+      DEFAULT_HOTKEY_MAPPINGS.replace(
+        "<unbound> hint-mode-background-tab",
+        "b hint-mode-background-tab"
+      )
+    );
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.mappings.b?.normal).toBe("hint-mode-background-tab");
+  });
+
   test("treats <unbound> actions as declared without creating bindings", () => {
     const parsed = parseHotkeyMappingsValue(`j scroll-down
 <unbound> scroll-up
@@ -13,6 +26,7 @@ describe("parseHotkeyMappingsValue", () => {
 <unbound> scroll-to-bottom
 <unbound> hint-mode-current-tab
 <unbound> hint-mode-new-tab
+<unbound> hint-mode-background-tab
 <unbound> hint-mode-right-click
 <unbound> create-new-tab
 <unbound> close-current-tab

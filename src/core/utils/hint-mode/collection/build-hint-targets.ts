@@ -708,7 +708,7 @@ const assignDirectiveLabel = (
 };
 
 const createModeMarker = (mode: HintActionMode, element: HTMLElement): HTMLDivElement => {
-  if (mode === "new-tab") {
+  if (mode === "new-tab" || mode === "background-tab") {
     return createHintMarkerWithIcon("directive", createInlineSvgIcon(EXTERNAL_LINK_ICON_PATH));
   }
 
@@ -736,7 +736,7 @@ const getForcedDirectiveForMode = (mode: HintActionMode): ReservedHintDirective 
 };
 
 const getForcedIconForMode = (mode: HintActionMode): string | null => {
-  if (mode === "new-tab") {
+  if (mode === "new-tab" || mode === "background-tab") {
     return EXTERNAL_LINK_ICON_PATH;
   }
 
@@ -796,7 +796,7 @@ const shouldScoreDirectiveForElement = (
 };
 
 const isElementCompatibleWithMode = (mode: HintActionMode, element: HTMLElement): boolean => {
-  if (mode === "new-tab") {
+  if (mode === "new-tab" || mode === "background-tab") {
     return !isChatGptSidebarOverflowButton(element) && !!getClosestLinkUrl(element);
   }
 

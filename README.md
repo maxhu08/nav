@@ -118,6 +118,7 @@ G scroll-to-bottom
 # hint entry
 f hint-mode-current-tab
 F hint-mode-new-tab
+<unbound> hint-mode-background-tab
 <a-f> hint-mode-right-click
 
 # tab actions

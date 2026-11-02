@@ -1,4 +1,5 @@
 export const it = {
+  "Could not open background tab.": "Impossibile aprire la scheda in secondo piano.",
   "expand editor": "espandi editor",
   "close editor": "chiudi editor",
   "bar.styling": "Stile della barra",

@@ -1,4 +1,5 @@
 export const ptBR = {
+  "Could not open background tab.": "Não foi possível abrir a aba em segundo plano.",
   "expand editor": "expandir editor",
   "close editor": "fechar editor",
   "bar.styling": "Estilo da barra",

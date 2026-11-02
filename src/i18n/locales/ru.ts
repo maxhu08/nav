@@ -1,4 +1,5 @@
 export const ru = {
+  "Could not open background tab.": "Не удалось открыть вкладку в фоновом режиме.",
   "expand editor": "развернуть редактор",
   "close editor": "закрыть редактор",
   "bar.styling": "Стиль панели",

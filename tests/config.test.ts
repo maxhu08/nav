@@ -161,6 +161,7 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
       }
 
       expect(migratedConfig.hotkeys.mappings).toContain("<a-f> hint-mode-right-click");
+      expect(migratedConfig.hotkeys.mappings).toContain("<unbound> hint-mode-background-tab");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> yank-current-tab-url-clean");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> duplicate-current-tab-origin");
       expect(migratedConfig.hotkeys.mappings).toContain("<unbound> bar-mode-current-tab");
@@ -205,6 +206,22 @@ export const configMigrationTestCases: ConfigMigrationTestCase[] = [
 ];
 
 describe("migrateOldConfig", () => {
+  test("adds background tab hints unbound once and preserves custom bindings", () => {
+    const config = structuredClone(defaultConfig);
+    config.hotkeys.mappings = config.hotkeys.mappings.replace(
+      "<unbound> hint-mode-background-tab\n",
+      ""
+    );
+    const migrated = migrateOldConfig(config, defaultConfig);
+    expect(migrated.hotkeys.mappings.split("\n")).toContain("<unbound> hint-mode-background-tab");
+    expect(migrateOldConfig(migrated, defaultConfig)).toEqual(migrated);
+
+    config.hotkeys.mappings += "\nb hint-mode-background-tab";
+    const custom = migrateOldConfig(config, defaultConfig);
+    expect(custom.hotkeys.mappings).toContain("b hint-mode-background-tab");
+    expect(custom.hotkeys.mappings).not.toContain("<unbound> hint-mode-background-tab");
+  });
+
   for (const configMigrationTestCase of configMigrationTestCases) {
     test(configMigrationTestCase.desc, configMigrationTestCase.test);
   }

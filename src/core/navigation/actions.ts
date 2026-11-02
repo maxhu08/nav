@@ -33,6 +33,7 @@ type NavigationActionDeps = {
       mode:
         | "current-tab"
         | "new-tab"
+        | "background-tab"
         | "right-click"
         | "yank-link-url"
         | "yank-image"
@@ -81,6 +82,7 @@ export const createNavigationActions = ({
     // hints
     "hint-mode-current-tab": () => hintController.activateMode("current-tab"),
     "hint-mode-new-tab": () => hintController.activateMode("new-tab"),
+    "hint-mode-background-tab": () => hintController.activateMode("background-tab"),
     "hint-mode-right-click": () => hintController.activateMode("right-click"),
 
     // tab actions

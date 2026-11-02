@@ -1,4 +1,5 @@
 export const ja = {
+  "Could not open background tab.": "バックグラウンドでタブを開けませんでした。",
   "expand editor": "エディターを拡大",
   "close editor": "エディターを閉じる",
   "bar.styling": "バーのスタイル",

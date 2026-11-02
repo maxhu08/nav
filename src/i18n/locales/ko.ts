@@ -1,4 +1,5 @@
 export const ko = {
+  "Could not open background tab.": "백그라운드 탭을 열 수 없습니다.",
   "expand editor": "편집기 확대",
   "close editor": "편집기 닫기",
   "bar.styling": "바 스타일",

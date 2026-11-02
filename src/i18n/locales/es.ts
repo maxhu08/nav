@@ -1,4 +1,5 @@
 export const es = {
+  "Could not open background tab.": "No se pudo abrir la pestaña en segundo plano.",
   "expand editor": "ampliar editor",
   "close editor": "cerrar editor",
   "bar.styling": "Estilo de la barra",
